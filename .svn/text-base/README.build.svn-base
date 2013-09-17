@@ -1,0 +1,279 @@
+** This file is generated from 'make help' output, do not edit it. **
+
+OSCam build system documentation
+================================
+
+ Build variables:
+   The build variables are set on the make command line and control the build
+   process. Setting the variables lets you enable additional features, request
+   extra libraries and more. Currently recognized build variables are:
+
+   CROSS=prefix   - Set tools prefix. This variable is used when OScam is being
+                    cross compiled. For example if you want to cross compile
+                    for SH4 architecture you can run: 'make CROSS=sh4-linux-'
+                    If you don't have the directory where cross compilers are
+                    in your PATH you can run:
+                    'make CROSS=/opt/STM/STLinux-2.3/devkit/sh4/bin/sh4-linux-'
+
+   CROSS_DIR=dir  - Set tools directory. This variable is added in front of
+                    CROSS variable. CROSS_DIR is useful if you want to use
+                    predefined targets that are setting CROSS, but you don't have
+                    the cross compilers in your PATH. For example:
+                    'make sh4 CROSS_DIR=/opt/STM/STLinux-2.3/devkit/sh4/bin/'
+                    'make dm500 CROSS_DIR=/opt/cross/dm500/cdk/bin/'
+
+   CONF_DIR=/dir  - Set OSCam config directory. For example to change config
+                    directory to /etc run: 'make CONF_DIR=/etc'
+                    The default config directory is: '/usr/local/etc'
+
+   CC_OPTS=text   - This variable holds compiler optimization parameters.
+                    Default CC_OPTS value is:
+                    '-O2 -ggdb -pipe -ffunction-sections -fdata-sections '
+                    To add text to this variable set EXTRA_CC_OPTS=text.
+
+   CC_WARN=text   - This variable holds compiler warning parameters.
+                    Default CC_WARN value is:
+                    '-W -Wall -Wshadow -Wredundant-decls -Wstrict-prototypes -Wold-style-definition '
+                    To add text to this variable set EXTRA_CC_WARN=text.
+
+   V=1            - Request build process to print verbose messages. By
+                    default the only messages that are shown are simple info
+                    what is being compiled. To request verbose build run:
+                    'make V=1'
+
+ Extra build variables:
+   These variables add text to build variables. They are useful if you want
+   to add additional options to already set variables without overwriting them
+   Currently defined EXTRA_xxx variables are:
+
+   EXTRA_CC_OPTS  - Add text to CC_OPTS.
+                    Example: 'make EXTRA_CC_OPTS=-Os'
+
+   EXTRA_CC_WARN  - Add text to CC_WARN.
+                    Example: 'make EXTRA_CC_WARN=-Wshadow'
+
+   EXTRA_TARGET   - Add text to TARGET.
+                    Example: 'make EXTRA_TARGET=-private'
+
+   EXTRA_CFLAGS   - Add text to CFLAGS (affects compilation).
+                    Example: 'make EXTRA_CFLAGS="-DBLAH=1 -I/opt/local"'
+
+   EXTRA_LDFLAGS  - Add text to LDFLAGS (affects linking).
+                    Example: 'make EXTRA_LDFLAGS=-Llibdir'
+
+   EXTRA_FLAGS    - Add text to both EXTRA_CFLAGS and EXTRA_LDFLAGS.
+                    Example: 'make EXTRA_FLAGS=-DBLAH=1'
+
+   EXTRA_LIBS     - Add text to LIBS (affects linking).
+                    Example: 'make EXTRA_LIBS="-L./stapi -loscam_stapi"'
+
+ Use flags:
+   Use flags are used to request additional libraries or features to be used
+   by OSCam. Currently defined USE_xxx flags are:
+
+   USE_LIBUSB=1    - Request linking with libusb. The variables that control
+                     USE_LIBUSB=1 build are:
+                         LIBUSB_FLAGS='-DWITH_LIBUSB=1'
+                         LIBUSB_CFLAGS='-DWITH_LIBUSB=1'
+                         LIBUSB_LDFLAGS='-DWITH_LIBUSB=1'
+                         LIBUSB_LIB='-lusb-1.0 -lrt'
+                     Using USE_LIBUSB=1 adds to '-libusb' to PLUS_TARGET.
+                     To build with static libusb, set the variable LIBUSB_LIB
+                     to contain full path of libusb library. For example:
+                      make USE_LIBUSB=1 LIBUSB_LIB=/usr/lib/libusb-1.0.a
+
+   USE_PCSC=1      - Request linking with PCSC. The variables that control
+                     USE_PCSC=1 build are:
+                         PCSC_FLAGS='-DWITH_PCSC=1 -I/usr/include/PCSC'
+                         PCSC_CFLAGS='-DWITH_PCSC=1 -I/usr/include/PCSC'
+                         PCSC_LDFLAGS='-DWITH_PCSC=1 -I/usr/include/PCSC'
+                         PCSC_LIB='-lpcsclite'
+                     Using USE_PCSC=1 adds to '-pcsc' to PLUS_TARGET.
+                     To build with static PCSC, set the variable PCSC_LIB
+                     to contain full path of PCSC library. For example:
+                      make USE_PCSC=1 PCSC_LIB=/usr/local/lib/libpcsclite.a
+
+   USE_STAPI=1    - Request linking with STAPI. The variables that control
+                     USE_STAPI=1 build are:
+                         STAPI_FLAGS='-DWITH_STAPI=1'
+                         STAPI_CFLAGS='-DWITH_STAPI=1'
+                         STAPI_LDFLAGS='-DWITH_STAPI=1'
+                         STAPI_LIB='-L./stapi -loscam_stapi'
+                     Using USE_STAPI=1 adds to '-stapi' to PLUS_TARGET.
+                     In order for USE_STAPI to work you have to create stapi
+                     directory and put liboscam_stapi.a file in it.
+
+   USE_COOLAPI=1  - Request support for Coolstream API (libnxp) aka NeutrinoHD
+                    box. The variables that control the build are:
+                         COOLAPI_FLAGS='-DWITH_COOLAPI=1'
+                         COOLAPI_CFLAGS='-DWITH_COOLAPI=1'
+                         COOLAPI_LDFLAGS='-DWITH_COOLAPI=1'
+                         COOLAPI_LIB='-lnxp -lrt'
+                     Using USE_COOLAPI=1 adds to '-coolapi' to PLUS_TARGET.
+                     In order for USE_COOLAPI to work you have to have libnxp.so
+                     library in your cross compilation toolchain.
+
+   USE_AZBOX=1    - Request support for AZBOX (openxcas)
+                    box. The variables that control the build are:
+                         AZBOX_FLAGS='-DWITH_AZBOX=1'
+                         AZBOX_CFLAGS='-DWITH_AZBOX=1'
+                         AZBOX_LDFLAGS='-DWITH_AZBOX=1'
+                         AZBOX_LIB='-Lextapi/openxcas -lOpenXCASAPI'
+                     Using USE_AZBOX=1 adds to '-azbox' to PLUS_TARGET.
+                     extapi/openxcas/libOpenXCASAPI.a library that is shipped
+                     with OSCam is compiled for MIPSEL.
+
+   USE_MCA=1      - Request support for Matrix Cam Air (MCA).
+                    The variables that control the build are:
+                         MCA_FLAGS='-DWITH_MCA=1'
+                         MCA_CFLAGS='-DWITH_MCA=1'
+                         MCA_LDFLAGS='-DWITH_MCA=1'
+                     Using USE_MCA=1 adds to '-mca' to PLUS_TARGET.
+
+   USE_LIBCRYPTO=1 - Request linking with libcrypto instead of using OSCam
+                     internal crypto functions. USE_LIBCRYPTO is automatically
+                     enabled if the build is configured with SSL support. The
+                     variables that control USE_LIBCRYPTO=1 build are:
+                         LIBCRYPTO_FLAGS='-DWITH_LIBCRYPTO=1'
+                         LIBCRYPTO_CFLAGS='-DWITH_LIBCRYPTO=1'
+                         LIBCRYPTO_LDFLAGS='-DWITH_LIBCRYPTO=1'
+                         LIBCRYPTO_LIB='-lcrypto'
+
+   USE_SSL=1       - Request linking with libssl. USE_SSL is automatically
+                     enabled if the build is configured with SSL support. The
+                     variables that control USE_SSL=1 build are:
+                         SSL_FLAGS='-DWITH_SSL=1'
+                         SSL_CFLAGS='-DWITH_SSL=1'
+                         SSL_LDFLAGS='-DWITH_SSL=1'
+                         SSL_LIB='-lssl'
+                     Using USE_SSL=1 adds to '-ssl' to PLUS_TARGET.
+
+ Automatically intialized variables:
+
+   TARGET=text     - This variable is auto detected by using the compiler's
+                    -dumpmachine output. To see the target on your machine run:
+                     'gcc -dumpmachine'
+
+   PLUS_TARGET     - This variable is added to TARGET and it is set depending
+                     on the chosen USE_xxx flags. To disable adding
+                     PLUS_TARGET to TARGET, set NO_PLUS_TARGET=1
+
+   BINDIR          - The directory where final oscam binary would be put. The
+                     default is: Distribution
+
+   OSCAM_BIN=text  - This variable controls how the oscam binary will be named.
+                     Default OSCAM_BIN value is:
+                      'BINDIR/oscam-VERSVN_REV-TARGET'
+                     Once the variables (BINDIR, VER, SVN_REV and TARGET) are
+                     replaced, the resulting filename can look like this:
+                      'Distribution/oscam-1.20-unstable_svn7404-i486-slackware-linux-static'
+                     For example you can run: 'make OSCAM_BIN=my-oscam'
+
+ Binaries compiled and run during the OSCam build:
+
+   OSCam builds webif/pages_gen binary that is run by the build system to
+   generate file that holds web pages. To build this binary two variables
+   are used:
+
+   HOSTCC=gcc     - The compiler used for building binaries that are run on
+                    the build machine (the host). Default: gcc
+                    To use clang for example run: make CC=clang HOSTCC=clang
+
+   HOSTCFLAGS=xxx - The CFLAGS passed to HOSTCC. See webif/Makefile for the
+                    default host cflags.
+
+ Config targets:
+   make config        - Start configuration utility.
+   make allyesconfig  - Enable all configuration options.
+   make allnoconfig   - Disable all configuration options.
+   make defconfig     - Restore default configuration options.
+
+ Cleaning targets:
+   make clean     - Remove 'build' directory which contains compiled
+                    object files.
+   make distclean - Executes clean target and also removes binary files
+                    located in 'Distribution' directory.
+
+ Build system files:
+   config.sh      - OSCam configuration. Run 'config.sh --help' to see
+                    available parameters or 'make config' to start GUI
+                    configuratior.
+   Makefile       - Main build system file.
+   Makefile.extra - Contains predefined targets. You can use this file
+                    as example on how to use the build system.
+   Makefile.local - This file is included in Makefile and allows creation
+                    of local build system targets. See Makefile.extra for
+                    examples.
+
+ Here are some of the interesting predefined targets in Makefile.extra.
+ To use them run 'make target ...' where ... can be any extra flag. For
+ example if you want to compile OSCam for Dreambox (DM500) but do not
+ have the compilers in the path, you can run:
+    make dm500 CROSS_DIR=/opt/cross/dm500/cdk/bin/
+
+ Predefined targets in Makefile.extra:
+
+    make libusb        - Builds OSCam with libusb support
+    make pcsc          - Builds OSCam with PCSC support
+    make pcsc-libusb   - Builds OSCam with PCSC and libusb support
+    make dm500         - Builds OSCam for Dreambox (DM500)
+    make sh4           - Builds OSCam for SH4 boxes
+    make azbox         - Builds OSCam for AZBox STBs
+    make mca           - Builds OSCam for Matrix Cam Air (MCA)
+    make coolstream    - Builds OSCam for Coolstream
+    make dockstar      - Builds OSCam for Dockstar
+    make qboxhd        - Builds OSCam for QBoxHD STBs
+    make opensolaris   - Builds OSCam for OpenSolaris
+    make uclinux       - Builds OSCam for m68k uClinux
+
+ Predefined targets for static builds:
+    make static        - Builds OSCam statically
+    make static-libusb - Builds OSCam with libusb linked statically
+    make static-libcrypto - Builds OSCam with libcrypto linked statically
+    make static-ssl    - Builds OSCam with SSL support linked statically
+
+ Examples:
+   Build OSCam for SH4 (the compilers are in the path):
+     make CROSS=sh4-linux-
+
+   Build OSCam for SH4 (the compilers are in not in the path):
+     make sh4 CROSS_DIR=/opt/STM/STLinux-2.3/devkit/sh4/bin/
+     make CROSS_DIR=/opt/STM/STLinux-2.3/devkit/sh4/bin/ CROSS=sh4-linux-
+     make CROSS=/opt/STM/STLinux-2.3/devkit/sh4/bin/sh4-linux-
+
+   Build OSCam for SH4 with STAPI:
+     make CROSS=sh4-linux- USE_STAPI=1
+
+   Build OSCam for SH4 with STAPI and changed configuration directory:
+     make CROSS=sh4-linux- USE_STAPI=1 CONF_DIR=/var/tuxbox/config
+
+   Build OSCam for ARM with COOLAPI (coolstream aka NeutrinoHD):
+     make CROSS=arm-cx2450x-linux-gnueabi- USE_COOLAPI=1
+
+   Build OSCam for MIPSEL with AZBOX support:
+     make CROSS=mipsel-linux-uclibc- USE_AZBOX=1
+
+   Build OSCam for ARM with MCA support:
+     make CROSS=arm-none-linux-gnueabi- USE_MCA=1
+
+   Build OSCam with libusb and PCSC:
+     make USE_LIBUSB=1 USE_PCSC=1
+
+   Build OSCam with static libusb:
+     make USE_LIBUSB=1 LIBUSB_LIB="/usr/lib/libusb-1.0.a"
+
+   Build OSCam with static libcrypto:
+     make USE_LIBCRYPTO=1 LIBCRYPTO_LIB="/usr/lib/libcrypto.a"
+
+   Build OSCam with static libssl and libcrypto:
+     make USE_SSL=1 SSL_LIB="/usr/lib/libssl.a" LIBCRYPTO_LIB="/usr/lib/libcrypto.a"
+
+   Build with verbose messages and size optimizations:
+     make V=1 CC_OPTS=-Os
+
+   Build and set oscam file name:
+     make OSCAM_BIN=oscam
+
+   Build and set oscam file name depending on revision:
+     make OSCAM_BIN=oscam-`./config.sh -r`
+

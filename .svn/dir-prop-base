@@ -1,0 +1,18 @@
+K 10
+svn:ignore
+V 81
+oscam-type.h
+oscam-ostype.h
+build_freetz
+build_sh4
+*.project
+build
+lib
+.cproject
+
+K 13
+svn:mergeinfo
+V 62
+/branches/dynamic-threads:5324-5666
+/branches/sc8in1:6254-6398
+END
