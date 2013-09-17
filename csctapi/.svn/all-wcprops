@@ -1,0 +1,173 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/oscam/!svn/ver/8917/trunk/csctapi
+END
+ifd_sci_ioctl.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/oscam/!svn/ver/7767/trunk/csctapi/ifd_sci_ioctl.h
+END
+icc_async.h
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/oscam/!svn/ver/8649/trunk/csctapi/icc_async.h
+END
+ifd_sci.c
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/oscam/!svn/ver/8670/trunk/csctapi/ifd_sci.c
+END
+ifd_phoenix.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/oscam/!svn/ver/7924/trunk/csctapi/ifd_phoenix.h
+END
+ifd_stapi.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/oscam/!svn/ver/8649/trunk/csctapi/ifd_stapi.c
+END
+protocol_t0.c
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/oscam/!svn/ver/8649/trunk/csctapi/protocol_t0.c
+END
+ifd_azbox.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/oscam/!svn/ver/8649/trunk/csctapi/ifd_azbox.c
+END
+protocol_t1.c
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/oscam/!svn/ver/8649/trunk/csctapi/protocol_t1.c
+END
+ifd_mp35.c
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/oscam/!svn/ver/7951/trunk/csctapi/ifd_mp35.c
+END
+io_serial.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/oscam/!svn/ver/8917/trunk/csctapi/io_serial.c
+END
+protocol_t0.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/oscam/!svn/ver/7687/trunk/csctapi/protocol_t0.h
+END
+ifd_pcsc.c
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/oscam/!svn/ver/8717/trunk/csctapi/ifd_pcsc.c
+END
+ifd_smargo.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/oscam/!svn/ver/8740/trunk/csctapi/ifd_smargo.c
+END
+io_serial.h
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/oscam/!svn/ver/8649/trunk/csctapi/io_serial.h
+END
+ifd_cool.c
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/oscam/!svn/ver/8650/trunk/csctapi/ifd_cool.c
+END
+cardreaders.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/oscam/!svn/ver/7898/trunk/csctapi/cardreaders.h
+END
+ifd_smartreader_types.h
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/oscam/!svn/ver/8900/trunk/csctapi/ifd_smartreader_types.h
+END
+ifd_sci_global.h
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/oscam/!svn/ver/7767/trunk/csctapi/ifd_sci_global.h
+END
+atr.c
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/oscam/!svn/ver/8489/trunk/csctapi/atr.c
+END
+ifd_sc8in1.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/oscam/!svn/ver/8514/trunk/csctapi/ifd_sc8in1.c
+END
+ifd_db2com.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/oscam/!svn/ver/7999/trunk/csctapi/ifd_db2com.c
+END
+icc_async.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/oscam/!svn/ver/8717/trunk/csctapi/icc_async.c
+END
+atr.h
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/oscam/!svn/ver/8489/trunk/csctapi/atr.h
+END
+ifd_smartreader.c
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/oscam/!svn/ver/8670/trunk/csctapi/ifd_smartreader.c
+END
+ifd_phoenix.c
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/oscam/!svn/ver/8440/trunk/csctapi/ifd_phoenix.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/oscam/!svn/ver/7175/trunk/csctapi/Makefile
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/oscam/!svn/ver/8321/trunk/csctapi/CMakeLists.txt
+END
+ifd_db2com.h
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/oscam/!svn/ver/7919/trunk/csctapi/ifd_db2com.h
+END

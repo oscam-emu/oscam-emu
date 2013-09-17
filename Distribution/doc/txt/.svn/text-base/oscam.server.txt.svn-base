@@ -1,0 +1,630 @@
+oscam.server(5) 												 oscam.server(5)
+
+
+
+NAME
+       oscam.server - reader configuration file for OSCam
+
+SYNOPSIS
+       The  server  configuration  file for OSCam contains reader parameters.  sections in oscam.server are recurring (more than
+       one reader possible).  At least one [reader] section is required.
+
+DESCRIPTIONS
+   The [reader] section
+       label = name
+	  name for reader, required
+
+       enable = 0|1
+	  0 = deactivate reader, default:1
+
+       description = text
+	  description of reader, default:none
+
+       protocol = reader protocol
+	  reader protocol, required:
+
+	   camd35|cs357x
+	   cccam
+	   cs378x
+	   constcw
+	   gbox
+	   ghttp
+	   internal
+	   mouse
+	   mp35
+	   newcamd|newcamd525
+	   newcamd524
+	   pcsc
+	   radegast
+	   sc8in1
+	   serial
+	   smargo
+	   smartreader
+
+       device = [<readertype>;]serial:serialnum|bus:device|
+		<device|device:slot>|
+		<ip|hostname>,<port>[,<lport>]|
+		<ip|hostname>,<gboxpport>|
+		pcsc|
+		<0|1>>|
+		constantcw
+	  define local or remote reader
+
+	   readertype:	set reader type
+
+			  SR:	    Smartreader+ (default)
+			  Infinity: Infinity USB
+			  TripleP1: Smargo Triple Reader port 1
+			  TripleP2: Smargo Triple Reader port 2
+			  TripleP3: Smargo Triple Reader port 3
+
+	   bus:device:	bus name and device name of the Smartreader+ or
+			Infinity USB (get the names with lsusb 'Bus'
+			and 'Device')
+
+	   serialnum:	serial number of reader of the Smartreader+ or
+			Infinity USB
+
+	   device:	device name
+
+	   device:slot: device name and slot number sc8in1 [1-8]
+			(only one SC8in1 reader supported)
+
+	   ip|hostname: IP address or host name
+
+	   port:	TCP/IP port
+
+	   lport:	remapping to local TCP/IP port
+
+	   gboxpport:	UDP port for remote gbox peer
+
+	   PCSC:	number of PCSC reader, starting with 0
+
+	   0|1: 	for Coolstream HD-1 STB only: select reader 0 or
+			reader 1
+
+	   constantcw:	constant CW file name
+
+	  constant CW file format:
+
+	  CAID:Provider ID:Service ID:Video ID:ECM PID::key (16 Bytes seperated by spaces)
+
+	  example: 1234:123456:1234:2345:3456::00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+
+       detect = CD|DSR|CTS|RING|NONE|gpio[1-7]
+	  status detect of card (NONE = no detection), default:CD
+
+       cardmhz = mhz
+	  set standard SC frequency in units of 10 kHz, for Irdeto SC set to 600, for auto clock speed in Dreambox mode  set  to
+	  -1, refer to OVERCLOCKING, default:357
+
+       mhz = frequency
+	  set reader frequency in units of 10 kHz, if mhz > cardmhz you are in overclocking mode, for cardmhz swiching to MIPSel
+	  Dreambox mode set to 2700, for cardmhz swiching to PPC Dreambox mode set to 3150, for  cardmhz  swiching  to	Dreambox
+	  DM7025 mode set to 8300, refer to OVERCLOCKING, default:357
+
+       deprecated = 0|1
+	  First  the  SC  will	be  initialized in normal mode. If it fails, the SC will be automatically reverted to deprecated
+	  mode, so that the SC speed will not be changed and the communication will remain on normal ATR speed of 9600 baud.
+
+	  1 = use deprecated SC mode only, default:0
+
+       mode = mode
+	  set card init mode for AzBox internal reader, default:none
+
+       smargopatch = 0|1
+	  1 = enable workaround for Smartreader+ reader until native mode works, default:0
+
+       sc8in1_dtrrts_patch = 0|1
+	  1 = enable fix for SC8in1/MCR DTR/RTS kernel bug, default:0
+
+       use_gpio = 0|1
+	  1 = use GPIO to init the reader. This needs to be set on WRT54G router, default:0
+
+       ins7e = payload
+	  add 26 hex-bytes payload for NDS Videoguard 2 SCs, valid for physical readers only, default:none
+
+       ins7e11 = TA1 byte
+	  set TA1 byte for NDS Videoguard 2 SCs, valid for physical readers only, default:none
+
+       force_irdeto = 0|1
+	  1 = force Irdeto SC mode even if RSA key is set for Irdeto tunnled Nagravion SC, default:0
+
+       nagra_read = 0|1|2
+	  read Nagravison records (on NCMED cards only):
+
+	   0 = disabled (default)
+	   1 = read all records with expired rights
+	   2 = read records with valid rights only
+
+       rsakey = RSA key
+	  RSA key for Nagravision/Tiger SCs, CAM key data for Irdeto SCs, Conax SCs, default:none
+
+       fix9993 = 0|1
+	  1 = enable fix for 9993 error with CAID 0919 SCs, default:0
+
+       boxkey = box key
+	  box key for Nagravision SCs / CAM key for Irdeto SCs
+
+       pincode = pincode
+	  pincode for Conax, Cryptoworks and Viaccess SCs, default:none
+
+       boxid = NDS box ID
+	  NDS receiver box id
+
+       ndsversion = 0|1|12|2
+	  set NDS Videoguard version
+
+	    0 = autodetection (default)
+	    1 = NDS Videoguard 1
+	   12 = NDS Videoguard 1+
+	    2 = NDS Videoguard 2
+
+       aeskeys = CAID #0@provid:AES key #0 CAID #0[,AES key #1 CAID #0],...[;CAID #1@provid:AES key #0 CAID #1[,AES key #1  CAID
+       #1],...]...
+	  multiple  16	bytes AES keys for Viaccess SCs (the used postprocessing AES key is specified through the D2 nano of the
+	  ECM)
+
+	  special AES keys:
+
+	   00 = do not return any CW, no AES key specified
+	   FF = return CW received from the S, no AES key specified
+
+	  example:
+
+	   aeskeys													       =
+	  0500@012345:000102030405060708090a0b0c0d0e0f;0500@543210:000102030405060708090a0b0c0d0e0f,0,0f0e0d0c0b0a090807060504030201
+
+       key = DES key
+	  key for newcamd remote reader encryption
+
+       user = name
+	  user for remote reader
+
+       password = password
+	  password for remote reader
+
+       mg-encrypted = D: { <IP|hostname> { <local port> <remote port> { <password> { <level> <level> }}}}[,<local MAC address>]
+	  mgcamd encrypted gbox line, default MAC address = eth0
+
+       services = [!]services[,[!]<services>]...
+	  reader [de]assignment to service group, default=none
+
+       lb_whitelist_services = <services>,<services>...
+	  reader assignement to service group for channels which may never be blocked  by  the	loadbalancer  to  the  reader  ,
+	  default=none
+
+       caid = <CAID>[&<mask>][:<target CAID>][,<CAID>[&<mask>][:target <CAID>]]...
+	  define and mapping of CAIDs for reader, default:all CAIDs with mask FFFF
+
+	  example: caid = 0100
+		   caid = 0200&ffee:0300
+		   caid = 0400&ff00:0500,0600
+		   caid = 0702,0722
+		   caid = 0702&ffdf (shortcut for the example above)
+
+       ident = <CAID>:<provid>[,provid]...[;<CAID>:<provid>[,provid]...]...
+	  set CAID and SC specific ident for reader
+
+	  example: ident = 0100:123456,234567;0200:345678,456789
+
+       class = [!]class[,[!]class]...
+	  set SC specific class in hex for reader
+
+	  example: class = 01,02,!1b,!2b
+
+       chid = CAID:ChID
+	  set SC specific ChIDs for reader, default:none
+
+	  example: chid = 0100:12
+
+       group = 1..64[,1..64]...
+	  reader assingment to groups, default:none, required
+
+       audisabled = 0|1
+	  1 = exclude reader from auto AU, default:0
+
+       auprovid = provider ID
+	  set provider ID to use the right reader for auto AU
+
+	  example: auprovid = 123456
+
+       disableserverfilter = 0|1
+	  1 = ignore caid and provid settings of reader due faulty clients, default:0
+
+       inactivitytimeout = seconds
+	  inactivity timeout for all TCP based remote readers, -1 = reconnect on network failure for newcamd based readers, even
+	  in idle, default:0
+
+       reconnecttimeout = seconds
+	  reconnect if missing answers from a remote reader, default:30
+
+       connectoninit = 0|1
+	  1 = allow newcamd connections to be established on startup although there isn't a request yet, default:0
+
+       fallback = 0|1
+	  1 = define reader as fallback, standard and fallback reader must have the same group, default:0
+
+       fallback_percaid = <CAID>[:<ident>[,ident]]...[;<CAID>[:<ident>[,ident]]...]....
+	  use reader as fallback for defined CAIDs only, two-digit wildcard CAIDs are possible, fallback_percaid overrules fall‐
+	  back, default:none
+
+	   example: fallback_percaid = 1234:234567;89;10:345678
+
+       emmcache = usecache,rewrite,logging
+	  set EMM cache of local reader:
+
+	   usecache = 0|1: 1 = enable EMM caching, default:0
+
+	   rewrite  = determines how often one and the same EMM is
+		      written, default:0
+
+	   logging  = EMM logging mask:
+
+		       0 = EMM logging disabled (default)
+		       1 = logging EMM errors
+		       2 = logging written EMMs
+		       4 = logging skipped EMMs
+		       8 = logging blocked EMMs
+		      16 = logging disabled AU
+
+	   example: emmcache = 1,3,2
+
+       cacheex = 0|1|2|3
+	  set cache exchange mode
+
+	   0: disable cache exchange mode (default)
+	   1: enable cache exchange pull mode
+	   2: enable cache exchange push mode for camd 3.5x / 3.57x and CCcam
+	      protocol
+	   3: enable reverse cache exchange push mode for camd 3.5x / 3.57x
+	      and CCcam protocol
+
+	  Identical cache exchange modes must be set on local OSCam server and remote OSCam user asccount.
+
+	  Please consider memory consumption.
+
+       cacheex_maxhop = hops
+	  define maximum hops for cache exchange, default=10
+
+       csp_ecm_filter = [caid][&mask][@provid][$servid],n
+	  cache exchange incoming ECM filter setting (mode 2 only) for Cardservproxy, default:none
+
+       cacheex_drop_csp = 0|1
+	  drop incoming Cardservproxy cache (mode 2 only), detection is zero ecmd5, default:0
+
+       cacheex_allow_request = 0|1
+	  allow incoming ECM request (mode 2), default:1
+
+       ecmwhitelist = [CAID[@provid]:]length[,length]...[;[CAID[@provid]:]length[,length]...]...
+	  set valid ECM length per CAID and provid in hex, default:none,provid=000000
+
+	  example: ecmwhitelist = 10,20,0a,0b
+		   ecmwhitelist = 0100:10,20;0200@123456:0a,4b
+
+	  In normal operation mode this parameter is not required.
+
+       ecmheaderwhitelist = [CAID[@provid]:]header[,header]...[;[CAID[@provid]:]header[,header]...]...
+	  set vaild ECM header per CAID and provid in hex, default:none,provid=000000
+
+       ratelimitecm = count
+	  number of different SIDs in ECMs allowed for an interval, default:0
+
+       ecmnotfoundlimit = count
+	  number of ECMs with "not found" answer until the reader will be restarted, 0 = no limit, default:0
+
+       resetcycle = count
+	  number of ECMs until SC reset is performed, 0 = disabled, valid for physical readers only, default:0
+
+       ratelimitseconds = seconds
+	  interval for rate limit, default:0
+
+       ecmunique = 0|1
+	  1 = enable check for matching ECM hash in ratelimit slot , default:0
+
+       srvidholdseconds  = seconds
+	  time to keep service ID in ratelimit slot, during this time checkeding for ecmunique is disbaled, default:0
+
+       cooldown = delay,duration
+	   define cooldown:
+
+	   delay:    delay in seconds for which the reader is allowed to do
+		     more ECM requests than defined by ecmratelimit,
+		     default: none
+
+	   duration: duration in seconds the reader needs to cooldown,
+		     default:none
+
+	  ratelimitecm and ratelimitseconds are required
+
+       blocknano = nano[,nano]...|all
+	  list of EMM-nanos to block (in hex w/o 0x) or all EMM-nanos, valid for physical readers only, default:none
+
+	   example: blocknano = 45,93,7a,ff
+		    blocknano = all
+
+       blockemm-u = 0|1
+	  1 = block unique EMMs, default:0
+
+       blockemm-s = 0|1
+	  1 = block shared EMMs, default:0
+
+       blockemm-g = 0|1
+	  1 = block global EMMs, default:0
+
+       blockemm-unknown = 0|1
+	  1 = block unknown types of EMMs, default:0
+
+       blockemm-bylen = [length range,length range]...
+	  block all types of EMMs by length, default:none
+
+	   example: blockemm-bylen = 1-10,11-
+
+       saveemm-u = 0|1
+	  1 = save unique EMMs to log file, default:0
+
+       saveemm-s = 0|1
+	  1 = save shared EMMs to log file, default:0
+
+       saveemm-g = 0|1
+	  1= save global EMMs to log file, default:0
+
+       saveemm-unknown = 0|1
+	  1 = save unknown types of EMMs to log file, default:0
+
+       savenano = nano[,nano]....|all (obsolete)
+	  list of EMM-nanos to save (in hex w/o 0x) or all EMM-nanos, only valid for physical readers, default:none
+
+	   example: savenano = 45,93,7a,ff
+		    savenano = all
+
+       readnano = [path]filename
+	  write file (usually a copy of a file saved by savenano) to your smartcard, if no path is specified, the specified file
+	  is searched for in the configuration directory, only valid for physical readers, default:none
+
+	   example: readnano = write.emm
+		    readnano = /var/oscam/write.emm
+
+       dropbadcws = 0|1
+	  1 = reject bad CWs, send "not found" instead of bad CWs, default:0
+
+       disablecrccws = 0|1
+	  1 = disable CRC for CW, default: 0
+
+	  In normal operation mode this parameter is not required. Parameter is incompatible with DVB standard.
+
+       lb_weight = weight
+	  the higher the value the higher the probability for reader selection, default:100
+
+	   It's an divider for the average responstime.
+
+       cccversion = <main version>.<version>.<sub version>
+	  set CCcam version, default:none
+
+	  example: cccversion = 1.2.34
+
+       cccmaxhops = hops
+	  set CCcam maximum SC distance hops, default:10
+
+	   -1 = disabled
+	    0 = remote local SCs only
+	    1 = remote local SCs and + 1 hop
+	    2 = remote local SCs and + 2 hops
+	   and so on
+
+	  After reading this SC hop will be incremented by one.
+
+       ccchop = hop
+	  set hop for non CCCam readers, default:0
+
+       cccreshare = hop
+	  set reader's CCcam reshare hop, default:0
+
+	   -1 = reshare value off cccam in global config
+	    0 = resharing for direct peer only
+	    x = resharing for direct peer and share level x
+
+       cccwantemu = 0|1
+	  1 = request to provide emu from CCCam server, too, default:0
+
+       ccckeepalive = 0|1
+	  1 = send keepalive messages to keep connection to remote CCCam server up, default:0
+
+       cccreconnect = timeout
+	  reconnect again after ECM request timeout in milli-seconds, default:4000
+
+       cccmindown = number
+	  filters all readers with hops smaller than number, default:0
+
+       gbox_my_password = password
+	  password for connection to local gbox peer, default:none
+
+       gbox_reshare = level
+	  gbox reshare level of local cards, default:0
+
+       gbox_max_distance = distance
+	  maximum distance to receive gbox peer cards, default:2
+
+       gbox_max_ecm_send = number
+	  maximum of gbox peers ECMs will be send to, default:3
+
+       gbox_group = group
+	  reader assingment to gbox group, default:none
+
+       use_ssl = 0|1
+	  1 = use SSL for ghttp protocol, default:0
+
+OVERCLOCKING
+       ·  Dreambox and other internal readers
+
+	  For Dreambox and other internal readers the highest possible clockrate will be auto detected. The mhz  parameter  lets
+	  you  override  the  values chosen by OSCam, if it differs from 357 and 358, but usually you will not set any value for
+	  mhz.
+
+	  For certain Dreamboxes (especially PPC clones) the default mhz parameter leads to slow ECM times  and/or  "not  found"
+	  ECMs. By setting mhz to values like 200, 300, 400, ... 1600 you can find a value that works for your receiver and your
+	  card. The higher the mhz value, the slower the ECM time (strange enough).
+
+	  If you choose the value too low, your card is not recognized (no ATR or "card not supported"). If you choose the value
+	  too high, you get slow ECM times. Our experience is that either no mhz line, or a line mhz = 1000 works best.
+
+       ·  Phoenix / Smartmouse reader
+
+	  Overclocking	does  not work with Windows and Mac OS X.  Set mhz equivalent to the frequency of the reader.  OSCam can
+	  not set the frequency of the reader.
+
+       ·  Smargo Smartreader+
+
+	  Use protocol = smargo for the FDDI kernel drivers (no libusb needed) or (not recommended) use protocol  =  smartreader
+	  for OSCam's driver implementation based on libusb.
+
+	  Set  the reader frequency with the native Smargo Smartreader+ tool (srp_tools).  If not setting mhz and cardmhz, OSCam
+	  tries  to  set the baudrate automatically, according to the maximum speed indicated by ATR. Overclocking is possible.
+
+       OSCam tries to set the baudrate automatically.  A standard serial port has limited baudrate settings, so SC  overclocking
+       might  not work.  When using a serial reader the best way for overclocking is connecting it to a FTDI based USB to serial
+       port adapter.
+
+       If overclocking does not work, verify the effective baudrate in the logfile.  If it deviates too much from the  requested
+       baudrate,  the  SC  will  not be recognized (no ATR) and the value for mhz should be adjusted again.  The higher the bau‐
+       drate, the more accurate the effective baudrate can be.
+
+CACHE EXCHANGE
+       ·  pull mode (on request: cache exchange from remote to local OSCam)
+
+	  ECM requests will be forwarded to the remote cache exchange partner. If the CW could not be found in the cache of  the
+	  remote  exchange  partner,  a  not  found  will  be  answered. If the CW could not be found in the cache of the remote
+	  exchange partner but a pending ECM request is open, the request will be re-initiated after the wait  time  defined  in
+	  cacheexwaittime.
+
+       ·  push mode (continuous: cache exchange from remote to local OSCam)
+
+	  CWs  from the remote cache exchange partner will be forwarded to the local cache. Forwarding only works while the camd
+	  camd 3.5x / 3.57x or CCcam protocol connection between the local and remote OSCam has been established.
+
+       ·  reverse push mode (continuous: cache exchange from local to remote OSCam)
+
+	  CWs from the local cache will be forwarded to the remote cache exchange partner. Forwarding only works while the  camd
+	  camd 3.5x / 3.57x or CCcam protocol connection between the remote and local OSCam has been established.
+
+EXAMPLES
+       ·  serial mouse compatible reader
+
+	   [reader]
+	   label    = myserialmousereader
+	   detect   = cd
+	   protocol = mouse
+	   device   = /dev/ttyS1
+	   group    = 1
+	   caid     = 0100
+	   services = myservice,!thisservice
+
+       ·  USB mouse compatible reader
+
+	   [reader]
+	   label    = myusbmousereader
+	   detect   = cd
+	   protocol = mouse
+	   device   = /dev/ttyUSB0
+	   aeskey   = 0102030405060708090a0b0c0d0e0f10
+	   group    = 2
+	   caid     = 0200
+
+       ·  camd 3.78x reader
+
+	   [reader]
+	   label    = mycamd378xreader
+	   protocol = cs378x
+	   device   = 192.168.0.1,1234
+	   user     = user1
+	   password = password1
+	   group    = 3
+
+       ·  newcamd reader
+
+	   [reader]
+	   label    = mynewcamdreader
+	   protocol = newcamd
+	   key	    = 0102030405060708091011121314
+	   device   = 192.168.0.2,2345
+	   user     = user2
+	   password = password2
+	   group    = 4
+
+       ·  CCcam reader
+
+	   [reader]
+	   label      = mycccamreader
+	   protocol   = cccam
+	   device     = 192.168.0.3,3456
+	   user       = user3
+	   password   = password3
+	   group      = 5
+	   caid       = 0300,0400,0500
+	   cccversion = 1.2.3
+
+       ·  PCSC reader
+
+	   [reader]
+	   label    = mypcscreader
+	   protocol = pcsc
+	   device   = 0
+	   aeskey   = 0102030405060708090a0b0c0d0e0f10
+	   group    = 6
+	   caid     = 0600
+
+       ·  Smargo Smartreader+
+
+	   [reader]
+	   label    = mysmartreader
+	   protocol = smartreader
+	   device   = 001:002
+	   aeskey   = 0102030405060708090a0b0c0d0e0f10
+	   group    = 7
+	   caid     = 0700
+
+       ·  internal reader
+
+	   [reader]
+	   label    = myinternalreader
+	   protocol = internal
+	   device   = /dev/sci0
+	   group    = 8
+	   caid     = 0800
+
+       ·  sc8in1 reader
+
+	   [reader]
+	   label    = mysc8in1reader
+	   protocol = sc8in1
+	   device   = /dev/ttyUSB0:1
+	   group    = 9
+	   caid     = 0900
+
+       ·  constant CW
+
+	   [reader]
+	   label    = myconstantcw
+	   protocol = constcw
+	   device   = /var/keys/constant.cw
+	   group    = 10
+
+       ·  gbox reader
+
+	   [reader]
+	   label    = mygboxreader
+	   protocol = gbox
+	   device   = 192.168.0.4,45678,56789
+	   user     = user4
+	   password = password4
+	   group    = 11
+	   caid     = 1100
+
+SEE ALSO
+       list_smargo(1),	oscam(1),  oscam.ac(5), oscam.cacheex(5), oscam.cert(5), oscam.conf(5), oscam.dvbapi(5), oscam.guess(5),
+       oscam.ird(5), oscam.provid(5),  oscam.ratelimit(5),  oscam.services(5),	oscam.srvid(5),  oscam.tiers(5),  oscam.user(5),
+       oscam.whitelist(5)
+
+
+
+														 oscam.server(5)

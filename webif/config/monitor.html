@@ -1,0 +1,29 @@
+##TPLHEADER##
+##TPLMENU##
+##TPLCONFIGMENU##
+##TPLMESSAGE##
+	<form action="config.html" method="get">
+		<input name="part" type="hidden" value="monitor">
+		<input name="action" type="hidden" value="execute">
+		<TABLE class="config">
+			<TR><TH COLSPAN="2">Edit Monitor Config</TH></TR>
+			<TR><TD>##TPLHELPPREFIX##conf#port##TPLHELPSUFFIX##Port:</A></TD><TD><input name="port" type="text" size="5" maxlength="5" value="##MONPORT##"></TD></TR>
+			<TR><TD>##TPLHELPPREFIX##conf#serverip_2##TPLHELPSUFFIX##Serverip:</A></TD><TD><input name="serverip" type="text" size="15" maxlength="15" value="##SERVERIP##"></TD></TR>
+			<TR><TD>##TPLHELPPREFIX##conf#nocrypt##TPLHELPSUFFIX##No crypt:</A></TD><TD><input name="nocrypt" type="text" size="63" maxlength="200" value="##NOCRYPT##"></TD></TR>
+			<TR><TD>##TPLHELPPREFIX##conf#aulow##TPLHELPSUFFIX##Au low:</A></TD><TD><input name="aulow" type="text" size="5" maxlength="5" value="##AULOW##"> min</TD></TR>
+			<TR><TD>##TPLHELPPREFIX##conf#hideclient_to##TPLHELPSUFFIX##Hide client to:</A></TD><TD><input name="hideclient_to" type="text" size="5" maxlength="5" value="##HIDECLIENTTO##"> s</TD></TR>
+			<TR>
+				<TD>##TPLHELPPREFIX##conf#monlevel##TPLHELPSUFFIX##Monlevel:</A></TD>
+				<TD><select name="monlevel">
+					<option value="0" ##MONSELECTED0##>0 - no access to monitor</option>
+					<option value="1" ##MONSELECTED1##>1 - only server and own procs</option>
+					<option value="2" ##MONSELECTED2##>2 - all procs, but viewing only, default</option>
+					<option value="3" ##MONSELECTED3##>3 - all procs, reload of oscam.user possible</option>
+					<option value="4" ##MONSELECTED4##>4 - complete access</option>
+					</select>
+				</TD>
+			</TR>
+			<TR><TD colspan="2" align="right"><input type="submit" value="Save" ##BTNDISABLED##></TD></TR>
+		</TABLE>
+	</form>
+##TPLFOOTER##

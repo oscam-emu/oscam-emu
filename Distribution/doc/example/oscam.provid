@@ -1,0 +1,14 @@
+#
+# provider table
+#
+# format:
+#
+# <caid>:<provid>|<provider>|<satellite>|<language>
+#
+
+0100:012345|MyPay-TV1|Astra 19.2E|German
+0200:543210|MyPay-TV2|Hot Bird 13.0E|English
+0300:112233|MyPay-TV3|Hot Bird 13.0E|Italian
+0400:223344|MyPay-TV4|Atra 28.2E|English
+
+

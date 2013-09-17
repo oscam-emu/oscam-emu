@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of oscam.dvbapi</TITLE>
+</HEAD><BODY>
+<H1>oscam.dvbapi</H1>
+Section: File Formats (5)<BR><A HREF="#index">Index</A>
+<A HREF="/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>oscam.dvbapi</B> - DVB API configuration file for OSCam
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+DVBAPI settings, first match - first used
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTIONS</H2>
+
+<P>
+
+<B>P</B>: <B>[CAID]</B>:<B>[provider ID]</B>:<B>[service ID]</B>:<B>[ECM PID]</B>:<B>[CHID]</B> <B>[continue]</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;set&nbsp;priority,&nbsp;<B>continue</B>&nbsp;=&nbsp;<B>1</B>:&nbsp;proceed&nbsp;with&nbsp;priority,&nbsp;recommended&nbsp;for&nbsp;
+<BR>&nbsp;pay-per-view&nbsp;services&nbsp;/&nbsp;EMMs&nbsp;<I>(use&nbsp;carefully)</I>,&nbsp;&nbsp;<I>although&nbsp;local&nbsp;SCs&nbsp;
+<BR>&nbsp;will&nbsp;be&nbsp;prioritised&nbsp;higher</I>,&nbsp;default:none
+</DL>
+
+<P>
+
+<B>I</B>: <B>[CAID]</B>:<B>[provider ID]</B>:<B>[service ID]</B>:<B>[ECM PID]</B>:<B>[CHID]</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;set&nbsp;ignore
+</DL>
+
+<P>
+
+<B>J</B>: <B>[CAID]</B>:<B>[provider ID]</B>:<B>[service ID]</B>:<B>[ECM PID]</B> <B>joined CAID</B>:<B>joined provider ID</B>:<B>joined ECM PID</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;join&nbsp;to&nbsp;another&nbsp;ECM&nbsp;PID
+</DL>
+
+<P>
+
+<B>A</B>: ::<B>service ID</B>:<B>[PMT PID] </B>:<B>[provider ID]</B>[:]<B>[ECM PID]</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;set&nbsp;a&nbsp;dummy&nbsp;ECM&nbsp;request&nbsp;with&nbsp;CAID&nbsp;FFFF&nbsp;for&nbsp;services&nbsp;with&nbsp;a&nbsp;constant&nbsp;CW&nbsp;shown&nbsp;as&nbsp;unencrypted&nbsp;service
+</DL>
+
+<P>
+
+<B>X</B>: <B>[CAID]</B>:<B>[provider ID]</B>:<B>[service ID]</B>:<B>[ECM PID]</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;add&nbsp;decoding&nbsp;on&nbsp;an&nbsp;extra&nbsp;demux&nbsp;index&nbsp;on&nbsp;the&nbsp;same&nbsp;CA&nbsp;device&nbsp;(Multi&nbsp;ECM)&nbsp;<I>(not&nbsp;support&nbsp;on&nbsp;all&nbsp;STBs)</I>
+</DL>
+
+<P>
+
+<B>D</B>: <B>[CAID]</B>:<B>[provider ID]</B>:<B>[service ID]</B>:<B>[ECM PID]</B> <B>delay</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;set&nbsp;delay&nbsp;in&nbsp;milli-seconds&nbsp;writing&nbsp;CWs
+</DL>
+
+<P>
+
+<B>M</B>: <B>[CAID]</B>:<B>[provider ID]</B>:<B>[service ID]</B>:<B>[ECM PID]</B> <B>target CAID</B>[:]<B>[target provider ID]</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;mapping
+</DL>
+
+<P>
+
+<B>S</B>: <B>[device]</B> <B>[PMT file name]</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;set&nbsp;DVB&nbsp;API&nbsp;device&nbsp;name&nbsp;and&nbsp;PMT&nbsp;file&nbsp;name&nbsp;<I>(valid&nbsp;for&nbsp;STAPI&nbsp;only)</I>
+</DL>
+
+<P>
+
+<B>L</B>: <B>[CAID]</B>:<B>[provider ID]</B>:<B>[service ID]</B>:<B>[ECM PID]</B> <B>length</B>
+<DL COMPACT><DT><DD>
+<BR>&nbsp;set&nbsp;ECM&nbsp;length&nbsp;in&nbsp;hexadecimal
+</DL>
+
+
+<A NAME="lbAE">&nbsp;</A>
+<H2>ANNONTATIONS</H2>
+
+<I>Please use Unix text file format only.</I>
+<A NAME="lbAF">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<BR>&nbsp;P:&nbsp;0100:123456&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;prioritise&nbsp;CAID&nbsp;0100&nbsp;with&nbsp;provider&nbsp;123456
+<P>
+<BR>&nbsp;P:&nbsp;:1234&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;prioritise&nbsp;ECM&nbsp;with&nbsp;provider&nbsp;ID&nbsp;1234&nbsp;on
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;on&nbsp;any&nbsp;CAID&nbsp;and&nbsp;service
+<P>
+<BR>&nbsp;P:&nbsp;0200&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;prioritise&nbsp;CAID&nbsp;0200
+<P>
+<BR>&nbsp;P:&nbsp;0300::9ABC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;prioritise&nbsp;CAID&nbsp;0300&nbsp;on&nbsp;service&nbsp;9ABC&nbsp;only
+<P>
+<BR>&nbsp;P:&nbsp;0400&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;prioritise&nbsp;CAID&nbsp;0400&nbsp;for&nbsp;pay-per-view&nbsp;services
+<BR>&nbsp;
+<BR>&nbsp;P:&nbsp;:&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;prioritise&nbsp;for&nbsp;EMMs
+<P>
+<BR>&nbsp;M:&nbsp;0500&nbsp;0600:123456&nbsp;&nbsp;#&nbsp;map&nbsp;CAID&nbsp;0500&nbsp;to&nbsp;provider&nbsp;ID&nbsp;123456&nbsp;with
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;CAID&nbsp;0600
+<P>
+<BR>&nbsp;D:&nbsp;0700&nbsp;200&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;wait&nbsp;200&nbsp;ms&nbsp;before&nbsp;writing&nbsp;CW&nbsp;for&nbsp;CAID&nbsp;0700
+<P>
+<BR>&nbsp;I:&nbsp;:654321&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;ignore&nbsp;provider&nbsp;ID&nbsp;654321&nbsp;for&nbsp;every&nbsp;CAID&nbsp;and
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;service
+<P>
+<BR>&nbsp;I:&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;ignore&nbsp;every&nbsp;CAID&nbsp;that&nbsp;was&nbsp;not&nbsp;handled&nbsp;before
+<P>
+<BR>&nbsp;L:&nbsp;0800&nbsp;8e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;ECM&nbsp;length&nbsp;for&nbsp;CAID&nbsp;0800&nbsp;to&nbsp;8e&nbsp;(hexadecimal)
+<A NAME="lbAG">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="/cgi-bin/man/man2html?1+list_smargo">list_smargo</A></B>(1), <B><A HREF="/cgi-bin/man/man2html?1+oscam">oscam</A></B>(1), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ac">oscam.ac</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.cacheex">oscam.cacheex</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.cert">oscam.cert</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.conf">oscam.conf</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.guess">oscam.guess</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ird">oscam.ird</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.provid">oscam.provid</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ratelimit">oscam.ratelimit</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.server">oscam.server</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.services">oscam.services</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.user">oscam.user</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.whitelist">oscam.whitelist</A></B>(5)
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTIONS</A><DD>
+<DT><A HREF="#lbAE">ANNONTATIONS</A><DD>
+<DT><A HREF="#lbAF">EXAMPLES</A><DD>
+<DT><A HREF="#lbAG">SEE ALSO</A><DD>
+</DL>
+</BODY>
+</HTML>

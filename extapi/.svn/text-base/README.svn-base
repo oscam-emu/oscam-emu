@@ -1,0 +1,5 @@
+This directory holds files that are external to OSCam.
+
+These files are API definitions or libs that are better to be shipped
+with OSCAM than to depend on founding them on the system that OSCam is
+being compiled on.

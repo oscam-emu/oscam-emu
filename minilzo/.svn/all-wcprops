@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/oscam/!svn/ver/8404/trunk/minilzo
+END
+README.LZO
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/oscam/!svn/ver/8397/trunk/minilzo/README.LZO
+END
+lzoconf.h
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/oscam/!svn/ver/8404/trunk/minilzo/lzoconf.h
+END
+minilzo.c
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/oscam/!svn/ver/8398/trunk/minilzo/minilzo.c
+END
+minilzo.h
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/oscam/!svn/ver/8397/trunk/minilzo/minilzo.h
+END
+lzodefs.h
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/oscam/!svn/ver/8397/trunk/minilzo/lzodefs.h
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/oscam/!svn/ver/8397/trunk/minilzo/CMakeLists.txt
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/oscam/!svn/ver/8397/trunk/minilzo/Makefile
+END

@@ -1,0 +1,11 @@
+			<TR><TD>##TPLHELPPREFIX##user#monlevel##TPLHELPSUFFIX##Monlevel:</A></TD>
+				<TD>
+					<select name="monlevel">
+						<option value="0" ##MONSELECTED0##>0 - no access to monitor</option>
+						<option value="1" ##MONSELECTED1##>1 - only server and own procs</option>
+						<option value="2" ##MONSELECTED2##>2 - all procs, but viewing only, default</option>
+						<option value="3" ##MONSELECTED3##>3 - all procs, reload of oscam.user possible</option>
+						<option value="4" ##MONSELECTED4##>4 - complete access</option>
+					</select>
+				</TD>
+			</TR>

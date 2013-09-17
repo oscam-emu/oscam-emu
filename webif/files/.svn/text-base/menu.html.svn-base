@@ -1,0 +1,17 @@
+	<TABLE border=0 class="configmenu">
+		<TR>
+			<TD CLASS="##CMENUACTIVE12##"><A HREF="files.html?file=oscam.version">oscam.version</A></TD>
+##TPLFILEMENUDVBAPI##
+			<TD CLASS="##CMENUACTIVE13##"><A HREF="files.html?file=oscam.conf">oscam.conf</A></TD>
+			<TD CLASS="##CMENUACTIVE14##"><A HREF="files.html?file=oscam.user">oscam.user</A></TD>
+			<TD CLASS="##CMENUACTIVE15##"><A HREF="files.html?file=oscam.server">oscam.server</A></TD>
+			<TD CLASS="##CMENUACTIVE16##"><A HREF="files.html?file=oscam.services">oscam.services</A></TD>
+			<TD CLASS="##CMENUACTIVE17##"><A HREF="files.html?file=oscam.srvid">oscam.srvid</A></TD>
+			<TD CLASS="##CMENUACTIVE18##"><A HREF="files.html?file=oscam.provid">oscam.provid</A></TD>
+			<TD CLASS="##CMENUACTIVE19##"><A HREF="files.html?file=oscam.tiers">oscam.tiers</A></TD>
+			<TD CLASS="##CMENUACTIVE25##"><A HREF="files.html?file=oscam.whitelist">oscam.whitelist</A></TD>
+			<TD CLASS="##CMENUACTIVE20##"><A HREF="files.html?file=logfile">logfile</A></TD>
+			<TD CLASS="##CMENUACTIVE21##"><A HREF="files.html?file=userfile">userfile</A></TD>
+##TPLFILEMENUANTICASC##
+		</TR>
+	</TABLE>

@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/svn/oscam/!svn/ver/8908/trunk/webif
+END
+pages_mkdep
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/oscam/!svn/ver/8418/trunk/webif/pages_mkdep
+END
+pages_index_check
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/oscam/!svn/ver/8418/trunk/webif/pages_index_check
+END
+pages_index.txt
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/oscam/!svn/ver/8780/trunk/webif/pages_index.txt
+END
+.gitignore
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/oscam/!svn/ver/8446/trunk/webif/.gitignore
+END
+pages_gen.c
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/oscam/!svn/ver/8453/trunk/webif/pages_gen.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/oscam/!svn/ver/8446/trunk/webif/Makefile
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/oscam/!svn/ver/8418/trunk/webif/README
+END

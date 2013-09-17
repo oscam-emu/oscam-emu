@@ -1,0 +1,64 @@
+#
+# user configuration
+#
+
+# user for group 1 with Betacrypt tunnel, no monitoring, only one connection possible, AU enabled
+
+[account]
+user       = user1
+pwd        = password1
+monlevel   = 0
+uniq       = 1
+group      = 1
+au         = reader1
+services   = services1
+betatunnel = 0300.FFFF:0100,0400.FFFF:0100
+ident 	   = 0100:000000
+caid       = 0100
+
+# user for group 2 with monitor access, AU enabled
+
+[account]
+user       = user2
+pwd        = password2
+monlevel   = 1
+uniq       = 0
+group      = 2
+au         = reader2
+services   = services2
+ident 	   = 0200:000000
+caid       = 0200
+
+# user for group 2 without monitor access, AU disabled, account disabled
+
+[account]
+user       = user3
+pwd        = password3
+disabled   = 1
+group      = 2
+services   = services2
+ident 	   = 0200:000000
+caid       = 0200
+
+# user for group 3 without monitor access, only one connection possible, AU disabled, multiple idents
+
+[account]
+user       = user4
+pwd        = password4
+monlevel   = 0
+uniq       = 1
+group      = 3
+ident 	   = 0300:000000,FFFFFF;0400:FFFFFF
+caid       = 0300
+
+# user for group 5 with anti-cascading, only 1 logging allowed, send fake CWs as penalty
+
+[account]
+user       = user5
+pwd        = password5
+group      = 5
+services   = services5
+ident 	   = 0500:000000
+caid       = 0500
+numusers   = 1
+penalty    = 1

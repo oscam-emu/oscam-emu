@@ -1,0 +1,148 @@
+html,div,table,tbody,tfoot,thead,tr,th,td {margin:0;padding:0;border:0}
+BODY {background-color:white;font-family:Arial;font-size:11px;text-align:center}
+P {color:white}
+P.blinking {text-decoration:blink;font-weight:bold;font-size:large;color:red}
+H2 {color:#AAAAAA;font-size:32px;line-height:32px;margin-top:0px; margin-bottom:0px}
+H4 {color:#AAAAAA;font-size:12px;line-height:9px}
+H4.styleauthor:after {content:"Eneen"}
+HR {height:1px;border-width:0;color:white;background-color:#AAAAAA}
+TABLE {border-spacing:1px;margin-left:auto;margin-right:auto}
+TABLE.menu {border-spacing:0px}
+TABLE.status {border-spacing:1px;background-color:white;empty-cells:show}
+TABLE.config {width:750px}
+TABLE.configreader {width:850px}
+TABLE.statsbalance TD:last-child{line-height:20px;width:125px}
+TABLE.statsbalance TD:last-child IMG.icon{float:right;margin-left:10px}
+TABLE.invisiblelb {border-spacing:0px;width:100%}
+TABLE.invisiblelb TH {width:33%;text-align:left}
+TABLE.invisiblelb TD {width:33%;font-size:12px;white-space: nowrap}
+TABLE.invisible {margin-left:0}
+TABLE.invisible TD {font-size:12px}
+TABLE.configmenu {line-height:16px}
+TH {height:10px;padding:5px;background-color:#CCCCCC;color:black}
+TH.statuscol0 {text-align:center;width:10px}
+TH.statuscol1 {text-align:center}
+TH.statuscol2 {text-align:center}
+TH.statuscol3 {text-align:center}
+TH.statuscol4 {text-align:center}
+TH.statuscol5 {text-align:center}
+TH.statuscol6 {text-align:center}
+TH.statuscol7 {text-align:center}
+TH.statuscol8 {text-align:center}
+TH.statuscol9 {text-align:center}
+TH.statuscol10 {text-align:center}
+TH.statuscol11 {text-align:center}
+TH.statuscol12 {text-align:center}
+TH.statuscol13 {text-align:center}
+TH.statuscol14 {text-align:center}
+TH.statuscol15 {text-align:center}
+TH.statuscol16 {text-align:center}
+TH.withservices {}
+TH.notservices {}
+TH.lbservices {}
+TD {height:10px;padding:5px;background-color:#EEEEEE;color:black;text-align:left}
+TD.centered {text-align:center}
+TD.statuscol0 {text-align:center;width:10px}
+TD.statuscol1 {text-align:center}
+TD.statuscol2 {text-align:center}
+TD.statuscol3 {text-align:center}
+TD.statuscol4 {}
+TD.statuscol5 {text-align:center}
+TD.statuscol6 {text-align:center}
+TD.statuscol7 {text-align:center}
+TD.statuscol8 {text-align:center}
+TD.statuscol9 {}
+TD.statuscol10 {text-align:center}
+TD.statuscol11 {text-align:center}
+TD.statuscol12 {text-align:center}
+TD.statuscol13 {}
+TD.statuscol14 {text-align:center}
+TD.statuscol14 A {text-decoration:none}
+TD.statuscol15 {text-align:center}
+TD.statuscol16 {text-align:center}
+TD.statuscol16 A {text-decoration:none}
+TD.usercol0 {text-align:center}
+TD.usercol1 {}
+TD.usercol2 {text-align:center}
+TD.usercol3 {text-align:center}
+TD.usercol4 {text-align:center}
+TD.usercol5 {text-align:center}
+TD.usercol6 {text-align:center}
+TD.usercol7 {text-align:center}
+TD.usercol8 {text-align:center}
+TD.usercol9 {text-align:center}
+TD.usercol10 {text-align:center}
+TD.usercol11 {text-align:center}
+TD.usercol12 {text-align:center}
+TD.usercol13 {text-align:center}
+TD.usercol14 {text-align:center}
+TD.usercol15 {text-align:center}
+TD.usercol16 {text-align:center}
+TD.usercol17 {text-align:center}
+TD.usercol18 {text-align:center}
+TD.usercol19 {text-align:center}
+TD.usercol20 {text-align:center}
+TD.usercol21 {text-align:center}
+TD.usercol22 {text-align:center}
+TD.usercol23 {text-align:center}
+TD.servicescol1 {}
+TD.servicescol2 {}
+TD.servicescol3 {border-left:2px solid #CCC}
+TD.menu {color:black;background-color:white;font-size:14px;font-weight:bold}
+TD.menu_selected {color:black;background-color:#E6FEBF;font-size:14px;font-weight:bold;font-style:italic}
+TD.configmenu {color:black;background-color:white;font-weight:bold}
+TD.configmenu_selected {color:black; background-color:#E6FEBF;font-weight:bold;font-style:italic}
+TD.subheadline {height:10px;border:0px;padding:5px;background-color:#CCCCCC;color:black}
+TD.subheadline A {text-decoration:none}
+TR.s TD {background-color:#e1e1ef}
+TR.l TD {background-color:#e1e1ef}
+TR.n TD {background-color:#e1e1ef}
+TR.h TD {background-color:#e1e1ef}
+TR.r TD {background-color:#fff3e7}
+TR.p TD {background-color:#fdfbe1}
+TR.c TD {background-color:#f1f5e6}
+TR.a TD {background-color:#33ff00}
+TR.online TD {background-color:#BBFFAA}
+TR.online TD.usercol5 {background-color:#646464}
+TR.expired TD {background-color:#FFBBAA}
+TR.connected TD {background-color:#FFFFAA}
+TR.disabled TD:first-child IMG.icon {background-color:#00AA00}
+TR.disabledreader TD:first-child IMG.icon {background-color:#00AA00}
+TR.scanusbsubhead TD {background-color:#fdfbe1}
+TR.e_valid TD {background-color:#E6FEBF;font-family:"Courier New", monospace}
+TR.e_expired TD {background-color:#fff3e7;font-family:"Courier New", monospace}
+TR.e_header TD {font-family:"Courier New", monospace}
+DIV.log {border:1px dotted #AAAAAA;background-color:#FAFAFA;padding:10px;font-family:"Courier New", monospace;color:#666666;word-wrap:break-word; text-align:left}
+DIV.sidlist {border:1px dotted #AAAAAA;background-color:#fffdf5;padding:2px;font-family:"Courier New", monospace;color:#666666;word-wrap:break-word; text-align:left}
+DIV.message {font-size: 12px;font-weight:bold;}
+DIV.div_notifier {height:14px;width:14px;border-radius:7px;-webkit-border-radius:7px;background-color:red;margin-left:4px;text-align:center;float:right}
+DIV.debugmenu {line-height:20px}
+DIV.logmenu {line-height:20px}
+DIV.filterform {margin:10px}
+TEXTAREA.bt {font-size: 12px}
+TEXTAREA.editor {font-size:11px;width:98%;height:508px;border:1px dotted #AAAAAA;background-color: #FAFAFA;padding:8px 10px;font-family:"Courier New", monospace; color:black;word-wrap:break-word;text-align:left}
+A.debugls:link {background-color:red}
+A.debugls:visited {background-color:red}
+A:link {color:#050840}
+A:visited {color:#050840}
+A:active {color:#050840}
+A:hover {color:#ff9e5f}
+A:hover IMG.icon {border: 1px solid yellow;width:20px;height:20px}
+A.tooltip  {position:relative;text-decoration:none;cursor:default}
+A.tooltip1 {position:relative;text-decoration:none;cursor:default;color:red}
+A.tooltip  SPAN {display:none;z-index:99}
+A.tooltip1 SPAN {display:none;z-index:99}
+A:hover SPAN {display:block;position:absolute;top:2em;right:1em;padding:10px;color:#335500;font-weight:normal;background:#ffffdd;text-align: left;border: 1px solid #666}
+IMG {border:0px solid}
+IMG.icon {border:0px solid;width:22px;height:22px;background-color:#AA0000;border-radius:3px;-webkit-border-radius:3px}
+IMG.userpicon {height:40px;width:80px}
+rect.graph_bg {fill:white}
+text.graph_error {text-anchor:middle;fill:red}
+text.graph_grid_txt {fill:gray;text-anchor:end;style:font-size:12px}
+path.graph_grid {stroke:gray;stroke-opacity:0.5}
+SPAN.e_valid {background-color:#E6FEBF}
+SPAN.e_expired {background-color:#fff3e7}
+SPAN.span_notifier {padding:1px 3px;border-radius:10px;color:#fff;margin-left:2px;background:#f00}
+SPAN.idlesec_normal {font-size:9px;color:black}
+SPAN.idlesec_alert {font-size:9px;color:red}
+SPAN.global_conf {color:blue;font-size:12px;cursor:default;padding:4px}

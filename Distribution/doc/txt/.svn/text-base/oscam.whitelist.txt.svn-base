@@ -1,0 +1,51 @@
+oscam.whitelist(5)												      oscam.whitelist(5)
+
+
+
+NAME
+       oscam.whitelist - global ECM length whitelisting configuration file for OSCam
+
+SYNOPSIS
+       ECM length whitelisting
+
+DESCRIPTIONS
+       w:[CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1[,ECM length 2]...]]
+	   ECM length whitelisting
+
+       l:[CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1[,ECM length 2]...]]
+	   ECM length whitelisting, does not proceed with any other ECM length
+	   whitelisting when matching, abbreviation for normal ECM length
+	   whitelisting using w parameter
+
+       i:[CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1[,ECM length 2]...]]
+	   ignore ECM length
+
+       m:[CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1[,ECM length 2]...]] [new CAID][:][new provider ID]
+	   CAID und provider ID mapping, first matching rules, mapping is
+	   preferred over all other whitelistings
+
+ANNONTATIONS
+       Please use Unix text file format only.
+
+EXAMPLES
+	w:0100				# whitelisting for CAID 0100
+
+	i:0200::1234			# ignore CAID 0200 with
+					# service ID 1234
+
+	i:::::2345			# ignore CHID 2345
+
+	m:3456:123456::::: 4567:234567	# mapping
+
+	w:				# allow all others (blacklist)
+
+	l:0300				# whitelisting for CAID 0300 not
+					# proceeding if matching
+
+SEE ALSO
+       list_smargo(1),	 oscam(1),   oscam.ac(5),   oscam.cacheex(5),  oscam.cert(5),  oscam.conf(5),  oscam.dvbapi(5),  oscam.guess(5),
+       oscam.ird(5), oscam.provid(5), oscam.ratelimit(5), oscam.server(5), oscam.services(5), oscam.user(5)
+
+
+
+														      oscam.whitelist(5)

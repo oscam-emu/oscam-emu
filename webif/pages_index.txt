@@ -1,0 +1,180 @@
+# This file contains index of the templates.
+# The format is simple "TEMPLATE_NAME  FILENAME  DEPENDENCY1,DEPENDANCYx"
+# Lines starting with # are ignorred
+#  TEMPLATE_NAME - name of the template and also name of the file that
+#                  contains the template
+#  FILENAME      - The file that contains the template
+#  DEPENDANCYx   - The config variable which is responsible for this template
+
+HEADER                        include/header.html
+APIHEADER                     api.xml/header.xml
+JSONHEADER                    api.json/header.json
+CSS                           include/css.css
+JSCRIPT                       include/jscript.js
+TOUCH_CSS                     touch/css.css                                               TOUCH
+TOUCH_STATUS                  touch/status.html                                           TOUCH
+TOUCH_JSCRIPT                 touch/jscript.js                                            TOUCH
+APIERROR                      api.xml/error.xml
+APICONFIRMATION               api.xml/confirmation.xml
+FOOTER                        include/footer.html
+APIFOOTER                     api.xml/footer.xml
+JSONFOOTER                    api.json/footer.json
+MENU                          include/menu.html
+REFRESH                       include/refresh.html
+HELPPREFIX                    include/help_prefix.html
+HELPSUFFIX                    include/help_suffix.html
+STATUS                        status/status.html
+APISTATUS                     api.xml/status.xml
+JSONSTATUS                    api.json/status.json
+CLIENTSTATUSBIT               status/status_clientstatusbit.html
+APISTATUSBIT                  api.xml/status_statusbits.xml
+JSONSTATUSBIT                 api.json/status_statusbits.json
+USERCONFIGLIST                userconfig/userconfig.html
+ADDNEWUSER                    userconfig/userconfig_newuserform.html
+USERCONFIGLISTBIT             userconfig/userconfig_entry.html
+APIUSERCONFIGLIST             api.xml/userconfiglist.xml
+APIUSERCONFIGLISTBIT          api.xml/userconfiglist_userconfigs.xml
+READERS                       readers/readers.html
+APIREADERS                    api.xml/readers.xml
+APIREADERSBIT                 api.xml/readers_readerlist.xml
+READERSBIT                    readers/readers_readerlist.html
+READERENTITLEBIT              readers/readers_readerlist_entitlement.html
+READERREFRESHBIT              readers/readers_readerlist_refresh.html
+READERWRITEEMMBIT             readers/readers_readerlist_writeemm.html
+READERSTATS                   readerstats/readerstats.html
+READERSTATSBIT                readerstats/readerstats_statsbit.html
+SCANUSB                       scanusb/scanusb.html
+SCANUSBBIT                    scanusb/scanusb_usbbit.html
+ENTITLEMENTS                  entitlements/entitlements.html
+ENTITLEMENTGENERICBIT         entitlements/entitlements_genericbit.html
+ENTITLEMENTBIT                entitlements/entitlements_bit.html
+ENTITLEMENTITEMBIT            entitlements/entitlements_itembit.html
+ENTITLEMENTCCCAMBIT           entitlements/entitlements_cccambit.html
+ENTITLEMENTCCCAMENTRYBIT      entitlements/entitlements_cccambit_statsentry.html
+APICCCAMCARDLIST              api.xml/cccamcardlist.xml
+APICCCAMCARDBIT               api.xml/cccamcardlist_cardlist.xml
+APICCCAMCARDNODEBIT           api.xml/cccamcardlist_cardlist_nodelist.xml
+APICCCAMCARDPROVIDERBIT       api.xml/cccamcardlist_cardlist_providerlist.xml
+APIREADERSTATS                api.xml/readerstats.xml
+APIREADERSTATSEMMBIT          api.xml/readerstats_emmstats.xml
+APIREADERSTATSECMBIT          api.xml/readerstats_ecmstats.xml
+READERCONFIG                  readerconfig/readerconfig.html
+READERCONFIGSIDOKBIT          readerconfig/readerconfig_sidokbit.html
+READERCONFIGSIDNOBIT          readerconfig/readerconfig_sidnobit.html
+READERCONFIGSIDLBOKBIT          readerconfig/readerconfig_sidlbokbit.html
+READERCONFIGSTDHWREADERBIT    readerconfig/readerconfig_hwreader.html
+READERCONFIGHOPBIT            readerconfig/readerconfig_hopbit.html
+READERCONFIGCAMD35BIT         readerconfig/readerconfig_camd35bit.html
+READERCONFIGCS378XBIT         readerconfig/readerconfig_cs378xbit.html
+READERCONFIGRADEGASTBIT       readerconfig/readerconfig_radegastbit.html
+READERCONFIGGHTTPBIT          readerconfig/readerconfig_ghttpbit.html
+READERCONFIGNCD525BIT         readerconfig/readerconfig_ncd525bit.html
+READERCONFIGNCD524BIT         readerconfig/readerconfig_ncd524bit.html
+READERCONFIGCCCAMBIT          readerconfig/readerconfig_cccambit.html
+APIUSEREDIT                   api.xml/useredit.xml
+USEREDIT                      user_edit/user_edit.html
+USEREDITSIDOKBIT              user_edit/user_edit_sidokbit.html
+USEREDITSIDNOBIT              user_edit/user_edit_sidnobit.html
+SAVETEMPLATES                 savetemplates/savetemplates.html
+CONFIGMENU                    config/menu.html
+FILEMENU                      files/menu.html
+FILE                          files/file.html
+FILTERFORM                    files/file_filterform.html
+APIFILE                       api.xml/file.xml
+FAILBAN                       failban/failban.html
+APIFAILBAN                    api.xml/failban.xml
+FAILBANBIT                    failban/failban_failbanrow.html
+APIFAILBANBIT                 api.xml/failban_failbanrow.xml
+CONFIGGBOX                    config/gbox.html
+CONFIGMONITOR                 config/monitor.html
+CONFIGWEBIF                   config/webif.html
+CONFIGLCD                     config/lcd.html
+CONFIGGLOBAL                  config/global.html
+CONFIGCACHE                   config/cache.html
+CONFIGSERIALDEVICEBIT         config/serial_devices.html
+SERVICECONFIGLIST             services/services.html
+SERVICECONFIGLISTBIT          services/services_servicetabs.html
+SERVICECONFIGSIDBIT           services/services_servicetabs_sidlist.html
+SERVICEEDIT                   services_edit/services_edit.html
+PRESHUTDOWN                   shutdown/pre_shutdown.html
+SHUTDOWN                      shutdown/shutdown.html
+
+WRITEPROTECTION               files/file_writeprotection.html
+MESSAGE                       include/message.html
+MESSAGEBIT                    include/message_bit.html
+SCRIPT                        script/script.html
+GRAPH                         graph/graph.svg
+ASKEMM                        emm/emm.html
+EMM_RUNNING                   emm_running/emm_running.html
+CONFIGDVBAPI                  config/dvbapi.html                                          HAVE_DVBAPI
+CONFIGMENUDVBAPI              config/menu_dvbapi.html                                     HAVE_DVBAPI
+FILEMENUDVBAPI                files/menu_dvbapi.html                                      HAVE_DVBAPI
+READERCONFIGLBWEIGHT          readerconfig/readerconfig_lbweight.html                     WITH_LB
+USEREDITANTICASC              user_edit/user_edit_anticasc.html                           CS_ANTICASC
+CONFIGANTICASC                config/anticasc.html                                        CS_ANTICASC
+CONFIGMENUANTICASC            config/menu_anticasc.html                                   CS_ANTICASC
+FILEMENUANTICASC              files/menu_anticasc.html                                    CS_ANTICASC
+CONFIGMENUMONITOR             config/menu_monitor.html                                    MODULE_MONITOR
+CONFIGMENUWEBIF               config/menu_webif.html
+CONFIGMENULCD                 config/menu_lcd.html                                        LCDSUPPORT
+ENABLELEDBIT                  config/global_enableledbit.html                             LEDSUPPORT
+DEBUGSELECT                   status/status_sdebug.html                                   WITH_DEBUG
+CONFIGMENULB                  config/menu_loadbalancer.html                               WITH_LB
+CONFIGLOADBALANCER            config/loadbalancer.html                                    WITH_LB
+CONFIGCAMD33                  config/camd33.html                                          MODULE_CAMD33
+CONFIGMENUCAMD33              config/menu_camd33.html                                     MODULE_CAMD33
+CONFIGCAMD35                  config/camd35.html                                          MODULE_CAMD35
+CONFIGMENUCAMD35              config/menu_camd35.html                                     MODULE_CAMD35
+USEREDITCCCAM                 user_edit/user_edit_cccam.html                              MODULE_CCCAM
+CONFIGCCCAM                   config/cccam.html                                           MODULE_CCCSHARE
+CONFIGMENUCCCAM               config/menu_cccam.html                                      MODULE_CCCSHARE
+CONFIGNEWCAMD                 config/newcamd.html                                         MODULE_NEWCAMD
+CONFIGMENUNEWCAMD             config/menu_newcamd.html                                    MODULE_NEWCAMD
+CONFIGRADEGAST                config/radegast.html                                        MODULE_RADEGAST
+CONFIGMENURADEGAST            config/menu_radegast.html                                   MODULE_RADEGAST
+CONFIGCAMD35TCP               config/camd35tcp.html                                       MODULE_CAMD35_TCP
+CONFIGMENUCAMD35TCP           config/menu_camd35tcp.html                                  MODULE_CAMD35_TCP
+SUPPRESSCMD08                 config/global_suppresscmd08.html                            MODULE_CAMD35,MODULE_CAMD35_TCP
+CONFIGSERIAL                  config/serial.html                                          MODULE_SERIAL
+CONFIGMENUSERIAL              config/menu_serial.html                                     MODULE_SERIAL
+HTTPFORCESSLV3                config/webif_httpforcesslv3.html                            WITH_SSL
+USEREDITMONLEVEL              user_edit/user_edit_monlevel.html                           MODULE_MONITOR
+USEREDITCACHEEXBIT            user_edit/user_edit_cacheexbit.html                         CS_CACHEEX
+READEREDITCACHEEXBIT          readerconfig/readerconfig_cacheexbit.html                   CS_CACHEEX
+CONFIGCACHEEXCSP              config/cache_cacheexcsp.html                                CS_CACHEEX
+CACHEEXPAGE                   cacheex/cacheex.html                                        CS_CACHEEX
+CACHEEXTABLEROW               cacheex/cacheex_tablerow.html                               CS_CACHEEX
+CACHEEXMENUITEM               include/menu_cacheexmenuitem.html                           CS_CACHEEX
+ICARRR                        images/ICARRR.gif                                           CS_CACHEEX
+ICARRL                        images/ICARRL.gif                                           CS_CACHEEX
+PREAUTOCONF                   ghttp/pre_autoconf.html                                     MODULE_GHTTP
+AUTOCONF                      ghttp/autoconf.html                                         MODULE_GHTTP
+CONFIGCWCYCLE                 config/cache_cwcycle.html                                   CW_CYCLE_CHECK
+CWCYCLETHV                    userconfig/userconfig_cwcyclethv.html                       CW_CYCLE_CHECK
+CWCYCLETBV                    userconfig/userconfig_entry_cwcycletbv.html                 CW_CYCLE_CHECK
+CMCAPTIONCWC                  config/menu_cmcaptioncwc.html                               CW_CYCLE_CHECK
+LOCALCARDS                    config/global_localcards.html                               WITH_CARDREADER
+UNLOCKPARENTAL                config/global_unlockparental.html                           READER_SECA,READER_VIACCESS
+READERPINCODE                 readerconfig/readerconfig_hwreader_pincode.html             READER_CONAX,READER_CRYPTOWORKS
+READERCONFIGNANO              readerconfig/readerconfig_hwreader_nano.html                WITH_CARDREADER
+READERCONFIGRSAKEY            readerconfig/readerconfig_hwreader_rsakey.html              READER_NAGRA,READER_IRDETO,READER_CONAX
+READERCONFIGBOXKEY            readerconfig/readerconfig_hwreader_boxkey.html              READER_NAGRA,READER_IRDETO
+READERCONFIGNAGRA             readerconfig/readerconfig_hwreader_nagra.html               READER_NAGRA
+READERCONFIGIRDETO            readerconfig/readerconfig_hwreader_irdeto.html              READER_IRDETO
+READERCONFIGVIACCESS          readerconfig/readerconfig_hwreader_viaccess.html            READER_VIACCESS
+READERCONFIGVIDEOGUARD        readerconfig/readerconfig_hwreader_videoguard.html          READER_VIDEOGUARD
+READERCONFIGSC8IN1            readerconfig/readerconfig_hwreader_sc8in1.html              CARDREADER_SC8IN1
+READERCONFIGSMARGO            readerconfig/readerconfig_hwreader_smargo.html              CARDREADER_SMARGO,CARDREADER_PHOENIX
+ICMAI                         images/favicon.ico
+ICSTA                         images/ICSTA.png
+ICDEL                         images/ICDEL.png
+ICEDI                         images/ICEDI.png
+ICENT                         images/ICENT.png
+ICREF                         images/ICREF.png
+ICKIL                         images/ICKIL.png
+ICDIS                         images/ICDIS.png
+ICENA                         images/ICENA.png
+ICHID                         images/ICHID.png
+ICRES                         images/ICRES.png
+ICSPAC                        images/ICSPAC.gif
+ICEMM                         images/ICEMM.png

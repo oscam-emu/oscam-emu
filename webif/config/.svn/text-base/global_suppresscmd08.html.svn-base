@@ -1,0 +1,2 @@
+			<TR><TH COLSPAN="2">Camd3.5/Camd3.5 TCP</TH></TR>
+			<TR><TD>##TPLHELPPREFIX##conf#suppresscmd08##TPLHELPSUFFIX##Suppress cmd08:</A></TD><TD><input name="suppresscmd08" type="checkbox" value="1" ##SUPPRESSCMD08##></TD></TR>

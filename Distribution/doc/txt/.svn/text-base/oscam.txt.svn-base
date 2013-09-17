@@ -1,0 +1,129 @@
+oscam(1)															oscam(1)
+
+
+
+NAME
+       OSCam - SC server
+
+DESCRIPTIONS
+       The OSCam software is an open source multi-protocol/multi-platform SC server.
+
+       Please check the compile options for included features in the binary.
+
+       OSCam supports the following protocols:
+
+       ·  newcamd with cascading/remote server ECM support
+
+       ·  camd 3.3x TCP
+
+       ·  camd camd 3.5x / 3.57x UDP with cascading/remote server ECM support, ECM and EMM support with size > 256 bytes
+
+       ·  camd 3.78x TCP with cascading/remote server ECM support, ECM and EMM support with size > 256 bytes
+
+       ·  CCcam with cascading/remote server ECM support, ECM and EMM support with size > 256 bytes
+
+       ·  DVB API with multi tuner and PIP support
+
+       ·  gbox with cascading/remote server ECM support
+
+       ·  serial (HSIC, SSSP, BOMBA, DSR 9500)
+
+       ·  radegast
+
+       OSCam works on the following platforms:
+
+       ·  Linux (Tuxbox, ARM, MIPS, MIPSel, SH-4, PowerPC, ...)
+
+       ·  Windows (based on cygwin1.dll)
+
+       ·  Mac OS X
+
+OPTIONS
+       -a|--crash-dump
+	  write oscam.crash on segfault (needs installed GDB and OSCam compiled with debug infos -ggdb)
+
+       -b|--daemon
+	  starts in background, writing oscam.version with starttime and version info in temporary directory
+
+       -B|--pidfile <filename>
+	  set PID file, overrides pidfile of oscam.conf, default:none
+
+       -c|--config-dir <directory>
+	  read configuration from <directory>, default:see CS_CONFDIR in globals.h, while starting OSCam prints warnings on invalid key‐
+	  words, comment lines start with # character.
+
+       -d|--debug <level>
+	  debug level mask:
+
+	       0 = no debugging (default)
+	       2 = ATR parsing info, ECM dumps, CW dumps
+	       4 = traffic from/to the reader
+	       8 = traffic from/to the clients
+	      16 = traffic to the reader-device on IFD layer
+	      32 = traffic to the reader-device on I/O layer
+	      64 = EMM logging
+	     128 = DVBAPI logging
+	     256 = load balancing logging
+	     512 = cache exchange logging
+	    1024 = client ECM logging
+	   65535 = debug all
+
+       -g|--gcollect <mode>
+	  garbage collector debug mode, default:none:
+
+	     1 = immediate free
+	     2 = check for double frees
+
+       -h|--help
+	  usage
+
+       -I|--syslog-ident <ident>
+	  set syslog ident, default:oscam
+
+       -p|--pending-ecm <number>
+	  maximum number of pending ECM packets, default:32, maximum:255
+
+       -r|--restart <level>
+	  restart level:
+
+	     0 = disabled, restart request sets exit status to 99
+	     1 = restart activated, web interface can restart oscam (default)
+	     2 = like 1, but also restart on segmentation faults
+
+       -S|--show-sensitive
+	  do not filter sensitive info (card serial numbers) in the logs
+
+       -s|--capture-segfaults
+	  capture segmentation faults
+
+       -t|--temp-dir <directory>
+	  use <directory> for temporary data, default:temporary directory of OS
+
+       -u|--utf8
+	  enable output of web interface in UTF-8 charset
+
+       -V|--build-info
+	  show OSCam version info
+
+       -w|--wait <seconds>
+	  time waiting for system time to be set correctly
+
+SIGNALS
+       SIGHUP
+	  reinit user db, TIERs, services, clients and anti-cascading, for  newcamd  connections:  after  reloading  the  ident,  please
+	  restart newcamd client
+
+       SIGUSR1
+	  shift debug level to next level (see debug level mask above)
+
+       SIGUSR2
+	  get reader SC info
+
+SEE ALSO
+       list_smargo(1),	oscam.ac(5),  oscam.cacheex(5),  oscam.cert(5),  oscam.conf(5),  oscam.dvbapi(5),  oscam.guess(5), oscam.ird(5),
+       oscam.provid(5),  oscam.ratelimit(5),  oscam.server(5),	 oscam.services(5),   oscam.srvid(5),	oscam.tiers(5),   oscam.user(5),
+       oscam.whitelist(5)
+
+
+
+																oscam(1)

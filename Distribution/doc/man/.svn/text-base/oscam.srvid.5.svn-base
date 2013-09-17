@@ -1,0 +1,24 @@
+.TH oscam.srvid 5
+.SH NAME
+\fBoscam.srvid\fR - service ID configuration file for OSCam
+.SH SYNOPSIS
+service ID mappings
+.SH DESCRIPTIONS
+.PP
+\fBCAID[,CAID]...\fP:\fBservice ID\fP|\fB[provider]\fP|\fB[name]\fP|\fB[type]\fP|\fB[description]\fP
+
+.RS 3n
+mapping between CAID, service ID, provider, name, type and description of service
+.RE
+.SH ANNONTATIONS
+\fIPlease use Unix text file format only.\fR
+
+You only need the \fBoscam.srvid\fR when using the monitor or the web interface. 
+\fIFor saving memory consumption only insert the service IDs you really need.\fR Some 
+external programs use their own \fBoscam.srvid\fR and do not need the \fBoscam.srvid\fR of OSCam.
+.SH EXAMPLES
+ 0001,0002,0003:000a|my provider 1|tv name 1|tv|my tv package
+ 0004,0005,0006:000a|my provider 2|radio name 2|radio|my radio package
+ 0006:000b|my provider 3|tv name 3| 
+.SH "SEE ALSO"
+\fBlist_smargo\fR(1), \fBoscam\fR(1), \fBoscam.ac\fR(5), \fBoscam.cacheex\fR(5), \fBoscam.cert\fR(5), \fBoscam.conf\fR(5), \fBoscam.dvbapi\fR(5), \fBoscam.guess\fR(5), \fBoscam.ird\fR(5), \fBoscam.provid\fR(5), \fBoscam.ratelimit\fR(5), \fBoscam.server\fR(5), \fBoscam.services\fR(5), \fBoscam.tiers\fR(5), \fBoscam.user\fR(5), \fBoscam.whitelist\fR(5)

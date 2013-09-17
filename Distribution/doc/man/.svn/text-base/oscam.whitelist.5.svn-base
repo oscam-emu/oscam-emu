@@ -1,0 +1,47 @@
+.TH oscam.whitelist 5
+.SH NAME
+\fBoscam.whitelist\fR - global ECM length whitelisting configuration file for OSCam
+.SH SYNOPSIS
+ECM length whitelisting
+.SH DESCRIPTIONS
+.PP
+\fBw\fP:\fB[CAID]\fP[:]\fB[provider ID]\fP[:]\fB[service ID]\fP[:]\fB[ECM PID]\fP[:]\fB[CHID]\fP[:]\fB[ECM length 1[,ECM length 2]...]]\fP
+.RS 3n
+ ECM length whitelisting
+.RE
+.PP
+\fBl\fP:\fB[CAID]\fP[:]\fB[provider ID]\fP[:]\fB[service ID]\fP[:]\fB[ECM PID]\fP[:]\fB[CHID]\fP[:]\fB[ECM length 1[,ECM length 2]...]]\fP
+.RS 3n
+ ECM length whitelisting, does not proceed with any other ECM length 
+ whitelisting when matching, abbreviation for normal ECM length 
+ whitelisting using w parameter
+.RE
+.PP
+\fBi\fP:\fB[CAID]\fP[:]\fB[provider ID]\fP[:]\fB[service ID]\fP[:]\fB[ECM PID]\fP[:]\fB[CHID]\fP[:]\fB[ECM length 1[,ECM length 2]...]]\fP
+.RS 3n
+ ignore ECM length
+.RE
+.PP
+\fBm\fP:\fB[CAID]\fP[:]\fB[provider ID]\fP[:]\fB[service ID]\fP[:]\fB[ECM PID]\fP[:]\fB[CHID]\fP[:]\fB[ECM length 1[,ECM length 2]...]]\fP \fB[new CAID]\fP[:]\fB[new provider ID]\fP
+.RS 3n
+ CAID und provider ID mapping, \fIfirst matching rules\fR, \fImapping is 
+ preferred over all other whitelistings\fR
+.RE
+.SH ANNONTATIONS
+\fIPlease use Unix text file format only.\fR
+.SH EXAMPLES
+ w:0100                          # whitelisting for CAID 0100
+
+ i:0200::1234                    # ignore CAID 0200 with 
+                                 # service ID 1234
+
+ i:::::2345                      # ignore CHID 2345
+
+ m:3456:123456::::: 4567:234567  # mapping
+
+ w:                              # allow all others (blacklist)
+
+ l:0300                          # whitelisting for CAID 0300 not 
+                                 # proceeding if matching
+.SH "SEE ALSO"
+\fBlist_smargo\fR(1), \fBoscam\fR(1), \fBoscam.ac\fR(5), \fBoscam.cacheex\fR(5), \fBoscam.cert\fR(5), \fBoscam.conf\fR(5), \fBoscam.dvbapi\fR(5), \fBoscam.guess\fR(5), \fBoscam.ird\fR(5), \fBoscam.provid\fR(5), \fBoscam.ratelimit\fR(5), \fBoscam.server\fR(5), \fBoscam.services\fR(5), \fBoscam.user\fR(5)

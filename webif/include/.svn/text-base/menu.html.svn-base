@@ -1,0 +1,14 @@
+	<TABLE border=0 class="menu">
+		<TR>
+			<TD CLASS="##MENUACTIVE0##"><A HREF="status.html">STATUS</A></TD>
+			<TD CLASS="##MENUACTIVE1##"><A HREF="config.html">CONFIGURATION</A></TD>
+			<TD CLASS="##MENUACTIVE2##"><A HREF="readers.html">READERS</A></TD>
+			<TD CLASS="##MENUACTIVE3##"><A HREF="userconfig.html">USERS</A></TD>
+			<TD CLASS="##MENUACTIVE4##"><A HREF="services.html">SERVICES</A></TD>
+			<TD CLASS="##MENUACTIVE5##"><A HREF="files.html?file=oscam.version">FILES</A></TD>
+			<TD CLASS="##MENUACTIVE6##"><A HREF="failban.html">FAILBAN</A>##FAILBANNOTIFIER##</TD>
+##TPLCACHEEXMENUITEM##
+			<TD CLASS="##MENUACTIVE8##"><A HREF="script.html">SCRIPT</A></TD>
+			<TD CLASS="##MENUACTIVE9##"><A HREF="shutdown.html">SHUTDOWN</A></TD>
+		</TR>
+	</TABLE>

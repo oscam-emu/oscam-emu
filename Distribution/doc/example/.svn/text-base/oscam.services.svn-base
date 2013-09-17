@@ -1,0 +1,19 @@
+#
+# definition of services 
+#
+# format:
+#
+# [name]
+# caid=CAID[,CAID]...
+# provid = provider ID[,provider ID]...
+# srvid = service ID[,service ID]...
+#
+
+[services1]
+caid=0100
+provid=000001,ABCDEF
+srvid=0001,0002,000A,000B
+
+[services2]
+caid=0200
+srvid=0003,0004,000C,000D

@@ -1,0 +1,823 @@
+#
+# Sky Deutschland
+#
+
+1702,1722,1833,1834,09C4:000C|Sky|Nat Geo Wild|TV|Sky Welt
+1702,1722,1833,1834,09C4:000D|Sky|National Geographic Channel|TV|Sky Welt
+1702,1722,1833,1834,09C4:000E|Sky|Discovery Channel|TV|Sky Welt
+1702,1722,1833,1834,09C4:0010|Sky|Fox Serie|TV|Sky Welt
+1702,1722,1833,1834,09C4:0013|Sky|Junior|TV|Sky Welt
+1702,1722,1833,1834,09C4:0015|Sky|Beate-Uhse.tv|TV|Sky Welt
+1702,1722,1833,1834,09C4:0016|Sky|Heimatkanal|TV|Sky Welt
+1702,1722,1833,1834,09C4:0017|Sky|Sky Krimi|TV|Sky Welt
+1702,1722,1833,1834,09C4:0018|Sky|Classica|TV|Sky Welt
+1702,1722,1833,1834,09C4:001A|Sky|Playhouse Disney|TV|Sky Welt
+1702,1722,1833,1834,09C4,0D22:001B|Sky|RTL Crime|TV|Sky Welt
+1702,1722,1833,1834,09C4:001C|Sky|Disney XD (Jetix)|TV|Sky Welt
+1702,1722,1833,1834,09C4,0D22:001D|Sky|RTL Passion|TV|Sky Welt
+1702,1722,1833,1834,09C4:0022|Sky|Disney Channel|TV|Sky Welt
+1702,1722,1833,1834,09C4:0024|Sky|SciFi|TV|Sky Welt
+1702,1722,1833,1834,09C4:002A|Sky|13th Street|TV|Sky Welt
+1702,1722,1833,1834,09C4:0032|Sky|TNT Serie|TV|Sky Welt
+1702,1722,1833,1834,09C4:0034|Sky|Spiegel Geschichte|TV|Sky Welt
+1702,1722,1833,1834,09C4:00A8|Sky|Motorvision TV|TV|Sky Welt
+1702,1722,1833,1834,09C4:0206|Sky|Goldstar TV|TV|Sky Welt
+
+1702,1722,1833,1834,09C4:0096|Sky|Deutsche Charts|Radio|Sky MCE
+1702,1722,1833,1834,09C4:0097|Sky|Rock Hymnen|Radio|Sky MCE
+1702,1722,1833,1834,09C4:0098|Sky|Love Songs|Radio|Sky MCE
+1702,1722,1833,1834,09C4:0099|Sky|60er/70er|Radio|Sky MCE
+1702,1722,1833,1834,09C4:009A|Sky|80er/90er|Radio|Sky MCE
+1702,1722,1833,1834,09C4:009B|Sky|R&B/Hip Hop|Radio|Sky MCE
+1702,1722,1833,1834,09C4:009C|Sky|Country|Radio|Sky MCE
+
+1702,1722,1833,1834,09C4:0008|Sky|Sky Comedy|TV|Sky Film
+1702,1722,1833,1834,09C4:0009|Sky|Sky Action|TV|Sky Film
+1702,1722,1833,1834,1836,09C4:000A|Sky|Sky Cinema|TV|Sky Film
+1702,1722,1833,1834,09C4:000B|Sky|Sky Cinema +1|TV|Sky Film
+1702,1722,1833,1834,09C4:0014|Sky|Sky Emotion|TV|Sky Film
+1702,1722,1833,1834,09C4:0019|Sky|Disney Cinemagic|TV|Sky Film
+1702,1722,1833,1834,09C4:0029|Sky|Sky Cinema Hits|TV|Sky Film
+1702,1722,1833,1834,09C4:002B|Sky|Sky Cinema +24|TV|Sky Film
+1702,1722,1833,1834,09C4:0203|Sky|MGM|TV|Sky Film
+1702,1722,1833,1834,09C4:0204|Sky|Sky Nostalgie|TV|Sky Film
+
+1702,1722,1833,1834,09C4:0011|Sky|Sky Sport Info|TV|Sky Sport
+1702,1833,09C4:0035|Sky|Sky Sport Austria|TV|Sky Sport
+1702,1722,1833,1834,09C4:00DD|Sky|Sky Sport 1|TV|Sky Sport
+1702,1722,1833,1834,09C4:00DE|Sky|Sky Sport 2|TV|Sky Sport
+1702,1722,1833,1834,09C4:00FD|Sky|Sky Sport 00FD|TV|Sky Sport
+1702,1722,1833,1834,09C4:0107|Sky|Sky Sport 0107|TV|Sky Sport
+1702,1722,1833,1834,09C4:0111|Sky|Sky Sport 0111|TV|Sky Sport
+1702,1722,1833,1834,09C4:011B|Sky|Sky Sport 011B|TV|Sky Sport
+1702,1722,1833,1834,09C4:0125|Sky|Sky Sport 0125|TV|Sky Sport
+1702,1722,1833,1834,09C4:012F|Sky|Sky Sport 2 / F1 Multisignal|TV|Sky Sport
+1702,1722,1833,1834,09C4:0139|Sky|Sky Sport 2 / F1 Highlights|TV|Sky Sport
+1702,1722,1833,1834,09C4:0143|Sky|Sky Sport 2 / F1 Daten|TV|Sky Sport
+1702,1722,1833,1834,09C4:014D|Sky|Sky Sport 2 / F1 Cockpit|TV|Sky Sport
+1702,1722,1833,1834,09C4:016B|Sky|Sky Sport 016B|TV|Sky Sport
+1702,1722,1833,1834,09C4:0175|Sky|Sky Sport 0175|TV|Sky Sport
+
+1702,1722,1833,1834,09C4:00DF|Sky|Sky Bundesliga|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:00FC|Sky|Sky Bundesliga 00FC|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:0106|Sky|Sky Bundesliga 0106|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:0110|Sky|Sky Bundesliga 0110|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:011A|Sky|Sky Bundesliga 011A|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:0124|Sky|Sky Bundesliga 0124|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:012E|Sky|Sky Bundesliga 012E|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:0138|Sky|Sky Bundesliga 0138|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:0142|Sky|Sky Bundesliga 0142|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:014C|Sky|Sky Bundesliga 014C|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:0156|Sky|Sky Bundesliga 0156|TV|Sky Bundesliga
+1702,1722,1833,1834,09C4:0160|Sky|Sky Bundesliga 0160|TV|Sky Bundesliga
+
+1702,1722,1833,1834,09C4:00FB|Sky|Sky Select 00FB|TV|Sky Select
+1702,1722,1833,1834,09C4:00FE|Sky|Sky Select 00FE|TV|Sky Select
+1702,1722,1833,1834,09C4:0105|Sky|Sky Select 0105|TV|Sky Select
+1702,1722,1833,1834,09C4:0108|Sky|Sky Select 0108|TV|Sky Select
+1702,1722,1833,1834,09C4:010F|Sky|Sky Select 010F|TV|Sky Select
+1702,1722,1833,1834,09C4:0119|Sky|Sky Select 0119|TV|Sky Select
+1702,1722,1833,1834,09C4:0123|Sky|Sky Select 0123|TV|Sky Select
+1702,1722,1833,1834,09C4:012D|Sky|Sky Select 012D|TV|Sky Select
+1702,1722,1833,1834,09C4:0137|Sky|Sky Select 0137|TV|Sky Select
+1702,1722,1833,1834,09C4:0141|Sky|Sky Select 0141|TV|Sky Select
+1702,1722,1833,1834,09C4:014B|Sky|Sky Select 014B|TV|Sky Select
+
+1702,1722,1833,1834,09C4:007A|Sky|Sky Sport HD 2|TV|Sky HD
+1702,1722,1833,1834,09C4:007B|Sky|Sky Action HD|TV|Sky HD
+1702,1722,1833,1834,09C4:007C|Sky|Sky Cinema Hits HD|TV|Sky HD
+1702,1722,1833,1834,09C4:007E|Sky|Disney Cinemagic HD|TV|Sky HD
+1702,1722,1833,1834,09C4:007F|Sky|National Geographic HD|TV|Sky HD
+1702,1722,1833,1834,09C4:0080|Sky|History HD|TV|Sky HD
+1702,1722,1833,1834,09C4:0081|Sky|Sky Sport HD 1|TV|Sky HD
+1702,1722,1833,1834,09C4:0082|Sky|Discovery HD|TV|Sky HD
+1702,1722,1833,1834,09C4:0083|Sky|Sky Cinema HD|TV|Sky HD
+1702,1722,1833,1834,09C4:0084|Sky|Eurosport HD|TV|Sky HD
+
+1702,1833,09C4:003C|Sky|Kinowelt TV|TV|Sky Welt Extra
+1702,1833,09C4,0D22:003D|Sky|TNT Film (TCM)|TV|Sky Welt Extra
+1702,1833,09C4,0D22:003E|Sky|AXN Action|TV|Sky Welt Extra
+1702,1833,09C4,0D22:003F|Sky|Romance TV|TV|Sky Welt Extra
+1702,1833,09C4,0D22:0042|Sky|Boomerang|TV|Sky Welt Extra
+1702,1722,1833,09C4:0043|Sky|E-Clips|TV|Sky Welt Extra
+1702,1833,09C4:0044|Sky|History|TV|Sky Welt Extra
+1702,1833,09C4,0D22:3331|Sky|ESPN|TV|Sky Welt Extra
+1702,1833,09C4,0D22:3393|Sky|Animax|TV|Sky Welt Extra
+1702,1833,09C4,0D22:3394|Sky|Cartoon Network|TV|Sky Welt Extra
+1702,1833,09C4,0D22:3395|Sky|Eurosport 2|TV|Sky Welt Extra
+1702,1833,09C4,0D22:3397|Sky|RTL Living|TV|Sky Welt Extra
+1702,1833,09C4,0D22:3398|Sky|Biography Channel|TV|Sky Welt Extra
+1702,1833,09C4,0D22:4461|Sky|Sat.1 Comedy|TV|Sky Welt Extra
+1702,1833,09C4,0D22:4462|Sky|Kabel1 Classics|TV|Sky Welt Extra
+1702,1833,09C4:6FF1|Sky|VH1 Classic|TV|Sky Welt Extra
+1702,1833,09C4,0D00:7009|Sky|MTV Entertainment|TV|Sky Welt Extra
+1702,1833,09C4,0D00:700A|Sky|Nick Premium|TV|Sky Welt Extra
+
+1702,1722,1833,1834,09C4:000F|Sky|BigBrother|TV|Sky sonstige
+
+1702,1722,1833,1834,1836,09C4:0201|Sky|Blue Movie Info|TV|Sky Erotik
+1702,1722,1833,1834,1836,09C4:0159|Sky|Blue Movie 1|TV|Sky Erotik
+1702,1722,1833,1834,1836,09C4:0163|Sky|Blue Movie 2|TV|Sky Erotik
+1702,1722,1833,1834,1836,09C4:016D|Sky|Blue Movie 3|TV|Sky Erotik
+
+#
+# Kabel Deutschland
+#
+
+1722,1801:C3B5|KD|Fashion TV|TV|
+1722,1801:C3B6|KD|Motors TV|TV|
+1722,1801:C3B7|KD|Trace.TV|TV|
+1722,1801:C3B9|KD|Planet|TV|
+1722,1801:C3BC|KD|Kinowelt TV|TV|
+1722,1801:C3BD|KD|Wetter Fernsehen|TV|
+1722,1801:C3BF|KD|Gute Laune TV|TV|
+1722,1801:D035|KD|History|TV|
+1722,1801:D036|KD|tv.gusto Premium|TV|
+1722,1801:D03E|KD|Animax|TV|
+1722,1801:C3BA|KD|SciFi (KD)|TV|
+1722,1801:C60E|KD|Yacht & Sail|TV|
+1722,1801:C60F|KD|MTV Dance|TV|
+1722,1801:C610|KD|MTV Hits|TV|
+1722,1801:C613|KD|Playboy TV|TV|
+1722,1801:C614|KD|National Geographic|TV|
+1722,1801:C615|KD|Disney Playhouse|TV|
+1722,1801:C616|KD|Disney Toon + 1|TV|
+1722,1801:D099|KD|Spiegel TV Digital|TV|
+1722,1801:C617|KD|Cartoon Network|TV|
+1722,1801:C618|KD|Turner Classic Movies|TV|
+1722,1801:C619|KD|The Biography Channel|TV|
+1722,1801:CF6E|KD|Relax TV|TV|
+1722,1801:CF6F|KD|Club TV|TV|
+1722,1801:C3B8|KD|E! Entertainment|TV|
+1722,1801:C3BB|KD|13th Street|TV|
+1722,1801:C47D|KD|ESPN Classic|TV|
+1722,1801:C47E|KD|VH1 Classic|TV|
+1722,1801:C47F|KD|TNT Serie|TV|
+1722,1801:C480|KD|AXN|TV|
+1722,1801:C481|KD|Silverline|TV|
+1722,1801:C482|KD|ESPN America|TV|
+1722,1801:C483|KD|Disney Toon|TV|
+1722,1801:CF70|KD|Jukebox|TV|
+1722,1801:D09E|KD|BBC Prime|TV|english
+1722,1801:D09C|KD|Boomerang|TV|
+1722,1801:D0A1|KD|Extreme Sports|TV|
+1722,1801:D0A3|KD|Sat.1 Comedy|TV|
+1722,1801:D0A4|KD|kabel eins classics|TV|
+1722,1801:CF73|KD|Rock TV|TV|
+1722,1801:C419|KD|Klassik Hits|Radio|
+1722,1801:C41A|KD|Symphonie|Radio|
+1722,1801:C41C|KD|Country|Radio|
+1722,1801:C41E|KD|Instrumentals|Radio|
+1722,1801:C41F|KD|New Age|Radio|
+1722,1801:C420|KD|Euro Hits|Radio|
+1722,1801:C423|KD|Deutscher Rock|Radio|
+1722,1801:C424|KD|Deutsche Schlager|Radio|
+1722,1801:C425|KD|Deutsche Hits|Radio|
+1722,1801:C427|KD|UK Hits|Radio|
+1722,1801:C42B|KD|Chillout|Radio|
+1722,1801:C42D|KD|Klassischer Jazz|Radio|
+1722,1801:C42E|KD|Perfect Dinner Party|Radio|
+1722,1801:C42F|KD|Brasil|Radio|
+1722,1801:C430|KD|Rock Anthems|Radio|
+1722,1801:C432|KD|Spanischer Rock|Radio|
+1722,1801:C433|KD|Rock'n Roll Oldies|Radio|
+1722,1801:C437|KD|60er & 70er Hits|Radio|
+1722,1801:C438|KD|Big Band/Swing|Radio|
+1722,1801:C439|KD|Classic Rock|Radio|
+1722,1801:C43A|KD|Heavy Metal|Radio|
+1722,1801:C43B|KD|Alternative|Radio|
+1722,1801:C43C|KD|Dance|Radio|
+1722,1801:C43F|KD|Pop|Radio|
+1722,1801:C441|KD|Love Songs|Radio|
+1722,1801:C442|KD|80er & 90er Hits|Radio|
+1722,1801:C443|KD|Blues|Radio|
+1722,1801:C445|KD|R & B Hip Hop|Radio|
+1722,1801:C446|KD|Reggae|Radio|
+1722,1801:C447|KD|Rap|Radio|
+1722,1801:D16C|KD|Astro TV|TV|
+1722,1801:D16F|KD|sonnenklar.TV|TV|
+1722,1801:CF0A|KD|Tele 5|TV|
+1722,1801:D175|KD|ProSieben|TV|
+1722,1801:D176|KD|kabel eins|TV|
+1722,1801:D177|KD|9Live|TV|
+1722,1801:D178|KD|DSF|TV|
+1722,1801:D17A|KD|Sat. 1|TV|
+1722,1801:D17B|KD|N24|TV|
+1722,1801:D17E|KD|HSE24|TV|
+1722,1801:CF7F|KD|OraiaTV|TV|english
+1722,1801:C3BE|KD|1-2-3.tv|TV|
+1722,1801:CF09|KD|BBC World|TV|english
+1722,1801:CF0C|KD|Bloomberg|TV|
+1722,1801:CF0D|KD|MTV|TV|
+1722,1801:CF0E|KD|NICK/COMEDY CENTRAL|TV|
+1722,1801:CF0F|KD|TV 5 Monde|TV|french
+1722,1801:CF12|KD|Eurosport 2|TV|
+1722,1801:D09B|KD|BibelTV|TV|
+1722,1801:D179|KD|EuroNews|TV|
+1722,1801:D16D|KD|CNN|TV|english
+1722,1801:D170|KD|QVC|TV|
+1722,1801:D10C|KD|Voyages Television|TV|
+1722,1801:D10B|KD|Giga Digital|TV|
+1722,1801:D161|KD|RTL Television|TV|
+1722,1801:D162|KD|Super RTL|TV|
+1722,1801:D163|KD|RTL II|TV|
+1722,1801:D164|KD|VOX|TV|
+1722,1801:D166|KD|n-tv|TV|
+1722,1801:D167|KD|Eurosport|TV|
+1722,1801:D168|KD|Das Vierte|TV|
+1722,1801:D169|KD|Viva|TV|
+1722,1801:CF76|KD|DELUXE MUSIC|TV|
+1722,1801:CF77|KD|ANIXE SD|TV|
+1722,1801:CF7E|KD|TIMM|TV|
+1722,1801:D165|KD|DAYSTAR TV|TV|
+1722,1801:D171|KD|DMAX|TV|
+1722,1801:D172|KD|iMusic|TV|
+1722,1801:D173|KD|Juwelo TV|TV|
+1722,1801:D10D|KD|France 2|TV|french
+1722,1801:D10E|KD|France 3|TV|french
+1722,1801:D10F|KD|France 5|TV|french
+1722,1801:D16E|KD|Al Jazeera Int|TV|english
+1722,1801:CFE3|KD|TRTi|TV|turkish
+1722,1801:D10A|KD|RTL Shop|TV|
+1722,1801:D174|KD|Tier TV|TV|
+1722,1801:CF17|KD|Kabel Digital Info|TV|
+1722,1801:C4E1|KD|Radio Horeb|TV|
+1722,1801:C4E2|KD|ERF|TV|
+1722,1801:C4E4|KD|Sunshine Live|TV|
+1722,1801:C4E0|KD|Radio-Test|TV|
+1722,1801:C4E5|KD|Klassik Radio|TV|
+1722,1801:C4E6|KD|RTL Radio|TV|
+1722,1801:C4E7|KD|Radio Paloma|TV|
+1722,1801:C4E8|KD|JAM FM|TV|
+1722,1801:CF79|KD|MTV Hits|TV|english
+1722,1801:CF7A|KD|MTV Dance|TV|english
+1722,1801:CF7C|KD|Yacht & Sail|TV|english
+1722,1801:CFD8|KD|National Geo|TV|english
+1722,1801:D0A0|KD|TCM|TV|english
+1722,1801:CF71|KD|ESPN America|TV|english
+1722,1801:CF7B|KD|VH1 Classic|TV|english
+1722,1801:D09D|KD|ESPN Classic|TV|english
+1722,1801:D09A|KD|AXN|TV|english
+1722,1801:CF6D|KD|BBC Prime|TV|english
+1722,1801:CF74|KD|Toon Disney|TV|english
+1722,1801:CF75|KD|Sky News|TV|english
+1722,1801:D09F|KD|Boomerang|TV|english
+1722,1801:D0A2|KD|CNBC Europe|TV|english
+1722,1801:CF78|KD|Extreme Sports|TV|english
+1722,1801:D109|KD|Playhouse Disney|TV|english
+1722,1801:C4E3|KD|BBC World Service|TV|
+1722,1801:C490|KD|Select Kino Info|TV|
+1722,1801:C491|KD|Select Kino 1|TV|
+1722,1801:C492|KD|Select Kino 2|TV|
+1722,1801:C493|KD|Select Kino 3|TV|
+1722,1801:C494|KD|Select Kino 4|TV|
+1722,1801:C495|KD|Select Kino 5|TV|
+1722,1801:C496|KD|Select Kino 6|TV|
+1722,1801:C497|KD|Select Kino 7|TV|
+1722,1801:C499|KD|redXclub Info|TV|
+1722,1801:C49A|KD|redXclub 1|TV|
+1722,1801:C49B|KD|redXclub 2|TV|
+1722,1801:D0FF|KD|Detski Mir|TV|
+1722,1801:CFE2|KD|EuroNews|TV|russian
+1722,1801:D108|KD|CH1 Russia|TV|russian
+1722,1801:CFD1|KD|RTVi|TV|russian
+1722,1801:CFD2|KD|Nashe Kino|TV|russian
+1722,1801:CFDC|KD|RTR Planeta|TV|russian
+1722,1801:CF72|KD|iTVN|TV|polish
+1722,1801:CFE0|KD|EuroNews|TV|spanish
+1722,1801:CFE1|KD|EuroNews|TV|portugise
+1722,1801:CFD4|KD|TV Polonia|TV|polish
+1722,1801:CFD6|KD|RTP Internacional|TV|
+1722,1801:CFD9|KD|ERT World|TV|greek
+1722,1801:D104|KD|TVEi|TV|spanish
+1722,1801:D105|KD|Canal 24 Horas|TV|spanish
+1722,1801:CFDF|KD|EuroNews|TV|italiano
+1722,1801:D101|KD|Rai 1|TV|italiano
+1722,1801:D102|KD|Rai 2|TV|italiano
+1722,1801:D103|KD|Rai 3|TV|italiano
+1722,1801:D0FD|KD|Show Turk|TV|turkish
+1722,1801:D0FE|KD|Fox Turk|TV|turkish
+1722,1801:D100|KD|Kanal 7|TV|turkish
+1722,1801:D106|KD|LiG TV|TV|turkish
+1722,1801:D107|KD|Turkmax|TV|turkish
+1722,1801:CFD3|KD|ATV Avrupa|TV|turkish
+1722,1801:CFD5|KD|Euro D|TV|turkish
+
+#
+# ORF
+# 
+
+0D05:32C9|ORF|ORF1|TV|
+0D05:32CA|ORF|ORF2|TV|
+0D05:32CB|ORF|ORF2 W|TV|
+0D05:32CC|ORF|ORF2 N|TV|
+0D05:32CD|ORF|ORF2 B|TV|
+0D05:32CE|ORF|ORF2 O|TV|
+0D05:32CF|ORF|ORF2 S|TV|
+0D05:32D0|ORF|ORF2 T|TV|
+0D05:32D1|ORF|ORF2 V|TV|
+0D05:32D2|ORF|ORF2 St|TV|
+0D05:32D3|ORF|ORF2 K|TV|
+
+0D05:32D4|ORF|ATV+|TV|
+0D05:3332|ORF|Austria 9 TV|TV|
+0D05:4E27|ORF|Puls 4 Austria|TV|
+
+0D05:132F|ORF|ORF1 HD|TV|
+0D05:1330|ORF|ORF2 HD|TV|
+
+#
+# MTV Unlimited
+#
+
+0B00:6FF3|MTV Unlimited|MTV TWO|TV|
+0B00:6FEE|MTV Unlimited|MTV Hits|TV|
+0B00:6FEF|MTV Unlimited|MTV Dance|TV|
+0B00:6FF1|MTV Unlimited|VH1 Classic|TV|
+0B00:6FF0|MTV Unlimited|VH1 Europe|TV|
+0B00:6FFF|MTV Unlimited|MTV Music|TV|
+
+#
+# Schweizer Fernsehen
+#
+
+0500:0385|Schweizer Fernsehen|SF1|TV|
+0500:038F|Schweizer Fernsehen|SF info|TV|
+0500:038B|Schweizer Fernsehen|SF zwei|TV|
+
+0500:03DE|Schweizer Fernsehen|HD suisse|TV|
+
+0500&023800:36B2|Television Suisse Romande|TSR1|TV|
+0500&023800:36B8|Television Suisse Romande|TSR2|TV|
+
+0500&023800:36B3|Televisione svizzera di lingua italiana|TSI1|TV|
+0500&023800:36B9|Televisione svizzera di lingua italiana|TSI1|TV|
+
+#
+# Astra HD+
+# 
+
+1830:EF10|Astra HD+|RTL HD|TV|
+1830:EF11|Astra HD+|VOX HD|TV|
+1830:EF74|Astra HD+|SAT.1 HD|TV|
+1830:EF75|Astra HD+|ProSieben HD|TV|
+1830:EF76|Astra HD+|kabel eins HD|TV|
+
+#
+# Unity Media
+# 
+
+1722:71ad|UM|Record Internacional Europa|TV|
+1722:71ae|UM|Tkshow TV|TV|
+1722:71af|UM|Kanal Avrupa|TV|
+1722:71b0|UM|RTVi Info|TV|
+1722:71b1|UM|CaspioNet|TV|
+1722:71b2|UM|Souvenirs from earth|TV|
+1722:5e25|UM|Viva|TV|
+1722:5e29|UM|Channel21|TV|
+1722:5e2a|UM|1-2-3.tv|TV|
+1722:5e2c|UM|DMax|TV|
+1722:5e2d|UM|CNN|TV|
+1722:5e30|UM|Sonnenklar TV|TV|
+1722:620d|UM|Unitymedia Infokanal|TV|
+1722:620e|UM|TV5Monde Europe|TV|
+1722:6213|UM|Power Tk TV|TV|
+1722:69e3|UM|Body in Balance|TV|
+1722:69e8|UM|Timm|TV|
+1722:3716|UM|BBC Prime|TV|
+1722:3afd|UM|ESPN Classic Sport|TV|
+1722:3afe|UM|Extreme Sports|TV|
+1722:3aff|UM|Yacht & Sail|TV|
+1722:3b00|UM|Bon Gusto|TV|
+1722:3b02|UM|Fashion TV|TV|
+1722:3b03|UM|E! Entertainment|TV|
+1722:3b05|UM|blue Hustler|TV|
+1722:3b06|UM|Bibel TV|TV|
+1722:3b07|UM|Cartoon Network|TV|
+1722:3b08|UM|VH1 Classic|TV|
+1722:3b0b|UM|e.clips|TV|
+1722:5656|UM|Detskij Mir|TV|
+1722:5657|UM|itvn|TV|
+1722:5658|UM|Kanal 7|TV|
+1722:5659|UM|Lig TV|TV|
+1722:565a|UM|Rai Uno|TV|
+1722:565b|UM|Rai Due|TV|
+1722:565c|UM|Rai Tre|TV|
+1722:565d|UM|Show Turk|TV|
+1722:565e|UM|Turkmax|TV|
+1722:565f|UM|TGRT EU News|TV|
+1722:5660|UM|Channel One Russia |TV|
+1722:5661|UM|Euro News (ESP)|TV|
+1722:5662|UM|Euro News (F)|TV|
+1722:5663|UM|Euro News (E)|TV|
+1722:5664|UM|Euro News (I)|TV|
+1722:5665|UM|Euro News (POR)|TV|
+1722:5666|UM|Euro News (RUS)|TV|
+1722:5667|UM|Euro News (D)|TV|
+1722:5669|UM|RAI Radio 1|TV|
+1722:566a|UM|Teleklub|TV|
+1722:566b|UM|Euro News (Arab.)|TV|
+1722:7595|UM|Al Jazeera|TV|
+1722:7596|UM|MBC Europe|TV|
+1722:7597|UM|LBC Europe|TV|
+1722:7598|UM|Art Movie 1|TV|
+1722:7599|UM|Art Hekayat|TV|
+1722:759a|UM|Art Prime Sports|TV|
+1722:4e8f|UM|France 24 (in English)|TV|
+1722:4e90|UM|Al Jazeera International|TV|
+1722:4e92|UM|Yavido|TV|
+1722:71b5|UM|XXHome|TV|
+1722:332e|UM|History|TV|
+1722:3330|UM|Planet|TV|
+1722:3333|UM|Kinowelt TV|TV|
+1722:3334|UM|Silverline Movie Channel|TV|
+1722:3335|UM|AXN Action|TV|
+1722:3337|UM|Gute Laune TV|TV|
+1722:3338|UM|kabel eins classics|TV|
+1722:3339|UM|Sat.1 Comedy|TV|
+1722:3341|UM|Rock Hymnen |TV|
+1722:3342|UM|Harder Than Hell |TV|
+1722:3343|UM|The Alternative|TV|
+1722:3344|UM|Dancefloor Fillers |TV|
+1722:3345|UM|Bass Breaks & Beats |TV|
+1722:3346|UM|Chillout |TV|
+1722:3347|UM|Party All Day |TV|
+1722:3348|UM|Freedom |TV|
+1722:3349|UM|Silk (Love Songs)|TV|
+1722:334a|UM|Groove (Disco & Funk)|TV|
+1722:334b|UM|Blues |TV|
+1722:334c|UM|R&apos;n&apos;B & Soul Classic |TV|
+1722:334d|UM|Hip Hop |TV|
+1722:334e|UM|Reggae |TV|
+1722:334f|UM|Independent Classics |TV|
+1722:3350|UM|Showcase|TV|
+1722:6211|UM|Animax|TV|
+1722:526d|UM|yourfamily|TV|
+1722:526e|UM|KidsCo|TV|
+1722:526f|UM|Nick Premium |TV|
+1722:5270|UM|Baby First|TV|
+1722:5271|UM|Baby TV|TV|
+1722:5272|UM|Nick Junior |TV|
+1722:42cd|UM|Kino 13|TV|
+1722:42ce|UM|Kino 14|TV|
+1722:42cf|UM|Kino 15|TV|
+1722:42d0|UM|Kino 16|TV|
+1722:42d1|UM|Kino 17|TV|
+1722:42d2|UM|Kino 18|TV|
+1722:42d3|UM|Kino 19|TV|
+1722:42d4|UM|Kino 20|TV|
+1722:42d5|UM|Kino 21|TV|
+1722:42d6|UM|Kino 22|TV|
+1722:42d7|UM|Kino 23|TV|
+1722:2b67|UM|MTV hits!|TV|
+1722:5e2b|UM|Offener Kanal|TV|
+1722:5e2e|UM|Bloomberg|TV|
+1722:5e2f|UM|Rhein-Main TV|TV|
+1722:620f|UM|Mezzo|TV|
+1722:6212|UM|MTV Music|TV|
+1722:6214|UM|Samanyolu TV|TV|
+1722:6215|UM|TVP Info|TV|
+1722:46b5|UM|Kino 24|TV|
+1722:46b6|UM|Kino 25|TV|
+1722:46b7|UM|Kino 26|TV|
+1722:46b8|UM|Kino 27|TV|
+1722:46b9|UM|Kino 28|TV|
+1722:46ba|UM|Kino 29|TV|
+1722:46bb|UM|Kino 30|TV|
+1722:46bc|UM|Kino 31|TV|
+1722:46bd|UM|Kino 32|TV|
+1722:46be|UM|Kino 33|TV|
+1722:46bf|UM|Kino 34|TV|
+1722:65f5|UM|TW1/ ORF Sport +|TV|
+1722:65f6|UM|JSTV|TV|
+1722:65f7|UM|Radio Japan|TV|
+1722:65fa|UM|RTL Televizija|TV|
+1722:65fb|UM|HRT TV 1|TV|
+1722:65fc|UM|Pink Plus|TV|
+1722:65fd|UM|Pink Extra|TV|
+1722:65fe|UM|NTV Hayat|TV|
+1722:65ff|UM|Pink Music|TV|
+1722:6600|UM|TVCG TV Montenegro|TV|
+1722:6601|UM|HRT HR1|TV|
+1722:6602|UM|Pink Radio|TV|
+1722:5a3d|UM|ATV Avrupa|TV|
+1722:5a3e|UM|Canal 24 Horas|TV|
+1722:5a3f|UM|Ert World|TV|
+1722:5a40|UM|Euro Star|TV|
+1722:5a41|UM|Euro D|TV|
+1722:5a42|UM|Nashe Kino|TV|
+1722:5a43|UM|RTPi|TV|
+1722:5a44|UM|RTR Planeta|TV|
+1722:5a45|UM|RTVi|TV|
+1722:5a46|UM|TV Polonia|TV|
+1722:5a47|UM|TVEi|TV|
+1722:5a48|UM|TRT Tk|TV|
+1722:5a4a|UM|Radyo Metropol|TV|
+1722:4e85|UM|Kino 35|TV|
+1722:4e86|UM|Kino 36|TV|
+1722:4e87|UM|Kino 37|TV|
+1722:4e88|UM|Kino 38|TV|
+1722:4e89|UM|Kino 39|TV|
+1722:4e8a|UM|Kino 40|TV|
+1722:69df|UM|SKY News|TV|
+1722:69e0|UM|Daystar|TV|
+1722:69e4|UM|God Channel|TV|
+1722:69e5|UM|Luxe.TV|TV|
+1722:69e6|UM|UProm.TV|TV|
+1722:71b3|UM|NTV Avrupa|TV|
+1722:71b4|UM|Astro TV|TV|
+1722:2b61|UM|BBC World News|TV|
+1722:2f50|UM|MTV Entertainment|TV|
+1722:3ee5|UM|Kino 12|TV|
+1722:3ee6|UM|Kino 11|TV|
+1722:3ee7|UM|Kino 10|TV|
+1722:3ee8|UM|Kino 09|TV|
+1722:3ee9|UM|Kino 08|TV|
+1722:3eea|UM|Kino 07|TV|
+1722:5a49|UM|Kino Vorschau|TV|
+1722:5e27|UM|QVC|TV|
+1722:5e28|UM|HSE24|TV|
+1722:2b5d|UM|9Live|TV|
+1722:2f45|UM|RTL Television|TV|
+1722:2f46|UM|SAT.1|TV|
+1722:2f47|UM|ProSieben|TV|
+1722:2f48|UM|VOX|TV|
+1722:2f49|UM|RTL2|TV|
+1722:2f4a|UM|kabel eins|TV|
+1722:2f4b|UM|Super RTL|TV|
+1722:2f4d|UM|n-tv|TV|
+1722:2f4e|UM|N24|TV|
+1722:3715|UM|Blue Movie 1|TV|
+1722:4aa2|UM|Kino 06|TV|
+1722:4aa3|UM|Kino 05|TV|
+1722:4aa4|UM|Kino 04|TV|
+1722:4aa5|UM|Kino 03|TV|
+1722:4aa6|UM|Kino 02|TV|
+1722:4aa7|UM|Kino 01|TV|
+1722:4aa8|UM|Blue Movie info|TV|
+1722:4aa9|UM|Blue Movie 2|TV|
+1722:4aaa|UM|Deutsches Wetter Fernsehen|TV|
+1722:6210|UM|Biography Channel|TV|
+1722:6217|UM|sportdigital.tv|TV|
+1722:2b5e|UM|Das Vierte|TV|
+1722:2b5f|UM|MTV|TV|
+1722:2b60|UM|Nick/Comedy Central|TV|
+1722:2b63|UM|Eurosport|TV|
+1722:2b65|UM|RTL Living|TV|
+1722:2b71|UM|Klassik |TV|
+1722:2b72|UM|Klassik Sinfonie |TV|
+1722:2b73|UM|Klassik Entspannt |TV|
+1722:2b74|UM|Country |TV|
+1722:2b75|UM|Kinder|TV|
+1722:2b76|UM|Coffee & Dinner |TV|
+1722:2b77|UM|New Age |TV|
+1722:2b78|UM|Rewind - 80er & 90er|TV|
+1722:2b79|UM|Total Hits France |TV|
+1722:2b7a|UM|60er |TV|
+1722:2b7b|UM|Urban |TV|
+1722:2b7c|UM|Schlager |TV|
+1722:2b7d|UM|Total Hits Deutschland |TV|
+1722:2b7e|UM|Total Hits Italy |TV|
+1722:2b7f|UM|Total Hits UK |TV|
+1722:2b80|UM|Bollywood Hits |TV|
+1722:2f4c|UM|DSF|TV|
+1722:2f4f|UM|Tele 5|TV|
+1722:4aab|UM|auto motor und sport channel|TV|
+1722:4aac|UM|Animal Planet|TV|
+1722:6dc7|UM|Liberty TV|TV|
+1722:6dc8|UM|France 24 (en Francais)|TV|
+1722:6dc9|UM|France 2|TV|
+1722:6dca|UM|France 3|TV|
+1722:6dcb|UM|France 5|TV|
+1722:6dcd|UM|Radio Italia|TV|
+1722:6dce|UM|Poker Channel Europe|TV|
+1722:4e8b|UM|iMusic 1|TV|
+1722:4e8c|UM|Juwelo|TV|
+1722:69de|UM|Deluxe Music|TV|
+1722:71ad|UM|Record Internacional Europa|Radio|
+1722:71ae|UM|Tkshow TV|Radio|
+1722:71af|UM|Kanal Avrupa|Radio|
+1722:71b0|UM|RTVi Info|Radio|
+1722:71b1|UM|CaspioNet|Radio|
+1722:71b2|UM|Souvenirs from earth|Radio|
+1722:5e25|UM|Viva|Radio|
+1722:5e29|UM|Channel21|Radio|
+1722:5e2a|UM|1-2-3.tv|Radio|
+1722:5e2c|UM|DMax|Radio|
+1722:5e2d|UM|CNN|Radio|
+1722:5e30|UM|Sonnenklar TV|Radio|
+1722:620d|UM|Unitymedia Infokanal|Radio|
+1722:620e|UM|TV5Monde Europe|Radio|
+1722:6213|UM|Power Tk TV|Radio|
+1722:69e3|UM|Body in Balance|Radio|
+1722:69e8|UM|Timm|Radio|
+1722:3716|UM|BBC Prime|Radio|
+1722:3afd|UM|ESPN Classic Sport|Radio|
+1722:3afe|UM|Extreme Sports|Radio|
+1722:3aff|UM|Yacht & Sail|Radio|
+1722:3b00|UM|Bon Gusto|Radio|
+1722:3b02|UM|Fashion TV|Radio|
+1722:3b03|UM|E! Entertainment|Radio|
+1722:3b05|UM|blue Hustler|Radio|
+1722:3b06|UM|Bibel TV|Radio|
+1722:3b07|UM|Cartoon Network|Radio|
+1722:3b08|UM|VH1 Classic|Radio|
+1722:3b0b|UM|e.clips|Radio|
+1722:5656|UM|Detskij Mir|Radio|
+1722:5657|UM|itvn|Radio|
+1722:5658|UM|Kanal 7|Radio|
+1722:5659|UM|Lig TV|Radio|
+1722:565a|UM|Rai Uno|Radio|
+1722:565b|UM|Rai Due|Radio|
+1722:565c|UM|Rai Tre|Radio|
+1722:565d|UM|Show Turk|Radio|
+1722:565e|UM|Turkmax|Radio|
+1722:565f|UM|TGRT EU News|Radio|
+1722:5660|UM|Channel One Russia |Radio|
+1722:5661|UM|Euro News (ESP)|Radio|
+1722:5662|UM|Euro News (F)|Radio|
+1722:5663|UM|Euro News (E)|Radio|
+1722:5664|UM|Euro News (I)|Radio|
+1722:5665|UM|Euro News (POR)|Radio|
+1722:5666|UM|Euro News (RUS)|Radio|
+1722:5667|UM|Euro News (D)|Radio|
+1722:5669|UM|RAI Radio 1|Radio|
+1722:566a|UM|Teleklub|Radio|
+1722:566b|UM|Euro News (Arab.)|Radio|
+1722:7595|UM|Al Jazeera|Radio|
+1722:7596|UM|MBC Europe|Radio|
+1722:7597|UM|LBC Europe|Radio|
+1722:7598|UM|Art Movie 1|Radio|
+1722:7599|UM|Art Hekayat|Radio|
+1722:759a|UM|Art Prime Sports|Radio|
+1722:4e8f|UM|France 24 (in English)|Radio|
+1722:4e90|UM|Al Jazeera International|Radio|
+1722:4e92|UM|Yavido|Radio|
+1722:71b5|UM|XXHome|Radio|
+1722:332e|UM|History|Radio|
+1722:3330|UM|Planet|Radio|
+1722:3333|UM|Kinowelt TV|Radio|
+1722:3334|UM|Silverline Movie Channel|Radio|
+1722:3335|UM|AXN Action|Radio|
+1722:3337|UM|Gute Laune TV|Radio|
+1722:3338|UM|kabel eins classics|Radio|
+1722:3339|UM|Sat.1 Comedy|Radio|
+1722:3341|UM|Rock Hymnen |Radio|
+1722:3342|UM|Harder Than Hell |Radio|
+1722:3343|UM|The Alternative|Radio|
+1722:3344|UM|Dancefloor Fillers |Radio|
+1722:3345|UM|Bass Breaks & Beats |Radio|
+1722:3346|UM|Chillout |Radio|
+1722:3347|UM|Party All Day |Radio|
+1722:3348|UM|Freedom |Radio|
+1722:3349|UM|Silk (Love Songs)|Radio|
+1722:334a|UM|Groove (Disco & Funk)|Radio|
+1722:334b|UM|Blues |Radio|
+1722:334c|UM|R&apos;n&apos;B & Soul Classic |Radio|
+1722:334d|UM|Hip Hop |Radio|
+1722:334e|UM|Reggae |Radio|
+1722:334f|UM|Independent Classics |Radio|
+1722:3350|UM|Showcase|Radio|
+1722:6211|UM|Animax|Radio|
+1722:526d|UM|yourfamily|Radio|
+1722:526e|UM|KidsCo|Radio|
+1722:526f|UM|Nick Premium |Radio|
+1722:5270|UM|Baby First|Radio|
+1722:5271|UM|Baby TV|Radio|
+1722:5272|UM|Nick Junior |Radio|
+1722:42cd|UM|Kino 13|Radio|
+1722:42ce|UM|Kino 14|Radio|
+1722:42cf|UM|Kino 15|Radio|
+1722:42d0|UM|Kino 16|Radio|
+1722:42d1|UM|Kino 17|Radio|
+1722:42d2|UM|Kino 18|Radio|
+1722:42d3|UM|Kino 19|Radio|
+1722:42d4|UM|Kino 20|Radio|
+1722:42d5|UM|Kino 21|Radio|
+1722:42d6|UM|Kino 22|Radio|
+1722:42d7|UM|Kino 23|Radio|
+1722:2b67|UM|MTV hits!|Radio|
+1722:5e2b|UM|Offener Kanal|Radio|
+1722:5e2e|UM|Bloomberg|Radio|
+1722:5e2f|UM|Rhein-Main TV|Radio|
+1722:620f|UM|Mezzo|Radio|
+1722:6212|UM|MTV Music|Radio|
+1722:6214|UM|Samanyolu TV|Radio|
+1722:6215|UM|TVP Info|Radio|
+1722:46b5|UM|Kino 24|Radio|
+1722:46b6|UM|Kino 25|Radio|
+1722:46b7|UM|Kino 26|Radio|
+1722:46b8|UM|Kino 27|Radio|
+1722:46b9|UM|Kino 28|Radio|
+1722:46ba|UM|Kino 29|Radio|
+1722:46bb|UM|Kino 30|Radio|
+1722:46bc|UM|Kino 31|Radio|
+1722:46bd|UM|Kino 32|Radio|
+1722:46be|UM|Kino 33|Radio|
+1722:46bf|UM|Kino 34|Radio|
+1722:65f5|UM|TW1/ ORF Sport +|Radio|
+1722:65f6|UM|JSTV|Radio|
+1722:65f7|UM|Radio Japan|Radio|
+1722:65fa|UM|RTL Televizija|Radio|
+1722:65fb|UM|HRT TV 1|Radio|
+1722:65fc|UM|Pink Plus|Radio|
+1722:65fd|UM|Pink Extra|Radio|
+1722:65fe|UM|NTV Hayat|Radio|
+1722:65ff|UM|Pink Music|Radio|
+1722:6600|UM|TVCG TV Montenegro|Radio|
+1722:6601|UM|HRT HR1|Radio|
+1722:6602|UM|Pink Radio|Radio|
+1722:5a3d|UM|ATV Avrupa|Radio|
+1722:5a3e|UM|Canal 24 Horas|Radio|
+1722:5a3f|UM|Ert World|Radio|
+1722:5a40|UM|Euro Star|Radio|
+1722:5a41|UM|Euro D|Radio|
+1722:5a42|UM|Nashe Kino|Radio|
+1722:5a43|UM|RTPi|Radio|
+1722:5a44|UM|RTR Planeta|Radio|
+1722:5a45|UM|RTVi|Radio|
+1722:5a46|UM|TV Polonia|Radio|
+1722:5a47|UM|TVEi|Radio|
+1722:5a48|UM|TRT Tk|Radio|
+1722:5a4a|UM|Radyo Metropol|Radio|
+1722:4e85|UM|Kino 35|Radio|
+1722:4e86|UM|Kino 36|Radio|
+1722:4e87|UM|Kino 37|Radio|
+1722:4e88|UM|Kino 38|Radio|
+1722:4e89|UM|Kino 39|Radio|
+1722:4e8a|UM|Kino 40|Radio|
+1722:69df|UM|SKY News|Radio|
+1722:69e0|UM|Daystar|Radio|
+1722:69e4|UM|God Channel|Radio|
+1722:69e5|UM|Luxe.TV|Radio|
+1722:69e6|UM|UProm.TV|Radio|
+1722:71b3|UM|NTV Avrupa|Radio|
+1722:71b4|UM|Astro TV|Radio|
+1722:2b61|UM|BBC World News|Radio|
+1722:2f50|UM|MTV Entertainment|Radio|
+1722:3ee5|UM|Kino 12|Radio|
+1722:3ee6|UM|Kino 11|Radio|
+1722:3ee7|UM|Kino 10|Radio|
+1722:3ee8|UM|Kino 09|Radio|
+1722:3ee9|UM|Kino 08|Radio|
+1722:3eea|UM|Kino 07|Radio|
+1722:5a49|UM|Kino Vorschau|Radio|
+1722:5e27|UM|QVC|Radio|
+1722:5e28|UM|HSE24|Radio|
+1722:2b5d|UM|9Live|Radio|
+1722:2f45|UM|RTL Television|Radio|
+1722:2f46|UM|SAT.1|Radio|
+1722:2f47|UM|ProSieben|Radio|
+1722:2f48|UM|VOX|Radio|
+1722:2f49|UM|RTL2|Radio|
+1722:2f4a|UM|kabel eins|Radio|
+1722:2f4b|UM|Super RTL|Radio|
+1722:2f4d|UM|n-tv|Radio|
+1722:2f4e|UM|N24|Radio|
+1722:3715|UM|Blue Movie 1|Radio|
+1722:4aa2|UM|Kino 06|Radio|
+1722:4aa3|UM|Kino 05|Radio|
+1722:4aa4|UM|Kino 04|Radio|
+1722:4aa5|UM|Kino 03|Radio|
+1722:4aa6|UM|Kino 02|Radio|
+1722:4aa7|UM|Kino 01|Radio|
+1722:4aa8|UM|Blue Movie info|Radio|
+1722:4aa9|UM|Blue Movie 2|Radio|
+1722:4aaa|UM|Deutsches Wetter Fernsehen|Radio|
+1722:6210|UM|Biography Channel|Radio|
+1722:6217|UM|sportdigital.tv|Radio|
+1722:2b5e|UM|Das Vierte|Radio|
+1722:2b5f|UM|MTV|Radio|
+1722:2b60|UM|Nick/Comedy Central|Radio|
+1722:2b63|UM|Eurosport|Radio|
+1722:2b65|UM|RTL Living|Radio|
+1722:2b71|UM|Klassik |Radio|
+1722:2b72|UM|Klassik Sinfonie |Radio|
+1722:2b73|UM|Klassik Entspannt |Radio|
+1722:2b74|UM|Country |Radio|
+1722:2b75|UM|Kinder|Radio|
+1722:2b76|UM|Coffee & Dinner |Radio|
+1722:2b77|UM|New Age |Radio|
+1722:2b78|UM|Rewind - 80er & 90er|Radio|
+1722:2b79|UM|Total Hits France |Radio|
+1722:2b7a|UM|60er |Radio|
+1722:2b7b|UM|Urban |Radio|
+1722:2b7c|UM|Schlager |Radio|
+1722:2b7d|UM|Total Hits Deutschland |Radio|
+1722:2b7e|UM|Total Hits Italy |Radio|
+1722:2b7f|UM|Total Hits UK |Radio|
+1722:2b80|UM|Bollywood Hits |Radio|
+1722:2f4c|UM|DSF|Radio|
+1722:2f4f|UM|Tele 5|Radio|
+1722:4aab|UM|auto motor und sport channel|Radio|
+1722:4aac|UM|Animal Planet|Radio|
+1722:6dc7|UM|Liberty TV|Radio|
+1722:6dc8|UM|France 24 (en Francais)|Radio|
+1722:6dc9|UM|France 2|Radio|
+1722:6dca|UM|France 3|Radio|
+1722:6dcb|UM|France 5|Radio|
+1722:6dcd|UM|Radio Italia|Radio|
+1722:6dce|UM|Poker Channel Europe|Radio|
+1722:4e8b|UM|iMusic 1|Radio|
+1722:4e8c|UM|Juwelo|Radio|
+1722:69de|UM|Deluxe Music|Radio|

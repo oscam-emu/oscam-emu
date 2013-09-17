@@ -1,0 +1,290 @@
+i386-pc-linux: simple
+i386-pc-linux-debug: debug
+i386-pc-freebsd: simple
+hppa1.1-hp-hpux10.20: simple
+alpha-dec-osf5.1: simple
+linux: simple
+freebsd: simple
+tuxbox: cross-powerpc-tuxbox-linux
+tripledragon: cross-powerpc-405-linux
+win: cross-i386-pc-cygwin
+cygwin: i386-pc-cygwin
+macosx: macosx-native
+linux-pcsc: i386-pc-linux-pcsc
+dm500: cross-powerpc-tuxbox-linux
+sh4: cross-sh4-linux
+sh4-stapi: cross-sh4-linux-stapi
+i386-pc-linux-libusb: libusb
+i386-pc-linux-pcsc: pcsc
+i386-pc-linux-pcsc-libusb: pcsc-libusb
+libusb-pcsc: pcsc-libusb
+
+libusb:
+	$(MAKE) --no-print-directory \
+		USE_LIBUSB=1 \
+		$(MAKEFLAGS)
+
+pcsc:
+	$(MAKE) --no-print-directory \
+		USE_PCSC=1 \
+		$(MAKEFLAGS)
+
+pcsc-libusb:
+	$(MAKE) --no-print-directory \
+		USE_LIBUSB=1 \
+		USE_PCSC=1 \
+		$(MAKEFLAGS)
+
+macosx-native:
+	$(MAKE) --no-print-directory \
+		USE_PCSC=1 \
+		$(MAKEFLAGS)
+
+macosx-libusb:
+	$(MAKE) --no-print-directory \
+		USE_LIBUSB=1 \
+		USE_PCSC=1 \
+		$(MAKEFLAGS)
+
+cross-i386-pc-freebsd:
+	$(MAKE) --no-print-directory \
+		CROSS=i386-pc-freebsd5.4- \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+cross-powerpc-tuxbox-linux:
+	$(MAKE) --no-print-directory \
+		CROSS=powerpc-tuxbox-linux-gnu- \
+		CONF_DIR=/var/tuxbox/config \
+		$(MAKEFLAGS)
+
+cross-powerpc-tuxbox-linux-uclibc:
+	$(MAKE) --no-print-directory \
+		CROSS=powerpc-tuxbox-linux-uclibc- \
+		CONF_DIR=/var/tuxbox/config \
+		$(MAKEFLAGS)
+
+cross-powerpc-405-linux:
+	$(MAKE) --no-print-directory \
+		CROSS=powerpc-405-linux-gnu- \
+		CONF_DIR=/var/tuxbox/config \
+		EXTRA_FLAGS="-DSTB04SCI=1"
+		$(MAKEFLAGS)
+
+cross-sh4-linux:
+	$(MAKE) --no-print-directory \
+		CROSS=sh4-linux- \
+		CONF_DIR=/var/tuxbox/config \
+		$(MAKEFLAGS)
+
+cross-sh4-linux-stapi:
+	$(MAKE) --no-print-directory \
+		CROSS=sh4-linux- \
+		CONF_DIR=/var/tuxbox/config \
+		USE_STAPI=1 \
+		$(MAKEFLAGS)
+
+cross-i386-pc-cygwin:
+	$(MAKE) --no-print-directory \
+		CROSS=i686-pc-cygwin- \
+		EXTRA_FLAGS="-static" \
+		$(MAKEFLAGS)
+
+i386-pc-cygwin:
+	$(MAKE) --no-print-directory \
+		EXTRA_FLAGS="-I /tmp/include" \
+		$(MAKEFLAGS)
+
+i386-pc-cygwin-pcsc:
+	$(MAKE) --no-print-directory \
+		USE_PCSC=1 \
+		PCSC_LIB="-lwinscard" \
+		EXTRA_FLAGS="-D_WIN32 -I /tmp/include -I ./cygwin -I/usr/include/w32api" \
+		EXTRA_LDFLAGS="-L/cygdrive/c/WINDOWS/system32/" \
+		$(MAKEFLAGS)
+
+i386-pc-cygwin-libusb:
+	$(MAKE) --no-print-directory \
+		USE_LIBUSB=1 \
+		LIBUSB_LIB="/usr/lib/libusb-1.0.a" \
+		USE_PCSC=1 \
+		PCSC_LIB="-lwinscard" \
+		EXTRA_LIBS="-lSetupAPI -lOle32 -lshell32" \
+		EXTRA_FLAGS="-D_WIN32 -I /tmp/include -I ./cygwin -I/usr/include/w32api" \
+		EXTRA_LDFLAGS="-L/cygdrive/c/WINDOWS/system32/" \
+		$(MAKEFLAGS)
+
+cross-sparc-sun-solaris2.7:
+	$(MAKE) --no-print-directory \
+		CROSS=sparc-sun-solaris2.7- \
+		EXTRA_LIBS="-lsocket" \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+opensolaris:
+	$(MAKE) --no-print-directory \
+		EXTRA_LIBS="-lsocket -lnsl" \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+cross-rs6000-ibm-aix4.2:
+	$(MAKE) --no-print-directory \
+		CROSS=rs6000-ibm-aix4.2- \
+		LIB_PTHREAD=-lpthreads \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+cross-mips-sgi-irix6.5:
+	$(MAKE) --no-print-directory \
+		CROSS=mips-sgi-irix6.5- \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+cross-mipsel-router-linux-uclibc:
+	$(MAKE) --no-print-directory \
+		CROSS=mipsel-linux-uclibc- \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+cross-mipsel-router-linux-uclibc927: cross-mipsel-router-linux-uclibc
+cross-mipsel-router-linux-uclibc928: cross-mipsel-router-linux-uclibc
+cross-mipsel-router-linux-uclibc929: cross-mipsel-router-linux-uclibc
+
+cross-mipsel-router-linux-uclibc929-static:
+	$(MAKE) --no-print-directory \
+		CROSS=mipsel-linux-uclibc- \
+		EXTRA_FLAGS="-static-libgcc" \
+		EXTRA_LDFLAGS="-static" \
+		$(MAKEFLAGS)
+
+cross-mips-router-linux-uclibc:
+	$(MAKE) --no-print-directory \
+		CROSS=mips-linux-uclibc- \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+cross-mips-router-linux-uclibc930: cross-mips-router-linux-uclibc
+cross-mips-router-linux-uclibc931: cross-mips-router-linux-uclibc930
+cross-mipsel-fonera2: cross-mips-router-linux-uclibc
+
+cross-mipsel-tuxbox-linux:
+	$(MAKE) --no-print-directory \
+		CROSS=mipsel-unknown-linux-gnu- \
+		CONF_DIR=/var/tuxbox/config \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+cross-mipsel-tuxbox-linux-glibc:
+	$(MAKE) --no-print-directory \
+		CROSS=mipsel-linux-glibc- \
+		CONF_DIR=/var/tuxbox/config \
+		EXTRA_FLAGS="-static-libgcc" \
+		$(MAKEFLAGS)
+
+cross-arm-nslu2-linux:
+	$(MAKE) --no-print-directory \
+		CROSS=armv5b-softfloat-linux- \
+		$(MAKEFLAGS)
+
+cross-armBE-unknown-linux:
+	$(MAKE) --no-print-directory \
+		CROSS=arm-linux- \
+		EXTRA_FLAGS="-mbig-endian" \
+		$(MAKEFLAGS)
+
+cross-armBE-unkown-linux: cross-armBE-unknown-linux
+
+cross-armLE-unknown-linux:
+	$(MAKE) --no-print-directory \
+		CROSS=arm-linux- \
+		EXTRA_FLAGS="-mlittle-endian" \
+		$(MAKEFLAGS)
+
+cross-armLE-unkown-linux: cross-armLE-unknown-linux
+
+azbox:
+	$(MAKE) --no-print-directory \
+		CROSS=mipsel-linux-uclibc- \
+		CONF_DIR=/PLUGINS/OpenXCAS/oscamCAS \
+		USE_AZBOX=1 \
+		$(MAKEFLAGS)
+
+mca:
+	$(MAKE) --no-print-directory \
+		CROSS=arm-none-linux-gnueabi- \
+		CONF_DIR=/var/mca/d1 \
+		USE_MCA=1 \
+		$(MAKEFLAGS)
+
+cool:
+	$(MAKE) --no-print-directory \
+		CROSS=arm-cx2450x-linux-gnueabi- \
+		CONF_DIR=/var/tuxbox/config \
+		USE_COOLAPI=1 \
+		$(MAKEFLAGS)
+
+neutrinohd: cool
+coolstream: cool
+
+su980:
+	$(MAKE) --no-print-directory \
+		CROSS=arm-cortex-linux-gnueabi- \
+		CONF_DIR=/var/tuxbox/config \
+		USE_SU980=1 \
+		$(MAKEFLAGS)
+
+hypercube: su980
+
+dockstar:
+	$(MAKE) --no-print-directory \
+		CROSS=arm-openwrt-linux-uclibcgnueabi- \
+		CONF_DIR=/jffs/etc/config/oscam \
+		$(MAKEFLAGS)
+
+qboxhd:
+	$(MAKE) --no-print-directory \
+		CROSS=sh4-linux- \
+		EXTRA_FLAGS="-DQBOXHD=1" \
+		PLUS_TARGET=-qboxhd \
+		CONF_DIR=/var/tuxbox/config \
+		$(MAKEFLAGS)
+
+static:
+	$(MAKE) --no-print-directory \
+		EXTRA_FLAGS=-static \
+		EXTRA_TARGET=-static \
+		$(MAKEFLAGS)
+
+static-libusb:
+	$(MAKE) --no-print-directory \
+		USE_LIBUSB=1 \
+		LIBUSB_LIB=/usr/lib/libusb-1.0.a \
+		EXTRA_TARGET=-static \
+		$(MAKEFLAGS)
+
+static-libcrypto:
+	$(MAKE) --no-print-directory \
+		USE_LIBCRYPTO=1 \
+		LIBCRYPTO_LIB=/usr/lib/libcrypto.a \
+		EXTRA_TARGET=-static \
+		$(MAKEFLAGS)
+
+static-ssl:
+	$(MAKE) --no-print-directory \
+		USE_SSL=1 \
+		SSL_LIB=/usr/lib/libssl.a \
+		LIBCRYPTO_LIB=/usr/lib/libcrypto.a \
+		EXTRA_TARGET=-static \
+		$(MAKEFLAGS)
+
+android-arm:
+	$(MAKE) --no-print-directory \
+		LIB_PTHREAD= \
+		CROSS=arm-linux-androideabi- \
+		$(MAKEFLAGS)
+
+uclinux:
+	$(MAKE) --no-print-directory \
+		LIB_DL= STRIP=true \
+		CROSS=m68k-uclinux- \
+		$(MAKEFLAGS)

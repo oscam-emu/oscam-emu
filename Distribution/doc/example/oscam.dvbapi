@@ -1,0 +1,41 @@
+#
+# dvbapi configuration
+#
+# format:
+#
+#  priority:
+#   P: CAID[:][provider ID][:][service ID][:][ECM PID] [continue]
+#
+#  ignore:
+#   I: CAID[:][provider ID][:][service ID][:][ECM PID]
+#
+#  wait:
+#   D: CAID[:][provider ID][:][service ID][:][ECM PID] delay
+#
+#  map:
+#   M: CAID[:][provider ID][:][service ID][:][ECM PID] target CAID[:][target provider ID]
+#
+#  lenght:
+#   L: CAID[:][provider ID][:][service ID][:][ECM PID] length
+#
+
+P: 0100:123456       # prioritise CAID 0100 with provider 123456
+
+P: :1234             # prioritise ECM with provider ID 1234 on
+                     # on any CAID and service
+
+P: 0200              # prioritise CAID 0200
+
+P: 0300::9ABC        # prioritise CAID 0300 on service 9ABC only
+
+M: 0400 0500:123456  # map CAID 0400 to provider ID 123456 with
+                     # CAID 0500
+
+D: 0600 200          # wait 200 ms before writing CW for CAID 0600
+
+I: :654321           # ignore provider ID 654321 for every CAID and
+                     # service
+
+I: 0                 # ignore every CAID that was not handled before
+
+L: 0700 8e           # ECM length for CAID 0700 to 8e (hexadecimal)

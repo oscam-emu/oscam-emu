@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/oscam/!svn/ver/8425/trunk/devtools
+END
+check_config_tables.sh
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/oscam/!svn/ver/8219/trunk/devtools/check_config_tables.sh
+END
+check_cmdline_opts.sh
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/oscam/!svn/ver/8187/trunk/devtools/check_cmdline_opts.sh
+END
+extract_config.sh
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/oscam/!svn/ver/8388/trunk/devtools/extract_config.sh
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/oscam/!svn/ver/8425/trunk/devtools/README
+END

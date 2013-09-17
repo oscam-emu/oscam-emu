@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of oscam.services</TITLE>
+</HEAD><BODY>
+<H1>oscam.services</H1>
+Section: File Formats (5)<BR><A HREF="#index">Index</A>
+<A HREF="/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>oscam.services</B> - definition of services for OSCam
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+service definitions
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTIONS</H2>
+
+<A NAME="lbAE">&nbsp;</A>
+<H3>The [&lt;service name&gt;] section</H3>
+
+service name section, service name sections are recurring, <I>required</I>, <I>maximum 64 services are allowed</I>
+<P>
+
+<B>caid</B> = <B>CAID[,CAID]...</B>
+<DL COMPACT><DT><DD>
+listing of CAIDs in hex
+</DL>
+
+
+<P>
+
+<B>provid</B> = <B>provider ID[,provider ID]...</B>
+<DL COMPACT><DT><DD>
+listing of provider IDs in hex
+</DL>
+
+
+<P>
+
+<B>srvid</B> = <B>service ID[,service ID]...</B>
+<DL COMPACT><DT><DD>
+listing of service IDs in hex
+</DL>
+
+<A NAME="lbAF">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<BR>&nbsp;[myservice]
+<BR>&nbsp;CAID=0100,0200,000A
+<BR>&nbsp;provid=000001,ABCDEF
+<BR>&nbsp;srvid=0001,0002,000A,000B
+<A NAME="lbAG">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="/cgi-bin/man/man2html?1+list_smargo">list_smargo</A></B>(1), <B><A HREF="/cgi-bin/man/man2html?1+oscam">oscam</A></B>(1), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ac">oscam.ac</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.cacheex">oscam.cacheex</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.cert">oscam.cert</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.conf">oscam.conf</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.dvbapi">oscam.dvbapi</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.guess">oscam.guess</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ird">oscam.ird</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.provid">oscam.provid</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ratelimit">oscam.ratelimit</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.server">oscam.server</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.srvid">oscam.srvid</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.tiers">oscam.tiers</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.user">oscam.user</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.whitelist">oscam.whitelist</A></B>(5)
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTIONS</A><DD>
+<DL>
+<DT><A HREF="#lbAE">The [&lt;service name&gt;] section</A><DD>
+</DL>
+<DT><A HREF="#lbAF">EXAMPLES</A><DD>
+<DT><A HREF="#lbAG">SEE ALSO</A><DD>
+</DL>
+</BODY>
+</HTML>

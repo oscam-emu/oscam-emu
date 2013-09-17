@@ -1,0 +1,310 @@
+.TH oscam.user 5
+.SH NAME
+\fBoscam.user\fR - user configuration file for OSCam
+.SH SYNOPSIS
+The user configuration file for OSCam contains user definitions. [account]
+sections in \fBoscam.user\fR are \fIrecurring\fR (more than one account).
+.SH DESCRIPTIONS
+.SS "The [account] section"
+.PP
+\fBuser\fP = \fBname\fP
+.RS 3n
+account name, \fIrequired\fR
+.RE
+.PP
+\fBpwd\fP = \fBpassword\fP
+.RS 3n
+password for account, \fIrequired\fR
+.RE
+.PP
+\fBdescription\fP = \fBtext\fP
+.RS 3n
+description of user account
+.RE
+.PP
+\fBdisabled\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = account disabled, default:0
+.RE
+.PP
+\fBhostname\fP = \fBhostname\fP
+.RS 3n
+host from which user connection is allowed
+.RE
+.PP
+\fBexpdate\fP = \fB<year>-<month>-<day>\fP|\fB<year>/<month>/<day>\fP
+.RS 3n
+expiration date for account, default:none
+
+ example: expdate = 2001-11-21
+          expdate = 2002/12/22
+.RE
+.PP
+\fBallowedprotocols\fP = \fB[camd33][,][camd35][,][cs357x][,][cs378x][,][newcamd][,][cccam][,][gbox][,][radegast]\fP
+.RS 3n
+list of all allowed connection protocols, default:all connection protocols
+.RE
+.PP
+\fBallowedtimeframe\fP = \fBhh:mm\fP-\fBhh:mm\fP
+.RS 3n
+account enabled from hh:mm to hh:mm, default:none
+.RE
+.PP
+\fBuniq\fP = \fB0\fP|\fB1\fP|\fB2\fP|\fB4\fP
+.RS 3n
+unique level:
+
+ \fB0\fP = disabled (default)
+ \fB1\fP = only one connection per user is allowed
+ \fB2\fP = set user to fake if source ip is different 
+     (e.g. for newcamd clients with different CAIDs and ports)
+ \fB3\fP = only one connection per user, but only the last login 
+     will survive (old MpCS behavior)
+ \fB4\fP = set user only to fake if source ip is different, 
+     but only the last login will survive
+.RE
+.PP
+\fBnumusers\fP = \fBquantity\fP
+.RS 3n
+anti-cascading: user per account, 0 = anti-cascading disabled, -1 = global value from oscam.conf, default:-1
+.RE
+.PP
+\fBpenalty\fP = \fB0\fP|\fB1\fP|\fB2\fP
+.RS 3n
+level of penalty:
+
+ \fB-1\fP = level of oscam.conf (default)
+ \fB 0\fP = only logging
+ \fB 1\fP = send fake CWs
+ \fB 2\fP = temporary user ban
+ \fB 3\fP = send delayed CWs
+.RE
+.PP
+\fBfakedelay\fP = \fB0\fP|\fB1\fP|\fBmilli-seconds\fP
+.RS 3n
+set fake delay time individually for user:
+
+ \fB 0\fP = disable fake delay
+ \fB-1\fP = fake delay of oscam.conf (default)
+.RE
+.PP
+\fBfailban\fP = \fB0\fP|\fB2\fP|\fB4\fP|\fB8\fP
+.RS 3n
+mask for IP address based blocking:
+
+ \fB0\fP = ignore (default)
+ \fB2\fP = block IP address of a disabled account on connecting
+ \fB4\fP = block IP address of a sleeping account while sleeping comes up
+ \fB8\fP = block duplicate IP address
+.RE
+.PP
+\fBlb_nbest_readers\fP = \fBcounts\fP
+.RS 3n
+set count of best readers for load balancing, -1 = use global lb_nbest_readers, default:-1
+.RE
+.PP
+\fBlb_nfb_readers\fP = \fBcounts\fP
+.RS 3n
+set count of fallback readers for load balancing, -1 = use global lb_nfb_readers, default:1
+.RE
+.PP
+\fBlb_nbest_percaid\fP = \fBCAID1:count1[,CAID2:count2]...\fP
+.RS 3n
+set count of best readers per CAIDs for load balancing, wildcard CAIDs with two-digit CAIDs possible, default:none
+
+ example: lb_nbest_percaid = 0100:4,0200:3,03:2,04:1
+          (wildcard CAIDs 03xx and 04xx)
+.RE
+.PP
+\fBcacheex\fP = \fB0\fP|\fB1\fP|\fB2\fP|\fB3\fP
+.RS 3n
+set cache exchange mode
+
+ \fB0\fP: disable cache exchange mode (default)
+ \fB1\fP: enable cache exchange pull mode
+ \fB2\fP: enable cache exchange push mode for camd 3.5x / 3.57x and 
+    CCcam protocol
+ \fB3\fP: enable reverse cache exchange push mode for camd 3.5x / 3.57x 
+    and CCcam protocol
+
+\fIIdentical cache exchange modes must be set on local OSCam user account and remote OSCam server.\fR
+
+\fIPlease consider memory consumption.\fR
+.RE
+.PP
+\fBcacheex_maxhop\fP = \fBhops\fP
+.RS 3n
+define maximum hops for cache exchange, default=10
+.RE
+.PP
+\fBcsp_ecm_filter\fP = \fB[caid][&mask][@provid][$servid],n\fP
+.RS 3n
+cache exchange incoming ECM filter setting (mode 3 only) for Cardservproxy, default:none
+.RE
+.PP
+\fBcacheex_drop_csp\fP = \fB0\fP|\fB1\fP
+.RS 3n
+drop incoming Cardservproxy cache (mode 3 only), detection is zero ecmd5, default:0
+.RE
+.PP
+\fBcacheex_allow_request\fP = \fB0\fP|\fB1\fP
+.RS 3n
+allow incoming ECM request (mode 3 only), default:1
+.RE
+.PP
+\fBsleep\fP = \fBminutes\fP
+.RS 3n
+time waiting for inactive user, default:none
+.RE
+.PP
+\fBsleepsend\fP = \fB0\fP|\fB255\fP
+.RS 3n
+255 = \fIOSCam client only\fR: stopping requests until next zap, 255 = \fIcamd 3.x only\fR: stopping requests until restart of camd 3.x client, default:0
+.RE
+.PP
+\fBsuppresscmd08\fP = \fB0\fP|\fB1\fP
+.RS 3n
+0 = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected 
+CAID, service ID and provider ID combination, 1 =  disable, default:0
+.RE
+.PP
+\fBkeepalive\fP = \fB0\fP|\fB1\fP
+.RS 3n
+0 = disable keepalive between server and client for newcamd or CCcam protocol, default:1
+.RE
+.PP
+\fBcaid\fP = \fB<CAID>[&<mask>][:<target CAID>][,<CAID>[&<mask>][:<target CAID>]]...\fP
+.RS 3n
+limit and mapping of CAIDs, default:all CAIDs with mask FFFF
+
+example: caid = 0100
+         caid = 0200&ffee:0300
+         caid = 0400&ff00:0500,0600
+         caid = 0702,0722
+         caid = 0702&ffdf (shortcut for the example above)
+.RE
+.PP
+\fBau\fP = \fBlabel of reader[,label of reader]...\fP|\fB1\fP
+.RS 3n
+AU setting, default:none:
+
+  \fBlabel of reader\fP = sending EMMs to specified reader 
+                    \fI(security issue: clients can see SC data!)\fR
+  \fB1\fP               = auto AU is sending EMMs to \fIall\fR readers
+                    \fI(security issue: clients can see SC data!)\fR
+.RE
+.PP
+\fBgroup\fP = \fB1..64[,1..64]...\fP
+.RS 3n
+user assingment to reader groups, default:none, \fIrequired\fR
+.RE
+.PP
+\fBbetatunnel\fP = \fB<CAID>.<ServiceID>:<target CAID>[,<CAID>.<ServiceID>:
+<target CAID>]...\fP
+.RS 3n
+define Betacrypt tunneling (maximum see CS_MAXTUNTAB in \fBglobals.h\fP).
+The ServiceID can also be used for wildcarded CAIDs.
+
+ example: betatunnel = 0100.0001:0200,0300.0004:0500
+          betatunnel = 0600.FFFF:0700
+
+\fIBe carefull using abbreviations.\fR
+.RE
+
+.PP
+\fBemmreassembly\fP = \fB0\fP|\fB1\fP||\fB2\fP
+.RS 3n
+EMM reassembly, should be set for Viaccess and Cryptoworks readers if the 
+client that you are using to send EMMs is reassembling them instead of 
+just sending them to OSCam for processing.
+
+  \fB0\fP: disabled
+  \fB1\fP: enabled for DVB API
+  \fB2\fP: enabled (default)
+.RE
+.PP
+\fBservices\fP = \fB[!]services[,[!]<services>]...\fP
+.RS 3n
+user [de]assingment to service group, default:none
+.RE
+.PP
+\fBident\fP = \fB<CAID>:<provid>[,<provid>,...][;<CAID>:<provid>[,<provid>,...]]...\fP
+.RS 3n
+user assingment to SC specific idents, default:none
+.RE
+.PP
+\fBclass\fP = \fB[!]class[,[!]class]...\fP
+.RS 3n
+user [de]assingment to SC specific classes, default=none
+
+ example: class = 01,02,!03,!04
+.RE
+.PP
+\fBchid\fP = \fB<CAID>:<ChID>[,<CAID>:<ChID>]...\fP
+.RS 3n
+user assingment to SC specific ChIDs, default:none
+.RE
+.PP
+\fBmonlevel\fP = \fB0\fP|\fB1\fP|\fB2\fP|\fB3\fP|\fB4\fP
+.RS 3n
+monitor level:
+
+ \fB0\fP = no access to monitor (default)
+ \fB1\fP = only server and own procs
+ \fB2\fP = all procs, but viewing only
+ \fB3\fP = all procs, reload of \fBoscam.user\fR possible
+ \fB4\fP = complete access
+.RE
+.PP
+\fBcccmaxhops\fP = \fBhops\fP
+.RS 3
+maximum hops limit for CCcam clients, default:10
+
+ \fB-1\fP = CCcam disabled for this user
+  \fB0\fP = local SCs only
+  \fB1\fP = local SCs + 1 hop
+  \fB2\fP = local SCs + 2 hops
+ and so on
+.RE
+.PP
+\fBcccreshare\fP = \fBlevel\fP
+.RS 3n
+reshare level for CCcam clients
+
+ \fB-1\fP = use reshare level of \fBoscam.conf\fR (default)
+  \fB0\fP = resharing for direct peer only
+  \fBx\fP = resharing for direct peer and share level x
+.RE
+.PP
+\fBcccignorereshare\fP = \fB-1\fP|\fB0\fP|\fB1\fP
+.RS 3n
+CCcam ignore reshare setting:
+
+ \fB-1\fP = use ignore reshare level of \fBoscam.conf\fR (default)
+  \fB0\fP = use ignore reshare setting of server
+  \fB1\fP = use ignore reshare setting of reader or user
+.RE
+.PP
+\fBcccstealth\fP = \fB-1\fP|\fB1\fP
+.RS 3n
+CCcam stealth:
+
+ \fB-1\fP = use CCcam stealth of \fBoscam.conf\fR (default)
+  \fB0\fP = use extended OSCam-CCcam protocol
+  \fB1\fP = behaviour like the original CCcam: no activate partner 
+      detection and extended OSCam-CCcam protocol, prevent 
+      other OSCam to detect the server as OSCam server
+.RE
+.SH EXAMPLES
+ [account]
+ user       = username
+ pwd        = password
+ group      = 1
+ au         = myserialmousereader
+ services   = myservice
+ betatunnel = 0100.0001:0101,0100.0002:0101
+ caid       = 0100 
+ ident      = 0100:000000
+ uniq       = 1
+.SH "SEE ALSO"
+\fBlist_smargo\fR(1), \fBoscam\fR(1), \fBoscam.ac\fR(5), \fBoscam.cacheex\fR(5), \fBoscam.cert\fR(5), \fBoscam.conf\fR(5), \fBoscam.dvbapi\fR(5), \fBoscam.guess\fR(5), \fBoscam.ird\fR(5), \fBoscam.provid\fR(5), \fBoscam.ratelimit\fR(5), \fBoscam.server\fR(5), \fBoscam.services\fR(5), \fBoscam.tiers\fR(5), \fBoscam.srvid\fR(5), \fBoscam.whitelist\fR(5)

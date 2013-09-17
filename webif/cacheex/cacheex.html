@@ -1,0 +1,18 @@
+##TPLHEADER##
+##TPLMENU##
+##TPLMESSAGE##
+	<BR><BR>
+	<TABLE CLASS="stats">
+			<TR><TH COLSPAN="11">CacheEX Stats for ##OWN_CACHEEX_NODEID##</TH></TR>
+			<TR><TH>Direction</TH><TH>Type</TH><TH>Name</TH><TH>IP</TH><TH>NODE</TH><TH>Cache EX Mode</TH><TH>Push</TH><TH>Got</TH><TH>Hit</TH><TH>Err</TH><TH>CW Diff</TH></TR>
+##TABLECLIENTROWS##
+##TABLEREADERROWS##
+	</TABLE>
+	<BR><BR>
+	<TABLE>
+		<TR><TH>Total push</TH><TH>Total got</TH><TH>Total hit</TH><TH>Cache size</TH></TR>
+		<TR><TD class="centered">##TOTAL_CACHEXPUSH_IMG##</TD><TD class="centered">##TOTAL_CACHEXGOT_IMG##</TD><TD class="centered">&nbsp;</TD><TD class="centered">&nbsp;</TD></TR>
+		<TR><TD class="centered">##TOTAL_CACHEXPUSH##</TD><TD class="centered">##TOTAL_CACHEXGOT##</TD><TD class="centered">##TOTAL_CACHEXHIT## (##REL_CACHEXHIT##%)</TD><TD class="centered">##TOTAL_CACHESIZE##</TD></TR>
+	</TABLE>
+	<BR><BR>
+##TPLFOOTER##

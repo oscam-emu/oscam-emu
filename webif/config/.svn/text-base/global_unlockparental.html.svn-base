@@ -1,0 +1,1 @@
+			<TR><TD>##TPLHELPPREFIX##conf#unlockparental##TPLHELPSUFFIX##Unlock parental:</A></TD><TD><SELECT NAME="unlockparental"><OPTION VALUE="0">NO</OPTION><OPTION VALUE="1" ##UNLOCKPARENTALCHECKED##>YES</OPTION></SELECT>  Only for Seca and Viaccess  </TD></TR>

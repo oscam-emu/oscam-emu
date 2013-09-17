@@ -1,0 +1,223 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of oscam</TITLE>
+</HEAD><BODY>
+<H1>oscam</H1>
+Section: User Commands  (1)<BR><A HREF="#index">Index</A>
+<A HREF="/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>OSCam</B> - SC server
+<A NAME="lbAC">&nbsp;</A>
+<H2>DESCRIPTIONS</H2>
+
+The OSCam software is an <I>open source</I> multi-protocol/multi-platform SC server.
+<P>
+<I>Please check the compile options for included features in the binary.</I>
+<P>
+OSCam supports the following protocols:
+<DL COMPACT>
+<DT>&bull;<DD>
+newcamd with cascading/remote server ECM support
+<DT>&bull;<DD>
+camd 3.3x TCP
+<DT>&bull;<DD>
+camd camd 3.5x / 3.57x UDP with cascading/remote server ECM support, ECM and EMM support with size &gt; 256 bytes
+<DT>&bull;<DD>
+camd 3.78x TCP with cascading/remote server ECM support, ECM and EMM support with size &gt; 256 bytes
+<DT>&bull;<DD>
+CCcam with cascading/remote server ECM support, ECM and EMM support with size &gt; 256 bytes
+<DT>&bull;<DD>
+DVB API with multi tuner and PIP support
+<DT>&bull;<DD>
+gbox with cascading/remote server ECM support
+<DT>&bull;<DD>
+serial (HSIC, SSSP, BOMBA, DSR 9500)
+<DT>&bull;<DD>
+radegast
+<DT>OSCam works on the following platforms:<DD>
+<DT>&bull;<DD>
+Linux (Tuxbox, ARM, MIPS, MIPSel, SH-4, PowerPC, ...)
+<DT>&bull;<DD>
+Windows (based on cygwin1.dll)
+<DT>&bull;<DD>
+Mac OS X
+</DL>
+<A NAME="lbAD">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<P>
+
+<B>-a</B>|<B>--crash-dump</B>
+<DL COMPACT><DT><DD>
+write oscam.crash on segfault (needs installed GDB and OSCam compiled with debug infos -ggdb)
+</DL>
+
+<P>
+
+<B>-b</B>|<B>--daemon</B>
+<DL COMPACT><DT><DD>
+starts in background, writing oscam.version with starttime and version info in temporary directory
+</DL>
+
+<P>
+
+<B>-B</B>|<B>--pidfile</B> &lt;filename&gt;
+<DL COMPACT><DT><DD>
+set PID file, overrides pidfile of <B>oscam.conf</B>, default:none
+</DL>
+
+<P>
+
+<B>-c</B>|<B>--config-dir</B> &lt;directory&gt;
+<DL COMPACT><DT><DD>
+read configuration from &lt;directory&gt;, default:see CS_CONFDIR in <B>globals.h</B>,
+while starting OSCam prints warnings on invalid keywords, comment lines start with <B>#</B> character.
+</DL>
+
+<P>
+
+<B>-d</B>|<B>--debug</B> &lt;level&gt;
+<DL COMPACT><DT><DD>
+debug level mask:
+<P>
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>0</B>&nbsp;=&nbsp;no&nbsp;debugging&nbsp;(default)
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>2</B>&nbsp;=&nbsp;ATR&nbsp;parsing&nbsp;info,&nbsp;ECM&nbsp;dumps,&nbsp;CW&nbsp;dumps
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>4</B>&nbsp;=&nbsp;traffic&nbsp;from/to&nbsp;the&nbsp;reader
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>8</B>&nbsp;=&nbsp;traffic&nbsp;from/to&nbsp;the&nbsp;clients
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;<B>16</B>&nbsp;=&nbsp;traffic&nbsp;to&nbsp;the&nbsp;reader-device&nbsp;on&nbsp;IFD&nbsp;layer
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;<B>32</B>&nbsp;=&nbsp;traffic&nbsp;to&nbsp;the&nbsp;reader-device&nbsp;on&nbsp;I/O&nbsp;layer
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;<B>64</B>&nbsp;=&nbsp;EMM&nbsp;logging
+<BR>&nbsp;&nbsp;&nbsp;<B>128</B>&nbsp;=&nbsp;DVBAPI&nbsp;logging
+<BR>&nbsp;&nbsp;&nbsp;<B>256</B>&nbsp;=&nbsp;load&nbsp;balancing&nbsp;logging
+<BR>&nbsp;&nbsp;&nbsp;<B>512</B>&nbsp;=&nbsp;cache&nbsp;exchange&nbsp;logging
+<BR>&nbsp;&nbsp;<B>1024</B>&nbsp;=&nbsp;client&nbsp;ECM&nbsp;logging
+<BR>&nbsp;<B>65535</B>&nbsp;=&nbsp;debug&nbsp;all
+</DL>
+
+<P>
+
+<B>-g</B>|<B>--gcollect</B> &lt;mode&gt;
+<DL COMPACT><DT><DD>
+garbage collector debug mode, default:none:
+<P>
+<BR>&nbsp;&nbsp;&nbsp;<B>1</B>&nbsp;=&nbsp;immediate&nbsp;free
+<BR>&nbsp;&nbsp;&nbsp;<B>2</B>&nbsp;=&nbsp;check&nbsp;for&nbsp;double&nbsp;frees
+</DL>
+
+<P>
+
+<B>-h</B>|<B>--help</B>
+<DL COMPACT><DT><DD>
+usage
+</DL>
+
+<P>
+
+<B>-I</B>|<B>--syslog-ident</B> &lt;ident&gt;
+<DL COMPACT><DT><DD>
+set syslog ident, default:oscam
+</DL>
+
+<P>
+
+<B>-p</B>|<B>--pending-ecm</B> &lt;number&gt;
+<DL COMPACT><DT><DD>
+maximum number of pending ECM packets, default:32, maximum:255
+</DL>
+
+<P>
+
+<B>-r</B>|<B>--restart</B> &lt;level&gt;
+<DL COMPACT><DT><DD>
+restart level:
+<P>
+<BR>&nbsp;&nbsp;&nbsp;<B>0</B>&nbsp;=&nbsp;disabled,&nbsp;restart&nbsp;request&nbsp;sets&nbsp;exit&nbsp;status&nbsp;to&nbsp;99
+<BR>&nbsp;&nbsp;&nbsp;<B>1</B>&nbsp;=&nbsp;restart&nbsp;activated,&nbsp;web&nbsp;interface&nbsp;can&nbsp;restart&nbsp;oscam&nbsp;(default)
+<BR>&nbsp;&nbsp;&nbsp;<B>2</B>&nbsp;=&nbsp;like&nbsp;1,&nbsp;but&nbsp;also&nbsp;restart&nbsp;on&nbsp;segmentation&nbsp;faults
+</DL>
+
+<P>
+
+<B>-S</B>|<B>--show-sensitive</B>
+<DL COMPACT><DT><DD>
+do not filter sensitive info (card serial numbers) in the logs
+</DL>
+
+<P>
+
+<B>-s</B>|<B>--capture-segfaults</B>
+<DL COMPACT><DT><DD>
+capture segmentation faults
+</DL>
+
+<P>
+
+<B>-t</B>|<B>--temp-dir</B> &lt;directory&gt;
+<DL COMPACT><DT><DD>
+use &lt;directory&gt; for temporary data, default:temporary directory of OS
+</DL>
+
+<P>
+
+<B>-u</B>|<B>--utf8</B>
+<DL COMPACT><DT><DD>
+enable output of web interface in UTF-8 charset
+</DL>
+
+<P>
+
+<B>-V</B>|<B>--build-info</B>
+<DL COMPACT><DT><DD>
+show OSCam version info
+</DL>
+
+<P>
+
+<B>-w</B>|<B>--wait</B> &lt;seconds&gt;
+<DL COMPACT><DT><DD>
+time waiting for system time to be set correctly
+</DL>
+
+<A NAME="lbAE">&nbsp;</A>
+<H2>SIGNALS</H2>
+
+<P>
+
+<B>SIGHUP</B>
+<DL COMPACT><DT><DD>
+reinit user db, TIERs, services, clients and anti-cascading, for newcamd connections: after reloading the ident, please restart newcamd client
+</DL>
+
+<P>
+
+<B>SIGUSR1</B>
+<DL COMPACT><DT><DD>
+shift debug level to next level (see debug level mask above)
+</DL>
+
+<P>
+
+<B>SIGUSR2</B>
+<DL COMPACT><DT><DD>
+get reader SC info
+</DL>
+
+<A NAME="lbAF">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="/cgi-bin/man/man2html?1+list_smargo">list_smargo</A></B>(1), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ac">oscam.ac</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.cacheex">oscam.cacheex</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.cert">oscam.cert</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.conf">oscam.conf</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.dvbapi">oscam.dvbapi</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.guess">oscam.guess</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ird">oscam.ird</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.provid">oscam.provid</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ratelimit">oscam.ratelimit</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.server">oscam.server</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.services">oscam.services</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.srvid">oscam.srvid</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.tiers">oscam.tiers</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.user">oscam.user</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.whitelist">oscam.whitelist</A></B>(5)
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">DESCRIPTIONS</A><DD>
+<DT><A HREF="#lbAD">OPTIONS</A><DD>
+<DT><A HREF="#lbAE">SIGNALS</A><DD>
+<DT><A HREF="#lbAF">SEE ALSO</A><DD>
+</DL>
+</BODY>
+</HTML>

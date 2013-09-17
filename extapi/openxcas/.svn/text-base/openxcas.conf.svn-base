@@ -1,0 +1,5 @@
+[module]
+name = oscamCAS
+daemon = oscam_module
+#daemon = oscam_module -255
+version = 1

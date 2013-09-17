@@ -1,0 +1,21 @@
+.TH oscam.ac 5
+.SH NAME
+\fBoscam.ac\fR - anti-cascading table for OSCam
+.SH SYNOPSIS
+anti-cascading table
+.SH DESCRIPTIONS
+.PP
+\fB<CAID>\fP:\fB<provider ID>\fP=\fB<seconds>\fP
+.RS 3n
+define time cycles between CWs changes relating to CAID and provider ID
+.RE
+.PP
+\fB*\fP=\fB<seconds>\fP
+.RS 3n
+default time cycles between CWs changes \fIrequired\fR
+.RE
+.SH EXAMPLES
+ 0100:000000=10
+ *=7
+.SH "SEE ALSO"
+\fBlist_smargo\fR(1), \fBoscam\fR(1), \fBoscam.cacheex\fR(5), \fBoscam.cert\fR(5), \fBoscam.conf\fR(5), \fBoscam.dvbapi\fR(5), \fBoscam.guess\fR(5), \fBoscam.ird\fR(5), \fBoscam.provid\fR(5), \fBoscam.ratelimit\fR(5), \fBoscam.server\fR(5), \fBoscam.services\fR(5), \fBoscam.srvid\fR(5), \fBoscam.tiers\fR(5), \fBoscam.user\fR(5), \fBoscam.whitelist\fR(5)

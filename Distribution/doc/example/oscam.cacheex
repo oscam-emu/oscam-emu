@@ -1,0 +1,12 @@
+#
+# ECM length matching table
+#
+# format:
+#
+#  matching:
+#   m:[CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1][,ECM length 2]...=
+#     [CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1][,ECM length 2]...
+#
+
+m:1234:::::93=5678:::::93  # matching CAID 1234 and CAID 5678 with
+                           # ECM length 93

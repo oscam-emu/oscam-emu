@@ -1,0 +1,26 @@
+#
+# whitelist table
+#
+# format:
+#
+#  whitelist:
+#   w:[CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1][,ECM length 2]...
+#
+#  whitelist, not proceed with any other ECM length whitelisting when matching:
+#   l:[CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1][,ECM length 2]...
+#
+#  ignore:
+#   i:[CAID][:][provider ID][:][service ID][:][ECM PID][:][CHID][:][ECM length 1][,ECM length 2]...
+#
+
+w:0100       # whitelisting for CAID 0100
+
+i:0200:1234  # ignore CAID 0200 with service ID 1234
+
+i:::::2345   # ignore CHID 2345
+
+w:           # allow all others (blacklist)
+
+l:0300       # whitelisting for CAID 0300 not proceeding
+             # if matching
+

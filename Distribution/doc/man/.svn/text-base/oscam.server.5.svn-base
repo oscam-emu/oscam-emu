@@ -1,0 +1,816 @@
+.TH oscam.server 5
+.SH NAME
+\fBoscam.server\fR - reader configuration file for OSCam
+.SH SYNOPSIS
+The server configuration file for OSCam contains reader parameters. 
+sections in \fBoscam.server\fR are \fIrecurring\fR (more than one reader possible).
+At least one [reader] section is \fIrequired\fR.
+.SH DESCRIPTIONS
+.SS "The [reader] section"
+.PP
+\fBlabel\fP = \fBname\fP
+.RS 3n
+name for reader, \fIrequired\fR
+.RE
+.PP
+\fBenable\fP = \fB0\fP|\fB1\fP
+.RS 3n
+0 = deactivate reader, default:1
+.RE
+.PP
+\fBdescription\fP = \fBtext\fP
+.RS 3n
+description of reader, default:none
+.RE
+.PP
+\fBprotocol\fP = \fBreader protocol\fP
+.RS 3n
+reader protocol, \fIrequired\fR:
+
+ \fBcamd35\fP|\fBcs357x\fP
+ \fBcccam\fP
+ \fBcs378x\fP
+ \fBconstcw\fP
+ \fBgbox\fP
+ \fBghttp\fP
+ \fBinternal\fP
+ \fBmouse\fP
+ \fBmp35\fP
+ \fBnewcamd\fP|\fBnewcamd525\fP
+ \fBnewcamd524\fP
+ \fBpcsc\fP 
+ \fBradegast\fP 
+ \fBsc8in1\fP
+ \fBserial\fP
+ \fBsmargo\fP 
+ \fBsmartreader\fP
+.RE
+.PP
+\fBdevice\fP = \fB[<readertype>;]serial:serialnum|bus:device\fP|
+         \fB<device|device:slot>\fP|
+         \fB<ip|hostname>,<port>[,<lport>]\fP|
+         \fB<ip|hostname>,<gboxpport>\fP|
+         \fBpcsc\fP|
+         \fB<0|1>\fP>|
+         \fBconstantcw\fP
+.RS 3n
+define local or remote reader
+
+ \fBreadertype\fP:  set reader type
+
+                \fBSR\fP:       Smartreader+ (default)
+                \fBInfinity\fP: Infinity USB
+                \fBTripleP1\fP: Smargo Triple Reader port 1
+                \fBTripleP2\fP: Smargo Triple Reader port 2
+                \fBTripleP3\fP: Smargo Triple Reader port 3
+
+ \fBbus:device\fP:  bus name and device name of the Smartreader+ or 
+              Infinity USB (get the names with lsusb 'Bus' 
+              and 'Device')
+
+ \fBserialnum\fP:   serial number of reader of the Smartreader+ or 
+              Infinity USB
+
+ \fBdevice\fP:      device name
+
+ \fBdevice:slot\fP: device name and slot number sc8in1 [1-8]
+              \fI(only one SC8in1 reader supported)\fR
+
+ \fBip\fP|\fBhostname\fP: IP address or host name
+
+ \fBport\fP:        TCP/IP port
+
+ \fBlport\fP:       remapping to local TCP/IP port
+
+ \fBgboxpport\fP:   UDP port for remote gbox peer
+
+ \fBPCSC\fP:        number of PCSC reader, starting with 0
+
+ \fB0|1\fP:         for Coolstream HD-1 STB only: select reader 0 or 
+              reader 1
+
+ \fBconstantcw\fP:  constant CW file name
+
+constant CW file format: 
+
+CAID\fB:\fPProvider ID\fB:\fPService ID\fB:\fPVideo ID\fB:\fPECM PID\fI::\fRkey (16 Bytes seperated by spaces)
+
+example: 1234:123456:1234:2345:3456\fI::\fR00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+.RE
+.PP
+\fBdetect\fP = \fBCD\fP|\fBDSR\fP|\fBCTS\fP|\fBRING\fP|\fBNONE\fP|\fBgpio[1-7]\fP
+.RS 3n
+status detect of card (NONE = no detection), default:CD
+.RE
+.PP
+\fBcardmhz\fP = \fBmhz\fP
+.RS 3n
+set standard SC frequency in units of 10 kHz, for Irdeto SC set to 600, for auto clock speed in Dreambox mode set to -1, refer to OVERCLOCKING, default:357
+.RE
+.PP
+\fBmhz\fP = \fBfrequency\fP
+.RS 3n
+set reader frequency in units of 10 kHz, if \fBmhz\fP > \fBcardmhz\fP you are in overclocking mode, 
+for \fBcardmhz\fP swiching to MIPSel Dreambox mode set to 2700, for \fBcardmhz\fP swiching to PPC Dreambox mode set to 3150, 
+for \fBcardmhz\fP swiching to Dreambox DM7025 mode set to 8300, refer to OVERCLOCKING, default:357 
+.RE
+.PP
+\fBdeprecated\fP = \fB0\fP|\fB1\fP
+.RS 3n
+First the SC will be initialized in normal mode. If it fails, the SC will be automatically 
+reverted to deprecated mode, so that the SC speed will not be changed and the communication 
+will remain on normal ATR speed of 9600 baud.
+
+1 = use deprecated SC mode only, default:0
+.RE
+.PP
+\fBmode\fP = \fBmode\fP
+.RS 3n
+set card init mode for AzBox internal reader, default:none
+.RE
+.PP
+\fBsmargopatch\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = enable workaround for Smartreader+ reader until native mode works, default:0
+.RE
+.PP
+\fBsc8in1_dtrrts_patch\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = enable fix for SC8in1/MCR DTR/RTS kernel bug, default:0
+.RE
+.PP
+\fBuse_gpio\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = use GPIO to init the reader. This needs to be set on WRT54G router, default:0
+.RE
+.PP
+\fBins7e\fP = \fBpayload\fP
+.RS 3n
+add 26 hex-bytes payload for NDS Videoguard 2 SCs, valid for physical readers only, default:none
+.RE
+.PP
+\fBins7e11\fP = \fBTA1 byte\fP
+.RS 3n
+set TA1 byte for NDS Videoguard 2 SCs, valid for physical readers only, default:none
+.RE
+.PP
+\fBforce_irdeto\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = force Irdeto SC mode even if RSA key is set for Irdeto tunnled Nagravion SC, default:0
+.RE
+.PP
+\fBnagra_read\fP = \fB0\fP|\fB1\fP|\fB2\fP
+.RS 3n
+read Nagravison records (on NCMED cards only):
+
+ \fB0\fP = disabled (default)
+ \fB1\fP = read all records with expired rights
+ \fB2\fP = read records with valid rights only
+.RE
+.PP
+\fBrsakey\fP = \fBRSA key\fP
+.RS 3n
+RSA key for Nagravision/Tiger SCs, CAM key data for Irdeto SCs, Conax SCs, default:none
+.RE
+.PP
+\fBfix9993\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = enable fix for 9993 error with CAID 0919 SCs, default:0
+.RE
+.PP
+\fBboxkey\fP = \fBbox key\fP
+.RS 3n
+box key for Nagravision SCs / CAM key for Irdeto SCs
+.RE
+.PP
+\fBpincode\fP = \fBpincode\fP
+.RS 3n
+pincode for Conax, Cryptoworks and Viaccess SCs, default:none
+.RE
+.PP
+\fBboxid\fP = \fBNDS box ID\fP
+.RS 3n
+NDS receiver box id
+.RE
+.PP
+\fBndsversion\fP = \fB0\fP|\fB1\fP|\fB12\fP|\fB2\fP
+.RS 3n
+set NDS Videoguard version
+
+  \fB0\fP = autodetection (default)
+  \fB1\fP = NDS Videoguard 1
+ \fB12\fP = NDS Videoguard 1+
+  \fB2\fP = NDS Videoguard 2
+.RE
+.PP
+\fBaeskeys\fP = \fBCAID #0\fP@\fBprovid\fP:\fBAES key #0 CAID #0\fP[,\fBAES key #1 CAID #0\fP],...[;\fBCAID #1\fP@\fBprovid\fP:\fBAES key #0 CAID #1\fP[,\fBAES key #1 CAID #1\fP],...]...
+.RS 3n
+multiple 16 bytes AES keys for Viaccess SCs (the used postprocessing AES key is specified through the D2 nano of the ECM)
+
+special AES keys:
+
+ \fB00\fP = do not return any CW, no AES key specified
+ \fBFF\fP = return CW received from the S, no AES key specified
+
+example: 
+
+ aeskeys = 0500@012345:000102030405060708090a0b0c0d0e0f;0500@543210:000102030405060708090a0b0c0d0e0f,0,0f0e0d0c0b0a090807060504030201
+.RE
+.PP
+\fBkey\fP = \fBDES key\fP
+.RS 3n
+key for newcamd remote reader encryption
+.RE
+.PP
+\fBuser\fP = \fBname\fP
+.RS 3n
+user for remote reader
+.RE
+.PP
+\fBpassword\fP = \fBpassword\fP
+.RS 3n
+password for remote reader
+.RE
+.PP
+\fBmg-encrypted\fP = D: { \fB<IP|hostname>\fP { \fB<local port>\fP \fB<remote port>\fP { \fB<password>\fP { \fB<level>\fP \fB<level>\fP }}}}[,\fB<local MAC address>\fP]
+.RS 3n
+mgcamd encrypted gbox line, default MAC address = eth0
+.RE
+.PP
+\fBservices\fP = \fB[!]services[,[!]<services>]...\fP
+.RS 3n
+reader [de]assignment to service group, default=none
+.RE
+.PP
+\fBlb_whitelist_services\fP = \fB<services>,<services>...\fP
+.RS 3n
+reader assignement to service group for channels which may never be blocked by the loadbalancer to the reader , default=none
+.RE
+.PP
+\fBcaid\fP = \fB<CAID>[&<mask>][:<target CAID>][,<CAID>[&<mask>][:target <CAID>]]...\fP
+.RS 3n
+define and mapping of CAIDs for reader, default:all CAIDs with mask FFFF
+
+example: caid = 0100
+         caid = 0200&ffee:0300
+         caid = 0400&ff00:0500,0600
+         caid = 0702,0722
+         caid = 0702&ffdf (shortcut for the example above)
+.RE
+.PP
+\fBident\fP = \fB<CAID>:<provid>[,provid]...[;<CAID>:<provid>[,provid]...]...\fP
+.RS 3n
+set CAID and SC specific ident for reader
+
+example: ident = 0100:123456,234567;0200:345678,456789
+.RE
+.PP
+\fBclass\fP = \fB[!]class[,[!]class]...\fP
+.RS 3n
+set SC specific class in hex for reader
+
+example: class = 01,02,!1b,!2b
+.RE
+.PP
+\fBchid\fP = \fBCAID:ChID\fP
+.RS 3n
+set SC specific ChIDs for reader, default:none
+
+example: chid = 0100:12
+.RE
+.PP
+\fBgroup\fP = \fB1..64[,1..64]...\fP
+.RS 3n
+reader assingment to groups, default:none, \fIrequired\fR
+.RE
+.PP
+\fBaudisabled\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = exclude reader from auto AU, default:0
+.RE
+.PP
+\fBauprovid\fP = \fBprovider ID\fP
+.RS 3n
+set provider ID to use the right reader for auto AU
+
+example: auprovid = 123456
+.RE
+.PP
+\fBdisableserverfilter\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = ignore \fBcaid\fP and \fBprovid\fP settings of reader due faulty clients, default:0
+.RE
+.PP
+\fBinactivitytimeout\fP = \fBseconds\fP
+.RS 3n
+inactivity timeout for all TCP based remote readers, -1 = reconnect on network failure for newcamd based readers, even in idle, default:0
+.RE
+.PP
+\fBreconnecttimeout\fP = \fBseconds\fP
+.RS 3n
+reconnect if missing answers from a remote reader, default:30
+.RE
+.PP
+\fBconnectoninit\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = allow newcamd connections to be established on startup although there isn't a request yet, default:0
+.RE
+.PP
+\fBfallback\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = define reader as fallback, standard and fallback reader must have the same group, default:0
+.RE
+.PP
+\fBfallback_percaid\fP = \fB<CAID>[:<ident>[,ident]]...[;<CAID>[:<ident>[,ident]]...]....\fP
+.RS 3n
+use reader as fallback for defined CAIDs only, two-digit wildcard CAIDs are possible, \fBfallback_percaid\fP overrules \fBfallback\fP, default:none
+
+ example: fallback_percaid = 1234:234567;89;10:345678
+.RE
+.PP
+\fBemmcache\fP = \fBusecache,rewrite,logging\fP
+.RS 3n
+set EMM cache of local reader:
+
+ \fBusecache\fP = \fB0\fP|\fB1\fP: 1 = enable EMM caching, default:0
+
+ \fBrewrite\fP  = determines how often one and the same EMM is
+            written, default:0
+
+ \fBlogging\fP  = EMM logging mask:
+
+             \fB0\fP = EMM logging disabled (default)
+             \fB1\fP = logging EMM errors
+             \fB2\fP = logging written EMMs
+             \fB4\fP = logging skipped EMMs
+             \fB8\fP = logging blocked EMMs
+            \fB16\fP = logging disabled AU
+
+ example: emmcache = 1,3,2
+.RE
+.PP
+\fBcacheex\fP = \fB0\fP|\fB1\fP|\fB2\fP|\fB3\fP
+.RS 3n
+set cache exchange mode
+
+ \fB0\fP: disable cache exchange mode (default)
+ \fB1\fP: enable cache exchange pull mode
+ \fB2\fP: enable cache exchange push mode for camd 3.5x / 3.57x and CCcam 
+    protocol
+ \fB3\fP: enable reverse cache exchange push mode for camd 3.5x / 3.57x 
+    and CCcam protocol
+
+\fIIdentical cache exchange modes must be set on local OSCam server and remote OSCam user asccount.\fR
+
+\fIPlease consider memory consumption.\fR
+.RE
+.PP
+\fBcacheex_maxhop\fP = \fBhops\fP
+.RS 3n
+define maximum hops for cache exchange, default=10
+.RE
+.PP
+\fBcsp_ecm_filter\fP = \fB[caid][&mask][@provid][$servid],n\fP
+.RS 3n
+cache exchange incoming ECM filter setting (mode 2 only) for Cardservproxy, default:none
+.RE
+.PP
+\fBcacheex_drop_csp\fP = \fB0\fP|\fB1\fP
+.RS 3n
+drop incoming Cardservproxy cache (mode 2 only), detection is zero ecmd5, default:0
+.RE
+.PP
+\fBcacheex_allow_request\fP = \fB0\fP|\fB1\fP
+.RS 3n
+allow incoming ECM request (mode 2), default:1
+.RE
+.PP
+\fBecmwhitelist\fP = [\fBCAID\fP[@\fBprovid\fP]:]\fBlength\fP[,\fBlength\fP]...[;[\fBCAID\fP[@\fBprovid\fP]:]\fBlength\fP[,\fBlength\fP]...]...
+.RS 3n
+set valid ECM length per CAID and provid in hex, default:none,provid=000000
+
+example: ecmwhitelist = 10,20,0a,0b
+         ecmwhitelist = 0100:10,20;0200@123456:0a,4b
+
+\fIIn normal operation mode this parameter is not required.\fR
+.RE
+.PP
+\fBecmheaderwhitelist\fP = [\fBCAID\fP[@\fBprovid\fP]:]\fBheader\fP[,\fBheader\fP]...[;[\fBCAID\fP[@\fBprovid\fP]:]\fBheader\fP[,\fBheader\fP]...]...
+.RS 3n
+set vaild ECM header per CAID and provid in hex, default:none,provid=000000
+.RE
+.PP
+\fBratelimitecm\fP = \fBcount\fP
+.RS 3n
+number of different SIDs in ECMs allowed for an interval, default:0
+.RE
+.PP
+\fBecmnotfoundlimit\fP = \fBcount\fP
+.RS 3n
+number of ECMs with "not found" answer until the reader will be restarted, 0 = no limit, default:0
+.RE
+.PP
+\fBresetcycle\fP = \fBcount\fP
+.RS 3n
+number of ECMs until SC reset is performed, 0 = disabled, valid for physical readers only, default:0
+.RE
+.PP
+\fBratelimitseconds\fP = \fBseconds\fP
+.RS 3n
+interval for rate limit, default:0
+.RE
+.PP
+\fBecmunique\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = enable check for matching ECM hash in ratelimit slot , default:0
+.RE
+.PP
+\fBsrvidholdseconds \fP = \fBseconds\fP
+.RS 3n
+time to keep service ID in ratelimit slot, during this time checkeding for ecmunique is disbaled, default:0
+.RE
+.PP
+\fBcooldown\fP = \fBdelay\fP,\fBduration\fP
+.RS 3n
+ define cooldown:
+
+ \fBdelay\fP:    delay in seconds for which the reader is allowed to do 
+           more ECM requests than defined by ecmratelimit, 
+           default: none 
+
+ \fBduration\fP: duration in seconds the reader needs to cooldown, 
+           default:none
+
+\fIratelimitecm and ratelimitseconds are required\fR
+.RE
+.PP
+\fBblocknano\fP = \fBnano[,nano]...\fP|\fPall\fP
+.RS 3n
+list of EMM-nanos to block (in hex w/o 0x) or all EMM-nanos, valid for physical readers only, default:none
+
+ example: blocknano = 45,93,7a,ff
+          blocknano = all
+.RE
+.PP
+\fBblockemm-u\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = block unique EMMs, default:0
+.RE
+.PP
+\fBblockemm-s\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = block shared EMMs, default:0
+.RE
+.PP
+\fBblockemm-g\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = block global EMMs, default:0
+.RE
+.PP
+\fBblockemm-unknown\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = block unknown types of EMMs, default:0
+.RE
+.PP
+\fBblockemm-bylen\fP = \fB[length range,length range]...\fP
+.RS 3n
+block all types of EMMs by length, default:none
+
+ example: blockemm-bylen = 1-10,11-
+.RE
+.PP
+\fBsaveemm-u\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = save unique EMMs to log file, default:0
+.RE
+.PP
+\fBsaveemm-s\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = save shared EMMs to log file, default:0
+.RE
+.PP
+\fBsaveemm-g\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1= save global EMMs to log file, default:0
+.RE
+.PP
+\fBsaveemm-unknown\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = save unknown types of EMMs to log file, default:0
+.RE
+.PP
+\fBsavenano\fP = \fBnano[,nano]....\fP|\fPall\fP \fI(obsolete)\fR
+.RS 3n
+list of EMM-nanos to save (in hex w/o 0x) or all EMM-nanos, only valid for physical readers, default:none
+
+ example: savenano = 45,93,7a,ff
+          savenano = all
+.RE
+.PP
+\fBreadnano\fP = \fB[path]filename\fP
+.RS 3n
+write file (usually a copy of a file saved by savenano) to your smartcard, if no path is specified, the specified file is searched for in the configuration directory, only valid for physical readers, default:none
+
+ example: readnano = write.emm
+          readnano = /var/oscam/write.emm
+.RE
+.PP
+\fBdropbadcws\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = reject bad CWs, send "not found" instead of bad CWs, default:0
+.RE
+.PP
+\fBdisablecrccws\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = disable CRC for CW, default: 0
+
+\fIIn normal operation mode this parameter is not required. Parameter is incompatible with DVB standard.\fR
+.RE
+.PP
+\fBlb_weight\fP = \fBweight\fP
+.RS 3n
+the higher the value the higher the probability for reader selection, default:100
+
+ It's an divider for the average responstime.
+.RE
+.PP
+\fBcccversion\fP = \fB<main version>.<version>.<sub version>\fP
+.RS 3n
+set CCcam version, default:none
+
+example: cccversion = 1.2.34
+.RE
+.PP
+\fBcccmaxhops\fP = \fBhops\fP
+.RS 3n
+set CCcam maximum SC distance hops, default:10
+
+ \fB-1\fP = disabled
+  \fB0\fP = remote local SCs only
+  \fB1\fP = remote local SCs and + 1 hop
+  \fB2\fP = remote local SCs and + 2 hops
+ and so on
+
+After reading this SC hop will be incremented by one.
+.RE
+.PP
+\fBccchop\fP = \fBhop\fP
+.RS 3n
+set hop for non CCCam readers, default:0
+.RE
+.PP
+\fBcccreshare\fP = \fBhop\fP
+.RS 3n
+set reader's CCcam reshare hop, default:0
+
+ \fB-1\fP = reshare value off cccam in global config
+  \fb0\fP = resharing for direct peer only
+  \fBx\fP = resharing for direct peer and share level x
+.RE
+.PP
+\fBcccwantemu\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = request to provide emu from CCCam server, too, default:0
+.RE
+.PP
+\fBccckeepalive\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = send keepalive messages to keep connection to remote CCCam server up, default:0
+.RE
+.PP
+\fBcccreconnect\fP = \fBtimeout\fP
+.RS 3n
+reconnect again after ECM request timeout in milli-seconds, default:4000
+.RE
+.PP
+\fBcccmindown\fP = \fBnumber\fP
+.RS 3n
+filters all readers with hops smaller than number, default:0
+.RE
+.PP
+\fBgbox_my_password\fP = \fBpassword\fP
+.RS 3n
+password for connection to local gbox peer, default:none
+.RE
+.PP
+\fBgbox_reshare\fP = \fBlevel\fP
+.RS 3n
+gbox reshare level of local cards, default:0
+.RE
+.PP
+\fBgbox_max_distance\fP = \fBdistance\fP
+.RS 3n
+maximum distance to receive gbox peer cards, default:2
+.RE
+.PP
+\fBgbox_max_ecm_send\fP = \fBnumber\fP
+.RS 3n
+maximum of gbox peers ECMs will be send to, default:3
+.RE
+.PP
+\fBgbox_group\fP = \fBgroup\fP
+.RS 3n
+reader assingment to gbox group, default:none
+.RE
+.PP
+\fBuse_ssl\fP = \fB0\fP|\fB1\fP
+.RS 3n
+1 = use SSL for ghttp protocol, default:0
+.RE
+.SH OVERCLOCKING
+.TP 3n
+\(bu
+Dreambox and other internal readers
+
+For Dreambox and other internal readers the highest possible clockrate will be 
+auto detected. The \fBmhz\fR parameter lets you override the values chosen by 
+OSCam, if it differs from 357 and 358, but usually you will not set any value 
+for mhz.
+
+For certain Dreamboxes (especially PPC clones) the default mhz parameter leads 
+to slow ECM times and/or "not found" ECMs. By setting \fBmhz\fR to values like 
+200, 300, 400, ... 1600 you can find a value that works for your receiver and 
+your card. The higher the \fBmhz\fR value, the slower the ECM time (strange enough).
+
+If you choose the value too low, your card is not recognized (no ATR or "card 
+not supported"). If you choose the value too high, you get slow ECM times. Our 
+experience is that either no \fBmhz\fR line, or a line \fBmhz\fR = 1000 works 
+best. 
+.TP 3n 
+\(bu
+Phoenix / Smartmouse reader
+
+Overclocking does not work with Windows and Mac OS X. 
+Set \fBmhz\fR equivalent to the frequency of the reader. 
+OSCam can not set the frequency of the reader. 
+.TP 3n 
+\(bu
+Smargo Smartreader+
+
+Use protocol = smargo for the FDDI kernel drivers (no libusb needed) or (not 
+recommended) use protocol = smartreader for OSCam's driver implementation 
+based on libusb.
+
+Set the reader frequency with the native Smargo Smartreader+ tool (srp_tools). 
+If not setting \fBmhz\fR and \fBcardmhz\fR, OSCam  tries  to  set the baudrate 
+automatically, according to the maximum speed indicated by ATR. Overclocking 
+is possible.
+.PP
+OSCam tries to set the baudrate automatically. 
+A standard serial port has limited baudrate settings, so SC overclocking might not work.
+When using a serial reader the best way for overclocking is connecting it to a FTDI based USB to serial port adapter. 
+
+If overclocking does not work, verify the effective baudrate in the logfile. 
+If it deviates too much from the requested baudrate, the SC will not be recognized (no ATR) 
+and the value for \fBmhz\fR should be adjusted again. 
+The higher the baudrate, the more accurate the effective baudrate can be. 
+.SH CACHE EXCHANGE
+.TP 3n
+\(bu
+pull mode (on request: cache exchange from remote to local OSCam)
+
+ECM requests will be forwarded to the remote cache exchange partner. If the CW 
+could not be found in the cache of the remote exchange partner, a not found 
+will be answered. If the CW could not be found in the cache of the remote 
+exchange partner but a pending ECM request is open, the request will be 
+re-initiated after the wait time defined in \fBcacheexwaittime\fR.
+.TP 3n
+\(bu
+push mode (continuous: cache exchange from remote to local OSCam)
+
+CWs from the remote cache exchange partner will be forwarded to the local 
+cache. Forwarding only works while the camd camd 3.5x / 3.57x or CCcam 
+protocol connection between the local and remote OSCam has been established.
+.TP 3n
+\(bu
+reverse push mode (continuous: cache exchange from local to remote OSCam)
+
+CWs from the local cache will be forwarded to the remote cache exchange 
+partner. Forwarding only works while the camd camd 3.5x / 3.57x or CCcam 
+protocol connection between the remote and local OSCam has been established.
+.SH EXAMPLES
+.TP 3n
+\(bu
+serial mouse compatible reader
+ 
+ [reader]
+ label    = myserialmousereader
+ detect   = cd
+ protocol = mouse
+ device   = /dev/ttyS1
+ group    = 1
+ caid     = 0100
+ services = myservice,!thisservice
+.TP 3n
+\(bu
+USB mouse compatible reader
+ 
+ [reader]
+ label    = myusbmousereader
+ detect   = cd
+ protocol = mouse
+ device   = /dev/ttyUSB0
+ aeskey   = 0102030405060708090a0b0c0d0e0f10
+ group    = 2
+ caid     = 0200
+.TP 3n
+\(bu
+camd 3.78x reader
+ 
+ [reader]
+ label    = mycamd378xreader
+ protocol = cs378x
+ device   = 192.168.0.1,1234
+ user     = user1
+ password = password1
+ group    = 3
+.TP 3n
+\(bu
+newcamd reader
+ 
+ [reader]
+ label    = mynewcamdreader
+ protocol = newcamd
+ key      = 0102030405060708091011121314
+ device   = 192.168.0.2,2345
+ user     = user2
+ password = password2
+ group    = 4
+.TP 3n
+\(bu
+CCcam reader
+ 
+ [reader]
+ label      = mycccamreader
+ protocol   = cccam
+ device     = 192.168.0.3,3456
+ user       = user3
+ password   = password3
+ group      = 5
+ caid       = 0300,0400,0500
+ cccversion = 1.2.3
+.TP 3n
+\(bu
+PCSC reader
+
+ [reader]
+ label    = mypcscreader
+ protocol = pcsc
+ device   = 0
+ aeskey   = 0102030405060708090a0b0c0d0e0f10
+ group    = 6
+ caid     = 0600
+.TP 3n
+\(bu
+Smargo Smartreader+
+
+ [reader]
+ label    = mysmartreader
+ protocol = smartreader
+ device   = 001:002
+ aeskey   = 0102030405060708090a0b0c0d0e0f10
+ group    = 7
+ caid     = 0700
+.TP 3n
+\(bu
+internal reader
+
+ [reader]
+ label    = myinternalreader
+ protocol = internal
+ device   = /dev/sci0
+ group    = 8
+ caid     = 0800
+.TP 3n.
+\(bu
+sc8in1 reader
+
+ [reader]
+ label    = mysc8in1reader
+ protocol = sc8in1
+ device   = /dev/ttyUSB0:1
+ group    = 9
+ caid     = 0900
+.TP 3n 
+\(bu
+constant CW
+
+ [reader]
+ label    = myconstantcw
+ protocol = constcw
+ device   = /var/keys/constant.cw
+ group    = 10
+.TP 3n
+\(bu
+gbox reader
+
+ [reader]
+ label    = mygboxreader
+ protocol = gbox
+ device   = 192.168.0.4,45678,56789
+ user     = user4
+ password = password4
+ group    = 11
+ caid     = 1100
+.SH "SEE ALSO"
+\fBlist_smargo\fR(1), \fBoscam\fR(1), \fBoscam.ac\fR(5), \fBoscam.cacheex\fR(5), \fBoscam.cert\fR(5), \fBoscam.conf\fR(5), \fBoscam.dvbapi\fR(5), \fBoscam.guess\fR(5), \fBoscam.ird\fR(5), \fBoscam.provid\fR(5), \fBoscam.ratelimit\fR(5), \fBoscam.services\fR(5), \fBoscam.srvid\fR(5), \fBoscam.tiers\fR(5), \fBoscam.user\fR(5), \fBoscam.whitelist\fR(5)

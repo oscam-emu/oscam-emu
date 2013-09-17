@@ -1,0 +1,19 @@
+.TH oscam.cacheex 5
+.SH NAME
+\fBoscam..cacheex\fR - global ECM length matching configuration file for OSCam
+.SH SYNOPSIS
+ECM length matching
+.SH DESCRIPTIONS
+.PP
+\fBm\fP:\fB[CAID]\fP[:]\fB[provider ID]\fP[:]\fB[service ID]\fP[:]\fB[ECM PID]\fP[:]\fB[CHID]\fP[:]\fB[ECM length 1[,ECM length 2]...]]\fP=\fB[CAID]\fP[:]\fB[provider ID]\fP[:]\fB[service ID]\fP[:]\fB[ECM PID]\fP[:]\fB[CHID]\fP[:]\fB[ECM length 1[,ECM length 2]...]]\fP
+.RS 3n
+ ECM length matching from remote cache exchange partner to local 
+ cache, \fIfor cache exchange pull mode (cacheex = 1) only\fR
+.RE
+.SH ANNONTATIONS
+\fIPlease use Unix text file format only.\fR
+.SH EXAMPLES
+ m:1234:::::93=5678:::::93  # matching CAID 1234 and CAID 5678 with 
+                            # ECM length 93
+.SH "SEE ALSO"
+\fBlist_smargo\fR(1), \fBoscam\fR(1), \fBoscam.ac\fR(5), \fBoscam.cert\fR(5), \fBoscam.conf\fR(5), \fBoscam.dvbapi\fR(5), \fBoscam.guess\fR(5), \fBoscam.ird\fR(5), \fBoscam.provid\fR(5), \fBoscam.ratelimit\fR(5), \fBoscam.server\fR(5), \fBoscam.services\fR(5), \fBoscam.user\fR(5)

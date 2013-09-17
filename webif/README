@@ -1,0 +1,19 @@
+This directory holds all pages that are used in OSCam WebIf along with
+program that builds pages.{c,h} files used by the OSCam build system.
+
+The build system is intelligent enough to rebuild pages.{c,h} files when
+any file mentioned in pages_index.txt is changed or pages_index.txt itself
+is changed.
+
+If you want change WebIf pages just edit files in the directory that
+interests you then build OSCam as you normally do.
+
+Any file must be described in pages_index.txt
+
+Files in the root directory:
+  Makefile          - Build system file.
+  pages_gen.c       - The program that generates pages.c and pages.h files.
+  pages_index.txt   - This file contains mapping of template names to
+                      file names and describes template's config dependecies.
+  pages_index_check - Script that checks if every file is found.
+  pages_mkdep       - Used by the build system to generate file dependencies.

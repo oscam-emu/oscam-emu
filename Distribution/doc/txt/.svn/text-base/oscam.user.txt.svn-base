@@ -1,0 +1,242 @@
+oscam.user(5)														   oscam.user(5)
+
+
+
+NAME
+       oscam.user - user configuration file for OSCam
+
+SYNOPSIS
+       The  user  configuration  file for OSCam contains user definitions. [account] sections in oscam.user are recurring (more than one
+       account).
+
+DESCRIPTIONS
+   The [account] section
+       user = name
+	  account name, required
+
+       pwd = password
+	  password for account, required
+
+       description = text
+	  description of user account
+
+       disabled = 0|1
+	  1 = account disabled, default:0
+
+       hostname = hostname
+	  host from which user connection is allowed
+
+       expdate = <year>-<month>-<day>|<year>/<month>/<day>
+	  expiration date for account, default:none
+
+	   example: expdate = 2001-11-21
+		    expdate = 2002/12/22
+
+       allowedprotocols = [camd33][,][camd35][,][cs357x][,][cs378x][,][newcamd][,][cccam][,][gbox][,][radegast]
+	  list of all allowed connection protocols, default:all connection protocols
+
+       allowedtimeframe = hh:mm-hh:mm
+	  account enabled from hh:mm to hh:mm, default:none
+
+       uniq = 0|1|2|4
+	  unique level:
+
+	   0 = disabled (default)
+	   1 = only one connection per user is allowed
+	   2 = set user to fake if source ip is different
+	       (e.g. for newcamd clients with different CAIDs and ports)
+	   3 = only one connection per user, but only the last login
+	       will survive (old MpCS behavior)
+	   4 = set user only to fake if source ip is different,
+	       but only the last login will survive
+
+       numusers = quantity
+	  anti-cascading: user per account, 0 = anti-cascading disabled, -1 = global value from oscam.conf, default:-1
+
+       penalty = 0|1|2
+	  level of penalty:
+
+	   -1 = level of oscam.conf (default)
+	    0 = only logging
+	    1 = send fake CWs
+	    2 = temporary user ban
+	    3 = send delayed CWs
+
+       fakedelay = 0|1|milli-seconds
+	  set fake delay time individually for user:
+
+	    0 = disable fake delay
+	   -1 = fake delay of oscam.conf (default)
+
+       failban = 0|2|4|8
+	  mask for IP address based blocking:
+
+	   0 = ignore (default)
+	   2 = block IP address of a disabled account on connecting
+	   4 = block IP address of a sleeping account while sleeping comes up
+	   8 = block duplicate IP address
+
+       lb_nbest_readers = counts
+	  set count of best readers for load balancing, -1 = use global lb_nbest_readers, default:-1
+
+       lb_nfb_readers = counts
+	  set count of fallback readers for load balancing, -1 = use global lb_nfb_readers, default:1
+
+       lb_nbest_percaid = CAID1:count1[,CAID2:count2]...
+	  set count of best readers per CAIDs for load balancing, wildcard CAIDs with two-digit CAIDs possible, default:none
+
+	   example: lb_nbest_percaid = 0100:4,0200:3,03:2,04:1
+		    (wildcard CAIDs 03xx and 04xx)
+
+       cacheex = 0|1|2|3
+	  set cache exchange mode
+
+	   0: disable cache exchange mode (default)
+	   1: enable cache exchange pull mode
+	   2: enable cache exchange push mode for camd 3.5x / 3.57x and
+	      CCcam protocol
+	   3: enable reverse cache exchange push mode for camd 3.5x / 3.57x
+	      and CCcam protocol
+
+	  Identical cache exchange modes must be set on local OSCam user account and remote OSCam server.
+
+	  Please consider memory consumption.
+
+       cacheex_maxhop = hops
+	  define maximum hops for cache exchange, default=10
+
+       csp_ecm_filter = [caid][&mask][@provid][$servid],n
+	  cache exchange incoming ECM filter setting (mode 3 only) for Cardservproxy, default:none
+
+       cacheex_drop_csp = 0|1
+	  drop incoming Cardservproxy cache (mode 3 only), detection is zero ecmd5, default:0
+
+       cacheex_allow_request = 0|1
+	  allow incoming ECM request (mode 3 only), default:1
+
+       sleep = minutes
+	  time waiting for inactive user, default:none
+
+       sleepsend = 0|255
+	  255 = OSCam client only: stopping requests until next zap, 255 = camd 3.x only: stopping requests until restart  of  camd  3.x
+	  client, default:0
+
+       suppresscmd08 = 0|1
+	  0  = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected CAID, service ID and provider ID combination, 1
+	  =  disable, default:0
+
+       keepalive = 0|1
+	  0 = disable keepalive between server and client for newcamd or CCcam protocol, default:1
+
+       caid = <CAID>[&<mask>][:<target CAID>][,<CAID>[&<mask>][:<target CAID>]]...
+	  limit and mapping of CAIDs, default:all CAIDs with mask FFFF
+
+	  example: caid = 0100
+		   caid = 0200&ffee:0300
+		   caid = 0400&ff00:0500,0600
+		   caid = 0702,0722
+		   caid = 0702&ffdf (shortcut for the example above)
+
+       au = label of reader[,label of reader]...|1
+	  AU setting, default:none:
+
+	    label of reader = sending EMMs to specified reader
+			      (security issue: clients can see SC data!)
+	    1		    = auto AU is sending EMMs to all readers
+			      (security issue: clients can see SC data!)
+
+       group = 1..64[,1..64]...
+	  user assingment to reader groups, default:none, required
+
+       betatunnel = <CAID>.<ServiceID>:<target CAID>[,<CAID>.<ServiceID>: <target CAID>]...
+	  define Betacrypt tunneling (maximum see CS_MAXTUNTAB in globals.h).  The ServiceID can also be used for wildcarded CAIDs.
+
+	   example: betatunnel = 0100.0001:0200,0300.0004:0500
+		    betatunnel = 0600.FFFF:0700
+
+	  Be carefull using abbreviations.
+
+
+       emmreassembly = 0|1||2
+	  EMM reassembly, should be set for Viaccess and Cryptoworks readers if the client that you are using to send EMMs  is	reassem‐
+	  bling them instead of just sending them to OSCam for processing.
+
+	    0: disabled
+	    1: enabled for DVB API
+	    2: enabled (default)
+
+       services = [!]services[,[!]<services>]...
+	  user [de]assingment to service group, default:none
+
+       ident = <CAID>:<provid>[,<provid>,...][;<CAID>:<provid>[,<provid>,...]]...
+	  user assingment to SC specific idents, default:none
+
+       class = [!]class[,[!]class]...
+	  user [de]assingment to SC specific classes, default=none
+
+	   example: class = 01,02,!03,!04
+
+       chid = <CAID>:<ChID>[,<CAID>:<ChID>]...
+	  user assingment to SC specific ChIDs, default:none
+
+       monlevel = 0|1|2|3|4
+	  monitor level:
+
+	   0 = no access to monitor (default)
+	   1 = only server and own procs
+	   2 = all procs, but viewing only
+	   3 = all procs, reload of oscam.user possible
+	   4 = complete access
+
+       cccmaxhops = hops
+	  maximum hops limit for CCcam clients, default:10
+
+	   -1 = CCcam disabled for this user
+	    0 = local SCs only
+	    1 = local SCs + 1 hop
+	    2 = local SCs + 2 hops
+	   and so on
+
+       cccreshare = level
+	  reshare level for CCcam clients
+
+	   -1 = use reshare level of oscam.conf (default)
+	    0 = resharing for direct peer only
+	    x = resharing for direct peer and share level x
+
+       cccignorereshare = -1|0|1
+	  CCcam ignore reshare setting:
+
+	   -1 = use ignore reshare level of oscam.conf (default)
+	    0 = use ignore reshare setting of server
+	    1 = use ignore reshare setting of reader or user
+
+       cccstealth = -1|1
+	  CCcam stealth:
+
+	   -1 = use CCcam stealth of oscam.conf (default)
+	    0 = use extended OSCam-CCcam protocol
+	    1 = behaviour like the original CCcam: no activate partner
+		detection and extended OSCam-CCcam protocol, prevent
+		other OSCam to detect the server as OSCam server
+
+EXAMPLES
+	[account]
+	user	   = username
+	pwd	   = password
+	group	   = 1
+	au	   = myserialmousereader
+	services   = myservice
+	betatunnel = 0100.0001:0101,0100.0002:0101
+	caid	   = 0100
+	ident	   = 0100:000000
+	uniq	   = 1
+
+SEE ALSO
+       list_smargo(1),	 oscam(1),   oscam.ac(5),   oscam.cacheex(5),  oscam.cert(5),  oscam.conf(5),  oscam.dvbapi(5),  oscam.guess(5),
+       oscam.ird(5),  oscam.provid(5),	 oscam.ratelimit(5),   oscam.server(5),   oscam.services(5),   oscam.tiers(5),	 oscam.srvid(5),
+       oscam.whitelist(5)
+
+
+
+															   oscam.user(5)

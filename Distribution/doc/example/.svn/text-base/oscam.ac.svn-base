@@ -1,0 +1,11 @@
+#
+# anti-cascading table
+#
+# format:
+#
+# <CAID>:<provider ID>=<seconds>
+#
+
+0500:000000=10
+*=7
+	

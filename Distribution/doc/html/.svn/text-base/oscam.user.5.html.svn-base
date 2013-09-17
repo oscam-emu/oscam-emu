@@ -1,0 +1,422 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of oscam.user</TITLE>
+</HEAD><BODY>
+<H1>oscam.user</H1>
+Section: File Formats (5)<BR><A HREF="#index">Index</A>
+<A HREF="/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>oscam.user</B> - user configuration file for OSCam
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+The user configuration file for OSCam contains user definitions. [account]
+sections in <B>oscam.user</B> are <I>recurring</I> (more than one account).
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTIONS</H2>
+
+<A NAME="lbAE">&nbsp;</A>
+<H3>The [account] section</H3>
+
+<P>
+
+<B>user</B> = <B>name</B>
+<DL COMPACT><DT><DD>
+account name, <I>required</I>
+</DL>
+
+<P>
+
+<B>pwd</B> = <B>password</B>
+<DL COMPACT><DT><DD>
+password for account, <I>required</I>
+</DL>
+
+<P>
+
+<B>description</B> = <B>text</B>
+<DL COMPACT><DT><DD>
+description of user account
+</DL>
+
+<P>
+
+<B>disabled</B> = <B>0</B>|<B>1</B>
+<DL COMPACT><DT><DD>
+1 = account disabled, default:0
+</DL>
+
+<P>
+
+<B>hostname</B> = <B>hostname</B>
+<DL COMPACT><DT><DD>
+host from which user connection is allowed
+</DL>
+
+<P>
+
+<B>expdate</B> = <B>&lt;year&gt;-&lt;month&gt;-&lt;day&gt;</B>|<B>&lt;year&gt;/&lt;month&gt;/&lt;day&gt;</B>
+<DL COMPACT><DT><DD>
+expiration date for account, default:none
+<P>
+<BR>&nbsp;example:&nbsp;expdate&nbsp;=&nbsp;2001-11-21
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;expdate&nbsp;=&nbsp;2002/12/22
+</DL>
+
+<P>
+
+<B>allowedprotocols</B> = <B>[camd33][,][camd35][,][cs357x][,][cs378x][,][newcamd][,][cccam][,][gbox][,][radegast]</B>
+<DL COMPACT><DT><DD>
+list of all allowed connection protocols, default:all connection protocols
+</DL>
+
+<P>
+
+<B>allowedtimeframe</B> = <B>hh:mm</B>-<B>hh:mm</B>
+<DL COMPACT><DT><DD>
+account enabled from hh:mm to hh:mm, default:none
+</DL>
+
+<P>
+
+<B>uniq</B> = <B>0</B>|<B>1</B>|<B>2</B>|<B>4</B>
+<DL COMPACT><DT><DD>
+unique level:
+<P>
+<BR>&nbsp;<B>0</B>&nbsp;=&nbsp;disabled&nbsp;(default)
+<BR>&nbsp;<B>1</B>&nbsp;=&nbsp;only&nbsp;one&nbsp;connection&nbsp;per&nbsp;user&nbsp;is&nbsp;allowed
+<BR>&nbsp;<B>2</B>&nbsp;=&nbsp;set&nbsp;user&nbsp;to&nbsp;fake&nbsp;if&nbsp;source&nbsp;ip&nbsp;is&nbsp;different&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(e.g.&nbsp;for&nbsp;newcamd&nbsp;clients&nbsp;with&nbsp;different&nbsp;CAIDs&nbsp;and&nbsp;ports)
+<BR>&nbsp;<B>3</B>&nbsp;=&nbsp;only&nbsp;one&nbsp;connection&nbsp;per&nbsp;user,&nbsp;but&nbsp;only&nbsp;the&nbsp;last&nbsp;login&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;will&nbsp;survive&nbsp;(old&nbsp;MpCS&nbsp;behavior)
+<BR>&nbsp;<B>4</B>&nbsp;=&nbsp;set&nbsp;user&nbsp;only&nbsp;to&nbsp;fake&nbsp;if&nbsp;source&nbsp;ip&nbsp;is&nbsp;different,&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;but&nbsp;only&nbsp;the&nbsp;last&nbsp;login&nbsp;will&nbsp;survive
+</DL>
+
+<P>
+
+<B>numusers</B> = <B>quantity</B>
+<DL COMPACT><DT><DD>
+anti-cascading: user per account, 0 = anti-cascading disabled, -1 = global value from oscam.conf, default:-1
+</DL>
+
+<P>
+
+<B>penalty</B> = <B>0</B>|<B>1</B>|<B>2</B>
+<DL COMPACT><DT><DD>
+level of penalty:
+<P>
+<BR>&nbsp;<B>-1</B>&nbsp;=&nbsp;level&nbsp;of&nbsp;oscam.conf&nbsp;(default)
+<BR>&nbsp;<B>&nbsp;0</B>&nbsp;=&nbsp;only&nbsp;logging
+<BR>&nbsp;<B>&nbsp;1</B>&nbsp;=&nbsp;send&nbsp;fake&nbsp;CWs
+<BR>&nbsp;<B>&nbsp;2</B>&nbsp;=&nbsp;temporary&nbsp;user&nbsp;ban
+<BR>&nbsp;<B>&nbsp;3</B>&nbsp;=&nbsp;send&nbsp;delayed&nbsp;CWs
+</DL>
+
+<P>
+
+<B>fakedelay</B> = <B>0</B>|<B>1</B>|<B>milli-seconds</B>
+<DL COMPACT><DT><DD>
+set fake delay time individually for user:
+<P>
+<BR>&nbsp;<B>&nbsp;0</B>&nbsp;=&nbsp;disable&nbsp;fake&nbsp;delay
+<BR>&nbsp;<B>-1</B>&nbsp;=&nbsp;fake&nbsp;delay&nbsp;of&nbsp;oscam.conf&nbsp;(default)
+</DL>
+
+<P>
+
+<B>failban</B> = <B>0</B>|<B>2</B>|<B>4</B>|<B>8</B>
+<DL COMPACT><DT><DD>
+mask for IP address based blocking:
+<P>
+<BR>&nbsp;<B>0</B>&nbsp;=&nbsp;ignore&nbsp;(default)
+<BR>&nbsp;<B>2</B>&nbsp;=&nbsp;block&nbsp;IP&nbsp;address&nbsp;of&nbsp;a&nbsp;disabled&nbsp;account&nbsp;on&nbsp;connecting
+<BR>&nbsp;<B>4</B>&nbsp;=&nbsp;block&nbsp;IP&nbsp;address&nbsp;of&nbsp;a&nbsp;sleeping&nbsp;account&nbsp;while&nbsp;sleeping&nbsp;comes&nbsp;up
+<BR>&nbsp;<B>8</B>&nbsp;=&nbsp;block&nbsp;duplicate&nbsp;IP&nbsp;address
+</DL>
+
+<P>
+
+<B>lb_nbest_readers</B> = <B>counts</B>
+<DL COMPACT><DT><DD>
+set count of best readers for load balancing, -1 = use global lb_nbest_readers, default:-1
+</DL>
+
+<P>
+
+<B>lb_nfb_readers</B> = <B>counts</B>
+<DL COMPACT><DT><DD>
+set count of fallback readers for load balancing, -1 = use global lb_nfb_readers, default:1
+</DL>
+
+<P>
+
+<B>lb_nbest_percaid</B> = <B>CAID1:count1[,CAID2:count2]...</B>
+<DL COMPACT><DT><DD>
+set count of best readers per CAIDs for load balancing, wildcard CAIDs with two-digit CAIDs possible, default:none
+<P>
+<BR>&nbsp;example:&nbsp;lb_nbest_percaid&nbsp;=&nbsp;0100:4,0200:3,03:2,04:1
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(wildcard&nbsp;CAIDs&nbsp;03xx&nbsp;and&nbsp;04xx)
+</DL>
+
+<P>
+
+<B>cacheex</B> = <B>0</B>|<B>1</B>|<B>2</B>|<B>3</B>
+<DL COMPACT><DT><DD>
+set cache exchange mode
+<P>
+<BR>&nbsp;<B>0</B>:&nbsp;disable&nbsp;cache&nbsp;exchange&nbsp;mode&nbsp;(default)
+<BR>&nbsp;<B>1</B>:&nbsp;enable&nbsp;cache&nbsp;exchange&nbsp;pull&nbsp;mode
+<BR>&nbsp;<B>2</B>:&nbsp;enable&nbsp;cache&nbsp;exchange&nbsp;push&nbsp;mode&nbsp;for&nbsp;camd&nbsp;3.5x&nbsp;/&nbsp;3.57x&nbsp;and&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;CCcam&nbsp;protocol
+<BR>&nbsp;<B>3</B>:&nbsp;enable&nbsp;reverse&nbsp;cache&nbsp;exchange&nbsp;push&nbsp;mode&nbsp;for&nbsp;camd&nbsp;3.5x&nbsp;/&nbsp;3.57x&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;and&nbsp;CCcam&nbsp;protocol
+<P>
+<I>Identical cache exchange modes must be set on local OSCam user account and remote OSCam server.</I>
+<P>
+<I>Please consider memory consumption.</I>
+</DL>
+
+<P>
+
+<B>cacheex_maxhop</B> = <B>hops</B>
+<DL COMPACT><DT><DD>
+define maximum hops for cache exchange, default=10
+</DL>
+
+<P>
+
+<B>csp_ecm_filter</B> = <B>[caid][&amp;mask][@provid][$servid],n</B>
+<DL COMPACT><DT><DD>
+cache exchange incoming ECM filter setting (mode 3 only) for Cardservproxy, default:none
+</DL>
+
+<P>
+
+<B>cacheex_drop_csp</B> = <B>0</B>|<B>1</B>
+<DL COMPACT><DT><DD>
+drop incoming Cardservproxy cache (mode 3 only), detection is zero ecmd5, default:0
+</DL>
+
+<P>
+
+<B>cacheex_allow_request</B> = <B>0</B>|<B>1</B>
+<DL COMPACT><DT><DD>
+allow incoming ECM request (mode 3 only), default:1
+</DL>
+
+<P>
+
+<B>sleep</B> = <B>minutes</B>
+<DL COMPACT><DT><DD>
+time waiting for inactive user, default:none
+</DL>
+
+<P>
+
+<B>sleepsend</B> = <B>0</B>|<B>255</B>
+<DL COMPACT><DT><DD>
+255 = <I>OSCam client only</I>: stopping requests until next zap, 255 = <I>camd 3.x only</I>: stopping requests until restart of camd 3.x client, default:0
+</DL>
+
+<P>
+
+<B>suppresscmd08</B> = <B>0</B>|<B>1</B>
+<DL COMPACT><DT><DD>
+0 = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected 
+CAID, service ID and provider ID combination, 1 =  disable, default:0
+</DL>
+
+<P>
+
+<B>keepalive</B> = <B>0</B>|<B>1</B>
+<DL COMPACT><DT><DD>
+0 = disable keepalive between server and client for newcamd or CCcam protocol, default:1
+</DL>
+
+<P>
+
+<B>caid</B> = <B>&lt;CAID&gt;[&amp;&lt;mask&gt;][:&lt;target CAID&gt;][,&lt;CAID&gt;[&amp;&lt;mask&gt;][:&lt;target CAID&gt;]]...</B>
+<DL COMPACT><DT><DD>
+limit and mapping of CAIDs, default:all CAIDs with mask FFFF
+<P>
+example: caid = 0100
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;caid&nbsp;=&nbsp;0200&amp;ffee:0300
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;caid&nbsp;=&nbsp;0400&amp;ff00:0500,0600
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;caid&nbsp;=&nbsp;0702,0722
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;caid&nbsp;=&nbsp;0702&amp;ffdf&nbsp;(shortcut&nbsp;for&nbsp;the&nbsp;example&nbsp;above)
+</DL>
+
+<P>
+
+<B>au</B> = <B>label of reader[,label of reader]...</B>|<B>1</B>
+<DL COMPACT><DT><DD>
+AU setting, default:none:
+<P>
+<BR>&nbsp;&nbsp;<B>label&nbsp;of&nbsp;reader</B>&nbsp;=&nbsp;sending&nbsp;EMMs&nbsp;to&nbsp;specified&nbsp;reader&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>(security&nbsp;issue:&nbsp;clients&nbsp;can&nbsp;see&nbsp;SC&nbsp;data!)</I>
+<BR>&nbsp;&nbsp;<B>1</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;auto&nbsp;AU&nbsp;is&nbsp;sending&nbsp;EMMs&nbsp;to&nbsp;<I>all</I>&nbsp;readers
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>(security&nbsp;issue:&nbsp;clients&nbsp;can&nbsp;see&nbsp;SC&nbsp;data!)</I>
+</DL>
+
+<P>
+
+<B>group</B> = <B>1..64[,1..64]...</B>
+<DL COMPACT><DT><DD>
+user assingment to reader groups, default:none, <I>required</I>
+</DL>
+
+<P>
+
+<B>betatunnel</B> = <B>&lt;CAID&gt;.&lt;ServiceID&gt;:&lt;target CAID&gt;[,&lt;CAID&gt;.&lt;ServiceID&gt;:
+&lt;target CAID&gt;]...</B>
+<DL COMPACT><DT><DD>
+define Betacrypt tunneling (maximum see CS_MAXTUNTAB in <B>globals.h</B>).
+The ServiceID can also be used for wildcarded CAIDs.
+<P>
+<BR>&nbsp;example:&nbsp;betatunnel&nbsp;=&nbsp;0100.0001:0200,0300.0004:0500
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;betatunnel&nbsp;=&nbsp;0600.FFFF:0700
+<P>
+<I>Be carefull using abbreviations.</I>
+</DL>
+
+<P>
+<P>
+
+<B>emmreassembly</B> = <B>0</B>|<B>1</B>||<B>2</B>
+<DL COMPACT><DT><DD>
+EMM reassembly, should be set for Viaccess and Cryptoworks readers if the 
+client that you are using to send EMMs is reassembling them instead of 
+just sending them to OSCam for processing.
+<P>
+<BR>&nbsp;&nbsp;<B>0</B>:&nbsp;disabled
+<BR>&nbsp;&nbsp;<B>1</B>:&nbsp;enabled&nbsp;for&nbsp;DVB&nbsp;API
+<BR>&nbsp;&nbsp;<B>2</B>:&nbsp;enabled&nbsp;(default)
+</DL>
+
+<P>
+
+<B>services</B> = <B>[!]services[,[!]&lt;services&gt;]...</B>
+<DL COMPACT><DT><DD>
+user [de]assingment to service group, default:none
+</DL>
+
+<P>
+
+<B>ident</B> = <B>&lt;CAID&gt;:&lt;provid&gt;[,&lt;provid&gt;,...][;&lt;CAID&gt;:&lt;provid&gt;[,&lt;provid&gt;,...]]...</B>
+<DL COMPACT><DT><DD>
+user assingment to SC specific idents, default:none
+</DL>
+
+<P>
+
+<B>class</B> = <B>[!]class[,[!]class]...</B>
+<DL COMPACT><DT><DD>
+user [de]assingment to SC specific classes, default=none
+<P>
+<BR>&nbsp;example:&nbsp;class&nbsp;=&nbsp;01,02,!03,!04
+</DL>
+
+<P>
+
+<B>chid</B> = <B>&lt;CAID&gt;:&lt;ChID&gt;[,&lt;CAID&gt;:&lt;ChID&gt;]...</B>
+<DL COMPACT><DT><DD>
+user assingment to SC specific ChIDs, default:none
+</DL>
+
+<P>
+
+<B>monlevel</B> = <B>0</B>|<B>1</B>|<B>2</B>|<B>3</B>|<B>4</B>
+<DL COMPACT><DT><DD>
+monitor level:
+<P>
+<BR>&nbsp;<B>0</B>&nbsp;=&nbsp;no&nbsp;access&nbsp;to&nbsp;monitor&nbsp;(default)
+<BR>&nbsp;<B>1</B>&nbsp;=&nbsp;only&nbsp;server&nbsp;and&nbsp;own&nbsp;procs
+<BR>&nbsp;<B>2</B>&nbsp;=&nbsp;all&nbsp;procs,&nbsp;but&nbsp;viewing&nbsp;only
+<BR>&nbsp;<B>3</B>&nbsp;=&nbsp;all&nbsp;procs,&nbsp;reload&nbsp;of&nbsp;<B>oscam.user</B>&nbsp;possible
+<BR>&nbsp;<B>4</B>&nbsp;=&nbsp;complete&nbsp;access
+</DL>
+
+<P>
+
+<B>cccmaxhops</B> = <B>hops</B>
+<DL COMPACT><DT><DD>
+maximum hops limit for CCcam clients, default:10
+<P>
+<BR>&nbsp;<B>-1</B>&nbsp;=&nbsp;CCcam&nbsp;disabled&nbsp;for&nbsp;this&nbsp;user
+<BR>&nbsp;&nbsp;<B>0</B>&nbsp;=&nbsp;local&nbsp;SCs&nbsp;only
+<BR>&nbsp;&nbsp;<B>1</B>&nbsp;=&nbsp;local&nbsp;SCs&nbsp;+&nbsp;1&nbsp;hop
+<BR>&nbsp;&nbsp;<B>2</B>&nbsp;=&nbsp;local&nbsp;SCs&nbsp;+&nbsp;2&nbsp;hops
+<BR>&nbsp;and&nbsp;so&nbsp;on
+</DL>
+
+<P>
+
+<B>cccreshare</B> = <B>level</B>
+<DL COMPACT><DT><DD>
+reshare level for CCcam clients
+<P>
+<BR>&nbsp;<B>-1</B>&nbsp;=&nbsp;use&nbsp;reshare&nbsp;level&nbsp;of&nbsp;<B>oscam.conf</B>&nbsp;(default)
+<BR>&nbsp;&nbsp;<B>0</B>&nbsp;=&nbsp;resharing&nbsp;for&nbsp;direct&nbsp;peer&nbsp;only
+<BR>&nbsp;&nbsp;<B>x</B>&nbsp;=&nbsp;resharing&nbsp;for&nbsp;direct&nbsp;peer&nbsp;and&nbsp;share&nbsp;level&nbsp;x
+</DL>
+
+<P>
+
+<B>cccignorereshare</B> = <B>-1</B>|<B>0</B>|<B>1</B>
+<DL COMPACT><DT><DD>
+CCcam ignore reshare setting:
+<P>
+<BR>&nbsp;<B>-1</B>&nbsp;=&nbsp;use&nbsp;ignore&nbsp;reshare&nbsp;level&nbsp;of&nbsp;<B>oscam.conf</B>&nbsp;(default)
+<BR>&nbsp;&nbsp;<B>0</B>&nbsp;=&nbsp;use&nbsp;ignore&nbsp;reshare&nbsp;setting&nbsp;of&nbsp;server
+<BR>&nbsp;&nbsp;<B>1</B>&nbsp;=&nbsp;use&nbsp;ignore&nbsp;reshare&nbsp;setting&nbsp;of&nbsp;reader&nbsp;or&nbsp;user
+</DL>
+
+<P>
+
+<B>cccstealth</B> = <B>-1</B>|<B>1</B>
+<DL COMPACT><DT><DD>
+CCcam stealth:
+<P>
+<BR>&nbsp;<B>-1</B>&nbsp;=&nbsp;use&nbsp;CCcam&nbsp;stealth&nbsp;of&nbsp;<B>oscam.conf</B>&nbsp;(default)
+<BR>&nbsp;&nbsp;<B>0</B>&nbsp;=&nbsp;use&nbsp;extended&nbsp;OSCam-CCcam&nbsp;protocol
+<BR>&nbsp;&nbsp;<B>1</B>&nbsp;=&nbsp;behaviour&nbsp;like&nbsp;the&nbsp;original&nbsp;CCcam:&nbsp;no&nbsp;activate&nbsp;partner&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;detection&nbsp;and&nbsp;extended&nbsp;OSCam-CCcam&nbsp;protocol,&nbsp;prevent&nbsp;
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;other&nbsp;OSCam&nbsp;to&nbsp;detect&nbsp;the&nbsp;server&nbsp;as&nbsp;OSCam&nbsp;server
+</DL>
+
+<A NAME="lbAF">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<BR>&nbsp;[account]
+<BR>&nbsp;user&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;username
+<BR>&nbsp;pwd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;password
+<BR>&nbsp;group&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;1
+<BR>&nbsp;au&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;myserialmousereader
+<BR>&nbsp;services&nbsp;&nbsp;&nbsp;=&nbsp;myservice
+<BR>&nbsp;betatunnel&nbsp;=&nbsp;0100.0001:0101,0100.0002:0101
+<BR>&nbsp;caid&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;0100&nbsp;
+<BR>&nbsp;ident&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;0100:000000
+<BR>&nbsp;uniq&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;1
+<A NAME="lbAG">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="/cgi-bin/man/man2html?1+list_smargo">list_smargo</A></B>(1), <B><A HREF="/cgi-bin/man/man2html?1+oscam">oscam</A></B>(1), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ac">oscam.ac</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.cacheex">oscam.cacheex</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.cert">oscam.cert</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.conf">oscam.conf</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.dvbapi">oscam.dvbapi</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.guess">oscam.guess</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ird">oscam.ird</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.provid">oscam.provid</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.ratelimit">oscam.ratelimit</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.server">oscam.server</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.services">oscam.services</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.tiers">oscam.tiers</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.srvid">oscam.srvid</A></B>(5), <B><A HREF="/cgi-bin/man/man2html?5+oscam.whitelist">oscam.whitelist</A></B>(5)
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTIONS</A><DD>
+<DL>
+<DT><A HREF="#lbAE">The [account] section</A><DD>
+</DL>
+<DT><A HREF="#lbAF">EXAMPLES</A><DD>
+<DT><A HREF="#lbAG">SEE ALSO</A><DD>
+</DL>
+</BODY>
+</HTML>

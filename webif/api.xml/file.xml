@@ -1,0 +1,5 @@
+##TPLAPIHEADER##
+	<file filename="##APIFILENAME##" writable="##APIWRITABLE##">
+	<![CDATA[##FILECONTENT##]]>
+	</file>
+##TPLAPIFOOTER##

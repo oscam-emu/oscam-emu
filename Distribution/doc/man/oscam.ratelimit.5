@@ -1,0 +1,30 @@
+.TH oscam.ratelimit 5
+.SH NAME
+\fBoscam.ratelimit\fR - ECMs ratelimit for OSCam
+.SH SYNOPSIS
+limit rate of ECMs allowed for an interval
+.SH DESCRIPTIONS
+.PP
+\fBCAID\fP:\fBprovider ID\fP:\fBservice ID\fP:\fBChID\fP:\fBratelimitecm\fP:\fBratelimitseconds\fP:\fBsrvidholdseconds\fP
+.RS 3n
+
+\fBratelimitecm\fP
+.RS 3n
+number of different SIDs in ECMs allowed for an interval
+.RE
+
+\fBratelimitseconds\fP
+.RS 3n
+interval in seconds for ratelimit
+.RE
+
+\fBsrvidholdseconds\fP
+.RS 3n
+extra time in seconds this service ID is kept in a slot before another service ID can take its place
+.RE
+.SH EXAMPLES
+ 0100:00002A:3A3A:4A00:0002:0010:0004
+.RE
+.RE
+.SH "SEE ALSO"
+\fBlist_smargo\fR(1), \fBoscam\fR(1), \fBoscam.ac\fR(5), \fBoscam.cacheex\fR(5), \fBoscam.cert\fR(5), \fBoscam.conf\fR(5), \fBoscam.dvbapi\fR(5), \fBoscam.guess\fR(5), \fBoscam.ird\fR(5), \fBoscam.provid\fR(5), \fBoscam.server\fR(5), \fBoscam.services\fR(5), \fBoscam.srvid\fR(5), \fBoscam.tiers\fR(5), \fBoscam.user\fR(5), \fBoscam.whitelist\fR(5)

@@ -1,0 +1,167 @@
+.TH oscam 1
+.SH NAME
+\fBOSCam\fR - SC server
+.SH DESCRIPTIONS
+The OSCam software is an \fIopen source\fR multi-protocol/multi-platform SC server.
+
+\fIPlease check the compile options for included features in the binary.\fR
+
+OSCam supports the following protocols:
+.TP 3n
+\(bu
+newcamd with cascading/remote server ECM support
+.TP 3n
+\(bu
+camd 3.3x TCP
+.TP 3n
+\(bu
+camd camd 3.5x / 3.57x UDP with cascading/remote server ECM support, ECM and EMM support with size > 256 bytes
+.TP 3n
+\(bu
+camd 3.78x TCP with cascading/remote server ECM support, ECM and EMM support with size > 256 bytes
+.TP 3n
+\(bu
+CCcam with cascading/remote server ECM support, ECM and EMM support with size > 256 bytes
+.TP 3n
+\(bu
+DVB API with multi tuner and PIP support
+.TP 3n
+\(bu
+gbox with cascading/remote server ECM support
+.TP 3n
+\(bu
+serial (HSIC, SSSP, BOMBA, DSR 9500)
+.TP 3n
+\(bu
+radegast
+.TP 3n
+OSCam works on the following platforms:
+.TP 3n
+\(bu
+Linux (Tuxbox, ARM, MIPS, MIPSel, SH-4, PowerPC, ...)
+.TP 3n
+\(bu
+Windows (based on cygwin1.dll)
+.TP 3n
+\(bu
+Mac OS X
+.SH OPTIONS
+.PP
+\fB-a\fP|\fB--crash-dump\fP
+.RS 3n
+write oscam.crash on segfault (needs installed GDB and OSCam compiled with debug infos -ggdb)
+.RE
+.PP
+\fB-b\fP|\fB--daemon\fP
+.RS 3n
+starts in background, writing oscam.version with starttime and version info in temporary directory
+.RE
+.PP
+\fB-B\fP|\fB--pidfile\fP <filename>
+.RS 3n
+set PID file, overrides pidfile of \fBoscam.conf\fR, default:none
+.RE
+.PP
+\fB-c\fP|\fB--config-dir\fP <directory>
+.RS 3n
+read configuration from <directory>, default:see CS_CONFDIR in \fBglobals.h\fR,
+while starting OSCam prints warnings on invalid keywords, comment lines start with \fB#\fP character.
+.RE
+.PP
+\fB-d\fP|\fB--debug\fP <level>
+.RS 3n
+debug level mask:
+
+     \fB0\fP = no debugging (default)
+     \fB2\fP = ATR parsing info, ECM dumps, CW dumps
+     \fB4\fP = traffic from/to the reader
+     \fB8\fP = traffic from/to the clients
+    \fB16\fP = traffic to the reader-device on IFD layer
+    \fB32\fP = traffic to the reader-device on I/O layer
+    \fB64\fP = EMM logging
+   \fB128\fP = DVBAPI logging
+   \fB256\fP = load balancing logging
+   \fB512\fP = cache exchange logging
+  \fB1024\fP = client ECM logging
+ \fB65535\fP = debug all
+.RE
+.PP
+\fB-g\fP|\fB--gcollect\fP <mode>
+.RS 3n
+garbage collector debug mode, default:none:
+
+   \fB1\fP = immediate free
+   \fB2\fP = check for double frees
+.RE
+.PP
+\fB-h\fP|\fB--help\fP
+.RS 3n
+usage
+.RE
+.PP
+\fB-I\fP|\fB--syslog-ident\fP <ident>
+.RS 3n
+set syslog ident, default:oscam
+.RE
+.PP
+\fB-p\fP|\fB--pending-ecm\fP <number>
+.RS 3n
+maximum number of pending ECM packets, default:32, maximum:255
+.RE
+.PP
+\fB-r\fP|\fB--restart\fP <level>
+.RS 3n
+restart level:
+
+   \fB0\fP = disabled, restart request sets exit status to 99
+   \fB1\fP = restart activated, web interface can restart oscam (default)
+   \fB2\fP = like 1, but also restart on segmentation faults
+.RE
+.PP
+\fB-S\fP|\fB--show-sensitive\fP
+.RS 3n
+do not filter sensitive info (card serial numbers) in the logs
+.RE
+.PP
+\fB-s\fP|\fB--capture-segfaults\fP
+.RS 3n
+capture segmentation faults
+.RE
+.PP
+\fB-t\fP|\fB--temp-dir\fP <directory>
+.RS 3n
+use <directory> for temporary data, default:temporary directory of OS
+.RE
+.PP
+\fB-u\fP|\fB--utf8\fP
+.RS 3n
+enable output of web interface in UTF-8 charset
+.RE
+.PP
+\fB-V\fP|\fB--build-info\fP
+.RS 3n
+show OSCam version info
+.RE
+.PP
+\fB-w\fP|\fB--wait\fP <seconds>
+.RS 3n
+time waiting for system time to be set correctly
+.RE
+.SH SIGNALS
+.PP
+\fBSIGHUP\fP
+.RS 3n
+reinit user db, TIERs, services, clients and anti-cascading, for newcamd connections: after reloading the ident, please restart newcamd client
+.RE
+.PP
+\fBSIGUSR1\fP
+.RS 3n
+shift debug level to next level (see debug level mask above)
+.RE
+.PP
+\fBSIGUSR2\fP
+.RS 3n
+get reader SC info
+.RE
+.SH "SEE ALSO"
+\fBlist_smargo\fR(1), \fBoscam.ac\fR(5), \fBoscam.cacheex\fR(5), \fBoscam.cert\fR(5), \fBoscam.conf\fR(5), \fBoscam.dvbapi\fR(5), \fBoscam.guess\fR(5), \fBoscam.ird\fR(5), \fBoscam.provid\fR(5), \fBoscam.ratelimit\fR(5), \fBoscam.server\fR(5), \fBoscam.services\fR(5), \fBoscam.srvid\fR(5), \fBoscam.tiers\fR(5), \fBoscam.user\fR(5), \fBoscam.whitelist\fR(5)

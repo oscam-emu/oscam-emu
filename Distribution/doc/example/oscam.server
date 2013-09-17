@@ -1,0 +1,167 @@
+#
+# reader configuration
+#
+
+# serial reader
+
+[reader]
+label    = reader1
+protocol = mouse
+detect   = CD
+device   = /dev/ttyS0
+group    = 1
+emmcache = 1,3,2
+services = services1
+caid     = 0100
+
+# USB serial reader
+
+[reader]
+label    = reader2
+protocol = mouse
+detect   = CD
+device   = /dev/ttyUSB0
+aeskey   = 000102030405060708090A0B0C0D0E0F
+group    = 2
+emmcache = 1,3,2
+services = services2
+caid     = 0200
+
+# remote newcamd reader with fallback for group 1
+
+[reader]
+label    = remote1
+protocol = newcamd
+key      = 0102030405060708091011121314
+device   = 192.168.0.2,66666
+user     = user1
+password = password1
+group    = 1
+fallback = 1
+
+# remote camd 3.78x reader with fallback for group 2
+
+[reader]
+label    = remote2
+protocol = cs378x
+device   = 192.168.0.3,23456
+user     = user2
+password = password2
+group    = 2
+fallback = 1
+
+# remote gbox reader
+
+[reader]
+label        = remote3
+protocol     = gbox
+mg-encrypted = D: { 192.168.0.4 { 12345 34567 { ABCD1234 { 9 9 }}}}
+group        = 3
+caid         = 0300
+
+# remote CCcam reader
+
+[reader]
+label      = remote4
+protocol   = cccam
+device     = 192.168.0.5,45678
+user       = user4
+password   = password4
+group      = 4
+caid       = 0400
+cccversion = 1.2.34
+cccbuild   = 5678
+
+# remote radegast reader
+
+[reader]
+label    = remote5
+protocol = radegast
+device   = 192.168.0.6,56789
+group    = 5
+caid     = 0500
+
+# PCSC reader
+
+[reader]
+label    = mypcscreader
+protocol = pcsc
+device   = 0
+aeskey   = 0102030405060708090a0b0c0d0e0f10
+group    = 6
+caid     = 0600
+
+# Smargo Smartreader+ (Tripple Reader as well) using kernel drivers (recommended)
+
+[reader]
+label    = mysmargo
+protocol = smargo
+device   = /dev/ttyUSB1
+aeskey   = 0102030405060708090a0b0c0d0e0f10
+group    = 7
+caid     = 0700
+
+# Smargo Smartreader+ using libusb
+
+[reader]
+label    = mysmartreader
+protocol = smartreader
+device   = 001:002
+group    = 8
+caid     = 0800
+
+# internal reader
+
+[reader]
+label    = myinternalreader
+protocol = internal
+device   = /dev/sci0
+group    = 9
+caid     = 0900
+
+# AD-Teknik AB Multiprogrammer 3.5 serial
+
+[reader]
+label    = reader9
+protocol = mp35
+detect   = CD
+device   = /dev/ttyS1
+group    = 10
+emmcache = 1,3,2
+services = services9
+caid     = 1000
+
+# AD-Teknik AB Multiprogrammer 3.6 USB
+
+[reader]
+label    = reader10
+protocol = mp35
+detect   = CD
+device   = /dev/ttyUSB1
+group    = 11
+emmcache = 1,3,2
+services = services10
+caid     = 1100
+
+# AD-Teknik AB USB Phoenix at 6.00 mhz
+
+[reader]
+label    = reader12
+protocol = mp35
+detect   = CD
+device   = /dev/ttyUSB2
+mhz      = 600
+group    = 12
+emmcache = 1,3,2
+services = services11
+caid     = 1200
+
+# sc8in1 reader
+
+[reader]
+label    = reader12
+protocol = sc8in1
+device   = /dev/ttyUSB3:1
+group    = 13
+emmcache = 1,3,2
+caid     = 1300

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+echo "= Checking for files that are not described in pages_index.txt"
+for FILE in $(find . -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.json' -o -name '*.xml' -o -name '*.png' -o -name '*.gif' -o -name '*.jpg' | sed -e 's|^\./||')
+do
+	grep -w $FILE pages_index.txt >/dev/null
+	if [ $? != 0 ]
+	then
+		echo "   *** FILE NOT IN pages_index.txt: $FILE"
+	fi
+done
+
+echo "= Checking for files that are in pages_index.txt but do not exist"
+while read TPL FILE DEPS
+do
+	[ "$TPL" = "#" ] && continue
+	if [ ! -f $FILE ]
+	then
+		echo "  *** FILE NOT FOUND: $FILE"
+	fi
+done < pages_index.txt
