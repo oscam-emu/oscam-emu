@@ -25,12 +25,6 @@
 
 #if !defined(WITH_SSL) && !defined(WITH_LIBCRYPTO)
 
-typedef struct MD5Context {
-	uint32_t buf[4];
-	uint32_t bits[2];
-	unsigned char in[64];
-} MD5_CTX;
-
 #ifdef __i386__
 #define byteReverse(a, b)
 #else
@@ -152,7 +146,7 @@ static void MD5_Transform(uint32_t buf[4],  uint32_t in[16])
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-static void MD5_Init(MD5_CTX *ctx)
+void MD5_Init(MD5_CTX *ctx)
 {
 	ctx->buf[0] = 0x67452301;
 	ctx->buf[1] = 0xefcdab89;
@@ -167,7 +161,7 @@ static void MD5_Init(MD5_CTX *ctx)
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-static void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
+void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
 {
 	uint32_t t;
 
@@ -213,7 +207,7 @@ static void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
  * Final wrapup - pad to 64-byte boundary with the bit pattern 
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-static void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
+void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
 {
 	unsigned count;
 	unsigned char *p;

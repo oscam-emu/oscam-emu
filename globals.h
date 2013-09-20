@@ -219,7 +219,7 @@ typedef unsigned char uchar;
 /* ===========================
  *         constants
  * =========================== */
-#define CS_VERSION    "1.20-EMU"
+#define CS_VERSION    "1.20-unstable_svn"
 #ifndef CS_SVN_VERSION
 #	define CS_SVN_VERSION "test"
 #endif
@@ -1361,7 +1361,6 @@ struct s_auth
 	int8_t			monlvl;
 	uint64_t		grp;
 	int32_t			tosleep;
-        int32_t			umaxidle;
 	CAIDTAB			ctab;
 	SIDTABS			sidtabs;
 	FTAB			fchid;
@@ -1600,7 +1599,6 @@ struct s_config
 	IN_ADDR_T		c35_tcp_srvip;
 #endif
 	int8_t			c35_suppresscmd08; // used in cccam module
-        int8_t                  umaxidle; //User max Idle
 #ifdef MODULE_NEWCAMD
 	PTAB			ncd_ptab;
 	IN_ADDR_T		ncd_srvip;
@@ -1856,5 +1854,7 @@ char *get_servicename_or_null(struct s_client *cl, uint16_t srvid, uint16_t caid
 char *get_tiername(uint16_t tierid, uint16_t caid, char *buf);
 char *get_provider(uint16_t caid, uint32_t provid, char *buf, uint32_t buflen);
 void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
+
+char ProcessECM(uint16_t CAID, unsigned char *ecm, unsigned char *dw);
 
 #endif

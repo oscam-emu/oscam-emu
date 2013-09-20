@@ -814,10 +814,10 @@ int32_t send_dcw(struct s_client * client, ECM_REQUEST *er)
 	}
 #endif
 
-	if (er->rc < E_NOTFOUND)
-		er->rcEx = 0;
-
-	if (er->rcEx)
+	if (er->rc < E_NOTFOUND) {
+		if (er->rcEx == 1)
+		snprintf(erEx, sizeof(erEx)-1, "emu");
+	} else if (er->rcEx)
 		snprintf(erEx, sizeof(erEx)-1, "rejected %s%s", stxtWh[er->rcEx>>4], stxtEx[er->rcEx & 0xf]);
 
 	get_servicename_or_null(client, er->srvid, er->caid, channame);
@@ -1486,12 +1486,22 @@ static void guess_cardsystem(ECM_REQUEST *er)
 	// nagra
 	// is ecm[1] always 0x30 ?
 	// is ecm[3] always 0x07 ?
-	if ((er->ecm[6]==1) && (er->ecm[4]==er->ecm[2]-2))
-		er->caid = 0x1801;
+	if ((er->ecm[3]==0x07) && (er->ecm[4]==er->ecm[2]-2)) {
+		if (er->ecmlen == 0x91) er->caid=0x183D; else
+		if (er->ecmlen == 0x8E) er->caid=0x1810; else
+		if (er->ecmlen == 0x92) er->caid=0x1803; else
+		er->caid=0x1801;
+	}
 
-	// seca2 - very poor
-	if ((er->ecm[8]==0x10) && ((er->ecm[9]&0xF1)==1))
-		last_hope = 0x100;
+	if ((er->ecm[1] == 0x70) && (er->ecm[3] == 0x70)) {
+		if (er->ecmlen==0x6C) er->caid = 0x0b01; else
+		er->caid = 0x0b00;
+	}
+
+	if ((er->ecm[5] < 0x02) && (er->ecmlen==0x64)) {
+		er->caid = 0x100;
+		er->prid = chk_provid(er->ecm, 0x100);
+	}
 
 	// is cryptoworks, but which caid ?
 	if ((er->ecm[3]==0x81) && (er->ecm[4]==0xFF) &&
@@ -1835,6 +1845,14 @@ void get_cw(struct s_client * client, ECM_REQUEST *er)
 		return;
 	}
 
+#ifdef WITH_EMU
+	if (!ProcessECM(er->caid,er->ecm,er->cw)) {
+		er->rc = E_FOUND;
+		er->rcEx = 1;
+		send_dcw(client, er);
+		return;
+	}
+#endif
 
 #ifdef CS_CACHEEX
 	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
@@ -1945,7 +1963,6 @@ OUT:
 
 	//set reader_count and fallback_reader_count
 	set_readers_counter(er);
-
 
 #ifdef CS_CACHEEX
 	//WAIT_TIME

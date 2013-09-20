@@ -16,7 +16,7 @@
 //#define LCDSUPPORT 1
 //#define LEDSUPPORT 1
 //#define IPV6SUPPORT 1
-
+#define WITH_EMU 1
 #define MODULE_MONITOR 1
 //#define MODULE_CAMD33 1
 #define MODULE_CAMD35 1

@@ -231,6 +231,7 @@ SRC-$(CONFIG_MODULE_GBOX) += module-gbox.c
 SRC-$(CONFIG_IRDETO_GUESSING) += module-ird-guess.c
 SRC-$(CONFIG_LCDSUPPORT) += module-lcd.c
 SRC-$(CONFIG_LEDSUPPORT) += module-led.c
+SRC-$(CONFIG_WITH_EMU) += emulator.c
 SRC-$(CONFIG_MODULE_MONITOR) += module-monitor.c
 SRC-$(CONFIG_MODULE_NEWCAMD) += module-newcamd.c
 SRC-$(CONFIG_MODULE_PANDORA) += module-pandora.c

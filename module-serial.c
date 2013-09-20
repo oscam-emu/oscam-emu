@@ -851,14 +851,14 @@ static int32_t oscam_ser_check_ecm(ECM_REQUEST *er, uchar *buf, int32_t l)
     case P_SSSP:
       er->pid=b2i(2, buf+3);
       for (i=0; (i<8) && (serialdata->sssp_tab[i].pid!=er->pid); i++);
-      if (i>=serialdata->sssp_num)
+      /*if (i>=serialdata->sssp_num)
       {
         cs_debug_mask(D_CLIENT, "illegal request, unknown pid=%04X", er->pid);
         return(2);
-      }
+      }*/
       er->ecmlen = l-5;
       er->srvid= serialdata->sssp_srvid;
-      er->caid = serialdata->sssp_tab[i].caid;
+      er->caid = (serialdata->sssp_tab[i].caid < 0x100) ? 0 : serialdata->sssp_tab[i].caid;
       er->prid = serialdata->sssp_tab[i].prid;
       memcpy(er->ecm, buf+5, er->ecmlen);
       break;
