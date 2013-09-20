@@ -8,3 +8,6 @@ Distribution/list_smargo-*
 
 # build directories
 /build/
+
+.svn/
+.gitignore
