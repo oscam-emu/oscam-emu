@@ -1,7 +1,7 @@
 10
 
 dir
-8917
+8918
 http://www.streamboard.tv/svn/oscam/trunk/Distribution/doc/txt
 http://www.streamboard.tv/svn/oscam
 
@@ -230,40 +230,6 @@ has-props
 
 1648
 
-oscam.user.txt
-file
-
-
-
-
-2013-09-17T05:41:57.000000Z
-4c8bde466bbe3bec9d1cbe0f9f4e55dd
-2013-08-25T18:51:03.357853Z
-8869
-docman
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-7778
-
 oscam.ird.txt
 file
 
@@ -297,6 +263,40 @@ has-props
 
 
 605
+
+oscam.user.txt
+file
+
+
+
+
+2013-09-17T05:41:57.000000Z
+4c8bde466bbe3bec9d1cbe0f9f4e55dd
+2013-08-25T18:51:03.357853Z
+8869
+docman
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7778
 
 list_smargo.txt
 file
@@ -332,40 +332,6 @@ has-props
 
 588
 
-oscam.services.txt
-file
-
-
-
-
-2013-09-17T05:41:57.000000Z
-1e8117677ff54483c98d5f2802d06658
-2013-08-25T18:51:03.357853Z
-8869
-docman
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-964
-
 oscam.ac.txt
 file
 
@@ -399,6 +365,40 @@ has-props
 
 
 705
+
+oscam.services.txt
+file
+
+
+
+
+2013-09-17T05:41:57.000000Z
+1e8117677ff54483c98d5f2802d06658
+2013-08-25T18:51:03.357853Z
+8869
+docman
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+964
 
 oscam.conf.txt
 file
@@ -434,40 +434,6 @@ has-props
 
 27546
 
-oscam.tiers.txt
-file
-
-
-
-
-2013-09-17T05:41:57.000000Z
-6719c996039039ba87eba662b6409504
-2013-08-25T18:51:03.357853Z
-8869
-docman
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-705
-
 oscam.guess.txt
 file
 
@@ -501,6 +467,40 @@ has-props
 
 
 686
+
+oscam.tiers.txt
+file
+
+
+
+
+2013-09-17T05:41:57.000000Z
+6719c996039039ba87eba662b6409504
+2013-08-25T18:51:03.357853Z
+8869
+docman
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+705
 
 oscam.srvid.txt
 file

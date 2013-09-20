@@ -1,7 +1,7 @@
 10
 
 dir
-8917
+8918
 http://www.streamboard.tv/svn/oscam/trunk/toolchains
 http://www.streamboard.tv/svn/oscam
 
@@ -25,74 +25,6 @@ gf
 
 
 4b0bc96b-bc66-0410-9d44-ebda105a78c1
-
-toolchain-mipsel-tuxbox-broken-pthread.cmake
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-960f58dfd5bd9321e19d2469b8a8271a
-2012-07-14T20:46:06.402953Z
-7175
-Admin
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-211
-
-toolchain-mips-dir825.cmake
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-1ce949bbc9fc8f3071ff279dd979e247
-2012-07-14T20:46:06.402953Z
-7175
-Admin
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-133
 
 toolchain-arm-dockstar-openwrt.cmake
 file
@@ -128,14 +60,14 @@ has-props
 
 156
 
-toolchain-arm-coolstream.cmake
+toolchain-mips-dir825.cmake
 file
 
 
 
 
 2013-09-17T05:41:58.000000Z
-a2c593c15ceff476395b8b05e2d7c671
+1ce949bbc9fc8f3071ff279dd979e247
 2012-07-14T20:46:06.402953Z
 7175
 Admin
@@ -160,7 +92,41 @@ has-props
 
 
 
-151
+133
+
+toolchain-mipsel-tuxbox-broken-pthread.cmake
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+960f58dfd5bd9321e19d2469b8a8271a
+2012-07-14T20:46:06.402953Z
+7175
+Admin
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+211
 
 toolchain-sh4-tuxbox.cmake
 file
@@ -196,14 +162,14 @@ has-props
 
 131
 
-toolchain-mips-azbox.cmake
+toolchain-arm-coolstream.cmake
 file
 
 
 
 
 2013-09-17T05:41:58.000000Z
-613c69c45c5b5b801988601163555218
+a2c593c15ceff476395b8b05e2d7c671
 2012-07-14T20:46:06.402953Z
 7175
 Admin
@@ -228,7 +194,7 @@ has-props
 
 
 
-141
+151
 
 toolchain-arm-friendlyarm.cmake
 file
@@ -263,6 +229,40 @@ has-props
 
 
 148
+
+toolchain-mips-azbox.cmake
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+613c69c45c5b5b801988601163555218
+2012-07-14T20:46:06.402953Z
+7175
+Admin
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+141
 
 toolchain-tripledragon.cmake
 file
@@ -332,40 +332,6 @@ has-props
 
 141
 
-toolchain-mips-tuxbox.cmake
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-f05d050e9cb22268f5637b0b2f183199
-2012-07-14T20:46:06.402953Z
-7175
-Admin
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-135
-
 toolchain-sh4-amino.cmake
 file
 
@@ -400,6 +366,40 @@ has-props
 
 134
 
+toolchain-mips-tuxbox.cmake
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+f05d050e9cb22268f5637b0b2f183199
+2012-07-14T20:46:06.402953Z
+7175
+Admin
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+135
+
 toolchain-sparc-padre.cmake
 file
 
@@ -408,6 +408,40 @@ file
 
 2013-09-17T05:41:58.000000Z
 e5438b25068fc4fd16178f89cdcf608f
+2012-07-14T20:46:06.402953Z
+7175
+Admin
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+134
+
+toolchain-mips-fonera2.cmake
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+88afcac80af711255fefa72c4c270131
 2012-07-14T20:46:06.402953Z
 7175
 Admin
@@ -467,40 +501,6 @@ has-props
 
 
 142
-
-toolchain-mips-fonera2.cmake
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-88afcac80af711255fefa72c4c270131
-2012-07-14T20:46:06.402953Z
-7175
-Admin
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-134
 
 toolchain-sh4-tuxbox-stapi.cmake
 file

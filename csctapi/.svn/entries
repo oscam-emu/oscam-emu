@@ -1,7 +1,7 @@
 10
 
 dir
-8917
+8918
 http://www.streamboard.tv/svn/oscam/trunk/csctapi
 http://www.streamboard.tv/svn/oscam
 
@@ -60,40 +60,6 @@ has-props
 
 2543
 
-icc_async.h
-file
-
-
-
-
-2013-09-17T05:41:59.000000Z
-53b6bdeb5757f30307c62e9a3cb20e0d
-2013-05-20T16:41:55.228185Z
-8649
-depp0n
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-2284
-
 ifd_sci.c
 file
 
@@ -127,6 +93,40 @@ has-props
 
 
 16039
+
+icc_async.h
+file
+
+
+
+
+2013-09-17T05:41:59.000000Z
+53b6bdeb5757f30307c62e9a3cb20e0d
+2013-05-20T16:41:55.228185Z
+8649
+depp0n
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2284
 
 ifd_phoenix.h
 file
@@ -230,40 +230,6 @@ has-props
 
 17592
 
-ifd_azbox.c
-file
-
-
-
-
-2013-09-17T05:41:59.000000Z
-f5801eac9f887bcabdf05078d4906ded
-2013-05-20T16:41:55.228185Z
-8649
-depp0n
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-3800
-
 protocol_t1.c
 file
 
@@ -298,17 +264,17 @@ has-props
 
 10893
 
-ifd_mp35.c
+ifd_azbox.c
 file
 
 
 
 
 2013-09-17T05:41:59.000000Z
-51db793b6635050a518d83fab72f68d3
-2012-12-08T14:36:47.340851Z
-7951
-lattjo
+f5801eac9f887bcabdf05078d4906ded
+2013-05-20T16:41:55.228185Z
+8649
+depp0n
 has-props
 
 
@@ -330,7 +296,7 @@ has-props
 
 
 
-7893
+3800
 
 io_serial.c
 file
@@ -366,6 +332,40 @@ has-props
 
 21890
 
+ifd_mp35.c
+file
+
+
+
+
+2013-09-17T05:41:59.000000Z
+51db793b6635050a518d83fab72f68d3
+2012-12-08T14:36:47.340851Z
+7951
+lattjo
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7893
+
 protocol_t0.h
 file
 
@@ -400,40 +400,6 @@ has-props
 
 1552
 
-ifd_pcsc.c
-file
-
-
-
-
-2013-09-17T05:41:59.000000Z
-1ae9e749d7b57211cd2b73a92f733db6
-2013-06-24T09:49:16.342532Z
-8717
-gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-12253
-
 ifd_smargo.c
 file
 
@@ -467,6 +433,40 @@ has-props
 
 
 5483
+
+ifd_pcsc.c
+file
+
+
+
+
+2013-09-17T05:41:59.000000Z
+1ae9e749d7b57211cd2b73a92f733db6
+2013-06-24T09:49:16.342532Z
+8717
+gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+12253
 
 io_serial.h
 file

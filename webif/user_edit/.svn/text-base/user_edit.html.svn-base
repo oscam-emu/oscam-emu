@@ -43,6 +43,7 @@
 			<TR><TD>##TPLHELPPREFIX##user#betatunnel##TPLHELPSUFFIX##Betatunnel:</A></TD><TD><textarea name="betatunnel" cols="58" rows="3" class="bt">##BETATUNNELS##</textarea></TD></TR>
 			<TR><TD>##TPLHELPPREFIX##user#suppresscmd08##TPLHELPSUFFIX##Suppresscmd08:</A></TD><TD><SELECT NAME="suppresscmd08"><OPTION VALUE="0">CMD08 active</OPTION><OPTION VALUE="1" ##SUPPRESSCMD08##>CMD08 suppressed</OPTION></SELECT></TD></TR>
 			<TR><TD>##TPLHELPPREFIX##user#sleepsend##TPLHELPSUFFIX##Sleepsend:</A></TD><TD><input name="sleepsend" type="text" size="3" maxlength="3" value="##SLEEPSEND##"> 0 or 255</TD></TR>
+			<TR><TD>##TPLHELPPREFIX##user#umaxidle##TPLHELPSUFFIX##User Max Idle:</A></TD><TD><input name="umaxidle" type="text" size="3" maxlength="3" value="##UMAXIDLE##"></TD></TR>
 			<TR><TD>##TPLHELPPREFIX##user#emmreassembly##TPLHELPSUFFIX##EMM Reassembly:</A></TD>
 				<TD>
 					<select name="emmreassembly">

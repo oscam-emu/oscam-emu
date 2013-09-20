@@ -1,15 +1,15 @@
 10
 
 dir
-8917
+8918
 http://www.streamboard.tv/svn/oscam/trunk
 http://www.streamboard.tv/svn/oscam
 
 
 
-2013-09-12T13:14:14.209929Z
-8917
-stefansat
+2013-09-19T18:26:54.829526Z
+8918
+gorgone.impertinence
 has-props
 
 
@@ -378,40 +378,6 @@ has-props
 toolchains
 dir
 
-reader-griffin.c
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-c8b131549a1e8fbd53d994f8d012fe7f
-2013-09-10T15:15:47.493991Z
-8914
-lattjo
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-18459
-
 reader-videoguard-common.h
 file
 
@@ -445,6 +411,40 @@ has-props
 
 
 2751
+
+reader-griffin.c
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+c8b131549a1e8fbd53d994f8d012fe7f
+2013-09-10T15:15:47.493991Z
+8914
+lattjo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+18459
 
 oscam-log.h
 file
@@ -616,40 +616,6 @@ has-props
 
 15274
 
-module-ghttp.c
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-5c3cf9447a00d7795501f385d99d14ac
-2013-09-01T13:28:20.214389Z
-8889
-bowman
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-21196
-
 module-dvbapi-azbox.c
 file
 
@@ -684,17 +650,17 @@ has-props
 
 10422
 
-module-webif-tpl.c
+module-ghttp.c
 file
 
 
 
 
 2013-09-17T17:28:07.000000Z
-6652da3b694ff1f412130d87f4bf556e
-2013-03-26T02:06:15.044961Z
-8576
-Admin
+5c3cf9447a00d7795501f385d99d14ac
+2013-09-01T13:28:20.214389Z
+8889
+bowman
 
 
 
@@ -716,7 +682,7 @@ Admin
 
 
 
-23375
+21196
 
 reader-dgcrypt.c
 file
@@ -752,17 +718,17 @@ gf
 
 5251
 
-modules.h
+module-webif-tpl.c
 file
 
 
 
 
 2013-09-17T17:28:07.000000Z
-aa19f74aa119e0694a5219fb469d4077
-2013-01-16T22:37:25.653075Z
-8115
-bowman
+6652da3b694ff1f412130d87f4bf556e
+2013-03-26T02:06:15.044961Z
+8576
+Admin
 
 
 
@@ -784,7 +750,7 @@ bowman
 
 
 
-596
+23375
 
 module-radegast.c
 file
@@ -819,6 +785,40 @@ has-props
 
 
 7523
+
+modules.h
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+aa19f74aa119e0694a5219fb469d4077
+2013-01-16T22:37:25.653075Z
+8115
+bowman
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+596
 
 module-dvbapi-azbox.h
 file
@@ -1716,11 +1716,11 @@ file
 
 
 
-2013-09-17T17:28:07.000000Z
-a41c9a2fc16969c3f37f4efcb7ff56c9
-2013-05-25T19:25:02.200358Z
-8663
-theparasol
+2013-09-20T04:52:30.000000Z
+ea2a5a01ac618bb30bdeef3a34720329
+2013-09-19T18:26:54.829526Z
+8918
+gorgone.impertinence
 
 
 
@@ -1742,7 +1742,7 @@ theparasol
 
 
 
-14824
+15248
 
 oscam-reader.c
 file
@@ -2019,40 +2019,6 @@ has-props
 
 23778
 
-oscam-string.h
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-766541e9c4751d6617e28c4e9f840b51
-2013-07-24T14:02:48.813325Z
-8768
-bowman
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-1677
-
 reader-seca.c
 file
 
@@ -2087,18 +2053,17 @@ has-props
 
 16566
 
-module-dvbapi-coolapi.c
+oscam-string.h
 file
 
 
 
 
 2013-09-17T17:28:07.000000Z
-4b46274f8cacdc81c8f050a3d06640fb
-2013-07-01T11:37:22.080308Z
-8739
-gf
-has-props
+766541e9c4751d6617e28c4e9f840b51
+2013-07-24T14:02:48.813325Z
+8768
+bowman
 
 
 
@@ -2119,7 +2084,8 @@ has-props
 
 
 
-14051
+
+1677
 
 README
 file
@@ -2154,6 +2120,40 @@ has-props
 
 
 3544
+
+module-dvbapi-coolapi.c
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+4b46274f8cacdc81c8f050a3d06640fb
+2013-07-01T11:37:22.080308Z
+8739
+gf
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+14051
 
 module-monitor.h
 file
@@ -2427,40 +2427,6 @@ blueven
 
 1909
 
-config.h
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-58d9dc6a3d0fd737b2b4e3da428e8380
-2013-07-10T14:19:09.168727Z
-8753
-bowman
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-1780
-
 README.build
 file
 
@@ -2495,17 +2461,51 @@ gorgone.impertinence
 
 13433
 
+config.h
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+58d9dc6a3d0fd737b2b4e3da428e8380
+2013-07-10T14:19:09.168727Z
+8753
+bowman
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1780
+
 module-webif.c
 file
 
 
 
 
-2013-09-17T17:28:07.000000Z
-ddd4b3bfdd3bef7ef3c49372d5f8c4c6
-2013-09-09T22:11:51.540883Z
-8908
-blueven
+2013-09-20T04:52:30.000000Z
+c7f1ec0cf222f0df976492de8b163675
+2013-09-19T18:26:54.829526Z
+8918
+gorgone.impertinence
 has-props
 
 
@@ -2527,41 +2527,7 @@ has-props
 
 
 
-198396
-
-module-gbox.c
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-4f4d96744e982872cde4ddfc2a8a3046
-2013-08-08T19:39:16.421056Z
-8822
-Eggy123
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-61047
+198518
 
 oscam-work.c
 file
@@ -2596,6 +2562,40 @@ blueven
 
 
 13443
+
+module-gbox.c
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+4f4d96744e982872cde4ddfc2a8a3046
+2013-08-08T19:39:16.421056Z
+8822
+Eggy123
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+61047
 
 module-webif.h
 file
@@ -2665,17 +2665,17 @@ theparasol
 
 15227
 
-module-led.c
+oscam-work.h
 file
 
 
 
 
 2013-09-17T17:28:07.000000Z
-c93306a2aa08476f550570df0751bc4f
-2013-02-04T01:09:41.984221Z
-8282
-gf
+7aa69b14b276717783f6fa1bfdd55959
+2013-09-04T15:22:29.381826Z
+8895
+blueven
 
 
 
@@ -2697,7 +2697,7 @@ gf
 
 
 
-9251
+1291
 
 module-gbox.h
 file
@@ -2733,17 +2733,17 @@ gf
 
 182
 
-oscam-work.h
+module-led.c
 file
 
 
 
 
 2013-09-17T17:28:07.000000Z
-7aa69b14b276717783f6fa1bfdd55959
-2013-09-04T15:22:29.381826Z
-8895
-blueven
+c93306a2aa08476f550570df0751bc4f
+2013-02-04T01:09:41.984221Z
+8282
+gf
 
 
 
@@ -2765,7 +2765,7 @@ blueven
 
 
 
-1291
+9251
 
 oscam-conf-mk.c
 file
@@ -2835,40 +2835,6 @@ gf
 
 1975
 
-module-led.h
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-8ff413cb453b046e31b26d56de96047b
-2012-09-28T23:36:39.299532Z
-7534
-gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-3012
-
 Makefile
 file
 
@@ -2902,6 +2868,40 @@ has-props
 
 
 28327
+
+module-led.h
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+8ff413cb453b046e31b26d56de96047b
+2012-09-28T23:36:39.299532Z
+7534
+gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3012
 
 oscam-conf-mk.h
 file
@@ -2937,40 +2937,6 @@ TNe-TWo
 
 1120
 
-module-serial.c
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-bff18bbefdb30a5f98b414967e202512
-2013-03-25T11:59:04.384632Z
-8572
-gf
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-37644
-
 oscam.c
 file
 
@@ -3004,6 +2970,40 @@ has-props
 
 
 39470
+
+module-serial.c
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+bff18bbefdb30a5f98b414967e202512
+2013-03-25T11:59:04.384632Z
+8572
+gf
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+37644
 
 reader-tongfang.c
 file
@@ -3076,40 +3076,6 @@ has-props
 cscrypt
 dir
 
-reader-videoguard1.c
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-531cc1f9f04ff3cc3f75658691c450d8
-2013-03-06T00:32:05.976850Z
-8484
-gf
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-9664
-
 oscam-config.h
 file
 
@@ -3143,6 +3109,40 @@ blueven
 
 
 2049
+
+reader-videoguard1.c
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+531cc1f9f04ff3cc3f75658691c450d8
+2013-03-06T00:32:05.976850Z
+8484
+gf
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+9664
 
 oscam-simples.c
 file
@@ -3246,40 +3246,6 @@ has-props
 
 41866
 
-reader-videoguard12.c
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-220e80655450bc29c89ebf872cc4fb48
-2013-03-06T00:32:05.976850Z
-8484
-gf
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-12000
-
 oscam-llist.h
 file
 
@@ -3313,6 +3279,40 @@ has-props
 
 
 3723
+
+reader-videoguard12.c
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+220e80655450bc29c89ebf872cc4fb48
+2013-03-06T00:32:05.976850Z
+8484
+gf
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+12000
 
 module-newcamd.c
 file
@@ -3484,40 +3484,6 @@ has-props
 
 5894
 
-readers.h
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-8f510d0ed6e027a7180e1dae8f0f05db
-2013-02-07T01:27:50.243278Z
-8307
-gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-671
-
 module-lcd.h
 file
 
@@ -3551,6 +3517,40 @@ gf
 
 
 246
+
+readers.h
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+8f510d0ed6e027a7180e1dae8f0f05db
+2013-02-07T01:27:50.243278Z
+8307
+gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+671
 
 CMakeLists.txt
 file
@@ -3790,6 +3790,40 @@ has-props
 
 30231
 
+oscam-client.c
+file
+
+
+
+
+2013-09-20T04:52:30.000000Z
+1a6c2a54a8382857c544d7d7ec862666
+2013-09-19T18:26:54.829526Z
+8918
+gorgone.impertinence
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+19786
+
 Makefile.extra
 file
 
@@ -3823,40 +3857,6 @@ has-props
 
 
 6565
-
-oscam-client.c
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-029978d27fef36b83624bb23927c3ccc
-2013-09-09T22:11:51.540883Z
-8908
-blueven
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-19393
 
 utils
 dir
@@ -3895,40 +3895,6 @@ gf
 
 2715
 
-module-webif-lib.c
-file
-
-
-
-
-2013-09-17T17:28:07.000000Z
-e767680e43231c1da4a82463c46183f3
-2013-07-24T14:02:48.813325Z
-8768
-bowman
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-20507
-
 oscam-client.h
 file
 
@@ -3962,6 +3928,40 @@ gf
 
 
 882
+
+module-webif-lib.c
+file
+
+
+
+
+2013-09-17T17:28:07.000000Z
+e767680e43231c1da4a82463c46183f3
+2013-07-24T14:02:48.813325Z
+8768
+bowman
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+20507
 
 .gitignore
 file
@@ -4173,33 +4173,12 @@ file
 
 
 
-2013-09-17T17:28:07.000000Z
-0daaf52cb4edd77dcb104660dd3359bd
-2013-09-09T22:55:39.251134Z
-8909
-theparasol
+
+1efb0de8fb06eae24e91ce3c0f0a5817
+2013-09-19T18:26:54.829526Z
+8918
+gorgone.impertinence
 has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-56559
 
 module-webif-lib.h
 file

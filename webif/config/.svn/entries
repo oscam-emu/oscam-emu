@@ -1,7 +1,7 @@
 10
 
 dir
-8917
+8918
 http://www.streamboard.tv/svn/oscam/trunk/webif/config
 http://www.streamboard.tv/svn/oscam
 
@@ -706,40 +706,6 @@ theparasol
 
 2058
 
-global_localcards.html
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-5873d69b633cea7be5ca1db6825d172e
-2013-02-24T15:12:29.902669Z
-8418
-gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-786
-
 monitor.html
 file
 
@@ -774,14 +740,14 @@ gf
 
 1828
 
-menu_cccam.html
+global_localcards.html
 file
 
 
 
 
 2013-09-17T05:41:58.000000Z
-dd493eafabc9c14cc1a01ebeb23321b0
+5873d69b633cea7be5ca1db6825d172e
 2013-02-24T15:12:29.902669Z
 8418
 gf
@@ -806,7 +772,41 @@ gf
 
 
 
-80
+786
+
+radegast.html
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+7833f8cb644863641b0e712858624bb3
+2013-02-24T15:12:29.902669Z
+8418
+gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1076
 
 global_enableledbit.html
 file
@@ -842,14 +842,14 @@ gf
 
 314
 
-radegast.html
+menu_cccam.html
 file
 
 
 
 
 2013-09-17T05:41:58.000000Z
-7833f8cb644863641b0e712858624bb3
+dd493eafabc9c14cc1a01ebeb23321b0
 2013-02-24T15:12:29.902669Z
 8418
 gf
@@ -874,7 +874,7 @@ gf
 
 
 
-1076
+80
 
 menu_loadbalancer.html
 file

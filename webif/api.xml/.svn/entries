@@ -1,7 +1,7 @@
 10
 
 dir
-8917
+8918
 http://www.streamboard.tv/svn/oscam/trunk/webif/api.xml
 http://www.streamboard.tv/svn/oscam
 
@@ -25,40 +25,6 @@ gf
 
 
 4b0bc96b-bc66-0410-9d44-ebda105a78c1
-
-readerstats.xml
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-4ae5070270d002a823ccf5ef347ed09c
-2013-02-24T15:12:29.902669Z
-8418
-gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-445
 
 cccamcardlist_cardlist.xml
 file
@@ -93,6 +59,40 @@ gf
 
 
 349
+
+readerstats.xml
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+4ae5070270d002a823ccf5ef347ed09c
+2013-02-24T15:12:29.902669Z
+8418
+gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+445
 
 cccamcardlist_cardlist_nodelist.xml
 file
@@ -162,40 +162,6 @@ gf
 
 118
 
-readerstats_ecmstats.xml
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-d06f77da1a66d9efb1cf822c5111890b
-2013-02-24T15:12:29.902669Z
-8418
-gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-230
-
 useredit.xml
 file
 
@@ -229,6 +195,40 @@ gf
 
 
 1087
+
+readerstats_ecmstats.xml
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+d06f77da1a66d9efb1cf822c5111890b
+2013-02-24T15:12:29.902669Z
+8418
+gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+230
 
 readers.xml
 file
@@ -298,40 +298,6 @@ gf
 
 157
 
-header.xml
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-cdf09b58d2562bdc34a79bab83637d40
-2013-02-24T15:12:29.902669Z
-8418
-gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-207
-
 confirmation.xml
 file
 
@@ -365,6 +331,40 @@ gf
 
 
 77
+
+header.xml
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+cdf09b58d2562bdc34a79bab83637d40
+2013-02-24T15:12:29.902669Z
+8418
+gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+207
 
 error.xml
 file
@@ -400,40 +400,6 @@ gf
 
 71
 
-failban.xml
-file
-
-
-
-
-2013-09-17T05:41:58.000000Z
-f39f3dfcfc9575c163e3685582fdfb7f
-2013-02-24T15:12:29.902669Z
-8418
-gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-83
-
 cccamcardlist.xml
 file
 
@@ -468,14 +434,14 @@ gf
 
 202
 
-readerstats_emmstats.xml
+failban.xml
 file
 
 
 
 
 2013-09-17T05:41:58.000000Z
-911a89fee97da7caef9bf38c6a31c46c
+f39f3dfcfc9575c163e3685582fdfb7f
 2013-02-24T15:12:29.902669Z
 8418
 gf
@@ -500,7 +466,7 @@ gf
 
 
 
-69
+83
 
 footer.xml
 file
@@ -535,6 +501,40 @@ gf
 
 
 9
+
+readerstats_emmstats.xml
+file
+
+
+
+
+2013-09-17T05:41:58.000000Z
+911a89fee97da7caef9bf38c6a31c46c
+2013-02-24T15:12:29.902669Z
+8418
+gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+69
 
 failban_failbanrow.xml
 file

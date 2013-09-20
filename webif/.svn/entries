@@ -1,15 +1,15 @@
 10
 
 dir
-8917
+8918
 http://www.streamboard.tv/svn/oscam/trunk/webif
 http://www.streamboard.tv/svn/oscam
 
 
 
-2013-09-09T22:11:51.540883Z
-8908
-blueven
+2013-09-19T18:26:54.829526Z
+8918
+gorgone.impertinence
 
 
 
@@ -99,6 +99,9 @@ dir
 shutdown
 dir
 
+savetemplates
+dir
+
 Makefile
 file
 
@@ -132,9 +135,6 @@ gf
 
 
 650
-
-savetemplates
-dir
 
 emm
 dir
@@ -176,6 +176,12 @@ has-props
 touch
 dir
 
+include
+dir
+
+user_edit
+dir
+
 pages_index_check
 file
 
@@ -209,12 +215,6 @@ has-props
 
 
 605
-
-user_edit
-dir
-
-include
-dir
 
 ghttp
 dir
@@ -259,13 +259,10 @@ gf
 scanusb
 dir
 
-script
-dir
-
 userconfig
 dir
 
-config
+script
 dir
 
 .gitignore
@@ -301,6 +298,9 @@ gf
 
 
 67
+
+config
+dir
 
 pages_gen.c
 file

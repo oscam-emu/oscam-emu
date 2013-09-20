@@ -498,12 +498,20 @@ void client_check_status(struct s_client *cl) {
 	switch (cl->typ) {
 	case 'm':
 	case 'c':
-		// Check clients for exceeding cmaxidle by checking cl->last
-		if (!(cl->ncd_keepalive && (get_module(cl)->listenertype & LIS_NEWCAMD)) &&
-		    cl->last && cfg.cmaxidle && (time(NULL) - cl->last) > (time_t)cfg.cmaxidle)
+                // Check user for exceeding umaxidle by checking cl->last
+		if (!(cl->ncd_keepalive && (get_module(cl)->listenertype & LIS_NEWCAMD)) && cl->account->umaxidle &&
+		    cl->last && (time(NULL) - cl->last) > (time_t)cl->account->umaxidle)
 		{
 			add_job(cl, ACTION_CLIENT_IDLE, NULL, 0);
-		}
+                }
+                
+		// Check clients for exceeding cmaxidle by checking cl->last
+		if (!(cl->ncd_keepalive && (get_module(cl)->listenertype & LIS_NEWCAMD)) &&
+		    cl->last && !cl->account->umaxidle && cfg.cmaxidle && (time(NULL) - cl->last) > (time_t)cfg.cmaxidle)
+		{
+			add_job(cl, ACTION_CLIENT_IDLE, NULL, 0);
+                }
+                
 		break;
 	case 'r':
 		cardreader_checkhealth(cl, cl->reader);

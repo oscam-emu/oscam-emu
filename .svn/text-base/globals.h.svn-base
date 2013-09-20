@@ -1361,6 +1361,7 @@ struct s_auth
 	int8_t			monlvl;
 	uint64_t		grp;
 	int32_t			tosleep;
+        int32_t			umaxidle;
 	CAIDTAB			ctab;
 	SIDTABS			sidtabs;
 	FTAB			fchid;
@@ -1599,6 +1600,7 @@ struct s_config
 	IN_ADDR_T		c35_tcp_srvip;
 #endif
 	int8_t			c35_suppresscmd08; // used in cccam module
+        int8_t                  umaxidle; //User max Idle
 #ifdef MODULE_NEWCAMD
 	PTAB			ncd_ptab;
 	IN_ADDR_T		ncd_srvip;
