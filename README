@@ -1,15 +1,14 @@
-OSCam: Open Source Conditional Access Module
-============================================
+OSCam-emu: Open Source Conditional Access Module Emulator
+=========================================================
 
 
 License
 =======
 
-OSCam: Open Source CAM
+OSCam-EMU: Open Source CAM Emulator
 Copyright (C) 2009-2013 OSCam developers
 
-OSCam is based on the Streamboard mp-cardserver 0.9d by dukat and
-has been extended and worked on by many more since then.
+OSCam-emu is an Oscam fork to include emulator support and other functionality that collides with the goal of the original oscam developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,24 +30,24 @@ top directory or visit http://www.gnu.org/licenses/gpl-3.0.html
 Version history
 ===============
 
-OSCam history is accessible through Trac timeline at:
-   http://www.streamboard.tv/oscam/timeline/
+OSCam-emu history is accessible through GitHub commits at:
+   https://github.com/oscam-emu/oscam-emu/commits/master
 
 
 Repositories
 ============
 
 SVN repository:
-   svn checkout http://www.streamboard.tv/svn/oscam/trunk oscam-svn
+   svn checkout https://github.com/oscam-emu/oscam-emu
 
 
-Building OSCam from source
+Building OSCam-emu from source
 ==========================
 
- - Get the lastest sources from SVN
-    svn checkout http://www.streamboard.tv/svn/oscam/trunk oscam-trunk
+ - Get the lastest sources from GitHub
+    https://github.com/oscam-emu/oscam-emu/archive/master.zip
 
- - Go to oscam-trunk directory.
+ - Go to oscam-emu-master directory.
 
  - Run `make config` to choose the features you want.
 
@@ -108,3 +107,6 @@ forum under (mainly German and English language) at:
 
 Configuration wiki:
    http://www.streamboard.tv/wiki/index.php/OSCam/
+
+Please note that support for the additional work on the emulator functionality only can be found at GitHub:
+   https://github.com/oscam-emu/oscam-emu/issues

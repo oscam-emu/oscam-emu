@@ -293,6 +293,7 @@ static char *send_oscam_config_global(struct templatevars *vars, struct uriparam
 	tpl_printf(vars, TPLADD, "CLIENTTIMEOUT", "%u", cfg.ctimeout);
 	tpl_printf(vars, TPLADD, "FALLBACKTIMEOUT", "%u", cfg.ftimeout);
 	tpl_printf(vars, TPLADD, "CLIENTMAXIDLE", "%u", cfg.cmaxidle);
+        
 
 	value = mk_t_caidvaluetab(&cfg.ftimeouttab);
 	tpl_addVar(vars, TPLADD, "FALLBACKTIMEOUT_PERCAID", value);
@@ -311,7 +312,8 @@ static char *send_oscam_config_global(struct templatevars *vars, struct uriparam
 	if (cfg.c35_suppresscmd08)
 		tpl_addVar(vars, TPLADD, "SUPPRESSCMD08", "checked");
 
-	if (cfg.reader_restart_seconds)
+	
+        if (cfg.reader_restart_seconds)
 		tpl_printf(vars, TPLADD, "READERRESTARTSECONDS", "%d", cfg.reader_restart_seconds);
 
 	if (cfg.dropdups)
@@ -2177,6 +2179,9 @@ static char *send_oscam_user_config_edit(struct templatevars *vars, struct uripa
 
 	//Sleepsend
 	tpl_printf(vars, TPLADD, "SLEEPSEND", "%u", account->c35_sleepsend);
+        
+        //User Max Idle
+        tpl_printf(vars, TPLADD, "UMAXIDLE", "%d", account->umaxidle);
 
 	//EMM Reassembly selector
 	if(!apicall) {
