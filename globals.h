@@ -220,9 +220,7 @@ typedef unsigned char uchar;
  *         constants
  * =========================== */
 #define CS_VERSION    "1.20-EMU"
-#ifndef CS_SVN_VERSION
-#	define CS_SVN_VERSION "test"
-#endif
+#define CS_SVN_VERSION "r8919"
 #ifndef CS_TARGET
 #	define CS_TARGET "unknown"
 #endif
