@@ -2269,17 +2269,18 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 		dvbapi_start_filter(demux_id, demux[demux_id].pidindex, 0x001, 0x001, 0x01, 0x01, 0xFF, 0, TYPE_EMM, 1); //CAT
 	}
 	else demux[demux_id].emmstart = time(NULL); // for all other caids delayed start!
-	
-	// set channel srvid+caid
-	dvbapi_client->last_srvid = demux[demux_id].program_number;
-	dvbapi_client->last_caid = 0;
-	// reset idle-Time
-	dvbapi_client->last=time((time_t*)0);
 
 #if defined WITH_AZBOX || defined WITH_MCA
 	openxcas_sid = program_number;
 #endif
-	if(demux[demux_id].ECMpidcount == 0) return demux_id; // for FTA it ends here!
+	if(demux[demux_id].ECMpidcount == 0){ // FTA channel?
+		// set channel srvid+caid (for scrambled channels this is done by ecm handler)
+		dvbapi_client->last_srvid = demux[demux_id].program_number;
+		dvbapi_client->last_caid = 0;
+		// reset idle-Time & lastswitch
+		dvbapi_client->lastswitch = dvbapi_client->last = time((time_t*)0);
+		return demux_id; // for FTA it ends here!
+	}
 	
 	if (running == 0){ // only start demuxer if it wasnt running
 		dvbapi_resort_ecmpids(demux_id);
@@ -3063,6 +3064,10 @@ static void * dvbapi_main_local(void *cli) {
 					dvbapi_resort_ecmpids(i);
 					dvbapi_try_next_caid(i,0);
 				}
+			}
+			
+			if (!demux[i].ECMpidcount){ // on fta channel update last client activity
+				dvbapi_client->lastecm = dvbapi_client->last = time((time_t*)0); 
 			}
 			
 			if (demux[i].socket_fd>0 && cfg.dvbapi_pmtmode != 6) {
