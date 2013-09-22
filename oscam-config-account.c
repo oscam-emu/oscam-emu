@@ -35,13 +35,13 @@ static void account_c35_suppresscmd08_fn(const char *token, char *value, void *s
 }
 
 static void account_umaxidle_fn(const char *token, char *value, void *setting, FILE *f) {
-	int8_t *umaxidle = setting;
+	uint32_t *umaxidle = setting;
 	if (value) {
-		*umaxidle = (int8_t)strToIntVal(value, cfg.umaxidle);
+		*umaxidle = (uint32_t)strToIntVal(value, cfg.umaxidle);
 		return;
 	}
 	if (*umaxidle != cfg.umaxidle || cfg.http_full_cfg)
-		fprintf_conf(f, token, "%d\n", *umaxidle);
+		fprintf_conf(f, token, "%u\n", *umaxidle);
 }
 
 
