@@ -71,7 +71,6 @@ CS_MUTEX_LOCK ecmcache_lock;
 CS_MUTEX_LOCK readdir_lock;
 CS_MUTEX_LOCK cwcycle_lock;
 CS_MUTEX_LOCK hitcache_lock;
-CS_MUTEX_LOCK ecm_pushed_lock;
 pthread_key_t getclient;
 static int32_t bg;
 static int32_t gbdb;
@@ -80,7 +79,6 @@ static int32_t max_pending = 32;
 //Cache for  ecms, cws and rcs:
 struct ecm_request_t	*ecmcwcache = NULL;
 uint32_t ecmcwcache_size = 0;
-struct ecm_request_t	*ecm_pushed = NULL;
 
 struct  s_config  cfg;
 
@@ -1198,7 +1196,6 @@ int32_t main (int32_t argc, char *argv[])
   cs_lock_create(&readdir_lock, 5, "readdir_lock");
   cs_lock_create(&cwcycle_lock, 5, "cwcycle_lock");
   cs_lock_create(&hitcache_lock, 5, "hitcache_lock");
-  cs_lock_create(&ecm_pushed_lock, 5, "ecm_pushed_lock");
   init_config();
   cs_init_log();
   if (!oscam_pidfile && cfg.pidfile)

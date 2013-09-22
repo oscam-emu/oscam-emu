@@ -26,9 +26,6 @@ extern uint16_t len4caid[256];
 extern uint32_t ecmcwcache_size;
 extern int32_t exit_oscam;
 
-extern struct ecm_request_t *ecm_pushed;
-extern CS_MUTEX_LOCK ecm_pushed_lock;
-
 static pthread_mutex_t cw_process_sleep_cond_mutex;
 static pthread_cond_t cw_process_sleep_cond;
 static int cw_process_wakeups;
@@ -251,32 +248,6 @@ static void *cw_process(void) {
 				free_ecm(ecmt);
 				ecmt = ecm;
 			}
-
-#ifdef CS_CACHEEX
-			ecmt=NULL;
-			cs_readlock(&ecm_pushed_lock);
-			for (ecm = ecm_pushed, prv = NULL; ecm; prv = ecm, ecm = ecm->next) {
-				if (ecm->tps.time < ecm_maxcachetime) {
-					cs_readunlock(&ecm_pushed_lock);
-					cs_writelock(&ecm_pushed_lock);
-					ecmt = ecm;
-					if (prv)
-						prv->next = NULL;
-					else
-						ecm_pushed = NULL;
-					cs_writeunlock(&ecm_pushed_lock);
-					break;
-				}
-			}
-			if (!ecmt)
-				cs_readunlock(&ecm_pushed_lock);
-
-			while (ecmt) {
-				ecm = ecmt->next;
-				free_ecm(ecmt);
-				ecmt = ecm;
-			}
-#endif
 
 			cs_ftime(&ecmc_time);
 			ecmc_next = add_ms_to_timeb(&ecmc_time, 1000);

@@ -29,8 +29,6 @@ uint8_t cacheex_peer_id[8];
 static LLIST *invalid_cws;
 static struct csp_ce_hit_t *cspec_hitcache;
 static uint32_t cspec_hitcache_size;
-extern struct ecm_request_t *ecm_pushed;
-extern CS_MUTEX_LOCK ecm_pushed_lock;
 
 
 void cacheex_init(void) {
@@ -546,8 +544,6 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 		return er->rc < E_NOTFOUND ? 1 : 0;
 	}
 
-	if(ecm_found) return -1;  //no free immediately er, because it is used by ACTION_ECM_ANSWER_CACHE and ACTION_CACHE_PUSH_OUT job threads
-
 	return 0;
 }
 
@@ -555,30 +551,14 @@ void cacheex_add_to_cache(struct s_client *cl, ECM_REQUEST *er)
 {
 	er->from_cacheex=1;
 
-	int32_t add_cache_rc = cacheex_add_to_cache_int(cl, er, 0);
-	if(!add_cache_rc)
+	if (!cacheex_add_to_cache_int(cl, er, 0))
 		free_ecm(er);
-	else if (add_cache_rc==-1){  //wait max_cache before free
-		//insert it in ecm_pushed!
-		cs_writelock(&ecm_pushed_lock);
-		er->next = ecm_pushed;
-		ecm_pushed = er;
-		cs_writeunlock(&ecm_pushed_lock);
-	}
 }
 
 void cacheex_add_to_cache_from_csp(struct s_client *cl, ECM_REQUEST *er)
 {
-	int32_t add_cache_rc = cacheex_add_to_cache_int(cl, er, 1);
-	if(!add_cache_rc)
+	if (!cacheex_add_to_cache_int(cl, er, 1))
 		free_ecm(er);
-	else if (add_cache_rc==-1){  //wait max_cache before free
-		//insert it in ecm_pushed!
-		cs_writelock(&ecm_pushed_lock);
-		er->next = ecm_pushed;
-		ecm_pushed = er;
-		cs_writeunlock(&ecm_pushed_lock);
-	}
 }
 
 //Format:
