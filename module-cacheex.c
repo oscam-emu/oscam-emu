@@ -531,9 +531,10 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 				ecmcwcache = er;
 				ecmcwcache_size++;
 				cs_writeunlock(&ecmcache_lock);
+
+				cacheex_cache_push(er);  //cascade push!
 			}
 
-			cacheex_cache_push(er);  //cascade push!
 			cacheex_add_stats(cl, er->caid, er->srvid, er->prid, 1);
 
 			if (cwcycle_act)
