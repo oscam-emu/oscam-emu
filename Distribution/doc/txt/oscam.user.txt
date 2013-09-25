@@ -1,4 +1,4 @@
-oscam.user(5)														   oscam.user(5)
+oscam.user(5)												oscam.user(5)
 
 
 
@@ -6,8 +6,8 @@ NAME
        oscam.user - user configuration file for OSCam
 
 SYNOPSIS
-       The  user  configuration  file for OSCam contains user definitions. [account] sections in oscam.user are recurring (more than one
-       account).
+       The  user  configuration file for OSCam contains user definitions. [account] sections in oscam.user are recur‐
+       ring (more than one account).
 
 DESCRIPTIONS
    The [account] section
@@ -51,7 +51,8 @@ DESCRIPTIONS
 	       but only the last login will survive
 
        numusers = quantity
-	  anti-cascading: user per account, 0 = anti-cascading disabled, -1 = global value from oscam.conf, default:-1
+	  anti-cascading: user per account,  0	=  anti-cascading  disabled,  -1  =  global  value  from  oscam.conf,
+	  default:-1
 
        penalty = 0|1|2
 	  level of penalty:
@@ -83,7 +84,8 @@ DESCRIPTIONS
 	  set count of fallback readers for load balancing, -1 = use global lb_nfb_readers, default:1
 
        lb_nbest_percaid = CAID1:count1[,CAID2:count2]...
-	  set count of best readers per CAIDs for load balancing, wildcard CAIDs with two-digit CAIDs possible, default:none
+	  set  count  of  best	readers  per  CAIDs for load balancing, wildcard CAIDs with two-digit CAIDs possible,
+	  default:none
 
 	   example: lb_nbest_percaid = 0100:4,0200:3,03:2,04:1
 		    (wildcard CAIDs 03xx and 04xx)
@@ -118,15 +120,18 @@ DESCRIPTIONS
 	  time waiting for inactive user, default:none
 
        sleepsend = 0|255
-	  255 = OSCam client only: stopping requests until next zap, 255 = camd 3.x only: stopping requests until restart  of  camd  3.x
-	  client, default:0
+	  255 = OSCam client only: stopping requests until next zap, 255 = camd 3.x  only:  stopping  requests	until
+	  restart of camd 3.x client, default:0
 
        suppresscmd08 = 0|1
-	  0  = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected CAID, service ID and provider ID combination, 1
-	  =  disable, default:0
+	  0 = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected CAID, service ID and provider
+	  ID combination, 1 =  disable, default:0
 
        keepalive = 0|1
 	  0 = disable keepalive between server and client for newcamd or CCcam protocol, default:1
+
+       umaxidle = seconds
+	  value for user being idle before disconnect, 0 = idle disconnect disabled, default:0
 
        caid = <CAID>[&<mask>][:<target CAID>][,<CAID>[&<mask>][:<target CAID>]]...
 	  limit and mapping of CAIDs, default:all CAIDs with mask FFFF
@@ -149,7 +154,8 @@ DESCRIPTIONS
 	  user assingment to reader groups, default:none, required
 
        betatunnel = <CAID>.<ServiceID>:<target CAID>[,<CAID>.<ServiceID>: <target CAID>]...
-	  define Betacrypt tunneling (maximum see CS_MAXTUNTAB in globals.h).  The ServiceID can also be used for wildcarded CAIDs.
+	  define Betacrypt tunneling (maximum see CS_MAXTUNTAB in globals.h).  The ServiceID can  also	be  used  for
+	  wildcarded CAIDs.
 
 	   example: betatunnel = 0100.0001:0200,0300.0004:0500
 		    betatunnel = 0600.FFFF:0700
@@ -158,8 +164,8 @@ DESCRIPTIONS
 
 
        emmreassembly = 0|1||2
-	  EMM reassembly, should be set for Viaccess and Cryptoworks readers if the client that you are using to send EMMs  is	reassem‐
-	  bling them instead of just sending them to OSCam for processing.
+	  EMM reassembly, should be set for Viaccess and Cryptoworks readers if the client that you are using to send
+	  EMMs is reassembling them instead of just sending them to OSCam for processing.
 
 	    0: disabled
 	    1: enabled for DVB API
@@ -233,10 +239,10 @@ EXAMPLES
 	uniq	   = 1
 
 SEE ALSO
-       list_smargo(1),	 oscam(1),   oscam.ac(5),   oscam.cacheex(5),  oscam.cert(5),  oscam.conf(5),  oscam.dvbapi(5),  oscam.guess(5),
-       oscam.ird(5),  oscam.provid(5),	 oscam.ratelimit(5),   oscam.server(5),   oscam.services(5),   oscam.tiers(5),	 oscam.srvid(5),
-       oscam.whitelist(5)
+       list_smargo(1),	oscam(1),  oscam.ac(5),  oscam.cacheex(5),  oscam.cert(5),  oscam.conf(5),   oscam.dvbapi(5),
+       oscam.guess(5),	 oscam.ird(5),	 oscam.provid(5),   oscam.ratelimit(5),  oscam.server(5),  oscam.services(5),
+       oscam.tiers(5), oscam.srvid(5), oscam.whitelist(5)
 
 
 
-															   oscam.user(5)
+													oscam.user(5)

@@ -1,4 +1,4 @@
-oscam.conf(5)													   oscam.conf(5)
+oscam.conf(5)												oscam.conf(5)
 
 
 
@@ -6,8 +6,9 @@ NAME
        oscam.conf - main configuration file for OSCam
 
 SYNOPSIS
-       The main configuration file for OSCam contains global parameters such as debugging, logging, monitor, protocols and anti-
-       cascading.  sections in oscam.conf are nonrecurring. The [global] section is required. All other sections are optional.
+       The  main  configuration file for OSCam contains global parameters such as debugging, logging, monitor, proto‐
+       cols and anti-cascading.  sections in oscam.conf are nonrecurring. The [global] section is required. All other
+       sections are optional.
 
 DESCRIPTIONS
    The [global] section
@@ -18,8 +19,8 @@ DESCRIPTIONS
 	  set PID file, default:none
 
        logfile = [filename][;syslog][;stdout]
-	  logging targets, default:/var/log/oscam.log. You can define a maximum of one filename and additionally to log to  std‐
-	  out or syslog (you can also only log to stdout or syslog and omit the filename).
+	  logging  targets,  default:/var/log/oscam.log. You can define a maximum of one filename and additionally to
+	  log to stdout or syslog (you can also only log to stdout or syslog and omit the filename).
 
        ecmfmt = format
 	  define ECM log format, default:c&p/i/s/l:h
@@ -108,7 +109,8 @@ DESCRIPTIONS
 	  1 = wait for local SCs on startup before opening network ports, default:1
 
        waitforcards_extra_delay = delay
-	  additional delay in milli-seconds after waiting for local SCs on startup before opening network ports, default:500
+	  additional delay in milli-seconds after waiting for local SCs on  startup  before  opening  network  ports,
+	  default:500
 
        preferlocalcards = 0|1
 	  1 = try decoding on local cards first, default:0
@@ -129,8 +131,8 @@ DESCRIPTIONS
 	  value for client process being idle before disconnect, 0 = idle disconnect disabled, default:120
 
        suppresscmd08 = 0|1
-	  0  = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected CAID, service ID and provider ID combi‐
-	  nation, 1 = disable, can be overwritten per user in oscam.user, default:0
+	  0 = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected CAID, service ID and provider
+	  ID combination, 1 = disable, can be overwritten per user in oscam.user, default:0
 
        fallbacktimeout = milli-seconds
 	  time falling back to fallback reader, default:2500
@@ -172,12 +174,12 @@ DESCRIPTIONS
 	  1 = unlock parental mode option to disable Seca and Viaccess pin code request for adult movie, default:0
 
        double_check = 0|1
-	  1 = ECM will be send to two or more readers with the same SC	and  the  CWs  will  be  verified  against  each  other,
-	  lb_nbest_readers must be set to 2 or higher, default:0
+	  1 = ECM will be send to two or more readers with the same SC and the CWs  will  be  verified	against  each
+	  other, lb_nbest_readers must be set to 2 or higher, default:0
 
        double_check_caid = [CAID1|first two digits of CAID1],[CAID2|first two digits of CAID2]...
-	  ECM  will  be send to two or more readers with the same SC and the CWs will be verified against each other for defined
-	  CAID or first two bytes of CAID, lb_nbest_readers must be set to 2 or higher, default:none
+	  ECM  will  be  send to two or more readers with the same SC and the CWs will be verified against each other
+	  for defined CAID or first two bytes of CAID, lb_nbest_readers must be set to 2 or higher, default:none
 
        lb_mode = mode
 	  load balancing mode:
@@ -206,7 +208,8 @@ DESCRIPTIONS
 	  set count of fallback readers for load balancing, default:1
 
        lb_nbest_percaid = CAID1:count1[,CAID2:count2]...
-	  set count of best readers per CAIDs for load balancing, wildcard CAIDs with two-digit CAIDs possible, default:none
+	  set count of best readers per CAIDs for load balancing,  wildcard  CAIDs  with  two-digit  CAIDs  possible,
+	  default:none
 
 	   example: lb_nbest_percaid = 0100:4,0200:3,03:2,04:1
 		    (wildcard CAIDs 03xx and 04xx)
@@ -236,8 +239,8 @@ DESCRIPTIONS
 		    (wildcard CAIDs 12xx and 34xx)
 
        lb_noproviderforcaid = CAID1[,CAID2]...
-	  ignore provider information for CAIDs to reduce load balancing statistic data, wildcard  CAIDs  with	two-digit  CAIDs
-	  possible, default:none
+	  ignore  provider  information  for  CAIDs to reduce load balancing statistic data, wildcard CAIDs with two-
+	  digit CAIDs possible, default:none
 
 	   example: lb_noproviderforcaid = 0100,02,0300,04
 		    (wildcard CAIDs 02xx and 04xx)
@@ -258,8 +261,8 @@ DESCRIPTIONS
 	  minimal time added to average time as timeout time, default:300
 
        lb_auto_betatunnel = 0|1
-	  1  = enable automatic Betacrypt tunneling detection for CAIDs 1801, 1833, 1834, and 1835 for load balancing, Betacrypt
-	  defintion in oscam.user with betatunnel will be prefered, default:1
+	  1 = enable automatic Betacrypt tunneling detection for CAIDs 1801, 1833, 1834, and 1835 for load balancing,
+	  Betacrypt defintion in oscam.user with betatunnel will be prefered, default:1
 
        lb_auto_betatunnel_mode = 0|1|2
 	  set mode for automatic Betacrypt tunneling:
@@ -332,9 +335,9 @@ DESCRIPTIONS
 	  1 = embedded CSS will be added before external CSS , default:0
 
        httptpl = path
-	  path for external templates and picons, multiple simultaneously templates and picons	are  possible  by  creating  sub
-	  folders  (maximum  length  of  32  alphanumeric characters), sub folders naming is corresponding to sub folder in URL,
-	  default:none
+	  path for external templates and picons, multiple simultaneously templates and picons are possible by creat‐
+	  ing sub folders (maximum length of 32 alphanumeric characters), sub folders naming is corresponding to  sub
+	  folder in URL, default:none
 
 	   example: httptpl = /this/is/my/path
 
@@ -359,7 +362,8 @@ DESCRIPTIONS
 	  path to an executable script which you wish to start from web interface, default:none
 
        httpallowed = IP address|IP address range[,IP address|IP address range]...
-	  http web interface connections allowed, default:127.0.0.1,192.168.0.0-192.168.255.255,10.0.0.0-10.255.255.255,::1
+	  http			web		     interface			connections		     allowed,
+	  default:127.0.0.1,192.168.0.0-192.168.255.255,10.0.0.0-10.255.255.255,::1
 
 	   example: httpallowed = 127.0.0.1,192.168.0.0-192.168.255.255
 
@@ -404,13 +408,15 @@ DESCRIPTIONS
 	  value to delay cached requests, default:0
 
        max_time = seconds
-	  maximum time CWs resist in cache, the time must be 2 seconds highter than the parameter clienttimeout, default:15
+	  maximum time CWs resist in cache, the time must be 2 seconds	highter  than  the  parameter  clienttimeout,
+	  default:15
 
        max_hit_time = seconds
 	  maximum time for cache exchange hits resist in cache for evaluating wait_time, default:15
 
        wait_time = [caid][&mask][@provid][$servid][:awtime][:]dwtime,n
-	  wait time in milli-seconds for cache exchange and Cardservproxy before sending ECMs to reader or proxy, default:none
+	  wait	time  in  milli-seconds  for cache exchange and Cardservproxy before sending ECMs to reader or proxy,
+	  default:none
 
 	   example: wait_time = 0:50:250,0200@00009X:50:150,15:950,0500@000001:150,1602&ffdf:1200
 
@@ -460,6 +466,9 @@ DESCRIPTIONS
 	   3 = 3 (or more) same bytes and drop new CW
 	   4 = 4 (or more) same bytes and drop new CW
 
+       cwcycle_allowbadfromffb = 0|1
+	  1 = allow bad cycles from a fixed fallback reader, default:0
+
    The [camd33] section
        port = 0|port
 	  TCP port for camd 3.3x clients, 0 = disabled, default:0
@@ -488,8 +497,8 @@ DESCRIPTIONS
 	  bind service to specified IP address, default:all
 
        suppresscmd08 = 0|1
-	  0 = tell camd 3.5x / 3.57x clients not to request again for rejected CAID, service ID and provider ID combination, 1 =
-	  disable, can be overwritten per user in oscam.user, default:0
+	  0 = tell camd 3.5x / 3.57x clients not to request again for rejected CAID, service ID and provider ID  com‐
+	  bination, 1 = disable, can be overwritten per user in oscam.user, default:0
 
    The [cs378x] section
        port = 0|port[@CAID][:provid][,provid]...[;port@CAID[:provid][,provid]...]...
@@ -502,8 +511,8 @@ DESCRIPTIONS
 	  bind service to specified IP address, default:all
 
        suppresscmd08 = 0|1
-	  0  =	tell camd 3.78x clients not to request again for rejected CAID, service ID and provider ID combination, 1 = dis‐
-	  able, can be overwritten per user in oscam.user, default:0
+	  0 = tell camd 3.78x clients not to request again for rejected CAID, service ID and provider ID combination,
+	  1 = disable, can be overwritten per user in oscam.user, default:0
 
    The [newcamd] section
        key = DES key
@@ -516,7 +525,8 @@ DESCRIPTIONS
 
 	   example: port = 10000@0100:100000;20000{0102030405060708091011121314}@0200:200000,300000
 
-	  Each CAID requires a separate port. If you don't specify a DES key for a port, the default DES key will be used.
+	  Each CAID requires a separate port. If you don't specify a DES key for a port, the default DES key will  be
+	  used.
 
        serverip = IP address
 	  bind newcamd service to specified IP address, default:all
@@ -607,8 +617,8 @@ DESCRIPTIONS
 	   1 = use reshare setting of reader or user
 
        stealth = 0|1
-	  1 = behaviour like the original CCcam: no activate partner detection and extended OSCam-CCcam protocol, prevent  other
-	  OSCam to detect the server as OSCam server, default:0
+	  1  =	behaviour  like  the original CCcam: no activate partner detection and extended OSCam-CCcam protocol,
+	  prevent other OSCam to detect the server as OSCam server, default:0
 
        minimizecards = mode
 	  mode how to provide CCcam servers to CCcam clients:
@@ -620,7 +630,8 @@ DESCRIPTIONS
 	       will be merged, provider (maximum 32) will be merged, too
 
        updateinterval = seconds
-	  interval to provide share list update to CCcam clients, values <= 10 are invalid and will be set to 30, default:240
+	  interval to provide share list update to CCcam clients, values <= 10 are invalid and will  be  set  to  30,
+	  default:240
 
        keepconnected = 0|1
 	  set CCcam keepalive modus:
@@ -632,7 +643,8 @@ DESCRIPTIONS
 	  set network timeout for receiving data, default:2000
 
        forward_origin_card = 0|1
-	  1 = forward ECM request to reader holding this card, load balancer, fallback and caching will be disabled, default:0
+	  1  = forward ECM request to reader holding this card, load balancer, fallback and caching will be disabled,
+	  default:0
 
        nodeid = ID
 	  set CCcam node ID in hex, default:none
@@ -653,7 +665,8 @@ DESCRIPTIONS
        enabled = 0|1
 	  1 = DVB API enabled, default:0
 
-	  Create file /tmp/.pauseoscam to pause DVB API, e.g. if STB goes into standby and OSCam remains as SC server only.
+	  Create file /tmp/.pauseoscam to pause DVB API, e.g. if STB goes into standby and OSCam remains as SC server
+	  only.
 
        user = username
 	  user name for DVB API client, default:anonymous
@@ -693,9 +706,11 @@ DESCRIPTIONS
        boxtype = dbox2|dreambox|dm7000|duckbox|ufs910|ipbox|ipbox-pmt|qboxhd|coolstream|neumo|pc
 	  set boxtype, auto detection of DVB API will be aspired, default:dreambox
 
-	  ipbox with camd.socket support, currently only with PGI image version 0.6 or above, verified on HD models only
+	  ipbox  with  camd.socket support, currently only with PGI image version 0.6 or above, verified on HD models
+	  only
 
-	  ipbox-pmt can be used on any DGS based images (with or without camd.socket support), verified on HD models only
+	  ipbox-pmt can be used on any DGS based images (with or without camd.socket support), verified on HD  models
+	  only
 
 	  pc is for generic pc support (currently supported on VDR with vdr-plugin-dvbapi)
 
@@ -807,8 +822,8 @@ MONITOR
 
        ·  reload
 
-	  reinit  user	db, clients and anti-cascading, for newcamd connections: after reloading the provid, please restart new‐
-	  camd client
+	  reinit  user	db,  clients  and anti-cascading, for newcamd connections: after reloading the provid, please
+	  restart newcamd client
 
 
        ·  details <PID>
@@ -852,8 +867,9 @@ MONITOR
 WEB INTERFACE
        ·  template system
 
-	  The web interface allows you to create your own template. For developing your own template request  the  orignal  tem‐
-	  plate with the non-linked page savetemplates.html. Store your own template in the directory specified by httptpl.
+	  The web interface allows you to create your own template. For developing  your  own  template  request  the
+	  orignal  template  with  the	non-linked  page savetemplates.html. Store your own template in the directory
+	  specified by httptpl.
 
 CACHING
        types of ECM caching:
@@ -867,10 +883,10 @@ CACHING
 	  ECM and checksum in cache already.
 
 SEE ALSO
-       list_smargo(1),	oscam(1),  oscam.ac(5),  oscam.cacheex(5), oscam.cert(5), oscam.dvbapi(5), oscam.guess(5), oscam.ird(5),
-       oscam.provid(5), oscam.ratelimit(5), oscam.server(5), oscam.services(5), oscam.srvid(5),  oscam.tiers(5),  oscam.user(5),
-       oscam.whitelist(5)
+       list_smargo(1),	oscam(1),  oscam.ac(5),  oscam.cacheex(5),  oscam.cert(5),  oscam.dvbapi(5),  oscam.guess(5),
+       oscam.ird(5),   oscam.provid(5),   oscam.ratelimit(5),	oscam.server(5),  oscam.services(5),  oscam.srvid(5),
+       oscam.tiers(5), oscam.user(5), oscam.whitelist(5)
 
 
 
-														   oscam.conf(5)
+													oscam.conf(5)

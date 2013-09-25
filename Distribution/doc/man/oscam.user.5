@@ -173,6 +173,11 @@ CAID, service ID and provider ID combination, 1 =  disable, default:0
 0 = disable keepalive between server and client for newcamd or CCcam protocol, default:1
 .RE
 .PP
+\fBumaxidle\fP = \fBseconds\fP
+.RS 3n
+value for user being idle before disconnect, 0 = idle disconnect disabled, default:0
+.RE
+.PP
 \fBcaid\fP = \fB<CAID>[&<mask>][:<target CAID>][,<CAID>[&<mask>][:<target CAID>]]...\fP
 .RS 3n
 limit and mapping of CAIDs, default:all CAIDs with mask FFFF
