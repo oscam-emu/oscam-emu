@@ -38,7 +38,7 @@ Repositories
 ============
 
 SVN repository:
-   svn checkout https://github.com/oscam-emu/oscam-emu
+   svn checkout https://github.com/oscam-emu/oscam-emu/trunk oscam-emu
 
 
 Building OSCam-emu from source
@@ -57,18 +57,10 @@ For more information and examples on using the build system, please
 see README.build and README.config files.
 
 
-Building OScam for different CPUs (cross-compilation)
+Building OScam-emu for different CPUs (cross-compilation)
 =====================================================
 
-First you need to install the target CPU toolchain. Already built toolchains
-for various architectures can be downloaded from:
-
-    http://www.streamboard.tv/oscam/wiki/crosscompiling/
-
-In order to cross compile OSCam you need to set CROSS variable when
-running make. For example to compile for SH4 architecture you need
-to run: `make CROSS=sh4-linux-` or if your cross compilers are not
-in your PATH - `make CROSS=/opt/STM/STLinux-2.3/devkit/sh4/bin/sh4-linux-`.
+non x86 platform can give issues, no support for them right now...
 
 
 Dependencies
