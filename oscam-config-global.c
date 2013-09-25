@@ -417,7 +417,7 @@ void cache_fixups_fn(void *UNUSED(var)) {
 	if (cfg.max_cache_time < ((cfg.ctimeout+500)/1000+3) ) cfg.max_cache_time = ((cfg.ctimeout+500)/1000+3);
 #ifdef CW_CYCLE_CHECK
 	if (cfg.maxcyclelist > 4000) cfg.maxcyclelist = 4000;
-	if (cfg.keepcycletime > 15) cfg.keepcycletime = 15;
+	if (cfg.keepcycletime > 240) cfg.keepcycletime = 240;
 	if (cfg.cwcycle_sensitive > 4) cfg.cwcycle_sensitive = 4;
 	if (cfg.cwcycle_sensitive == 1) cfg.cwcycle_sensitive = 2;
 #endif
@@ -429,7 +429,7 @@ static bool cache_should_save_fn(void *UNUSED(var)) {
 	|| cfg.cacheex_wait_timetab.n || cfg.cacheex_enable_stats > 0 || cfg.csp_port || cfg.csp.filter_caidtab.n || cfg.csp.allow_request == 0 || cfg.csp.allow_reforward > 0
 #endif
 #ifdef CW_CYCLE_CHECK
-	|| cfg.cwcycle_check_enable || cfg.cwcycle_check_caidtab.caid[0] || cfg.maxcyclelist != 500 || cfg.keepcycletime || cfg.onbadcycle || cfg.cwcycle_dropold || cfg.cwcycle_sensitive
+	|| cfg.cwcycle_check_enable || cfg.cwcycle_check_caidtab.caid[0] || cfg.maxcyclelist != 500 || cfg.keepcycletime || cfg.onbadcycle || cfg.cwcycle_dropold || cfg.cwcycle_sensitive || cfg.cwcycle_allowbadfromffb
 #endif
 	;
 }
@@ -457,6 +457,7 @@ static const struct config_list cache_opts[] = {
 	DEF_OPT_INT8("cwcycle_onbad"			, OFS(onbadcycle),					0 ),
 	DEF_OPT_INT8("cwcycle_dropold"			, OFS(cwcycle_dropold),				0 ),
 	DEF_OPT_INT8("cwcycle_sensitive"		, OFS(cwcycle_sensitive),			0 ),
+	DEF_OPT_INT8("cwcycle_allowbadfromffb"		, OFS(cwcycle_allowbadfromffb),			0 ),
 #endif
 	DEF_LAST_OPT
 };

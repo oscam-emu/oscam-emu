@@ -561,6 +561,9 @@ static char *send_oscam_config_cache(struct templatevars *vars, struct uriparams
 			tpl_addVar(vars, TPLADD, "CWCSEN4", "selected");
 			break;
 	}
+	if (cfg.cwcycle_allowbadfromffb == 1) {
+		tpl_addVar(vars, TPLADD, "ALLOWBADFROMFFB", "selected");
+	}
 #endif
 
 	return tpl_getTpl(vars, "CONFIGCACHE");
@@ -2660,16 +2663,27 @@ static char *send_oscam_user_config(struct templatevars *vars, struct uriparams 
 	tpl_printf(vars, TPLADD, "TOTAL_CONNECTED", "%d", connected_users);
 	tpl_printf(vars, TPLADD, "TOTAL_ONLINE", "%d", online_users);
 
+	tpl_printf(vars, TPLADD, "TOTAL_CW", "%d", first_client->cwfound + first_client->cwcache + first_client->cwnot + first_client->cwignored + first_client->cwtout); // dont count TUN its included
 	tpl_printf(vars, TPLADD, "TOTAL_CWOK", "%d", first_client->cwfound);
 	tpl_printf(vars, TPLADD, "TOTAL_CWNOK", "%d", first_client->cwnot);
 	tpl_printf(vars, TPLADD, "TOTAL_CWIGN", "%d", first_client->cwignored);
 	tpl_printf(vars, TPLADD, "TOTAL_CWTOUT", "%d", first_client->cwtout);
 	tpl_printf(vars, TPLADD, "TOTAL_CWCACHE", "%d", first_client->cwcache);
 	tpl_printf(vars, TPLADD, "TOTAL_CWTUN", "%d", first_client->cwtun);
+	tpl_printf(vars, TPLADD, "TOTAL_CWPOS", "%d", first_client->cwfound + first_client->cwcache);
+	tpl_printf(vars, TPLADD, "TOTAL_CWNEG", "%d", first_client->cwnot + first_client->cwignored + first_client->cwtout);
 
-	float ecmsum = first_client->cwfound + first_client->cwnot + first_client->cwignored + first_client->cwtout+ first_client->cwcache + first_client->cwtun;
+	float ecmsum = first_client->cwfound + first_client->cwnot + first_client->cwignored + first_client->cwtout+ first_client->cwcache; //dont count TUN its included
 	if (ecmsum < 1) {
 		ecmsum = 1;
+	}
+	float ecmpos = first_client->cwfound + first_client->cwcache; // dont count TUN its included
+	if (ecmpos < 1) {
+		ecmpos = 1;
+	}
+	float ecmneg = first_client->cwnot + first_client->cwignored + first_client->cwtout;
+	if (ecmneg < 1) {
+		ecmneg = 1;
 	}
 	tpl_printf(vars, TPLADD, "REL_CWOK", "%.2f", first_client->cwfound * 100 / ecmsum);
 	tpl_printf(vars, TPLADD, "REL_CWNOK", "%.2f", first_client->cwnot * 100 / ecmsum);
@@ -2677,6 +2691,13 @@ static char *send_oscam_user_config(struct templatevars *vars, struct uriparams 
 	tpl_printf(vars, TPLADD, "REL_CWTOUT", "%.2f", first_client->cwtout * 100 / ecmsum);
 	tpl_printf(vars, TPLADD, "REL_CWCACHE", "%.2f", first_client->cwcache * 100 / ecmsum);
 	tpl_printf(vars, TPLADD, "REL_CWTUN", "%.2f", first_client->cwtun * 100 / ecmsum);
+	tpl_printf(vars, TPLADD, "REL_CWPOS", "%.2f", (first_client->cwfound + first_client->cwcache) * 100 / ecmsum);	
+	tpl_printf(vars, TPLADD, "REL_CWNEG", "%.2f", (first_client->cwnot + first_client->cwignored + first_client->cwtout) * 100 / ecmsum);
+	tpl_printf(vars, TPLADD, "REL_CWPOSOK", "%.2f", first_client->cwfound * 100 / ecmpos);
+	tpl_printf(vars, TPLADD, "REL_CWPOSCACHE", "%.2f", first_client->cwcache * 100 / ecmpos);
+	tpl_printf(vars, TPLADD, "REL_CWNEGNOK", "%.2f", first_client->cwnot * 100 / ecmneg);
+	tpl_printf(vars, TPLADD, "REL_CWNEGIGN", "%.2f", first_client->cwignored * 100 / ecmneg);
+	tpl_printf(vars, TPLADD, "REL_CWNEGTOUT", "%.2f", first_client->cwtout * 100 / ecmneg);
 
 
 	if (!apicall)

@@ -33,9 +33,7 @@ struct s_cw_cycle_check {
 
 void cleanupcwcycle(void);
 uint8_t checkcwcycle(ECM_REQUEST *er, struct s_reader *reader, uchar *cw, int8_t rc);
-uint8_t cwcycle_check_act(uint16_t caid);
 #else
-static inline uint8_t cwcycle_check_act(uint16_t UNUSED(caid)) { return 0; };
 static inline void cleanupcwcycle(void) { };
 #endif
 

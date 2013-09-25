@@ -368,6 +368,7 @@ char *tpl_getUnparsedTpl(const char* name, int8_t removeHeader, const char* subd
 										check_conf(MODULE_PANDORA, ptr2);
 										check_conf(MODULE_RADEGAST, ptr2);
 										check_conf(MODULE_SERIAL, ptr2);
+										check_conf(MODULE_CW_CYCLE_CHECK, ptr2);
 										check_conf(READER_BULCRYPT, ptr2);
 										check_conf(READER_CONAX, ptr2);
 										check_conf(READER_CRYPTOWORKS, ptr2);

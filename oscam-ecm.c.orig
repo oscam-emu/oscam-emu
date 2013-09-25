@@ -1057,7 +1057,7 @@ void request_cw_from_readers(ECM_REQUEST *er, uint8_t stop_stage)
 			struct s_reader *rdr = ea->reader;
 			char ecmd5[17*3];
 			cs_hexdump(0, er->ecmd5, 16, ecmd5, sizeof(ecmd5));
-			cs_debug_mask(D_TRACE | D_CSP, "request_cw stage=%d to reader %s ecm hash=%s", er->stage, rdr?rdr->label:"", ecmd5);
+			cs_debug_mask(D_TRACE | D_CSPCWC, "request_cw stage=%d to reader %s ecm hash=%s", er->stage, rdr?rdr->label:"", ecmd5);
 
 			ea->status |= REQUEST_SENT;
 			cs_ftime(&ea->time_request_sent);
@@ -1364,8 +1364,8 @@ int32_t write_ecm_answer(struct s_reader * reader, ECM_REQUEST *er, int8_t rc, u
 	if (!checkcwcycle(er, reader, cw, rc )) {
 		rc = E_NOTFOUND;
 		rcEx = E2_WRONG_CHKSUM;
-		cs_debug_mask(D_CACHEEX|D_CWC|D_LB,"{client %s, caid %04X, srvid %04X} [write_ecm_answer] cyclecheck failed! Reader: %s set rc: %i", (er->client?er->client->account->usr:"-"),er->caid, er->srvid, reader?reader->label:"-", rc);
-	} else cs_debug_mask(D_CACHEEX|D_CWC|D_LB,"{client %s, caid %04X, srvid %04X} [write_ecm_answer] cyclecheck passed! Reader: %s rc: %i", (er->client?er->client->account->usr:"-"),er->caid, er->srvid, reader?reader->label:"-", rc); 
+		cs_debug_mask(D_CACHEEX|D_CSPCWC|D_LB,"{client %s, caid %04X, srvid %04X} [write_ecm_answer] cyclecheck failed! Reader: %s set rc: %i", (er->client?er->client->account->usr:"-"),er->caid, er->srvid, reader?reader->label:"-", rc);
+	} else cs_debug_mask(D_CACHEEX|D_CSPCWC|D_LB,"{client %s, caid %04X, srvid %04X} [write_ecm_answer] cyclecheck passed! Reader: %s rc: %i", (er->client?er->client->account->usr:"-"),er->caid, er->srvid, reader?reader->label:"-", rc); 
 #endif
 	//END -- SPECIAL CHECKs for rc
 
@@ -1997,7 +1997,7 @@ OUT:
 
 	#ifdef CW_CYCLE_CHECK 
 		if (checkcwcycle(er, NULL, ecm->cw, ecm->rc) != 0) { // check answer from int cache too, necessary for cycle learning
-			cs_debug_mask(D_CWC|D_LB,"{client %s, caid %04X, srvid %04X} [get_cw] cyclecheck passed ecm in INT. cache, ecm->rc %d", (er->client?er->client->account->usr:"-"),er->caid, er->srvid, ecm?ecm->rc:-1 );			
+			cs_debug_mask(D_CSPCWC|D_LB,"{client %s, caid %04X, srvid %04X} [get_cw] cyclecheck passed ecm in INT. cache, ecm->rc %d", (er->client?er->client->account->usr:"-"),er->caid, er->srvid, ecm?ecm->rc:-1 );			
 	#endif		
 
 		er->readers_timeout_check=1;  //no readers asked to be checked at ctimeout

@@ -439,7 +439,7 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 							el = ll_last_element(ecm->csp_lastnodes);
 							uint64_t node4 = el?(*(uint64_t*)el):0;
 
-							debug_ecm(D_TRACE| D_CSPCWC, "WARNING: Different CWs %s from %s(%s)<>%s(%s): %s<>%s nodes %llX %llX %llX %llX", buf,
+							debug_ecm(D_TRACE| D_CSP, "WARNING: Different CWs %s from %s(%s)<>%s(%s): %s<>%s nodes %llX %llX %llX %llX", buf,
 								csp ? "csp" : username(cl), ip1,
 								ecm->cacheex_src?username(ecm->cacheex_src):(ecm->selected_reader?ecm->selected_reader->label:"unknown/csp"), ip2,
 								cw1, cw2,
@@ -448,7 +448,7 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 								(long long unsigned int)node3,
 								(long long unsigned int)node4);
 						} else {
-							debug_ecm(D_CACHEEX| D_CSPCWC, "ignored duplicate pushed ECM %s from %s", buf, csp ? "csp" : username(cl));
+							debug_ecm(D_CACHEEX| D_CSP, "ignored duplicate pushed ECM %s from %s", buf, csp ? "csp" : username(cl));
 						}
 					}
 
@@ -459,7 +459,7 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 							#ifdef CW_CYCLE_CHECK
 								if (!checkcwcycle(ecm, cl->reader, er->cw, er->rc )) {   //if not valid, we don't add it to hit_cache and does not cascade push!!!
 									continue;
-								}
+								} else cs_debug_mask(D_CACHEEX|D_CSP|D_LB,"{client %s, caid %04X, srvid %04X} [ADD_HITCACHE] cyclecheck passed!", (ecm->client?ecm->client->account->usr:"-"),er->caid, er->srvid );
 							#endif
 
 							struct s_write_from_cache *wfc=NULL;
@@ -495,7 +495,7 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 							for(ea = ecm->matching_rdr; ea; ea = ea->next) {
 								rdr = ea->reader;
 								if (cl_rdr == rdr && ((ea->status & REQUEST_ANSWERED) == REQUEST_ANSWERED)){
-									cs_debug_mask(D_CACHEEX|D_CSPCWC|D_LB,"{client %s, caid %04X, prid %06X, srvid %04X} [CACHEEX] skip ADD self request!", (check_client(ecm->client)?ecm->client->account->usr:"-"),ecm->caid, ecm->prid, ecm->srvid );
+									cs_debug_mask(D_CACHEEX|D_CSP|D_LB,"{client %s, caid %04X, prid %06X, srvid %04X} [CACHEEX] skip ADD self request!", (check_client(ecm->client)?ecm->client->account->usr:"-"),ecm->caid, ecm->prid, ecm->srvid );
 									add_hitcache_er=0; //don't add hit cache, reader requested self
 								}
 							}
@@ -519,28 +519,23 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 
 
 	if(!ecm_found && add_to_cache){  //if not ecm (cw) already in cache
-		uint8_t cwcycle_act = cwcycle_check_act(er->caid);
 		if (er->rc < E_NOTFOUND) { // Do NOT add cacheex - not founds!
 			add_hitcache(cl, er);
 
 			er->selected_reader = cl->reader;
 
-			if (!cwcycle_act) {
-				cs_writelock(&ecmcache_lock);
-				er->next = ecmcwcache;
-				ecmcwcache = er;
-				ecmcwcache_size++;
-				cs_writeunlock(&ecmcache_lock);
+			cs_writelock(&ecmcache_lock);
+			er->next = ecmcwcache;
+			ecmcwcache = er;
+			ecmcwcache_size++;
+			cs_writeunlock(&ecmcache_lock);
 
-				cacheex_cache_push(er);  //cascade push!
-			}
+			cacheex_cache_push(er);  //cascade push!
 
 			cacheex_add_stats(cl, er->caid, er->srvid, er->prid, 1);
 
-			if (cwcycle_act)
-				er->rc = E_NOTFOUND; //need to free
 		}
-		debug_ecm(D_CACHEEX, "got pushed %sECM %s from %s (%s)", (er->rc == E_UNHANDLED)?"request ":"", buf, csp ? "csp" : username(cl),(cwcycle_act)?"on":"off");
+		debug_ecm(D_CACHEEX, "got pushed %sECM %s from %s", (er->rc == E_UNHANDLED)?"request ":"", buf, csp ? "csp" : username(cl));
 
 		return er->rc < E_NOTFOUND ? 1 : 0;
 	}
@@ -711,7 +706,7 @@ void add_hitcache(struct s_client *cl, ECM_REQUEST *er) {
 	}
 	if (ch){
 
-		cs_debug_mask(D_CACHEEX|D_CSPCWC,"[CSPCEHIT] add_hitcache %s entry ecmlen %d caid %04X provid %06X srvid %04X grp %"PRIu64" next %s size %d", upd_hit?"upd":"add", ch->ecmlen, ch->caid, ch->prid, ch->srvid, ch->grp, (ch->next)?"Yes":"No", cspec_hitcache_size);
+		cs_debug_mask(D_CACHEEX|D_CSP,"[CSPCEHIT] add_hitcache %s entry ecmlen %d caid %04X provid %06X srvid %04X grp %"PRIu64" next %s size %d", upd_hit?"upd":"add", ch->ecmlen, ch->caid, ch->prid, ch->srvid, ch->grp, (ch->next)?"Yes":"No", cspec_hitcache_size);
 		if(cl) ch->grp |= cl->grp;
 		ch->time = time(NULL); //always update time;
 
@@ -768,7 +763,7 @@ struct csp_ce_hit_t *check_hitcache(ECM_REQUEST *er, struct s_client *cl, uint8_
 		cs_log("[CSPCEHIT] check_hitcache error on check hitcache");
 		ch = NULL;
 	}
-	cs_debug_mask(D_CACHEEX| D_CSPCWC,"[CSPCEHIT] check_hitcache %s hit found max stage %d caid %04X prov %06X serv %04X grp %"PRIu64" lock %s", (fs == 15)?"yes":"no", fs, er->caid, er->prid, er->srvid, grp, lock?"yes":"no");
+	cs_debug_mask(D_CACHEEX| D_CSP,"[CSPCEHIT] check_hitcache %s hit found max stage %d caid %04X prov %06X serv %04X grp %"PRIu64" lock %s", (fs == 15)?"yes":"no", fs, er->caid, er->prid, er->srvid, grp, lock?"yes":"no");
 
 	return ch;
 }
@@ -801,7 +796,7 @@ void cleanup_hitcache(void) {
 	cspec_hitcache_size = count;
 
 	if (current)
-		cs_debug_mask(D_CACHEEX|D_CSPCWC,"[CSPCEHIT] cleanup list new size %d ct %d", cspec_hitcache_size, mct);
+		cs_debug_mask(D_CACHEEX|D_CSP,"[CSPCEHIT] cleanup list new size %d ct %d", cspec_hitcache_size, mct);
 
 	if (current) {
 		while (current) {
