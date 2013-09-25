@@ -443,7 +443,7 @@ char SoftNDSECM(unsigned char *ecm, unsigned char *dw)
 	int i;
 	unsigned char *tDW;
 	unsigned char digest[16];
-	struct MD5Context mdContext;
+	MD5_CTX mdContext;
 	memset(dw,0,16);
 	tDW = &dw[ecm[0]==0x81 ? 8 : 0];
 	if (ecm[6]!=0x21) return 1;
