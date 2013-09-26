@@ -3221,7 +3221,9 @@ int32_t cc_srv_connect(struct s_client *cl) {
 
 	// receive username
 	memset(buf, 0, CC_MAXMSGSIZE);
-	if ((i = cc_recv_to(cl, buf, 20)) == 20) {
+	i = cc_recv_to(cl, buf, 20);
+	if (i < 0) return -1; // errors during receive!
+	if (i == 20) {
 		cc_crypt(&cc->block[DECRYPT], buf, 20, DECRYPT);
 
 		strncpy(usr, (char *) buf, sizeof(usr));
@@ -3245,7 +3247,9 @@ int32_t cc_srv_connect(struct s_client *cl) {
 	//CCCam only supports len=20 usr/pass. So we could have more than one user that matches the first 20 chars.
 
 	//receive password-CCCam encrypted Hash:
-	if (cc_recv_to(cl, buf, 6) != 6) {
+	i = cc_recv_to(cl, buf, 6);
+	if (i < 0) return -1; // errors during receive!
+	if (i != 6) { // received invalid password length
 		cs_add_violation(cl, usr);
 		return -2;
 	}

@@ -983,7 +983,10 @@ static char *send_oscam_reader(struct templatevars *vars, struct uriparams *para
 	int32_t i;
 
 	if(!apicall) setActiveMenu(vars, MNU_READERS);
-
+	if(cfg.http_refresh > 0) {
+		tpl_printf(vars, TPLADD, "REFRESHTIME", "%d", cfg.http_refresh);
+		tpl_addVar(vars, TPLADD, "REFRESH", tpl_getTpl(vars, "REFRESH"));
+	}
 	if ((strcmp(getParam(params, "action"), "disable") == 0) || (strcmp(getParam(params, "action"), "enable") == 0)) {
 		if(cfg.http_readonly) {
 			tpl_addMsg(vars, "WebIf is in readonly mode. Enabling or disabling readers is not possible!");
@@ -2272,19 +2275,28 @@ static char *send_oscam_user_config_edit(struct templatevars *vars, struct uripa
 }
 
 static void webif_add_client_proto(struct templatevars *vars, struct s_client *cl, const char *proto) {
+	tpl_addVar(vars, TPLADDONCE, "PROTOICON", "");
+	tpl_addVar(vars, TPLADDONCE, "CLIENTPROTO", "");
+	tpl_addVar(vars, TPLADDONCE, "CLIENTPROTOTITLE", "");
 	if(!cl) return;
 #ifdef MODULE_NEWCAMD
 	if (streq(proto, "newcamd") && cl->typ == 'c') {
-		tpl_printf(vars, TPLADDONCE, "CLIENTPROTO","%s (%s)", proto, newcamd_get_client_name(cl->ncd_client_id));
-		char picon_name[32];
-		snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%s_%s", (char *)proto, newcamd_get_client_name(cl->ncd_client_id));
-		if (cfg.http_showpicons && picon_exists(picon_name)) {
-			tpl_printf(vars, TPLADD, "PROTOICON",
-			"<img class=\"protoicon\" src=\"image?i=IC_%s_%s\" alt=\"IC_%s_%s\" title=\"Protocol %s %s\">",
-			proto, newcamd_get_client_name(cl->ncd_client_id), proto, newcamd_get_client_name(cl->ncd_client_id), proto, newcamd_get_client_name(cl->ncd_client_id));
+		if (cfg.http_showpicons) {
+			char picon_name[32];
+			snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%s_%s", (char *)proto, newcamd_get_client_name(cl->ncd_client_id));
+			if (picon_exists(picon_name)) {
+				tpl_printf(vars, TPLADDONCE, "CLIENTPROTO","%s (%s)", proto, newcamd_get_client_name(cl->ncd_client_id));
+				tpl_printf(vars, TPLADD, "PROTOICON",
+				"<img class=\"protoicon\" src=\"image?i=IC_%s_%s\" alt=\"IC_%s_%s\" title=\"Protocol %s %s\">",
+				proto, newcamd_get_client_name(cl->ncd_client_id), proto, newcamd_get_client_name(cl->ncd_client_id), proto, newcamd_get_client_name(cl->ncd_client_id));
+			} else {
+				tpl_printf(vars, TPLADDONCE, "CLIENTPROTO","%s (%s)", proto, newcamd_get_client_name(cl->ncd_client_id));
+				tpl_printf(vars, TPLADD, "PROTOICON", "<SPAN TITLE=\"IC_%s_%s\">%s (%s)</SPAN>",
+				proto, newcamd_get_client_name(cl->ncd_client_id), proto, newcamd_get_client_name(cl->ncd_client_id));
+			}
 		} else {
-			tpl_printf(vars, TPLADD, "PROTOICON", "<SPAN TITLE=\"IC_%s_%s\">%s (%s)</SPAN>",
-			proto, newcamd_get_client_name(cl->ncd_client_id), proto, newcamd_get_client_name(cl->ncd_client_id));
+			tpl_printf(vars, TPLADDONCE, "PROTOICON","%s (%s)", proto, newcamd_get_client_name(cl->ncd_client_id));
+			tpl_printf(vars, TPLADDONCE, "CLIENTPROTO","%s (%s)", proto, newcamd_get_client_name(cl->ncd_client_id));
 		}
 		return;
 	}
@@ -2293,30 +2305,45 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 	if (strncmp(proto, "cccam", 5) == 0) {
 		struct cc_data *cc = cl->cc;
 		if (cc && cc->remote_version && cc->remote_build) {
-			tpl_printf(vars, TPLADDONCE, "CLIENTPROTO", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
-			tpl_addVar(vars, TPLADDONCE, "CLIENTPROTOTITLE", cc->extended_mode ? cc->remote_oscam : "");
-			char picon_name[32];
-			snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%s_%s_%s", proto, cc->remote_version, cc->remote_build);
-			if (cfg.http_showpicons && picon_exists(picon_name)) {
-				tpl_printf(vars, TPLADD, "PROTOICON",
-				"<img class=\"protoicon\" src=\"image?i=IC_%s_%s_%s\" alt=\"IC_%s (%s-%s)\" title=\"Protocol %s (%s-%s)\">",
-				proto, cc->remote_version, cc->remote_build, proto, cc->remote_version, cc->remote_build, proto, cc->remote_version, cc->remote_build);
+			if (cfg.http_showpicons) {
+				char picon_name[32];
+				snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%s_%s_%s", proto, cc->remote_version, cc->remote_build);
+				if (picon_exists(picon_name)) {
+					tpl_printf(vars, TPLADDONCE, "CLIENTPROTO", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
+					tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE","cccam extinfo: %s missing icon: IC_%s_%s_%s", cc->extended_mode ? cc->remote_oscam : "", proto, cc->remote_version, cc->remote_build);
+					tpl_printf(vars, TPLADD, "PROTOICON",
+					"<img class=\"protoicon\" src=\"image?i=IC_%s_%s_%s\" alt=\"IC_%s (%s-%s)\" title=\"Protocol %s (%s-%s) %s\">",
+					proto, cc->remote_version, cc->remote_build, proto, cc->remote_version, cc->remote_build, proto, cc->remote_version, cc->remote_build, cc->extended_mode ? cc->remote_oscam : "");
+				} else {
+					tpl_printf(vars, TPLADD, "PROTOICON","%s (%s-%s)",proto, cc->remote_version, cc->remote_build);
+					tpl_printf(vars, TPLADDONCE, "CLIENTPROTO", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
+					tpl_addVar(vars, TPLADDONCE, "CLIENTPROTOTITLE", cc->extended_mode ? cc->remote_oscam : "");
+				}
 			} else {
-				tpl_printf(vars, TPLADD, "PROTOICON", "<SPAN TITLE=\"IC_%s_%s_%s\">%s (%s-%s)</SPAN>",
-				proto, cc->remote_version, cc->remote_build, proto, cc->remote_version, cc->remote_build);
+				tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
+				tpl_printf(vars, TPLADDONCE, "CLIENTPROTO", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
+				tpl_addVar(vars, TPLADDONCE, "CLIENTPROTOTITLE", cc->extended_mode ? cc->remote_oscam : "");
 			}
-			return;
 		}
+		return;
 	}
 #endif
-	tpl_addVar(vars, TPLADDONCE, "CLIENTPROTO", (char *)proto);
-	tpl_addVar(vars, TPLADDONCE, "CLIENTPROTOTITLE", "");
-	char picon_name[32];
-	snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%s", proto);
-	if (cfg.http_showpicons && picon_exists(picon_name)) {
-		tpl_printf(vars, TPLADD, "PROTOICON", "<img class=\"protoicon\" src=\"image?i=IC_%s\" alt=\"IC_%s\" title=\"Protocol %s\">", proto, proto, proto);
+	if (cfg.http_showpicons) {
+		char picon_name[32];
+		snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%s", proto);
+		if (picon_exists(picon_name)) {
+			tpl_printf(vars, TPLADD, "PROTOICON", "<img class=\"protoicon\" src=\"image?i=IC_%s\" alt=\"IC_%s\" title=\"Protocol %s\">", proto, proto, proto);
+			tpl_addVar(vars, TPLADDONCE, "CLIENTPROTO", (char *)proto);
+			tpl_addVar(vars, TPLADDONCE, "CLIENTPROTOTITLE", "");
+		} else {
+			tpl_printf(vars, TPLADD, "PROTOICON", "<SPAN TITLE=\"IC_%s\">%s</SPAN>", proto, proto);
+			tpl_addVar(vars, TPLADDONCE, "CLIENTPROTO", (char *)proto);
+			tpl_addVar(vars, TPLADDONCE, "CLIENTPROTOTITLE", "");
+		}
 	} else {
-		tpl_printf(vars, TPLADD, "PROTOICON", "<SPAN TITLE=\"IC_%s\">%s</SPAN>", proto, proto);
+		tpl_addVar(vars, TPLADDONCE, "PROTOICON", (char *)proto);
+		tpl_addVar(vars, TPLADDONCE, "CLIENTPROTO", (char *)proto);
+		tpl_addVar(vars, TPLADDONCE, "CLIENTPROTOTITLE", "");
 	}
 }
 
@@ -2547,15 +2574,19 @@ static char *send_oscam_user_config(struct templatevars *vars, struct uriparams 
 				lastchan = "";
 			tpl_printf(vars, TPLADD, "CLIENTCAID", "%04X", latestclient->last_caid);
 			tpl_printf(vars, TPLADD, "CLIENTSRVID", "%04X", latestclient->last_srvid);
-			char picon_name[32];
-			snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%04X_%04X", latestclient->last_caid, latestclient->last_srvid);
-			if (cfg.http_showpicons && picon_exists(picon_name)) {
-				tpl_printf(vars, TPLADD, "LASTCHANNEL",
+			if (cfg.http_showpicons && !apicall) {
+				char picon_name[32];
+				snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%04X_%04X", latestclient->last_caid, latestclient->last_srvid);
+				if (picon_exists(picon_name)) {
+					tpl_printf(vars, TPLADD, "LASTCHANNEL",
 					"<img class=\"userpicon\" src=\"image?i=IC_%s\" alt=\"%s\" title=\"%s\">",
 					picon_name, lastchan, lastchan);
+				} else {
+					tpl_addVar(vars, TPLADDONCE, "LASTCHANNEL", lastchan);
+				}
 			} else {
 				tpl_addVar(vars, TPLADDONCE, "LASTCHANNEL", lastchan);
-			}
+			} 
 			lastresponsetm = latestclient->cwlastresptime;
 			tpl_addVar(vars, TPLADDONCE, "CLIENTIP", cs_inet_ntoa(latestclient->ip));
 			connected_users++;
@@ -2624,16 +2655,28 @@ static char *send_oscam_user_config(struct templatevars *vars, struct uriparams 
 				tpl_addVar(vars, TPLADDONCE, "CLIENTTIMETOSLEEP", "");
 				tpl_addVar(vars, TPLADDONCE, "CLIENTTIMETOSLEEPAPI", "");
 			}
-
 			webif_add_client_proto(vars, latestclient, proto);
+		} else {
+		    tpl_addVar(vars, TPLADDONCE, "PROTOICON", "");
 		}
 
 		tpl_addVar(vars, TPLADD, "CLASSNAME", classname);
-		tpl_addVar(vars, TPLADD, "USER", xml_encode(vars, account->usr));
-		tpl_addVar(vars, TPLADD, "USERENC", urlencode(vars, account->usr));
-		tpl_addVar(vars, TPLADD, "DESCRIPTION", xml_encode(vars, account->description?account->description:""));
+
+		if (cfg.http_showpicons && !apicall) {
+			if (picon_exists(xml_encode(vars, account->usr))) {
+				tpl_printf(vars, TPLADD, "USER",
+				"<img class=\"usericon\" src=\"image?i=IC_%s\" TITLE=\"%s\">",
+				xml_encode(vars, account->usr), xml_encode(vars, account->usr));
+			} else {
+				tpl_addVar(vars, TPLADD, "USER", xml_encode(vars, account->usr));
+			}
+		} else {
+			tpl_addVar(vars, TPLADD, "USER", xml_encode(vars, account->usr));
+		}		
 		char *value = mk_t_group(account->grp);
 		tpl_addVar(vars, TPLADD, "GROUPS", value);
+		tpl_addVar(vars, TPLADD, "USERENC", urlencode(vars, account->usr));
+		tpl_addVar(vars, TPLADD, "DESCRIPTION", xml_encode(vars, account->description?account->description:""));
 		tpl_addVar(vars, TPLADD, "STATUS", status);
 		tpl_addVar(vars, TPLAPPEND, "STATUS", expired);
 		if(nrclients > 1) tpl_printf(vars, TPLADDONCE, "CLIENTCOUNTNOTIFIER", "<SPAN CLASS=\"span_notifier\">%d</SPAN>", nrclients);
@@ -3260,26 +3303,34 @@ static char *send_oscam_status(struct templatevars *vars, struct uriparams *para
 
 				localtime_r(&cl->login, &lt);
 
+
 				tpl_printf(vars, TPLADD, "HIDEIDX", "%p", cl);
 
 				if(!apicall) {
 					if(cl->typ == 'c' && !cfg.http_readonly) {
-						tpl_printf(vars, TPLADD, "CSIDX", "<A HREF=\"status.html?action=kill&threadid=%p\" TITLE=\"Kill this client\"><IMG CLASS=\"icon\" SRC=\"image?i=ICKIL\" ALT=\"Kill\"></A>", cl);
+						tpl_printf(vars, TPLADD, "HIDEIDXFULL", "<A HREF =\"status.html?hide=%p\" TITLE=\"Hide this User\"><IMG CLASS=\"icon\" SRC=\"image?i=ICHID\" ALT=\"Hide\"></A>", cl);
+						tpl_printf(vars, TPLADD, "CSIDX", "<A HREF=\"status.html?action=kill&threadid=%p\" TITLE=\"Kill this User\"><IMG CLASS=\"icon\" SRC=\"image?i=ICKIL\" ALT=\"Kill\"></A>", cl);
 					}
-					else if(((cl->typ == 'p' || cl->typ == 'r')) && !cfg.http_readonly) {
-						tpl_printf(vars, TPLADD, "CSIDX", "<A HREF=\"status.html?action=restart&amp;label=%s\" TITLE=\"Restart this reader/ proxy\"><IMG CLASS=\"icon\" SRC=\"image?i=ICRES\" ALT=\"Restart\"></A>", urlencode(vars, cl->reader->label));
+					else if(cl->typ == 'p' && !cfg.http_readonly) {
+						tpl_printf(vars, TPLADD, "HIDEIDXFULL", "<A HREF =\"status.html?hide=%p\" TITLE=\"Hide this Proxy\"><IMG CLASS=\"icon\" SRC=\"image?i=ICHID\" ALT=\"Hide\"></A>", cl);
+						tpl_printf(vars, TPLADD, "CSIDX", "<A HREF=\"status.html?action=restart&amp;label=%s\" TITLE=\"Restart this Proxy\"><IMG CLASS=\"icon\" SRC=\"image?i=ICRES\" ALT=\"Restart\"></A>", urlencode(vars, cl->reader->label));
+					}
+					else if(cl->typ == 'r' && !cfg.http_readonly) {
+						tpl_printf(vars, TPLADD, "HIDEIDXFULL", "<A HREF =\"status.html?hide=%p\" TITLE=\"Hide this Reader\"><IMG CLASS=\"icon\" SRC=\"image?i=ICHID\" ALT=\"Hide\"></A>", cl);
+						tpl_printf(vars, TPLADD, "CSIDX", "<A HREF=\"status.html?action=restart&amp;label=%s\" TITLE=\"Restart this Reader\"><IMG CLASS=\"icon\" SRC=\"image?i=ICRES\" ALT=\"Restart\"></A>", urlencode(vars, cl->reader->label));
 					}
 					else {
+						tpl_printf(vars, TPLADD, "HIDEIDXFULL", "%p", cl);
 						tpl_printf(vars, TPLADD, "CSIDX", "%p&nbsp;", cl);
 					}
 				} else {
+					tpl_printf(vars, TPLADD, "HIDEIDXFULL", "%p", cl);
 					tpl_printf(vars, TPLADD, "CSIDX", "%p", cl);
 				}
 
 				tpl_printf(vars, TPLADD, "CLIENTTYPE", "%c", cl->typ);
 				tpl_printf(vars, TPLADD, "CLIENTCNR", "%d", get_threadnum(cl));
 				tpl_addVar(vars, TPLADD, "CLIENTUSER", xml_encode(vars, usr));
-				tpl_addVar(vars, TPLADD, "STATUSUSERICON", xml_encode(vars, usr));
 	
 				if(cl->typ == 'c') {
 					tpl_addVar(vars, TPLADD, "CLIENTDESCRIPTION", xml_encode(vars, (cl->account && cl->account->description)?cl->account->description:""));
@@ -3288,29 +3339,45 @@ static char *send_oscam_status(struct templatevars *vars, struct uriparams *para
 					tpl_addVar(vars, TPLADD, "CLIENTDESCRIPTION", xml_encode(vars, cl->reader->description?cl->reader->description:""));
 				}
 
-				if (cfg.http_showpicons && picon_exists(xml_encode(vars, usr))) {
-					if (cl->typ == 'c') {
+				if (!apicall) {
+				    if (cfg.http_showpicons) {
+					if (picon_exists(xml_encode(vars, usr))) {
+					    if (cl->typ == 'c') {
 						tpl_printf(vars, TPLADD, "STATUSUSERICON",
-						"<A HREF=\"user_edit.html?user=%s\" TITLE=\"Edit this User\"><img class=\"statususericon\" src=\"image?i=IC_%s\" TITLE=\"%s\"></A>",
+						"<A HREF=\"user_edit.html?user=%s\"><img class=\"statususericon\" src=\"image?i=IC_%s\" TITLE=\"Edit User %s\"></A>",
 						xml_encode(vars, usr), xml_encode(vars, usr), xml_encode(vars, usr));
-					}
-					if (cl->typ == 'p' || cl->typ == 'r') {
+					    }
+					    if (cl->typ == 'p' || cl->typ == 'r') {
 						tpl_printf(vars, TPLADD, "STATUSUSERICON",
-						"<A HREF=\"readerconfig.html?label=%s\" TITLE=\"Edit this Reader\"><img class=\"statususericon\" src=\"image?i=IC_%s\" TITLE=\"%s\"></A>",
+						"<A HREF=\"readerconfig.html?label=%s\"><img class=\"statususericon\" src=\"image?i=IC_%s\" TITLE=\" Edit Reader %s\"></A>",
 						xml_encode(vars, usr), xml_encode(vars, usr), xml_encode(vars, usr));
-					}
-				} else {
-					if (cl->typ == 'c') {
-						tpl_printf(vars, TPLADD, "STATUSUSERICON",
-						"<A HREF=\"user_edit.html?user=%s\" TITLE=\"Edit this User\">%s</A>",
-						xml_encode(vars, usr), xml_encode(vars, usr));
+					    }
 					} else {
+					    if (cl->typ == 'c') {
 						tpl_printf(vars, TPLADD, "STATUSUSERICON",
-						"<A HREF=\"readerconfig.html?label=%s\" TITLE=\"Edit this Reader\">%s</A>",
-						xml_encode(vars, usr), xml_encode(vars, usr));
+						"<A class=\"statususericon\" HREF=\"user_edit.html?user=%s\" TITLE=\"Edit User %s\">%s</A>",
+						xml_encode(vars, usr), xml_encode(vars, usr), xml_encode(vars, usr));
+					    } else {
+						tpl_printf(vars, TPLADD, "STATUSUSERICON",
+						"<A class=\"statususericon\" HREF=\"readerconfig.html?label=%s\" TITLE=\"Edit Reader %s\">%s</A>",
+						xml_encode(vars, usr), xml_encode(vars, usr), xml_encode(vars, usr));
+					    }
 					}
+				    } else {
+					if (cl->typ == 'c') {
+					    tpl_printf(vars, TPLADD, "STATUSUSERICON",
+					    "<A class=\"statususericon\" HREF=\"user_edit.html?user=%s\" TITLE=\"Edit User %s\">%s</A>",
+					    xml_encode(vars, usr), xml_encode(vars, usr), xml_encode(vars, usr));
+					} else {
+					    tpl_printf(vars, TPLADD, "STATUSUSERICON",
+					    "<A class=\"statususericon\" HREF=\"readerconfig.html?label=%s\" TITLE=\"Edit Reader %s\">%s</A>",
+					    xml_encode(vars, usr), xml_encode(vars, usr), xml_encode(vars, usr));
+					}
+				    }
+				} else {
+				    tpl_addVar(vars, TPLADD, "STATUSUSERICON", xml_encode(vars, usr));
 				}
-
+				
 				tpl_printf(vars, TPLADD, "CLIENTCAU", "%d", cau);
 				if(!apicall){
 					if(cl->typ == 'c' || cl->typ == 'p' || cl->typ == 'r'){
@@ -3359,8 +3426,31 @@ static char *send_oscam_status(struct templatevars *vars, struct uriparams *para
 						tpl_printf(vars, TPLADD, "CLIENTSRVID", "%04X", cl->last_srvid);
 					else
 						tpl_printf(vars, TPLADD, "CLIENTSRVID", "none");
-					tpl_printf(vars, TPLADD, "CLIENTLASTRESPONSETIME", "%d", cl->cwlastresptime?cl->cwlastresptime:1);
 
+					char *lastchannel;char channame[32];
+					int32_t actual_caid=cl->last_caid;
+					int32_t actual_srvid=cl->last_srvid;
+					lastchannel = xml_encode(vars, get_servicename(cl, actual_srvid, actual_caid, channame));
+					if (cl->last_caid != NO_CAID_VALUE && cl->last_srvid != NO_SRVID_VALUE){
+						tpl_printf(vars, TPLADD, "CLIENTCURRENTPICON", "%s", lastchannel);
+						tpl_printf(vars, TPLADD, "CAIDSRVID", "%04X:%04X", actual_caid, actual_srvid);
+						if (cfg.http_showpicons) {
+							snprintf(picon_name, sizeof(picon_name)/sizeof(char) - 1, "%04X_%04X", actual_caid, actual_srvid);
+							if (picon_exists(picon_name)) {
+								tpl_printf(vars, TPLADD, "CLIENTCURRENTPICON",
+								"<img class=\"clientcurrentpicon\" src=\"image?i=IC_%04X_%04X\">",
+								actual_caid, actual_srvid);
+							} else {
+								tpl_printf(vars, TPLADD, "CLIENTCURRENTPICON", "%s", lastchannel);
+								tpl_printf(vars, TPLADD, "CAIDSRVID", "%04X:%04X", actual_caid, actual_srvid);
+							}
+						} else {
+							tpl_printf(vars, TPLADD, "CLIENTCURRENTPICON", "%s", lastchannel);
+							tpl_printf(vars, TPLADD, "CAIDSRVID", "%04X:%04X", actual_caid, actual_srvid);
+						}
+					}
+
+					tpl_printf(vars, TPLADD, "CLIENTLASTRESPONSETIME", "%d", cl->cwlastresptime?cl->cwlastresptime:1);
 					tpl_printf(vars, TPLADD, "CLIENTSRVPROVIDER","%s%s", cl->last_srvidptr && cl->last_srvidptr->prov ? xml_encode(vars, cl->last_srvidptr->prov) : "", cl->last_srvidptr && cl->last_srvidptr->prov ? ": " : "");
 					tpl_addVar(vars, TPLADD, "CLIENTSRVNAME", cl->last_srvidptr && cl->last_srvidptr->name ? xml_encode(vars, cl->last_srvidptr->name) : "");
 					tpl_addVar(vars, TPLADD, "CLIENTSRVTYPE", cl->last_srvidptr && cl->last_srvidptr->type ? xml_encode(vars, cl->last_srvidptr->type) : "");
@@ -3369,6 +3459,8 @@ static char *send_oscam_status(struct templatevars *vars, struct uriparams *para
 				} else {
 					tpl_addVar(vars, TPLADD, "CLIENTCAID", "0000");
 					tpl_addVar(vars, TPLADD, "CLIENTSRVID", "0000");
+					tpl_addVar(vars, TPLADD, "CAIDSRVID", "0000:0000");
+					tpl_addVar(vars, TPLADD, "CLIENTCURRENTPICON", "");
 					tpl_addVar(vars, TPLADD, "CLIENTSRVPROVIDER","");
 					tpl_addVar(vars, TPLADD, "CLIENTSRVNAME","");
 					tpl_addVar(vars, TPLADD, "CLIENTSRVTYPE","");
@@ -4669,7 +4761,10 @@ static char *send_oscam_cacheex(struct templatevars *vars, struct uriparams *par
 	if (strcmp(getParam(params, "x"), "x") == 0) {
 		// avoid compilerwarning unused vars
 	}
-
+	if(cfg.http_refresh > 0) {
+		tpl_printf(vars, TPLADD, "REFRESHTIME", "%d", cfg.http_refresh);
+		tpl_addVar(vars, TPLADD, "REFRESH", tpl_getTpl(vars, "REFRESH"));
+	}
 	char *level[]= {"NONE","CACHE PULL","CACHE PUSH","REVERSE CACHE PUSH"};
 	char *getting = "<IMG SRC=\"image?i=ICARRL\" ALT=\"Getting\">";
 	char *pushing = "<IMG SRC=\"image?i=ICARRR\" ALT=\"Pushing\">";
