@@ -3235,7 +3235,11 @@ static char *send_oscam_status(struct templatevars *vars, struct uriparams *para
 				while (*p && !filtered) {
 					char type = *p++;
 					// 'x' is a virtual type to match cacheex
+#ifdef CS_CACHEEX
 					filtered = (type == cl->typ) || (type == 'x' && (cl->typ == 'p' || cl->typ == 'r') && (cl->reader && cl->reader->cacheex.mode));
+#else
+					filtered = (type == cl->typ);
+#endif
 				}
 			}
 			
