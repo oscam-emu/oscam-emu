@@ -502,6 +502,13 @@ status refresh in seconds, default:none
 1 = enables hiding clients after idle time set in parameter \fBhideclient_to\fP, default:0
 .RE
 .PP
+\fBhttphidetype\fP = \fBtype\fP[\fBtype\fP]...
+.RS 3n
+type = letter which defines types to hide in web interface status page (see Type column), default:none
+
+x is a special type to match cacheex readers and proxies
+.RE
+.PP
 \fBhttpscript\fP = \fBpath\fP
 .RS 3n
 path to an executable script which you wish to start from web interface, default:none

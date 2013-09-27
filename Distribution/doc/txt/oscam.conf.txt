@@ -358,6 +358,11 @@ DESCRIPTIONS
        httphideidleclients = 0|1
 	  1 = enables hiding clients after idle time set in parameter hideclient_to, default:0
 
+       httphidetype = type[type]...
+	  type = letter which defines types to hide in web interface status page (see Type column), default:none
+
+	  x is a special type to match cacheex readers and proxies
+
        httpscript = path
 	  path to an executable script which you wish to start from web interface, default:none
 

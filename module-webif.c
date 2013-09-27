@@ -3232,8 +3232,10 @@ static char *send_oscam_status(struct templatevars *vars, struct uriparams *para
 			filtered = !(cfg.http_hide_idle_clients != 1 || cl->typ != 'c' || (now - cl->lastecm) <= cfg.hideclient_to);
 			if (!filtered && cfg.http_hide_type) {
 				char *p = cfg.http_hide_type;
-			        while (*p && !filtered) {
-			        	filtered = (*p++ == cl->typ);
+				while (*p && !filtered) {
+					char type = *p++;
+					// 'x' is a virtual type to match cacheex
+					filtered = (type == cl->typ) || (type == 'x' && (cl->typ == 'p' || cl->typ == 'r') && (cl->reader && cl->reader->cacheex.mode));
 				}
 			}
 			
