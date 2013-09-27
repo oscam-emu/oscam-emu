@@ -83,6 +83,7 @@ static int32_t ecm_ratelimit_findspace(struct s_reader * reader, ECM_REQUEST *er
 								write_ecm_answer(reader, er, E_NOTFOUND, E2_RATELIMIT, NULL, "Ratelimiter: no slots free!");
 							return -2;
 						}
+						continue;
 					}
 				}
 				if ((er->ecm[0] == reader->rlecmh[h].kindecm)
