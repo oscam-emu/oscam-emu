@@ -155,7 +155,7 @@ CWCYCLETBV                    userconfig/userconfig_entry_cwcycletbv.html       
 CMCAPTIONCWC                  config/menu_cmcaptioncwc.html                               CW_CYCLE_CHECK
 LOCALCARDS                    config/global_localcards.html                               WITH_CARDREADER
 UNLOCKPARENTAL                config/global_unlockparental.html                           READER_SECA,READER_VIACCESS
-READERPINCODE                 readerconfig/readerconfig_hwreader_pincode.html             READER_CONAX,READER_CRYPTOWORKS
+READERPINCODE                 readerconfig/readerconfig_hwreader_pincode.html             READER_CONAX,READER_CRYPTOWORKS,READER_VIACCESS,READER_SECA
 READERCONFIGNANO              readerconfig/readerconfig_hwreader_nano.html                WITH_CARDREADER
 READERCONFIGRSAKEY            readerconfig/readerconfig_hwreader_rsakey.html              READER_NAGRA,READER_IRDETO,READER_CONAX
 READERCONFIGBOXKEY            readerconfig/readerconfig_hwreader_boxkey.html              READER_NAGRA,READER_IRDETO
