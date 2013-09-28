@@ -44,7 +44,7 @@ SVN repository:
 Building OSCam-emu from source
 ==========================
 
- - Get the lastest sources from GitHub
+ - Get the lastest sources from GitHub or checkout SVN as above:
     https://github.com/oscam-emu/oscam-emu/archive/master.zip
 
  - Go to oscam-emu-master directory.
@@ -60,7 +60,7 @@ see README.build and README.config files.
 Building OScam-emu for different CPUs (cross-compilation)
 =====================================================
 
-non x86 platform can give issues, no support for them right now...
+non x86 platform can give issues so no official support for them right now, your on your own…
 
 
 Dependencies
@@ -74,13 +74,6 @@ OSCam supports building with the following external dependencies:
   - libcrypto (libssl) - 'make USE_LIBCRYPTO=1'
   - libusb             - 'make USE_LIBUSB=1'
   - PCSC               - 'make USE_PCSC=1'
-  - SH4 STAPI support  - 'make USE_STAPI=1'
-  - Coolapi support    - 'make USE_COOLAPI=1'
-  - AZBOX support      - 'make USE_AZBOX=1'
-
-For STAPI support you need to download liboscam_stapi.a library and place
-it in stapi directory under oscam/ root dir. liboscam_stapi.a can be downloaded
-from: http://www.streamboard.tv/wbb2/thread.php?threadid=28854
 
 For more information and examples on using the build system, run `make help`.
 
@@ -90,15 +83,17 @@ Help and Support
 
 man pages and configuration examples are in Distribution/doc directory.
 
-You may visit our Trac system for tracking and filling bug reports.
-   http://www.streamboard.tv/oscam/
-
-If you experience any problems with OSCam, feel free to post in our support
-forum under (mainly German and English language) at:
-   http://www.streamboard.tv/wbb2/portal.php
+You may visit our issues system for filling in bug reports.
+   https://github.com/oscam-emu/oscam-emu/issues
 
 Configuration wiki:
    http://www.streamboard.tv/wiki/index.php/OSCam/
 
-Please note that support for the additional work on the emulator functionality only can be found at GitHub:
-   https://github.com/oscam-emu/oscam-emu/issues
+Configuring the EMU part is easy, add a constcw reader and place a CCcam keyfile on your machine.
+	A minimal reader config looks like this:
+
+[reader]
+label                         = keyfile
+protocol                      = constcw
+device                        = /var/keys/SoftCam.Key
+group                         = 1
