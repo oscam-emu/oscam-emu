@@ -640,7 +640,7 @@ do
 		break
 	;;
 	'-r'|'--oscam-revision')
-		echo "8923"
+		echo "8938"
 		break
 	;;
 	'-O'|'--detect-osx-sdk-version')
