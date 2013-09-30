@@ -80,6 +80,7 @@ static time_t chid_date(const uchar *ptr, char *buf, int32_t l)
 		timeinfo.tm_year = 90 + (ptr[1]>>4)+(((ptr[0]>>5)&7)*10);
 		timeinfo.tm_mon = (ptr[1]&0xf) - 1;
 		timeinfo.tm_mday = ptr[0]&0x1f;
+		timeinfo.tm_isdst = -1;
 		rc = mktime(&timeinfo);
 		strftime(buf, l, "%Y/%m/%d", &timeinfo);
   }
@@ -479,7 +480,7 @@ static int32_t conax_card_info(struct s_reader * reader)
 									chid[0] = '\0';
 								}
 								if(k == 0) start_t = chid_date(cta_res+i+2, pdate, 15);
-								else end_t = chid_date(cta_res+i+2, pdate+16, 15);
+								else end_t = chid_date(cta_res+i+2, pdate+16, 15) /* add 23:59:59 here: */ + 0x1517F;
 								++k;
 								break;
 							case 0x20: // Provider classes

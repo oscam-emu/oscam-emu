@@ -208,6 +208,7 @@ SRC-$(CONFIG_CARDREADER_SC8IN1) += csctapi/ifd_sc8in1.c
 SRC-$(CONFIG_CARDREADER_INTERNAL_SCI) += csctapi/ifd_sci.c
 SRC-$(CONFIG_CARDREADER_SMARGO) += csctapi/ifd_smargo.c
 SRC-$(CONFIG_CARDREADER_SMART) += csctapi/ifd_smartreader.c
+SRC-$(CONFIG_CARDREADER_STINGER) += csctapi/ifd_stinger.c
 SRC-$(CONFIG_CARDREADER_STAPI) += csctapi/ifd_stapi.c
 
 SRC-$(CONFIG_LIB_MINILZO) += minilzo/minilzo.c

@@ -357,6 +357,7 @@ static void write_versionfile(bool use_stdout) {
 		write_cardreaderconf(CARDREADER_SMART, "smartreader");
 		write_cardreaderconf(CARDREADER_DB2COM, "db2com");
 		write_cardreaderconf(CARDREADER_STAPI, "stapi");
+		write_cardreaderconf(CARDREADER_STINGER, "stinger");
 	} else {
 		write_readerconf(WITH_CARDREADER, "Reader Support");
 	}
@@ -1161,6 +1162,9 @@ int32_t main (int32_t argc, char *argv[])
 #endif
 #ifdef CARDREADER_STAPI
 	cardreader_stapi,
+#endif
+#ifdef CARDREADER_STINGER
+	cardreader_stinger,
 #endif
 	0
   };

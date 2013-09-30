@@ -442,7 +442,7 @@ static void monitor_process_details_reader(struct s_client *cl) {
 
 	S_ENTITLEMENT *item;
 	LL_ITER itr = ll_iter_create(rdr->ll_entitlements);
-	time_t now = (time(NULL) / 84600) * 84600;
+	time_t now = (time(NULL) / 86400) * 86400;
 
 	while ((item = ll_iter_next(&itr))) {
 		struct tm start_t, end_t;

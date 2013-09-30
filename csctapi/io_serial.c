@@ -353,7 +353,7 @@ void IO_Serial_Flush (struct s_reader * reader)
 {
   unsigned char b;
   tcflush(reader->handle, TCIOFLUSH);
-  while(!IO_Serial_Read(reader, 0, 15000, 1, &b)); // first appears between 9~15ms
+  while(!IO_Serial_Read(reader, 0, 75000, 1, &b)); // first appears between 9~75ms
 }
 
 void IO_Serial_Sendbreak(struct s_reader * reader, int32_t duration)
