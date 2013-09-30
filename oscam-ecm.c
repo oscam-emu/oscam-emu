@@ -384,7 +384,7 @@ struct ecm_request_t *check_cwcache(ECM_REQUEST *er, struct s_client *cl)
 struct ecm_request_t *check_same_ecm(ECM_REQUEST *er)
 {
 	struct ecm_request_t *ecm;
-	time_t timeout = time(NULL)-cfg.max_cache_time;
+	time_t timeout = time(NULL)-((cfg.ctimeout+500)/1000+1);
 
 	cs_readlock(&ecmcache_lock);
 	for (ecm = ecmcwcache; ecm; ecm = ecm->next) {
@@ -403,6 +403,9 @@ struct ecm_request_t *check_same_ecm(ECM_REQUEST *er)
 
 		struct s_ecm_answer *ea_ecm = ecm->matching_rdr;
 		struct s_ecm_answer *ea_er = er->matching_rdr;
+
+		if(!ea_ecm || !ea_er) continue;
+
 		uint8_t rdrs=er->readers;
 		while(rdrs){
 			if(ea_ecm->reader!=ea_er->reader)

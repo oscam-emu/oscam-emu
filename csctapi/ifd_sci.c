@@ -83,14 +83,15 @@ static int32_t Sci_Read_ATR(struct s_reader * reader, ATR * atr) // reads ATR on
 			
 			if (protocols < 2) {
 				int32_t FI = (buf[n]>>4); // FI is high nibble                  ***** work ETU = (1/D)*(Frequencydivider/cardfrequency) (in seconds!)
-				int32_t F = atr_f_table[FI]; // lookup the frequency divider
+				int32_t Fi = atr_f_table[FI]; // lookup the frequency divider
 				float fmax = atr_fs_table[FI]; // lookup the max frequency      ***** initial ETU = 372 / initial frequency during atr  (in seconds!)
 				
 				int32_t DI = (buf[n]&0x0F); // DI is low nibble
 				D = atr_d_table[DI]; // lookup the bitrate adjustment (yeah there are floats in it, but in iso only integers!?)
-				rdr_debug_mask(reader, D_ATR, "Advertised max cardfrequency is %.2f (Fmax), frequency divider is %d (F)", fmax/1000000L, F); // High nibble TA1 contains cardspeed
+				rdr_debug_mask(reader, D_ATR, "Advertised max cardfrequency is %.2f (Fmax), frequency divider is %d (Fi)", fmax/1000000L, Fi); // High nibble TA1 contains cardspeed
 				rdr_debug_mask(reader, D_ATR, "Bitrate adjustment is %d (D)", D); // Low nibble TA1 contains Bitrateadjustment
-				rdr_debug_mask(reader, D_ATR, "Work ETU = %.2f us", (double) ((1/(double)D)*((double)F/(double)fmax)*1000000)); // And display it...
+				rdr_debug_mask(reader, D_ATR, "Work ETU = %.2f us assuming card runs at %.2f Mhz",
+					(double) ((1/(double)D)*((double)Fi/(double)fmax)*1000000),fmax/1000000L); // And display it...
 				rdr_debug_mask(reader, D_ATR, "Initial ETU = %.2f us", (double)372/(double)fmax*1000000); // And display it... since D=1 and frequency during ATR fetch might be different!
 			} 
 			if (protocols > 1 && protocols <3){
@@ -113,11 +114,8 @@ static int32_t Sci_Read_ATR(struct s_reader * reader, ATR * atr) // reads ATR on
 			if ((protocols >2) && ((TDi&0x0F)==0x01)){  // Protocol T1 specfic (There is always an obsolete T0 protocol!)
 				int32_t CWI = (buf[n]&0x0F); // low nibble contains CWI code for the character waiting time CWT
 				int32_t BWI = (buf[n]>>4); // high nibble contains BWI code for the block waiting time BWT
-				int32_t CWT = (1<<CWI) + 11; // in work etu  *** 2^CWI + 11 work etu *** 
-				rdr_debug_mask(reader, D_ATR, "Protocol T1: Character waiting time is %d work etu (CWT)", CWT);
-				int32_t BWT = (int) ((1<<BWI) * 960 * 372); // divided by frequency and add with 11 work etu *** 2^BWI*960*372/f + 11 work etu ***
-				rdr_debug_mask(reader, D_ATR, "Protocol T1: Block waiting time is %d divided by actual cardfrequency + 11 work etu (BWI)", BWI);
-				rdr_debug_mask(reader, D_ATR, "Protocol T1: BWT: %d", BWT);
+				rdr_debug_mask(reader, D_ATR, "Protocol T1: Character waiting time is %d(CWI)", CWI);
+				rdr_debug_mask(reader, D_ATR, "Protocol T1: Block waiting time is %d (BWI)", BWI);
 			}
 			
 			n++; // next interface character
@@ -326,20 +324,18 @@ static int32_t Sci_Close(struct s_reader *reader) {
 	return OK;
 }
 
-static int32_t sci_write_settings3(struct s_reader *reader, uint32_t ETU, uint32_t WWT, uint32_t I)
+static int32_t sci_write_settings3(struct s_reader *reader, uint32_t ETU, uint32_t F, uint32_t WWT, uint32_t CWT, uint32_t BWT, uint32_t EGT, uint32_t I)
 {
 	if (reader->mhz > 2000){ // only for dreambox internal readers
-		// EGT = 0; // communicating guardtime is only slowing card ecm responses down. its not needed with internal readers, the drivers already take care of this!
 		// P fixed at 5V since this is default class A card, and TB is deprecated
 		if (reader->protocol_type != ATR_PROTOCOL_TYPE_T14){ // fix VU+ internal reader slow responses on T0/T1
-			call (Sci_WriteSettings (reader, 0, reader->divider, ETU, WWT, reader->CWT, reader->BWT, 0, 5, (unsigned char)I));
+			call (Sci_WriteSettings (reader, 0, reader->divider, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
 		} else { // no fixup for T14 protocol otherwise error
-			call (Sci_WriteSettings (reader, reader->protocol_type, reader->divider, ETU, WWT, reader->CWT, reader->BWT, 0, 5, (unsigned char)I));
+			call (Sci_WriteSettings (reader, reader->protocol_type, reader->divider, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
 		}
 	} else { // all other brand boxes than dreamboxes or VU+!
-		// EGT = 0; // dont communicate guardtime -> slowing down card ecm responses!
 		// P fixed at 5V since this is default class A card, and TB is deprecated
-		call (Sci_WriteSettings (reader, reader->protocol_type, reader->mhz / 100, ETU, WWT, reader->CWT, reader->BWT, 0, 5, (unsigned char)I));
+		call (Sci_WriteSettings (reader, reader->protocol_type, F, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
 	}
 	return OK;
 }

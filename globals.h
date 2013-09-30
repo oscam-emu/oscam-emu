@@ -722,7 +722,7 @@ struct s_cardreader
 	// FIXME: write_settings2 is used by coolstream reader
 	int32_t			(*write_settings2)(struct s_reader *, uint16_t F, uint8_t D, uint32_t WWT, uint32_t EGT, uint32_t BGT);
 	// FIXME: write_settings3 is used by sci reader
-	int32_t			(*write_settings3)(struct s_reader *, uint32_t ETU, uint32_t WWT, uint32_t I);
+	int32_t			(*write_settings3)(struct s_reader *, uint32_t ETU, uint32_t F, uint32_t WWT, uint32_t CWT, uint32_t BWT, uint32_t EGT, uint32_t I);
 	int32_t			(*set_protocol)(struct s_reader*,
 										unsigned char * params,
 										uint32_t *length,

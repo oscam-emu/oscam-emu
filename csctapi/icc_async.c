@@ -107,7 +107,7 @@ int32_t ICC_Async_Activate (struct s_reader *reader, ATR * atr, uint16_t depreca
 {
 	rdr_debug_mask(reader, D_IFD, "Activating card");
 
-	reader->current_baudrate = DEFAULT_BAUDRATE; //this is needed for all readers to calculate work_etu for timings
+	reader->current_baudrate = DEFAULT_BAUDRATE;
 	if (reader->atr[0] != 0 && !reader->ins7e11_fast_reset) {
 		rdr_log(reader, "Using ATR from reader config");
 		ATR_InitFromArray(atr, reader->atr, ATR_MAX_SIZE);
@@ -579,7 +579,7 @@ static int32_t SetRightParity (struct s_reader * reader)
 
 static int32_t InitCard (struct s_reader * reader, ATR * atr, unsigned char FI, uint32_t D, unsigned char N, uint16_t deprecated)
 {
-	uint32_t I, F, BGT = 0, edc, GT = 0, WWT = 0, EGT = 0;
+	uint32_t I, F, Fi, BGT = 0, edc, GT = 0, WWT = 0, EGT = 0;
 	unsigned char wi = 0;
 
 	//set the amps and the volts according to ATR
@@ -600,22 +600,23 @@ static int32_t InitCard (struct s_reader * reader, ATR * atr, unsigned char FI, 
 		ICC_Async_GetPLL_Divider(reader); // calculate pll divider for target cardmhz.
 	}
 
-	F =	atr_f_table[FI];  //get the frequency divider also called clock rate conversion factor
+	Fi = atr_f_table[FI];  //get the frequency divider also called clock rate conversion factor
 	if (reader->crdr.set_baudrate) {
 		reader->current_baudrate = DEFAULT_BAUDRATE;
 
 		if (deprecated == 0) {
 		
 			if (reader->protocol_type != ATR_PROTOCOL_TYPE_T14) { //dont switch for T14
-				uint32_t baud_temp = (double)D * ICC_Async_GetClockRate (reader->cardmhz) / (double)F;
+				uint32_t baud_temp = (double)D * ICC_Async_GetClockRate (reader->cardmhz) / (double)Fi;
 				rdr_log(reader, "Setting baudrate to %d bps", baud_temp);
 				call (reader->crdr.set_baudrate(reader, baud_temp));
 				reader->current_baudrate = baud_temp;
 			}
 		}
 	}
-	if (reader->mhz > 2000 && reader->typ == R_INTERNAL) reader->worketu = (double) ((1/(double)D)*((double)F/(double)reader->cardmhz)*100);
-	else reader->worketu = (double) ((1/(double)D)*((double)F/(double)reader->mhz)*100);
+	if (reader->mhz > 2000 && reader->typ == R_INTERNAL) F = reader->cardmhz; // for PLL based internal readers
+	else F = reader->mhz; // all other readers
+	reader->worketu = (double) ((1/(double)D)*((double)Fi/(double)F*100)); // expressed in us
 	rdr_log(reader, "Calculated work ETU is %.2f us", reader->worketu);
 
 	//set timings according to ATR
@@ -635,7 +636,7 @@ static int32_t InitCard (struct s_reader * reader, ATR * atr, unsigned char FI, 
 
 			// WWT = 960 * d * WI  work etu
 
-			unsigned char tmpatr[7]; // this is card atr of conax with pairingecmrotation, they need some additional WWT time but this isnt in those ATRs
+			/*unsigned char tmpatr[7]; // this is card atr of conax with pairingecmrotation, they need some additional WWT time but this isnt in those ATRs
 			tmpatr[0] = 0x3B;
 			tmpatr[1] = 0x24;
 			tmpatr[2] = 0x00;
@@ -643,10 +644,12 @@ static int32_t InitCard (struct s_reader * reader, ATR * atr, unsigned char FI, 
 			tmpatr[4] = 0x42;
 			tmpatr[5] = 0x30;
 			tmpatr[6] = 0x30;
+			*/
+			
 			WWT = (uint32_t) 960 * D * wi; //in work ETU
-			if (!memcmp(reader->card_atr, tmpatr, sizeof(tmpatr))){ // check for conax pairingecmrotation card atr.
+			/*if (!memcmp(reader->card_atr, tmpatr, sizeof(tmpatr))){ // check for conax pairingecmrotation card atr.
 				WWT = WWT * 600; // if found add some additional WWT time
-			}
+			}*/
 			GT = 2; // standard guardtime
 			GT += 1; // start bit
 			GT += 8; // databits
@@ -706,11 +709,13 @@ static int32_t InitCard (struct s_reader * reader, ATR * atr, unsigned char FI, 
 					}
 			#endif
 
-				// Set CWT = (2^CWI + 11) work etu
-				reader->CWT = (uint16_t) ((1<<cwi) + 11); // in work ETU
-				// Set BWT = (2^BWI * 960 * 372 / clockspeed) seconds + 11 work etu
-				if (reader->mhz > 2000 && reader->typ == R_INTERNAL) reader->BWT = (uint32_t) ((1<<bwi) * 960 * 372 / (double) reader->cardmhz* 100 / (double) reader->worketu)+11; // BWT in ETU
-				else reader->BWT = (uint32_t) ((1<<bwi) * 960 * 372 / (double)reader->mhz * 100 / (double) reader->worketu) + 11 ; // BWT in ETU
+				// Set CWT = 11+(2^CWI) work etu
+				reader->CWT = (uint16_t) 11+ (1<<cwi); // in work ETU
+				// Set BWT = (2^BWI * 960 * Fi / clockspeed) seconds + 11 work etu
+				// Fi / clockspeed == D * worketu (in nano seconds!)
+
+				reader->BWT = (uint32_t) ((1<<bwi) * 960 * D) + 11; // BWT in work ETU
+				
 				// Set BGT = 22 * work etu
 				BGT = 22L; // Block Guard Time in ETU used to interspace between block responses
 				
@@ -752,32 +757,32 @@ static int32_t InitCard (struct s_reader * reader, ATR * atr, unsigned char FI, 
 	}//switch
 	SetRightParity (reader); // some reader devices need to get set the right parity
 
-	uint32_t ETU = F / D;
-	
+	uint32_t ETU = Fi / D;
+	F = atr_fs_table[FI];
 	if (atr->hbn >= 6 && !memcmp(atr->hb, "IRDETO", 6) && reader->protocol_type == ATR_PROTOCOL_TYPE_T14){
 		ETU = 0;	// for Irdeto T14 cards, do not set ETU
 		reader->worketu *=2; // overclocked T14 needs this otherwise high ecm reponses
 	}
 		
 	if (reader->crdr.write_settings) {
-		call(reader->crdr.write_settings(reader, ETU, EGT, 5, I, (uint16_t) F, (unsigned char)D, N));
+		call(reader->crdr.write_settings(reader, ETU, EGT, 5, I, (uint16_t) Fi, (unsigned char)D, N));
 	} else if (reader->crdr.write_settings2) {
 		call(reader->crdr.write_settings2(reader, (uint16_t) F, (uint8_t) D, WWT, EGT, BGT));
 	} else if (reader->crdr.write_settings3) {
-		call(reader->crdr.write_settings3(reader, ETU, WWT, (unsigned char)I));
+		call(reader->crdr.write_settings3(reader, ETU, F, WWT, reader->CWT, reader->BWT, EGT, (unsigned char)I));
 	}
 
 	if (reader->typ == R_INTERNAL){
 		if (reader->mhz > 2000) {
-			rdr_log(reader, "ATR Fsmax is: %i MHz, clocking card to %.2f (nearest possible to wanted user cardspeed of %.2f MHz)",
-				atr_fs_table[FI] / 1000000,	(float) reader->cardmhz / 100, (float) reader->cardmhz / 100);
+			rdr_log(reader, "PLL Reader: ATR Fsmax is %i MHz, clocking card to %.2f Mhz (nearest possible mhz specified reader->cardmhz)",
+				atr_fs_table[FI] / 1000000,	(float) reader->cardmhz / 100);
 		} else {
-			rdr_log(reader, "ATR Fsmax is: %i MHz, clocking card to %.2f",
+			rdr_log(reader, "ATR Fsmax is %i MHz, clocking card to %.2f (specified in reader->mhz)",
 				atr_fs_table[FI] / 1000000,	(float) reader->mhz / 100);
 		}
 	}
 	else{
-		rdr_log(reader, "ATR Fsmax is: %i MHz, clocking card to wanted user cardspeed of %.2f MHz (specified in reader->mhz)",
+		rdr_log(reader, "ATR Fsmax is %i MHz, clocking card to wanted user cardspeed of %.2f MHz (specified in reader->mhz)",
 			atr_fs_table[FI] / 1000000,
 				(float) reader->mhz / 100);
 	}
