@@ -384,14 +384,16 @@ struct ecm_request_t *check_cwcache(ECM_REQUEST *er, struct s_client *cl)
 struct ecm_request_t *check_same_ecm(ECM_REQUEST *er)
 {
 	struct ecm_request_t *ecm;
-	time_t timeout = time(NULL)-((cfg.ctimeout+500)/1000+1);
+	time_t timeout;
+	struct s_ecm_answer *ea_ecm = NULL, *ea_er = NULL;
+	uint8_t rdrs=0;
 
 	cs_readlock(&ecmcache_lock);
 	for (ecm = ecmcwcache; ecm; ecm = ecm->next) {
-		if (ecm->tps.time <= timeout) {
-			ecm = NULL;
+
+		timeout = time(NULL)-((cfg.ctimeout+500)/1000);
+		if (ecm->tps.time <= timeout)
 			break;
-		}
 
 		if (ecm==er) continue;
 
@@ -401,13 +403,11 @@ struct ecm_request_t *check_same_ecm(ECM_REQUEST *er)
 		if (!er->readers || !ecm->readers || er->readers!=ecm->readers)
 			continue;
 
-		struct s_ecm_answer *ea_ecm = ecm->matching_rdr;
-		struct s_ecm_answer *ea_er = er->matching_rdr;
+		ea_ecm = ecm->matching_rdr;
+		ea_er = er->matching_rdr;
+		rdrs = er->readers;
 
-		if(!ea_ecm || !ea_er) continue;
-
-		uint8_t rdrs=er->readers;
-		while(rdrs){
+		while(rdrs && ea_ecm && ea_er){
 			if(ea_ecm->reader!=ea_er->reader)
 				break;
 			ea_ecm=ea_ecm->next;
