@@ -9,7 +9,7 @@ void add_aes_entry(AES_ENTRY **list, uint16_t caid, uint32_t ident, int32_t keyi
 void parse_aes_entry(AES_ENTRY **list, char *label, char *value);
 void aes_clear_entries(AES_ENTRY **list);
 void parse_aes_keys(struct s_reader *rdr, char *value);
-int32_t aes_decrypt_from_list(AES_ENTRY *list, uint16_t caid, uint32_t provid,int32_t keyid, uchar *buf, int32_t n);
-int32_t aes_present(AES_ENTRY *list, uint16_t caid, uint32_t provid,int32_t keyid);
+int32_t aes_decrypt_from_list(AES_ENTRY *list, uint16_t caid, uint32_t provid, int32_t keyid, uchar *buf, int32_t n);
+int32_t aes_present(AES_ENTRY *list, uint16_t caid, uint32_t provid, int32_t keyid);
 
 #endif

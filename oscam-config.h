@@ -45,12 +45,13 @@ void class_fn(const char *token, char *value, void *setting, FILE *f);
 void group_fn(const char *token, char *value, void *setting, FILE *f);
 void services_fn(const char *token, char *value, void *setting, FILE *f);
 
-enum ftab_fn {
-	FTAB_ACCOUNT = 0x01,
-	FTAB_READER  = 0x02,
-	FTAB_PROVID  = 0x04,
-	FTAB_CHID    = 0x08,
-	FTAB_FBPCAID = 0x10,
+enum ftab_fn
+{
+    FTAB_ACCOUNT = 0x01,
+    FTAB_READER  = 0x02,
+    FTAB_PROVID  = 0x04,
+    FTAB_CHID    = 0x08,
+    FTAB_FBPCAID = 0x10,
 };
 
 void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE *f);

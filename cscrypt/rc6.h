@@ -15,7 +15,7 @@
 * Salvo Salasio.  The ROTL and ROTR definitions were cribbed from RSA Labs'
 * RC5 reference implementation.
 */
-                
+
 /* RC6 is parameterized for w-bit words, b bytes of key, and
  * r rounds.  The AES version of RC6 specifies b=16, 24, or 32;
  * w=32; and r=20.

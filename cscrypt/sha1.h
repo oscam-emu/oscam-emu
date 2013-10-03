@@ -10,7 +10,8 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-typedef struct {
+typedef struct
+{
     uint32_t state[5];
     uint32_t count[2];
     uint8_t  buffer[64];
@@ -20,9 +21,9 @@ typedef struct {
 
 void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64]);
 
-void SHA1_Init(SHA_CTX* context);
-void SHA1_Update(SHA_CTX* context, const uint8_t* data, const size_t len);
-void SHA1_Final(uint8_t digest[SHA_DIGEST_LENGTH], SHA_CTX* context);
+void SHA1_Init(SHA_CTX *context);
+void SHA1_Update(SHA_CTX *context, const uint8_t *data, const size_t len);
+void SHA1_Final(uint8_t digest[SHA_DIGEST_LENGTH], SHA_CTX *context);
 
 #endif /* __SHA1_H */
 

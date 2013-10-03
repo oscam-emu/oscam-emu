@@ -14,16 +14,18 @@
 #define  ARM_LED_TIMEOUT 3 //Dont blink for actions which are < ARM_LED_TIMEOUT seconds ago
 
 // QBOX led structures
-typedef struct {
-	uint16_t H;										// range 0-359
-	unsigned char S;								// range 0-99
-	unsigned char V;								// range 0-99
+typedef struct
+{
+    uint16_t H;                                     // range 0-359
+    unsigned char S;                                // range 0-99
+    unsigned char V;                                // range 0-99
 } qboxhd_led_color_struct;
 
-typedef struct {
-	unsigned char red;								// first 5 bit used (&0x1F)
-	unsigned char green;							// first 5 bit used (&0x1F)
-	unsigned char blue;								// first 5 bit used (&0x1F)
+typedef struct
+{
+    unsigned char red;                              // first 5 bit used (&0x1F)
+    unsigned char green;                            // first 5 bit used (&0x1F)
+    unsigned char blue;                             // first 5 bit used (&0x1F)
 } qboxhdmini_led_color_struct;
 
 #define QBOXHD_LED_DEVICE              "/dev/sw0"

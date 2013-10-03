@@ -30,48 +30,51 @@
 
 #define TOUCH_SUBDIR "touch/"
 
-struct s_connection {
-	int32_t socket;
-	struct s_client *cl;
-	IN_ADDR_T remote;
+struct s_connection
+{
+    int32_t socket;
+    struct s_client *cl;
+    IN_ADDR_T remote;
 #ifdef WITH_SSL
-	SSL *ssl;
+    SSL *ssl;
 #endif
 };
 
-struct uriparams {
-	int32_t paramcount;
-	char *params[MAXGETPARAMS];
-	char *values[MAXGETPARAMS];
+struct uriparams
+{
+    int32_t paramcount;
+    char *params[MAXGETPARAMS];
+    char *values[MAXGETPARAMS];
 };
 
-struct s_nonce{
-	char nonce[(MD5_DIGEST_LENGTH * 2) + 1];
-	char opaque[(MD5_DIGEST_LENGTH * 2) + 1];
-	time_t expirationdate;
-	time_t firstuse;
-	struct s_nonce *next;
+struct s_nonce
+{
+    char nonce[(MD5_DIGEST_LENGTH * 2) + 1];
+    char opaque[(MD5_DIGEST_LENGTH * 2) + 1];
+    time_t expirationdate;
+    time_t firstuse;
+    struct s_nonce *next;
 };
 
-extern time_t parse_modifiedsince(char * value);
+extern time_t parse_modifiedsince(char *value);
 extern void calculate_opaque(IN_ADDR_T addr, char *opaque);
 extern void init_noncelocks(void);
-extern void calculate_nonce(char * nonce, char *result, char *opaque);
+extern void calculate_nonce(char *nonce, char *result, char *opaque);
 extern int32_t check_auth(char *authstring, char *method, char *path, IN_ADDR_T addr, char *expectednonce, char *opaque);
-extern int32_t webif_write_raw(char *buf, FILE* f, int32_t len);
-extern int32_t webif_write(char *buf, FILE* f);
+extern int32_t webif_write_raw(char *buf, FILE *f, int32_t len);
+extern int32_t webif_write(char *buf, FILE *f);
 extern int32_t webif_read(char *buf, int32_t num, FILE *f);
 extern void send_headers(FILE *f, int32_t status, char *title, char *extra, char *mime, int32_t cache, int32_t length, char *content, int8_t forcePlain);
 extern void send_error(FILE *f, int32_t status, char *title, char *extra, char *text, int8_t forcePlain);
 extern void send_error500(FILE *f);
 extern void send_header304(FILE *f, char *extraheader);
-extern void send_file(FILE *f, char *filename, char* subdir, time_t modifiedheader, uint32_t etagheader, char *extraheader);
+extern void send_file(FILE *f, char *filename, char *subdir, time_t modifiedheader, uint32_t etagheader, char *extraheader);
 extern void urldecode(char *s);
 extern void parseParams(struct uriparams *params, char *pch);
 extern char *getParam(struct uriparams *params, char *name);
 
 #ifdef WITH_SSL
-extern SSL * cur_ssl(void);
+extern SSL *cur_ssl(void);
 extern SSL_CTX *SSL_Webif_Init(void);
 #endif
 

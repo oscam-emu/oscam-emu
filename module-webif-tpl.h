@@ -15,16 +15,17 @@
 
 #define TOUCH_SUBDIR "touch/"
 
-struct templatevars {
-	uint32_t varscnt;
-	uint32_t varsalloc;
-	uint32_t tmpcnt;
-	uint32_t tmpalloc;
-	char **names;
-	char **values;
-	uint8_t *vartypes;
-	char **tmp;
-	uint8_t messages;
+struct templatevars
+{
+    uint32_t varscnt;
+    uint32_t varsalloc;
+    uint32_t tmpcnt;
+    uint32_t tmpalloc;
+    char **names;
+    char **values;
+    uint8_t *vartypes;
+    char **tmp;
+    uint8_t messages;
 };
 
 void    webif_tpls_prepare(void);
@@ -39,14 +40,14 @@ char    *tpl_addTmp(struct templatevars *vars, char *value);
 char    *tpl_printf(struct templatevars *vars, uint8_t addmode, char *varname, char *fmtstring, ...) __attribute__ ((format (printf, 4, 5)));
 
 char    *tpl_getVar(struct templatevars *vars, char *name);
-char    *tpl_getFilePathInSubdir(const char *path, const char* subdir, const char *name, const char* ext, char *result, uint32_t resultsize);
+char    *tpl_getFilePathInSubdir(const char *path, const char *subdir, const char *name, const char *ext, char *result, uint32_t resultsize);
 char    *tpl_getTplPath(const char *name, const char *path, char *result, uint32_t resultsize);
-char    *tpl_getTpl(struct templatevars *vars, const char* name);
-char    *tpl_getUnparsedTpl(const char* name, int8_t removeHeader, const char* subdir);
+char    *tpl_getTpl(struct templatevars *vars, const char *name);
+char    *tpl_getUnparsedTpl(const char *name, int8_t removeHeader, const char *subdir);
 
 int32_t tpl_saveIncludedTpls(const char *path);
 
-void    tpl_checkOneDirDiskRevisions(const char* subdir);
+void    tpl_checkOneDirDiskRevisions(const char *subdir);
 void    tpl_checkDiskRevisions(void);
 
 char    *urlencode(struct templatevars *vars, char *str);
@@ -54,7 +55,10 @@ char    *xml_encode(struct templatevars *vars, char *chartoencode);
 char    *sec2timeformat(struct templatevars *vars, int32_t seconds);
 
 #else
-static inline void webif_tpls_free(void) { return; }
+static inline void webif_tpls_free(void)
+{
+    return;
+}
 #endif
 
 #endif

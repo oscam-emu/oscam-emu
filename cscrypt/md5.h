@@ -14,7 +14,7 @@ typedef struct MD5Context {
 	unsigned char in[64];
 } MD5_CTX;
 
-char * __md5_crypt(const char *text_pass, const char *salt, char *crypted_passwd);
+char *__md5_crypt(const char *text_pass, const char *salt, char *crypted_passwd);
 void MD5_Init(MD5_CTX *ctx);
 void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len);
 void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx);

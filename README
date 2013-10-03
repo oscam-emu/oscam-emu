@@ -49,7 +49,7 @@ Building OSCam-emu from source
 
  - Go to oscam-emu-master directory.
 
- - Run `make config` to choose the features you want.
+ - Run `make config` to choose the features you want. (make sure to include at least all readers and emu besides the wanted protocol)
 
  - Run `make` to compile OSCam.
 
@@ -89,11 +89,4 @@ You may visit our issues system for filling in bug reports.
 Configuration wiki:
    http://www.streamboard.tv/wiki/index.php/OSCam/
 
-Configuring the EMU part is easy, add a constcw reader and place a CCcam keyfile on your machine.
-	A minimal reader config looks like this:
-
-[reader]
-label                         = keyfile
-protocol                      = constcw
-device                        = /var/keys/SoftCam.Key
-group                         = 1
+Configuring the EMU part is easy, there is none, currently all keys are inside the source…

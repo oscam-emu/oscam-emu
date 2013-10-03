@@ -912,21 +912,21 @@
 extern "C" {
 #endif
 #if (LZO_CC_BORLANDC && (__BORLANDC__ >= 0x0200))
-   extern void __near __cdecl _AHSHIFT(void);
+extern void __near __cdecl _AHSHIFT(void);
 #  define LZO_MM_AHSHIFT      ((unsigned) _AHSHIFT)
 #elif (LZO_CC_DMC || LZO_CC_SYMANTECC || LZO_CC_ZORTECHC)
-   extern void __near __cdecl _AHSHIFT(void);
+extern void __near __cdecl _AHSHIFT(void);
 #  define LZO_MM_AHSHIFT      ((unsigned) _AHSHIFT)
 #elif (LZO_CC_MSC || LZO_CC_TOPSPEEDC)
-   extern void __near __cdecl _AHSHIFT(void);
+extern void __near __cdecl _AHSHIFT(void);
 #  define LZO_MM_AHSHIFT      ((unsigned) _AHSHIFT)
 #elif (LZO_CC_TURBOC && (__TURBOC__ >= 0x0295))
-   extern void __near __cdecl _AHSHIFT(void);
+extern void __near __cdecl _AHSHIFT(void);
 #  define LZO_MM_AHSHIFT      ((unsigned) _AHSHIFT)
 #elif ((LZO_CC_AZTECC || LZO_CC_PACIFICC || LZO_CC_TURBOC) && LZO_OS_DOS16)
 #  define LZO_MM_AHSHIFT      12
 #elif (LZO_CC_WATCOMC)
-   extern unsigned char _HShift;
+extern unsigned char _HShift;
 #  define LZO_MM_AHSHIFT      ((unsigned) _HShift)
 #else
 #  error "FIXME - implement LZO_MM_AHSHIFT"

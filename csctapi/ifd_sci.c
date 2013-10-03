@@ -1,6 +1,6 @@
 /*
-		ifd_sci.c
-		This module provides IFD handling functions for SCI internal reader.
+        ifd_sci.c
+        This module provides IFD handling functions for SCI internal reader.
 */
 
 #include "../globals.h"
@@ -266,93 +266,105 @@ static int32_t Sci_WriteSettings (struct s_reader * reader, unsigned char T, uin
 #define __IOCTL_CARD_ACTIVATED IOCTL_GET_IS_CARD_ACTIVATED
 #endif
 
-static int32_t Sci_Activate (struct s_reader * reader)
+static int32_t Sci_Activate (struct s_reader *reader)
 {
-	rdr_debug_mask(reader, D_IFD, "Activating card");
-	uint32_t in = 1;
-	rdr_debug_mask(reader, D_IFD, "Is card activated?");
-	ioctl(reader->handle, IOCTL_GET_IS_CARD_PRESENT, &in);
-	ioctl(reader->handle, __IOCTL_CARD_ACTIVATED, &in);
-	return OK;
+    rdr_debug_mask(reader, D_IFD, "Activating card");
+    uint32_t in = 1;
+    rdr_debug_mask(reader, D_IFD, "Is card activated?");
+    ioctl(reader->handle, IOCTL_GET_IS_CARD_PRESENT, &in);
+    ioctl(reader->handle, __IOCTL_CARD_ACTIVATED, &in);
+    return OK;
 }
 
-static int32_t Sci_Deactivate (struct s_reader * reader)
+static int32_t Sci_Deactivate (struct s_reader *reader)
 {
-	rdr_debug_mask(reader, D_IFD, "Deactivating card");
-	ioctl(reader->handle, IOCTL_SET_DEACTIVATE);	
-	return OK;
+    rdr_debug_mask(reader, D_IFD, "Deactivating card");
+    ioctl(reader->handle, IOCTL_SET_DEACTIVATE);
+    return OK;
 }
 
-static int32_t Sci_FastReset (struct s_reader *reader, ATR * atr)
+static int32_t Sci_FastReset (struct s_reader *reader, ATR *atr)
 {
-	int32_t ret;
-	ioctl(reader->handle, IOCTL_SET_RESET, 1);
-	ret = Sci_Read_ATR(reader, atr);
-	ioctl(reader->handle, IOCTL_SET_ATR_READY, 1);
+    int32_t ret;
+    ioctl(reader->handle, IOCTL_SET_RESET, 1);
+    ret = Sci_Read_ATR(reader, atr);
+    ioctl(reader->handle, IOCTL_SET_ATR_READY, 1);
 
-	return ret;
+    return ret;
 }
 
-static int32_t Sci_Init(struct s_reader *reader) {
-	int flags = O_RDWR | O_NOCTTY;
+static int32_t Sci_Init(struct s_reader *reader)
+{
+    int flags = O_RDWR | O_NOCTTY;
 #if defined(__SH4__) || defined(STB04SCI)
-	flags |= O_NONBLOCK;
+    flags |= O_NONBLOCK;
 #endif
-	reader->handle = open (reader->device, flags);
-	if (reader->handle < 0) {
-		rdr_log(reader, "ERROR: Opening device %s (errno=%d %s)", reader->device, errno, strerror(errno));
-		return ERROR;
-	}
-	return OK;
+    reader->handle = open (reader->device, flags);
+    if (reader->handle < 0)
+    {
+        rdr_log(reader, "ERROR: Opening device %s (errno=%d %s)", reader->device, errno, strerror(errno));
+        return ERROR;
+    }
+    return OK;
 }
 
 static int32_t sci_activate(struct s_reader *reader, ATR *atr)
 {
-	if (!reader->ins7e11_fast_reset) {
-		call (Sci_Activate(reader));
-		call (Sci_Reset(reader, atr));
-	} else {
-		rdr_log(reader, "Doing fast reset");
-		call (Sci_FastReset(reader, atr));
-	}
-	return OK;
+    if (!reader->ins7e11_fast_reset)
+    {
+        call (Sci_Activate(reader));
+        call (Sci_Reset(reader, atr));
+    }
+    else
+    {
+        rdr_log(reader, "Doing fast reset");
+        call (Sci_FastReset(reader, atr));
+    }
+    return OK;
 }
 
-static int32_t Sci_Close(struct s_reader *reader) {
-	Sci_Deactivate(reader);
-	IO_Serial_Close(reader);
-	return OK;
+static int32_t Sci_Close(struct s_reader *reader)
+{
+    Sci_Deactivate(reader);
+    IO_Serial_Close(reader);
+    return OK;
 }
 
 static int32_t sci_write_settings3(struct s_reader *reader, uint32_t ETU, uint32_t F, uint32_t WWT, uint32_t CWT, uint32_t BWT, uint32_t EGT, uint32_t I)
 {
-	if (reader->mhz > 2000){ // only for dreambox internal readers
-		// P fixed at 5V since this is default class A card, and TB is deprecated
-		if (reader->protocol_type != ATR_PROTOCOL_TYPE_T14){ // fix VU+ internal reader slow responses on T0/T1
-			call (Sci_WriteSettings (reader, 0, reader->divider, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
-		} else { // no fixup for T14 protocol otherwise error
-			call (Sci_WriteSettings (reader, reader->protocol_type, reader->divider, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
-		}
-	} else { // all other brand boxes than dreamboxes or VU+!
-		// P fixed at 5V since this is default class A card, and TB is deprecated
-		call (Sci_WriteSettings (reader, reader->protocol_type, F, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
-	}
-	return OK;
+    if (reader->mhz > 2000)  // only for dreambox internal readers
+    {
+        // P fixed at 5V since this is default class A card, and TB is deprecated
+        if (reader->protocol_type != ATR_PROTOCOL_TYPE_T14)  // fix VU+ internal reader slow responses on T0/T1
+        {
+            call (Sci_WriteSettings (reader, 0, reader->divider, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
+        }
+        else     // no fixup for T14 protocol otherwise error
+        {
+            call (Sci_WriteSettings (reader, reader->protocol_type, reader->divider, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
+        }
+    }
+    else     // all other brand boxes than dreamboxes or VU+!
+    {
+        // P fixed at 5V since this is default class A card, and TB is deprecated
+        call (Sci_WriteSettings (reader, reader->protocol_type, F, ETU, WWT, CWT, BWT, EGT, 5, (unsigned char)I));
+    }
+    return OK;
 }
 
 void cardreader_internal_sci(struct s_cardreader *crdr)
 {
-	crdr->desc         = "internal";
-	crdr->typ          = R_INTERNAL;
-	crdr->flush        = 1;
-	crdr->max_clock_speed = 1;
-	crdr->reader_init  = Sci_Init;
-	crdr->get_status   = Sci_GetStatus;
-	crdr->activate     = sci_activate;
-	crdr->transmit     = IO_Serial_Transmit;
-	crdr->receive      = IO_Serial_Receive;
-	crdr->close        = Sci_Close;
-	crdr->write_settings3 = sci_write_settings3;
+    crdr->desc         = "internal";
+    crdr->typ          = R_INTERNAL;
+    crdr->flush        = 1;
+    crdr->max_clock_speed = 1;
+    crdr->reader_init  = Sci_Init;
+    crdr->get_status   = Sci_GetStatus;
+    crdr->activate     = sci_activate;
+    crdr->transmit     = IO_Serial_Transmit;
+    crdr->receive      = IO_Serial_Receive;
+    crdr->close        = Sci_Close;
+    crdr->write_settings3 = sci_write_settings3;
 }
 
 #endif

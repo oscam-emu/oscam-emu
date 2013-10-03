@@ -45,15 +45,15 @@
 
 #define SIO_RTS_CTS_HS (0x1 << 8)
 /** FTDI chip type */
-enum smartreader_chip_type { TYPE_AM=0, TYPE_BM=1, TYPE_2232C=2, TYPE_R=3, TYPE_2232H=4, TYPE_4232H=5 };
+enum smartreader_chip_type { TYPE_AM = 0, TYPE_BM = 1, TYPE_2232C = 2, TYPE_R = 3, TYPE_2232H = 4, TYPE_4232H = 5 };
 /** Parity mode for smartreader_set_line_property() */
-enum smartreader_parity_type { NONE=0, ODD=1, EVEN=2, MARK=3, SPACE=4 };
+enum smartreader_parity_type { NONE = 0, ODD = 1, EVEN = 2, MARK = 3, SPACE = 4 };
 /** Number of stop bits for smartreader_set_line_property() */
-enum smartreader_stopbits_type { STOP_BIT_1=0, STOP_BIT_15=1, STOP_BIT_2=2 };
+enum smartreader_stopbits_type { STOP_BIT_1 = 0, STOP_BIT_15 = 1, STOP_BIT_2 = 2 };
 /** Number of bits for smartreader_set_line_property() */
-enum smartreader_bits_type { BITS_7=7, BITS_8=8 };
+enum smartreader_bits_type { BITS_7 = 7, BITS_8 = 8 };
 /** Break type for smartreader_set_line_property2() */
-enum smartreader_break_type { BREAK_OFF=0, BREAK_ON=1 };
+enum smartreader_break_type { BREAK_OFF = 0, BREAK_ON = 1 };
 
 /** Port interface for chips with multiple interfaces */
 enum smartreader_interface
@@ -65,19 +65,21 @@ enum smartreader_interface
     INTERFACE_D   = 4
 };
 
-struct s_reader_types {
-	char *name;
-	uint8_t in_ep;
-	uint8_t out_ep;
-	int32_t index;
-	int32_t interface;	
+struct s_reader_types
+{
+    char *name;
+    uint8_t in_ep;
+    uint8_t out_ep;
+    int32_t index;
+    int32_t interface;
 };
 
-const struct s_reader_types reader_types[] = { 
+const struct s_reader_types reader_types[] =
+{
     {"SR", 0x01, 0x82, INTERFACE_A, 0},
-	{"SRv2", 0x02, 0x81, INTERFACE_A, 0},
+    {"SRv2", 0x02, 0x81, INTERFACE_A, 0},
     {"Infinity", 0x01, 0x81, INTERFACE_A, 0},
-    {"TripleP1", 0x02, 0x81, INTERFACE_A, 0}, 
+    {"TripleP1", 0x02, 0x81, INTERFACE_A, 0},
     {"TripleP2", 0x04, 0x83, INTERFACE_B, 1},
     {"TripleP3", 0x06, 0x85, INTERFACE_C, 2}
 };

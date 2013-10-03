@@ -21,7 +21,7 @@ void cs_log_int(uint16_t mask, int8_t lock, const uchar *buf, int32_t n, const c
 void logCWtoFile(ECM_REQUEST *er, uchar *cw);
 
 int32_t cs_init_statistics(void);
-void cs_statistics(struct s_client * client);
+void cs_statistics(struct s_client *client);
 
 void log_free(void);
 
