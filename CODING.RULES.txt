@@ -1,0 +1,49 @@
+/* CODING RULES */
+
+//single line comment
+
+/* #####
+ * multi
+ * line
+ * comment
+ */
+
+#include <stdio.h>
+
+/* use tab == (4 spaces)
+ * or 2tab == (8 spaces)
+ * for increment
+ * and each level
+ */
+
+//one empty line between functions
+const char *idea_options(void){
+<------>if (sizeof(short) != sizeof(IDEA_INT)) // please do not use shortenings
+<------>{
+<------><-->return ("idea(int)");
+<------>} else {
+<------><-->return ("idea(short)");
+<------>}
+}
+
+/* ##########################
+ * each function or procedure
+ * begins & ends with a brace
+ */
+
+int main(void)
+{
+<------>printf("hello, world\n");
+<------>for (count=1; count < 11; count = count + 1)
+<------>{
+<------><-->printf(" %d\n", count); 
+<------>}
+
+<------>//one empty line between codeblocks
+<------>while(i < x)
+<------>{
+<------><-->printf(" %d\n", i);      
+<------><-->i++;
+<------>}
+<------>exit(0);
+}

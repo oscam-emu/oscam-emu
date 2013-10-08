@@ -41,55 +41,55 @@
 
 struct box_devices
 {
-    char *path;
-    char *ca_device;
-    char *demux_device;
-    char *cam_socket_path;
-    int8_t api;
+	char *path;
+	char *ca_device;
+	char *demux_device;
+	char *cam_socket_path;
+	int8_t api;
 };
 
 struct s_ecmpids
 {
-    uint16_t CAID;
-    uint32_t PROVID;
-    uint16_t ECM_PID;
-    uint32_t CHID;
-    uint16_t EMM_PID;
-    uint32_t VPID; // videopid
-    uint8_t irdeto_maxindex; // max irdeto indexes always fresh fetched from current ecm
-    uint8_t irdeto_curindex; // current irdeto index we want to handle
-    uint8_t irdeto_cycle; // temp var that holds the irdeto index we started with to detect if we cycled trough all indexes
-    int8_t checked;
-    int8_t status;
-    uint8_t tries;
-    unsigned char table;
-    int8_t index;
-    uint32_t streams;
+	uint16_t CAID;
+	uint32_t PROVID;
+	uint16_t ECM_PID;
+	uint32_t CHID;
+	uint16_t EMM_PID;
+	uint32_t VPID; // videopid
+	uint8_t irdeto_maxindex; // max irdeto indexes always fresh fetched from current ecm
+	uint8_t irdeto_curindex; // current irdeto index we want to handle
+	uint8_t irdeto_cycle; // temp var that holds the irdeto index we started with to detect if we cycled trough all indexes
+	int8_t checked;
+	int8_t status;
+	uint8_t tries;
+	unsigned char table;
+	int8_t index;
+	uint32_t streams;
 };
 
 typedef struct filter_s
 {
-    uint32_t fd; //FilterHandle
-    int32_t pidindex;
-    int32_t pid;
-    uint16_t caid;
-    uint32_t provid;
-    uint16_t type;
-    int32_t count;
-    uchar   ecmd5[CS_ECMSTORESIZE]; // last requested ecm md5
+	uint32_t fd; //FilterHandle
+	int32_t pidindex;
+	int32_t pid;
+	uint16_t caid;
+	uint32_t provid;
+	uint16_t type;
+	int32_t count;
+	uchar   ecmd5[CS_ECMSTORESIZE]; // last requested ecm md5
 #ifdef WITH_STAPI
-    int32_t NumSlots;
-    uint32_t    SlotHandle[10];
-    uint32_t    BufferHandle[10];
+	int32_t NumSlots;
+	uint32_t    SlotHandle[10];
+	uint32_t    BufferHandle[10];
 #endif
 } FILTERTYPE;
 
 struct s_emmpids
 {
-    uint16_t CAID;
-    uint32_t PROVID;
-    uint16_t PID;
-    uint8_t type;
+	uint16_t CAID;
+	uint32_t PROVID;
+	uint16_t PID;
+	uint8_t type;
 };
 
 #define PTINUM 10
@@ -97,61 +97,61 @@ struct s_emmpids
 
 typedef struct demux_s
 {
-    int8_t demux_index;
-    FILTERTYPE demux_fd[MAX_FILTER];
-    int32_t ca_mask;
-    int8_t adapter_index;
-    int32_t socket_fd;
-    int8_t ECMpidcount;
-    time_t emmstart; // last time emmfilters were started
-    struct s_ecmpids ECMpids[ECM_PIDS];
-    int8_t EMMpidcount;
-    struct s_emmpids EMMpids[ECM_PIDS];
-    uint16_t max_emm_filter;
-    int8_t STREAMpidcount;
-    uint16_t STREAMpids[ECM_PIDS];
-    int16_t pidindex;
-    int16_t curindex;
-    int8_t max_status;
-    uint16_t program_number;
-    uint16_t onid;
-    uint16_t tsid;
-    uint32_t enigma_namespace;
-    unsigned char lastcw[2][8];
-    int8_t emm_filter;
-    uchar hexserial[8];
-    struct s_reader *rdr;
-    char pmt_file[30];
-    time_t pmt_time;
-    uint8_t stopdescramble;
-    uint8_t old_ecmfiltercount; // previous ecm filtercount
-    uint8_t old_emmfiltercount; // previous emm filtercount
+	int8_t demux_index;
+	FILTERTYPE demux_fd[MAX_FILTER];
+	int32_t ca_mask;
+	int8_t adapter_index;
+	int32_t socket_fd;
+	int8_t ECMpidcount;
+	time_t emmstart; // last time emmfilters were started
+	struct s_ecmpids ECMpids[ECM_PIDS];
+	int8_t EMMpidcount;
+	struct s_emmpids EMMpids[ECM_PIDS];
+	uint16_t max_emm_filter;
+	int8_t STREAMpidcount;
+	uint16_t STREAMpids[ECM_PIDS];
+	int16_t pidindex;
+	int16_t curindex;
+	int8_t max_status;
+	uint16_t program_number;
+	uint16_t onid;
+	uint16_t tsid;
+	uint32_t enigma_namespace;
+	unsigned char lastcw[2][8];
+	int8_t emm_filter;
+	uchar hexserial[8];
+	struct s_reader *rdr;
+	char pmt_file[30];
+	time_t pmt_time;
+	uint8_t stopdescramble;
+	uint8_t old_ecmfiltercount; // previous ecm filtercount
+	uint8_t old_emmfiltercount; // previous emm filtercount
 #ifdef WITH_STAPI
-    uint32_t DescramblerHandle[PTINUM];
-    int32_t desc_pidcount;
-    uint32_t slot_assc[PTINUM][SLOTNUM];
+	uint32_t DescramblerHandle[PTINUM];
+	int32_t desc_pidcount;
+	uint32_t slot_assc[PTINUM][SLOTNUM];
 #endif
 } DEMUXTYPE;
 
 struct s_dvbapi_priority
 {
-    char type; // p or i
-    uint16_t caid;
-    uint32_t provid;
-    uint16_t srvid;
-    uint32_t chid;
-    uint16_t ecmpid;
-    uint16_t mapcaid;
-    uint32_t mapprovid;
-    uint16_t mapecmpid;
-    int16_t delay;
-    int8_t force;
+	char type; // p or i
+	uint16_t caid;
+	uint32_t provid;
+	uint16_t srvid;
+	uint32_t chid;
+	uint16_t ecmpid;
+	uint16_t mapcaid;
+	uint32_t mapprovid;
+	uint16_t mapecmpid;
+	int16_t delay;
+	int8_t force;
 #ifdef WITH_STAPI
-    char devname[30];
-    char pmtfile[30];
-    int8_t disablefilter;
+	char devname[30];
+	char pmtfile[30];
+	int8_t disablefilter;
 #endif
-    struct s_dvbapi_priority *next;
+	struct s_dvbapi_priority *next;
 };
 
 
@@ -161,16 +161,16 @@ struct s_dvbapi_priority
 //dvbapi 1
 typedef struct dmxFilter
 {
-    uint8_t     filter[DMX_FILTER_SIZE];
-    uint8_t     mask[DMX_FILTER_SIZE];
+	uint8_t     filter[DMX_FILTER_SIZE];
+	uint8_t     mask[DMX_FILTER_SIZE];
 } dmxFilter_t;
 
 struct dmxSctFilterParams
 {
-    uint16_t            pid;
-    dmxFilter_t          filter;
-    uint32_t             timeout;
-    uint32_t             flags;
+	uint16_t            pid;
+	dmxFilter_t          filter;
+	uint32_t             timeout;
+	uint32_t             flags;
 #define DMX_CHECK_CRC       1
 #define DMX_ONESHOT     2
 #define DMX_IMMEDIATE_START 4
@@ -187,18 +187,18 @@ struct dmxSctFilterParams
 //dbox2+ufs
 typedef struct dmx_filter
 {
-    uint8_t  filter[DMX_FILTER_SIZE];
-    uint8_t  mask[DMX_FILTER_SIZE];
-    uint8_t  mode[DMX_FILTER_SIZE];
+	uint8_t  filter[DMX_FILTER_SIZE];
+	uint8_t  mask[DMX_FILTER_SIZE];
+	uint8_t  mode[DMX_FILTER_SIZE];
 } dmx_filter_t;
 
 
 struct dmx_sct_filter_params
 {
-    uint16_t        pid;
-    dmx_filter_t        filter;
-    uint32_t        timeout;
-    uint32_t        flags;
+	uint16_t        pid;
+	dmx_filter_t        filter;
+	uint32_t        timeout;
+	uint32_t        flags;
 #define DMX_CHECK_CRC       1
 #define DMX_ONESHOT     2
 #define DMX_IMMEDIATE_START 4
@@ -207,15 +207,15 @@ struct dmx_sct_filter_params
 
 typedef struct ca_descr
 {
-    uint32_t index;
-    uint32_t parity;    /* 0 == even, 1 == odd */
-    unsigned char cw[8];
+	uint32_t index;
+	uint32_t parity;    /* 0 == even, 1 == odd */
+	unsigned char cw[8];
 } ca_descr_t;
 
 typedef struct ca_pid
 {
-    uint32_t pid;
-    int32_t index;      /* -1 == disable*/
+	uint32_t pid;
+	int32_t index;      /* -1 == disable*/
 } ca_pid_t;
 
 #define DMX_START       _IO('o', 41)
@@ -239,7 +239,7 @@ void request_cw(struct s_client *client, ECM_REQUEST *er, int32_t demux_id, uint
 void dvbapi_try_next_caid(int32_t demux_id, int8_t checked);
 void dvbapi_read_priority(void);
 int32_t dvbapi_set_section_filter(int32_t demux_index, ECM_REQUEST *er);
-int32_t dvbapi_activate_section_filter (int32_t fd, int32_t pid, uchar *filter, uchar *mask);
+int32_t dvbapi_activate_section_filter(int32_t fd, int32_t pid, uchar *filter, uchar *mask);
 int32_t dvbapi_check_ecm_delayed_delivery(int32_t demux_index, ECM_REQUEST *er);
 int32_t dvbapi_get_filternum(int32_t demux_index, ECM_REQUEST *er, int32_t type);
 int32_t dvbapi_ca_setpid(int32_t demux_index, int32_t pid);

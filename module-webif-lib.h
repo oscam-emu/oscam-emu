@@ -32,28 +32,28 @@
 
 struct s_connection
 {
-    int32_t socket;
-    struct s_client *cl;
-    IN_ADDR_T remote;
+	int32_t socket;
+	struct s_client *cl;
+	IN_ADDR_T remote;
 #ifdef WITH_SSL
-    SSL *ssl;
+	SSL *ssl;
 #endif
 };
 
 struct uriparams
 {
-    int32_t paramcount;
-    char *params[MAXGETPARAMS];
-    char *values[MAXGETPARAMS];
+	int32_t paramcount;
+	char *params[MAXGETPARAMS];
+	char *values[MAXGETPARAMS];
 };
 
 struct s_nonce
 {
-    char nonce[(MD5_DIGEST_LENGTH * 2) + 1];
-    char opaque[(MD5_DIGEST_LENGTH * 2) + 1];
-    time_t expirationdate;
-    time_t firstuse;
-    struct s_nonce *next;
+	char nonce[(MD5_DIGEST_LENGTH * 2) + 1];
+	char opaque[(MD5_DIGEST_LENGTH * 2) + 1];
+	time_t expirationdate;
+	time_t firstuse;
+	struct s_nonce *next;
 };
 
 extern time_t parse_modifiedsince(char *value);

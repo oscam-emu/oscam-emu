@@ -8,7 +8,7 @@
  * Define ASYNCB_* for convenient use with {test,set,clear}_bit.
  */
 #define ASYNCB_HUP_NOTIFY	 0 /* Notify getty on hangups and closes
-				    * on the callout port */
+* on the callout port */
 #define ASYNCB_FOURPORT		 1 /* Set OU1, OUT2 per AST Fourport settings */
 #define ASYNCB_SAK		 2 /* Secure Attention Key (Orange book) */
 #define ASYNCB_SPLIT_TERMIOS	 3 /* Separate termios for dialin/callout */
@@ -16,7 +16,7 @@
 #define ASYNCB_SPD_VHI		 5 /* Use 115200 instead of 38400 bps */
 #define ASYNCB_SKIP_TEST	 6 /* Skip UART test during autoconfiguration */
 #define ASYNCB_AUTO_IRQ		 7 /* Do automatic IRQ during
-				    * autoconfiguration */
+* autoconfiguration */
 #define ASYNCB_SESSION_LOCKOUT	 8 /* Lock out cua opens based on session */
 #define ASYNCB_PGRP_LOCKOUT	 9 /* Lock out cua opens based on pgrp */
 #define ASYNCB_CALLOUT_NOHUP	10 /* Don't do hangups for cua device */
@@ -24,7 +24,7 @@
 #define ASYNCB_SPD_SHI		12 /* Use 230400 instead of 38400 bps */
 #define ASYNCB_LOW_LATENCY	13 /* Request low latency behaviour */
 #define ASYNCB_BUGGY_UART	14 /* This is a buggy UART, skip some safety
-				    * checks.  Note: can be dangerous! */
+* checks.  Note: can be dangerous! */
 #define ASYNCB_AUTOPROBE	15 /* Port was autoprobed by PCI or PNP code */
 #define ASYNCB_LAST_USER	15
 

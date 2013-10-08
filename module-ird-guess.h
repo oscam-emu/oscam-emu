@@ -8,7 +8,7 @@ void free_irdeto_guess_tab(void);
 #else
 static inline int32_t init_irdeto_guess_tab(void)
 {
-    return 0;
+	return 0;
 }
 static inline void guess_irdeto(ECM_REQUEST *UNUSED(er)) { }
 static inline void free_irdeto_guess_tab(void) { }

@@ -37,50 +37,50 @@
 #define IS_BAD  0xFF    // incoming data is unknown
 
 static const char *const proto_txt[] = {"unknown", "hsic", "sssp", "bomba", "dsr9500", "gs",
-                                        "alpha", "dsr9500old", "gbox"
-                                       };
+										"alpha", "dsr9500old", "gbox"
+									   };
 static const char *const dsrproto_txt[] = {"unknown", "samsung", "openbox", "pioneer",
-                                           "extended", "unknown"
-                                          };
+		"extended", "unknown"
+										  };
 static const char *const incomplete = "incomplete request (%d bytes)";
 
 typedef struct s_gbox
 {
-    int32_t cat_len;
-    int32_t pmt_len;
-    int32_t ecm_len;
+	int32_t cat_len;
+	int32_t pmt_len;
+	int32_t ecm_len;
 } GBOX_LENS;
 
 typedef struct s_sssp
 {
-    uint16_t caid;
-    uint16_t pid;
-    uint32_t  prid;
+	uint16_t caid;
+	uint16_t pid;
+	uint32_t  prid;
 } SSSP_TAB;
 
 //added to support multiple instances with thread
 struct s_serial_client
 {
-    int32_t connected;
-    struct timeb tps;
-    struct timeb tpe;
-    char oscam_ser_usr[32];
-    char oscam_ser_device[64];
-    int32_t oscam_ser_port;
-    speed_t oscam_ser_baud;
-    int32_t oscam_ser_delay;
-    int32_t oscam_ser_timeout;
-    int32_t oscam_ser_proto;
-    int32_t serial_errors;
-    int32_t dsr9500type;
-    int32_t samsung_0a;   // number of 0A in ALL dcw sent into samsung
-    int32_t samsung_dcw;  // number of dcw sent into samsung before echo or ecm is received
+	int32_t connected;
+	struct timeb tps;
+	struct timeb tpe;
+	char oscam_ser_usr[32];
+	char oscam_ser_device[64];
+	int32_t oscam_ser_port;
+	speed_t oscam_ser_baud;
+	int32_t oscam_ser_delay;
+	int32_t oscam_ser_timeout;
+	int32_t oscam_ser_proto;
+	int32_t serial_errors;
+	int32_t dsr9500type;
+	int32_t samsung_0a;   // number of 0A in ALL dcw sent into samsung
+	int32_t samsung_dcw;  // number of dcw sent into samsung before echo or ecm is received
 
-    GBOX_LENS gbox_lens;
-    SSSP_TAB sssp_tab[SSSP_MAX_PID];
-    uint16_t sssp_srvid;
-    int32_t sssp_num;
-    int32_t sssp_fix;
+	GBOX_LENS gbox_lens;
+	SSSP_TAB sssp_tab[SSSP_MAX_PID];
+	uint16_t sssp_srvid;
+	int32_t sssp_num;
+	int32_t sssp_fix;
 };
 
 static pthread_mutex_t mutex;

@@ -58,27 +58,27 @@
  */
 
 /* IO_Serial creation and deletion */
-void IO_Serial_Flush (struct s_reader *reader);
+void IO_Serial_Flush(struct s_reader *reader);
 
 /* Initialization and closing */
-bool IO_Serial_InitPnP (struct s_reader *reader);
-int32_t IO_Serial_Close (struct s_reader *reader);
+bool IO_Serial_InitPnP(struct s_reader *reader);
+int32_t IO_Serial_Close(struct s_reader *reader);
 
 /* Transmission properties */
 bool IO_Serial_DTR_RTS_dbox2(struct s_reader *reader, int32_t *dtr, int32_t *rts);
 bool IO_Serial_DTR_RTS(struct s_reader *reader, int32_t *dtr, int32_t *rts);
 void IO_Serial_Ioctl_Lock(struct s_reader *reader, int32_t);
 
-bool IO_Serial_SetBitrate (struct s_reader *reader, uint32_t bitrate, struct termios *tio);
-bool IO_Serial_SetParams (struct s_reader *reader, uint32_t bitrate, uint32_t bits, int32_t parity, uint32_t stopbits, int32_t *dtr, int32_t *rts);
-bool IO_Serial_SetProperties (struct s_reader *reader, struct termios newtio);
-int32_t IO_Serial_SetParity (struct s_reader *reader, unsigned char parity);
+bool IO_Serial_SetBitrate(struct s_reader *reader, uint32_t bitrate, struct termios *tio);
+bool IO_Serial_SetParams(struct s_reader *reader, uint32_t bitrate, uint32_t bits, int32_t parity, uint32_t stopbits, int32_t *dtr, int32_t *rts);
+bool IO_Serial_SetProperties(struct s_reader *reader, struct termios newtio);
+int32_t IO_Serial_SetParity(struct s_reader *reader, unsigned char parity);
 
 /* Input and output */
-bool IO_Serial_Read (struct s_reader *reader, uint32_t delay, uint32_t timeout, uint32_t size, unsigned char *data);
-bool IO_Serial_Write (struct s_reader *reader, uint32_t delay, uint32_t timeout, uint32_t size, const unsigned char *data);
-void IO_Serial_Sendbreak (struct s_reader *reader, int32_t duration);
-bool IO_Serial_WaitToRead (struct s_reader *reader, uint32_t delay_us, uint32_t timeout_us);
+bool IO_Serial_Read(struct s_reader *reader, uint32_t delay, uint32_t timeout, uint32_t size, unsigned char *data);
+bool IO_Serial_Write(struct s_reader *reader, uint32_t delay, uint32_t timeout, uint32_t size, const unsigned char *data);
+void IO_Serial_Sendbreak(struct s_reader *reader, int32_t duration);
+bool IO_Serial_WaitToRead(struct s_reader *reader, uint32_t delay_us, uint32_t timeout_us);
 
 int32_t IO_Serial_Receive(struct s_reader *reader, unsigned char *buffer, uint32_t size, uint32_t delay, uint32_t timeout);
 int32_t IO_Serial_Transmit(struct s_reader *reader, unsigned char *buffer, uint32_t size, uint32_t expectedlen, uint32_t delay, uint32_t timeout);

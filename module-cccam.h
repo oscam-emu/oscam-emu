@@ -30,15 +30,15 @@ bool cccam_client_extended_mode(struct s_client *cl);
 #else
 static inline bool cccam_forward_origin_card(ECM_REQUEST *UNUSED(er))
 {
-    return false;
+	return false;
 }
 static inline bool cccam_snprintf_cards_stat(struct s_client *UNUSED(cl), char *UNUSED(emmtext), size_t UNUSED(emmtext_sz))
 {
-    return false;
+	return false;
 }
 static inline bool cccam_client_extended_mode(struct s_client *UNUSED(cl))
 {
-    return false;
+	return false;
 }
 #endif
 

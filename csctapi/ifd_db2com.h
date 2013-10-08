@@ -7,7 +7,7 @@ void cardreader_db2com(struct s_cardreader *crdr);
 #else
 static inline bool detect_db2com_reader(struct s_reader *UNUSED(reader))
 {
-    return false;
+	return false;
 }
 static inline void cardreader_db2com(struct s_cardreader *UNUSED(crdr)) { }
 #endif

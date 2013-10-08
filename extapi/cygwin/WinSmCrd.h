@@ -28,19 +28,19 @@ extern "C" {
 #endif
 
 #ifdef _WINSCARD_H_
-typedef DWORD ULONG;
-typedef WORD UWORD;
-typedef BYTE UCHAR;
+	typedef DWORD ULONG;
+	typedef WORD UWORD;
+	typedef BYTE UCHAR;
 #else
-typedef ULONG DWORD;
+	typedef ULONG DWORD;
 // typedef UWORD WORD;
-typedef UCHAR BYTE;
+	typedef UCHAR BYTE;
 #endif
 
 #ifndef DEVICE_TYPE_SMARTCARD
- #ifndef FILE_DEVICE_SMARTCARD
- #define FILE_DEVICE_SMARTCARD           0x00000031
- #endif
+#ifndef FILE_DEVICE_SMARTCARD
+#define FILE_DEVICE_SMARTCARD           0x00000031
+#endif
 #else
 #if 0x00000031 != FILE_DEVICE_SMARTCARD
 #error "Incorrect Smart Card Device Definition"
@@ -224,24 +224,24 @@ typedef UCHAR BYTE;
 //
 
 #define SCARD_UNKNOWN     0   // This value implies the driver is unaware
-                              // of the current state of the reader.
+	// of the current state of the reader.
 #define SCARD_ABSENT      1   // This value implies there is no card in
-                              // the reader.
+	// the reader.
 #define SCARD_PRESENT     2   // This value implies there is a card is
-                              // present in the reader, but that it has
-                              // not been moved into position for use.
+	// present in the reader, but that it has
+	// not been moved into position for use.
 #define SCARD_SWALLOWED   3   // This value implies there is a card in the
-                              // reader in position for use.  The card is
-                              // not powered.
+	// reader in position for use.  The card is
+	// not powered.
 #define SCARD_POWERED     4   // This value implies there is power is
-                              // being provided to the card, but the
-                              // Reader Driver is unaware of the mode of
-                              // the card.
+	// being provided to the card, but the
+	// Reader Driver is unaware of the mode of
+	// the card.
 #define SCARD_NEGOTIABLE  5   // This value implies the card has been
-                              // reset and is awaiting PTS negotiation.
+	// reset and is awaiting PTS negotiation.
 #define SCARD_SPECIFIC    6   // This value implies the card has been
-                              // reset and specific communication
-                              // protocols have been established.
+	// reset and specific communication
+	// protocols have been established.
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -253,49 +253,49 @@ typedef UCHAR BYTE;
 //
 
 
-typedef struct _SCARD_IO_REQUEST{
-    DWORD dwProtocol;   // Protocol identifier
-    DWORD cbPciLength;  // Protocol Control Information Length
-} SCARD_IO_REQUEST, *PSCARD_IO_REQUEST, *LPSCARD_IO_REQUEST;
-typedef const SCARD_IO_REQUEST *LPCSCARD_IO_REQUEST;
+	typedef struct _SCARD_IO_REQUEST {
+		DWORD dwProtocol;   // Protocol identifier
+		DWORD cbPciLength;  // Protocol Control Information Length
+	} SCARD_IO_REQUEST, *PSCARD_IO_REQUEST, *LPSCARD_IO_REQUEST;
+	typedef const SCARD_IO_REQUEST *LPCSCARD_IO_REQUEST;
 
 
 //
 // T=0 protocol services.
 //
 
-typedef struct {
-    BYTE
-        bCla,   // The instruction class
-        bIns,   // The instruction code within the instruction class
-        bP1,
-        bP2,    // Parameters to the instruction
-        bP3;    // Size of I/O Transfer
-} SCARD_T0_COMMAND, *LPSCARD_T0_COMMAND;
+	typedef struct {
+		BYTE
+		bCla,   // The instruction class
+		bIns,   // The instruction code within the instruction class
+		bP1,
+		bP2,    // Parameters to the instruction
+		bP3;    // Size of I/O Transfer
+	} SCARD_T0_COMMAND, *LPSCARD_T0_COMMAND;
 
-typedef struct {
-    SCARD_IO_REQUEST ioRequest;
-    BYTE
-        bSw1,
-        bSw2;           // Return codes from the instruction
-    union
-    {
-        SCARD_T0_COMMAND CmdBytes;
-        BYTE rgbHeader[5];
-    } DUMMYUNIONNAME;
-} SCARD_T0_REQUEST;
+	typedef struct {
+		SCARD_IO_REQUEST ioRequest;
+		BYTE
+		bSw1,
+		bSw2;           // Return codes from the instruction
+		union
+		{
+			SCARD_T0_COMMAND CmdBytes;
+			BYTE rgbHeader[5];
+		} DUMMYUNIONNAME;
+	} SCARD_T0_REQUEST;
 
-typedef SCARD_T0_REQUEST *PSCARD_T0_REQUEST, *LPSCARD_T0_REQUEST;
+	typedef SCARD_T0_REQUEST *PSCARD_T0_REQUEST, *LPSCARD_T0_REQUEST;
 
 
 //
 //  T=1 Protocol Services
 //
 
-typedef struct {
-    SCARD_IO_REQUEST ioRequest;
-} SCARD_T1_REQUEST;
-typedef SCARD_T1_REQUEST *PSCARD_T1_REQUEST, *LPSCARD_T1_REQUEST;
+	typedef struct {
+		SCARD_IO_REQUEST ioRequest;
+	} SCARD_T1_REQUEST;
+	typedef SCARD_T1_REQUEST *PSCARD_T1_REQUEST, *LPSCARD_T1_REQUEST;
 
 
 //
@@ -305,11 +305,11 @@ typedef SCARD_T1_REQUEST *PSCARD_T1_REQUEST, *LPSCARD_T1_REQUEST;
 //
 
 #define SCARD_READER_SWALLOWS       0x00000001  // Reader has a card swallowing
-                                                // mechanism.
+	// mechanism.
 #define SCARD_READER_EJECTS         0x00000002  // Reader has a card ejection
-                                                // mechanism.
+	// mechanism.
 #define SCARD_READER_CONFISCATES    0x00000004  // Reader has a card capture
-                                                // mechanism.
+	// mechanism.
 
 //
 ///////////////////////////////////////////////////////////////////////////////

@@ -26,8 +26,8 @@
 #define _PROTOCOL_T0_
 
 /* Send a command and return a response */
-int32_t Protocol_T0_Command (struct s_reader *reader, unsigned char *command, uint16_t command_len, unsigned char *rsp, uint16_t *lr);
-int32_t Protocol_T14_ExchangeTPDU (struct s_reader *reader, unsigned char *command, uint16_t command_len, unsigned char *rsp, uint16_t *lr);
-int32_t Protocol_T1_Command (struct s_reader *reader, unsigned char *command, uint16_t command_len, unsigned char *rsp, uint16_t *lr);
+int32_t Protocol_T0_Command(struct s_reader *reader, unsigned char *command, uint16_t command_len, unsigned char *rsp, uint16_t *lr);
+int32_t Protocol_T14_ExchangeTPDU(struct s_reader *reader, unsigned char *command, uint16_t command_len, unsigned char *rsp, uint16_t *lr);
+int32_t Protocol_T1_Command(struct s_reader *reader, unsigned char *command, uint16_t command_len, unsigned char *rsp, uint16_t *lr);
 
 #endif /* _PROTOCOL_T0_ */

@@ -50,22 +50,22 @@ int32_t check_sct_len(const unsigned char *data, int32_t off);
 static inline void cardreader_init_locks(void) { }
 static inline bool cardreader_init(struct s_reader *UNUSED(reader))
 {
-    return true;
+	return true;
 }
 static inline void cardreader_close(struct s_reader *UNUSED(reader)) { }
 static inline void cardreader_do_reset(struct s_reader *UNUSED(reader))
 {
-    return;
+	return;
 }
 static inline void cardreader_reset(struct s_client *UNUSED(cl)) { }
 static inline int32_t cardreader_do_checkhealth(struct s_reader *UNUSED(reader))
 {
-    return false;
+	return false;
 }
 static inline void cardreader_checkhealth(struct s_client *UNUSED(cl), struct s_reader *UNUSED(rdr)) { }
 static inline int32_t cardreader_do_emm(struct s_reader *UNUSED(reader), EMM_PACKET *UNUSED(ep))
 {
-    return 0;
+	return 0;
 }
 static inline void cardreader_process_ecm(struct s_reader *UNUSED(reader), struct s_client *UNUSED(cl), ECM_REQUEST *UNUSED(er)) { }
 static inline void cardreader_get_card_info(struct s_reader *UNUSED(reader)) { }

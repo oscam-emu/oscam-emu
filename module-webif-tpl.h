@@ -17,15 +17,15 @@
 
 struct templatevars
 {
-    uint32_t varscnt;
-    uint32_t varsalloc;
-    uint32_t tmpcnt;
-    uint32_t tmpalloc;
-    char **names;
-    char **values;
-    uint8_t *vartypes;
-    char **tmp;
-    uint8_t messages;
+	uint32_t varscnt;
+	uint32_t varsalloc;
+	uint32_t tmpcnt;
+	uint32_t tmpalloc;
+	char **names;
+	char **values;
+	uint8_t *vartypes;
+	char **tmp;
+	uint8_t messages;
 };
 
 void    webif_tpls_prepare(void);
@@ -37,7 +37,7 @@ void                 tpl_clear(struct templatevars *vars);
 char    *tpl_addVar(struct templatevars *vars, uint8_t addmode, char *name, char *value);
 char    *tpl_addMsg(struct templatevars *vars, char *value);
 char    *tpl_addTmp(struct templatevars *vars, char *value);
-char    *tpl_printf(struct templatevars *vars, uint8_t addmode, char *varname, char *fmtstring, ...) __attribute__ ((format (printf, 4, 5)));
+char    *tpl_printf(struct templatevars *vars, uint8_t addmode, char *varname, char *fmtstring, ...) __attribute__((format(printf, 4, 5)));
 
 char    *tpl_getVar(struct templatevars *vars, char *name);
 char    *tpl_getFilePathInSubdir(const char *path, const char *subdir, const char *name, const char *ext, char *result, uint32_t resultsize);
@@ -57,7 +57,7 @@ char    *sec2timeformat(struct templatevars *vars, int32_t seconds);
 #else
 static inline void webif_tpls_free(void)
 {
-    return;
+	return;
 }
 #endif
 

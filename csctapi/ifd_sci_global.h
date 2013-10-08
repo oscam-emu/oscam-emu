@@ -37,66 +37,66 @@
 /* error codes */
 typedef enum
 {
-    SCI_ERROR_OK = 0,
-    SCI_ERROR_DRIVER_NOT_INITIALIZED = -1691,
-    SCI_ERROR_FAIL,
-    SCI_ERROR_KERNEL_FAIL,
-    SCI_ERROR_NO_ATR,
-    SCI_ERROR_TS_CHARACTER_INVALID,
-    SCI_ERROR_LRC_FAIL,
-    SCI_ERROR_CRC_FAIL,
-    SCI_ERROR_LENGTH_FAIL,
-    SCI_ERROR_PARITY_FAIL,
-    SCI_ERROR_RX_OVERFLOW_FAIL,
-    SCI_ERROR_TX_OVERFLOW_FAIL,
-    SCI_ERROR_TX_UNDERRUN_FAIL,
-    SCI_ERROR_CARD_NOT_PRESENT,
-    SCI_ERROR_CARD_NOT_ACTIVATED,
-    SCI_ERROR_AWT_TIMEOUT,
-    SCI_ERROR_WWT_TIMEOUT,
-    SCI_ERROR_CWT_TIMEOUT,
-    SCI_ERROR_BWT_TIMEOUT,
-    SCI_ERROR_PARAMETER_OUT_OF_RANGE,
-    SCI_ERROR_TRANSACTION_ABORTED,
-    SCI_ERROR_CLOCK_STOP_DISABLED,
-    SCI_ERROR_TX_PENDING,
-    SCI_ERROR_ATR_PENDING
+	SCI_ERROR_OK = 0,
+	SCI_ERROR_DRIVER_NOT_INITIALIZED = -1691,
+	SCI_ERROR_FAIL,
+	SCI_ERROR_KERNEL_FAIL,
+	SCI_ERROR_NO_ATR,
+	SCI_ERROR_TS_CHARACTER_INVALID,
+	SCI_ERROR_LRC_FAIL,
+	SCI_ERROR_CRC_FAIL,
+	SCI_ERROR_LENGTH_FAIL,
+	SCI_ERROR_PARITY_FAIL,
+	SCI_ERROR_RX_OVERFLOW_FAIL,
+	SCI_ERROR_TX_OVERFLOW_FAIL,
+	SCI_ERROR_TX_UNDERRUN_FAIL,
+	SCI_ERROR_CARD_NOT_PRESENT,
+	SCI_ERROR_CARD_NOT_ACTIVATED,
+	SCI_ERROR_AWT_TIMEOUT,
+	SCI_ERROR_WWT_TIMEOUT,
+	SCI_ERROR_CWT_TIMEOUT,
+	SCI_ERROR_BWT_TIMEOUT,
+	SCI_ERROR_PARAMETER_OUT_OF_RANGE,
+	SCI_ERROR_TRANSACTION_ABORTED,
+	SCI_ERROR_CLOCK_STOP_DISABLED,
+	SCI_ERROR_TX_PENDING,
+	SCI_ERROR_ATR_PENDING
 }
 SCI_ERROR;
 
 /* SCI driver modes */
 typedef struct sci_modes
 {
-    int32_t emv2000;
-    int32_t dma;
-    int32_t man_act;
-    int32_t rw_mode;
+	int32_t emv2000;
+	int32_t dma;
+	int32_t man_act;
+	int32_t rw_mode;
 }
 SCI_MODES;
 
 /* SCI communication parameters */
 typedef struct sci_parameters
 {
-    unsigned char T;
-    uint32_t fs;
-    uint32_t ETU;
-    uint32_t WWT;
-    uint32_t CWT;
-    uint32_t BWT;
-    uint32_t EGT;
-    uint32_t clock_stop_polarity;
-    unsigned char check;
-    unsigned char P;
-    unsigned char I;
-    unsigned char U;
+	unsigned char T;
+	uint32_t fs;
+	uint32_t ETU;
+	uint32_t WWT;
+	uint32_t CWT;
+	uint32_t BWT;
+	uint32_t EGT;
+	uint32_t clock_stop_polarity;
+	unsigned char check;
+	unsigned char P;
+	unsigned char I;
+	unsigned char U;
 }
 SCI_PARAMETERS;
 
 /* SCI ATR status */
 typedef enum
 {
-    SCI_WITHOUT_ATR = 0,
-    SCI_ATR_READY
+	SCI_WITHOUT_ATR = 0,
+	SCI_ATR_READY
 }
 SCI_ATR_STATUS;
 

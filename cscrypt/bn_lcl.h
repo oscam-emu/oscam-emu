@@ -119,31 +119,31 @@ extern "C" {
 #endif
 
 
-/*
- * BN_window_bits_for_exponent_size -- macro for sliding window mod_exp functions
- *
- *
- * For window size 'w' (w >= 2) and a random 'b' bits exponent,
- * the number of multiplications is a constant plus on average
- *
- *    2^(w-1) + (b-w)/(w+1);
- *
- * here  2^(w-1)  is for precomputing the table (we actually need
- * entries only for windows that have the lowest bit set), and
- * (b-w)/(w+1)  is an approximation for the expected number of
- * w-bit windows, not counting the first one.
- *
- * Thus we should use
- *
- *    w >= 6  if        b > 671
- *     w = 5  if  671 > b > 239
- *     w = 4  if  239 > b >  79
- *     w = 3  if   79 > b >  23
- *    w <= 2  if   23 > b
- *
- * (with draws in between).  Very small exponents are often selected
- * with low Hamming weight, so we use  w = 1  for b <= 23.
- */
+	/*
+	 * BN_window_bits_for_exponent_size -- macro for sliding window mod_exp functions
+	 *
+	 *
+	 * For window size 'w' (w >= 2) and a random 'b' bits exponent,
+	 * the number of multiplications is a constant plus on average
+	 *
+	 *    2^(w-1) + (b-w)/(w+1);
+	 *
+	 * here  2^(w-1)  is for precomputing the table (we actually need
+	 * entries only for windows that have the lowest bit set), and
+	 * (b-w)/(w+1)  is an approximation for the expected number of
+	 * w-bit windows, not counting the first one.
+	 *
+	 * Thus we should use
+	 *
+	 *    w >= 6  if        b > 671
+	 *     w = 5  if  671 > b > 239
+	 *     w = 4  if  239 > b >  79
+	 *     w = 3  if   79 > b >  23
+	 *    w <= 2  if   23 > b
+	 *
+	 * (with draws in between).  Very small exponents are often selected
+	 * with low Hamming weight, so we use  w = 1  for b <= 23.
+	 */
 #if 1
 #define BN_window_bits_for_exponent_size(b) \
     ((b) > 671 ? 6 : \
@@ -151,10 +151,10 @@ extern "C" {
      (b) >  79 ? 4 : \
      (b) >  23 ? 3 : 1)
 #else
-/* Old SSLeay/OpenSSL table.
- * Maximum window size was 5, so this table differs for b==1024;
- * but it coincides for other interesting values (b==160, b==512).
- */
+	/* Old SSLeay/OpenSSL table.
+	 * Maximum window size was 5, so this table differs for b==1024;
+	 * but it coincides for other interesting values (b==160, b==512).
+	 */
 #define BN_window_bits_for_exponent_size(b) \
     ((b) > 255 ? 5 : \
      (b) > 127 ? 4 : \
@@ -163,8 +163,8 @@ extern "C" {
 
 
 
-/* Pentium pro 16,16,16,32,64 */
-/* Alpha       16,16,16,16.64 */
+	/* Pentium pro 16,16,16,32,64 */
+	/* Alpha       16,16,16,16.64 */
 #define BN_MULL_SIZE_NORMAL         (16) /* 32 */
 #define BN_MUL_RECURSIVE_SIZE_NORMAL        (16) /* 32 less than */
 #define BN_SQR_RECURSIVE_SIZE_NORMAL        (16) /* 32 */
@@ -172,29 +172,29 @@ extern "C" {
 #define BN_MONT_CTX_SET_SIZE_WORD       (64) /* 32 */
 
 #if !defined(NO_ASM) && !defined(NO_INLINE_ASM) && !defined(PEDANTIC)
-/*
- * BN_UMULT_HIGH section.
- *
- * No, I'm not trying to overwhelm you when stating that the
- * product of N-bit numbers is 2*N bits wide:-) No, I don't expect
- * you to be impressed when I say that if the compiler doesn't
- * support 2*N integer type, then you have to replace every N*N
- * multiplication with 4 (N/2)*(N/2) accompanied by some shifts
- * and additions which unavoidably results in severe performance
- * penalties. Of course provided that the hardware is capable of
- * producing 2*N result... That's when you normally start
- * considering assembler implementation. However! It should be
- * pointed out that some CPUs (most notably Alpha, PowerPC and
- * upcoming IA-64 family:-) provide *separate* instruction
- * calculating the upper half of the product placing the result
- * into a general purpose register. Now *if* the compiler supports
- * inline assembler, then it's not impossible to implement the
- * "bignum" routines (and have the compiler optimize 'em)
- * exhibiting "native" performance in C. That's what BN_UMULT_HIGH
- * macro is about:-)
- *
- *                  <appro@fy.chalmers.se>
- */
+	/*
+	 * BN_UMULT_HIGH section.
+	 *
+	 * No, I'm not trying to overwhelm you when stating that the
+	 * product of N-bit numbers is 2*N bits wide:-) No, I don't expect
+	 * you to be impressed when I say that if the compiler doesn't
+	 * support 2*N integer type, then you have to replace every N*N
+	 * multiplication with 4 (N/2)*(N/2) accompanied by some shifts
+	 * and additions which unavoidably results in severe performance
+	 * penalties. Of course provided that the hardware is capable of
+	 * producing 2*N result... That's when you normally start
+	 * considering assembler implementation. However! It should be
+	 * pointed out that some CPUs (most notably Alpha, PowerPC and
+	 * upcoming IA-64 family:-) provide *separate* instruction
+	 * calculating the upper half of the product placing the result
+	 * into a general purpose register. Now *if* the compiler supports
+	 * inline assembler, then it's not impossible to implement the
+	 * "bignum" routines (and have the compiler optimize 'em)
+	 * exhibiting "native" performance in C. That's what BN_UMULT_HIGH
+	 * macro is about:-)
+	 *
+	 *                  <appro@fy.chalmers.se>
+	 */
 # if defined(__alpha) && (defined(SIXTY_FOUR_BIT_LONG) || defined(SIXTY_FOUR_BIT))
 #  if defined(__DECC)
 #   include <c_asm.h>
@@ -219,13 +219,13 @@ extern "C" {
 # endif     /* cpu */
 #endif      /* NO_ASM */
 
-/*************************************************************
- * Using the long long type
- */
+	/*************************************************************
+	 * Using the long long type
+	 */
 #define Lw(t)    (((BN_ULONG)(t))&BN_MASK2)
 #define Hw(t)    (((BN_ULONG)((t)>>BN_BITS2))&BN_MASK2)
 
-/* This is used for internal error checking and is not normally used */
+	/* This is used for internal error checking and is not normally used */
 #ifdef BN_DEBUG
 # include <assert.h>
 # define bn_check_top(a) assert ((a)->top >= 0 && (a)->top <= (a)->dmax);
@@ -233,14 +233,14 @@ extern "C" {
 # define bn_check_top(a)
 #endif
 
-/* This macro is to add extra stuff for development checking */
+	/* This macro is to add extra stuff for development checking */
 #ifdef BN_DEBUG
 #define bn_set_max(r) ((r)->max=(r)->top,BN_set_flags((r),BN_FLG_STATIC_DATA))
 #else
 #define bn_set_max(r)
 #endif
 
-/* These macros are used to 'take' a section of a bignum for read only use */
+	/* These macros are used to 'take' a section of a bignum for read only use */
 #define bn_set_low(r,a,n) \
     { \
         (r)->top=((a)->top > (n))?(n):(a)->top; \
@@ -317,9 +317,9 @@ extern "C" {
     }
 
 #else
-/*************************************************************
- * No long long type
- */
+	/*************************************************************
+	 * No long long type
+	 */
 
 #define LBITS(a)    ((a)&BN_MASK2l)
 #define HBITS(a)    (((a)>>BN_BITS4)&BN_MASK2l)
@@ -395,22 +395,22 @@ extern "C" {
     }
 #endif /* !BN_LLONG */
 
-void bn_mul_normal(BN_ULONG *r, BN_ULONG *a, int na, BN_ULONG *b, int nb);
-void bn_mul_comba8(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b);
-void bn_mul_comba4(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b);
-void bn_sqr_normal(BN_ULONG *r, BN_ULONG *a, int n, BN_ULONG *tmp);
-void bn_sqr_comba8(BN_ULONG *r, BN_ULONG *a);
-void bn_sqr_comba4(BN_ULONG *r, BN_ULONG *a);
-int bn_cmp_words(BN_ULONG *a, BN_ULONG *b, int n);
-void bn_mul_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2, BN_ULONG *t);
-void bn_mul_part_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b,
-                           int tn, int n, BN_ULONG *t);
-void bn_sqr_recursive(BN_ULONG *r, BN_ULONG *a, int n2, BN_ULONG *t);
-void bn_mul_low_normal(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n);
-void bn_mul_low_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2,
-                          BN_ULONG *t);
-void bn_mul_high(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, BN_ULONG *l, int n2,
-                 BN_ULONG *t);
+	void bn_mul_normal(BN_ULONG *r, BN_ULONG *a, int na, BN_ULONG *b, int nb);
+	void bn_mul_comba8(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b);
+	void bn_mul_comba4(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b);
+	void bn_sqr_normal(BN_ULONG *r, BN_ULONG *a, int n, BN_ULONG *tmp);
+	void bn_sqr_comba8(BN_ULONG *r, BN_ULONG *a);
+	void bn_sqr_comba4(BN_ULONG *r, BN_ULONG *a);
+	int bn_cmp_words(BN_ULONG *a, BN_ULONG *b, int n);
+	void bn_mul_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2, BN_ULONG *t);
+	void bn_mul_part_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b,
+							   int tn, int n, BN_ULONG *t);
+	void bn_sqr_recursive(BN_ULONG *r, BN_ULONG *a, int n2, BN_ULONG *t);
+	void bn_mul_low_normal(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n);
+	void bn_mul_low_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2,
+							  BN_ULONG *t);
+	void bn_mul_high(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, BN_ULONG *l, int n2,
+					 BN_ULONG *t);
 
 #ifdef  __cplusplus
 }

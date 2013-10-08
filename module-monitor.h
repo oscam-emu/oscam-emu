@@ -6,7 +6,7 @@ int32_t monitor_send_idx(struct s_client *cl, char *txt);
 #else
 int32_t monitor_send_idx(struct s_client *UNUSED(cl), char *UNUSED(txt))
 {
-    return 0;
+	return 0;
 }
 #endif
 

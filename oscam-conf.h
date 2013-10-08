@@ -5,44 +5,44 @@
 
 enum opt_types
 {
-    OPT_UNKNOWN = 0,
-    OPT_INT8,
-    OPT_UINT8,
-    OPT_INT32,
-    OPT_UINT32,
-    OPT_STRING,
-    OPT_SSTRING,
-    OPT_HEX_ARRAY,
-    OPT_FUNC,
-    OPT_FUNC_EXTRA,
-    OPT_SAVE_FUNC,
-    OPT_FIXUP_FUNC,
+	OPT_UNKNOWN = 0,
+	OPT_INT8,
+	OPT_UINT8,
+	OPT_INT32,
+	OPT_UINT32,
+	OPT_STRING,
+	OPT_SSTRING,
+	OPT_HEX_ARRAY,
+	OPT_FUNC,
+	OPT_FUNC_EXTRA,
+	OPT_SAVE_FUNC,
+	OPT_FIXUP_FUNC,
 };
 
 struct config_list
 {
-    enum opt_types  opt_type;
-    char            *config_name;
-    size_t          var_offset;
-    unsigned int    str_size;
-    union
-    {
-        int8_t          d_int8;
-        uint8_t         d_uint8;
-        int32_t         d_int32;
-        uint32_t        d_uint32;
-        char            *d_char;
-        long            d_extra;
-        uint32_t        array_size;
-    } def;
-    union
-    {
-        void            (*process_fn)(const char *token, char *value, void *setting, FILE *config_file);
-        void            (*process_fn_extra)(const char *token, char *value, void *setting, long extra, FILE *config_file);
-        bool            (*should_save_fn)(void *var);
-        void            (*fixup_fn)(void *var);
-    } ops;
-    void            (*free_value)(void *setting);
+	enum opt_types  opt_type;
+	char            *config_name;
+	size_t          var_offset;
+	unsigned int    str_size;
+	union
+	{
+		int8_t          d_int8;
+		uint8_t         d_uint8;
+		int32_t         d_int32;
+		uint32_t        d_uint32;
+		char            *d_char;
+		long            d_extra;
+		uint32_t        array_size;
+	} def;
+	union
+	{
+		void (*process_fn)(const char *token, char *value, void *setting, FILE *config_file);
+		void (*process_fn_extra)(const char *token, char *value, void *setting, long extra, FILE *config_file);
+		bool (*should_save_fn)(void *var);
+		void (*fixup_fn)(void *var);
+	} ops;
+	void (*free_value)(void *setting);
 };
 
 #define DEF_OPT_INT8(__name, __var_ofs, __default) \
@@ -140,22 +140,22 @@ struct config_list
 
 struct config_sections
 {
-    const char                  *section;
-    const struct config_list    *config;
+	const char                  *section;
+	const struct config_list    *config;
 };
 
 int32_t  strToIntVal(char *value, int32_t defaultvalue);
 uint32_t strToUIntVal(char *value, uint32_t defaultvalue);
 
-void fprintf_conf(FILE *f, const char *varname, const char *fmt, ...) __attribute__ ((format (printf, 3, 4)));
+void fprintf_conf(FILE *f, const char *varname, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 
 int  config_list_parse(const struct config_list *clist, const char *token, char *value, void *config_data);
 void config_list_save_ex(FILE *f, const struct config_list *clist, void *config_data, int save_all,
-                         bool (*check_func)(const struct config_list *clist, void *config_data, const char *setting)
-                        );
+						 bool (*check_func)(const struct config_list *clist, void *config_data, const char *setting)
+						);
 static inline void config_list_save(FILE *f, const struct config_list *clist, void *config_data, int save_all)
 {
-    config_list_save_ex(f, clist, config_data, save_all, NULL);
+	config_list_save_ex(f, clist, config_data, save_all, NULL);
 }
 void config_list_apply_fixups(const struct config_list *clist, void *var);
 bool config_list_should_be_saved(const struct config_list *clist, void *var);

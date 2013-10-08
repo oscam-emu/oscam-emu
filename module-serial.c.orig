@@ -10,16 +10,16 @@
 #define HSIC_CRC 0xA5
 #define SSSP_MAX_PID 8
 
-#define P_HSIC	    1	// Humax Sharing Interface Client
-#define P_SSSP	    2	// Simple Serial Sharing Protocol
-#define P_BOMBA	    3	// This is not really a Protocol
-#define P_DSR95	    4	// DSR9500 with SID
-#define P_GS	    5	// GS7001
-#define P_ALPHA	    6	// AlphaStar Receivers
-#define P_DSR95_OLD 7	// DSR9500 without SID
-#define P_GBOX      8	// Arion with gbox
-#define P_MAX	    P_GBOX
-#define P_AUTO	    0xFF
+#define P_HSIC      1   // Humax Sharing Interface Client
+#define P_SSSP      2   // Simple Serial Sharing Protocol
+#define P_BOMBA     3   // This is not really a Protocol
+#define P_DSR95     4   // DSR9500 with SID
+#define P_GS        5   // GS7001
+#define P_ALPHA     6   // AlphaStar Receivers
+#define P_DSR95_OLD 7   // DSR9500 without SID
+#define P_GBOX      8   // Arion with gbox
+#define P_MAX       P_GBOX
+#define P_AUTO      0xFF
 
 #define P_DSR_AUTO    0
 #define P_DSR_GNUSMAS 1
@@ -28,57 +28,59 @@
 #define P_DSR_WITHSID 4
 #define P_DSR_UNKNOWN 5
 
-#define IS_ECM	0	// incoming data is ECM
-#define IS_DCW	1	// incoming data is DCW
-#define IS_PMT	2	// incoming data is PMT
-#define IS_LGO	3	// incoming data is client logon
-#define IS_ECHO 4	// incoming data is DCW echo from Samsung
-#define IS_CAT  5	// incoming data is CAT
-#define IS_BAD	0xFF	// incoming data is unknown
+#define IS_ECM  0   // incoming data is ECM
+#define IS_DCW  1   // incoming data is DCW
+#define IS_PMT  2   // incoming data is PMT
+#define IS_LGO  3   // incoming data is client logon
+#define IS_ECHO 4   // incoming data is DCW echo from Samsung
+#define IS_CAT  5   // incoming data is CAT
+#define IS_BAD  0xFF    // incoming data is unknown
 
-static const char * const proto_txt[]={"unknown", "hsic", "sssp", "bomba", "dsr9500", "gs",
-                          "alpha", "dsr9500old", "gbox"};
-static const char * const dsrproto_txt[]={"unknown", "samsung", "openbox", "pioneer",
-                             "extended", "unknown"};
-static const char * const incomplete="incomplete request (%d bytes)";
+static const char *const proto_txt[] = {"unknown", "hsic", "sssp", "bomba", "dsr9500", "gs",
+                                        "alpha", "dsr9500old", "gbox"
+                                       };
+static const char *const dsrproto_txt[] = {"unknown", "samsung", "openbox", "pioneer",
+                                           "extended", "unknown"
+                                          };
+static const char *const incomplete = "incomplete request (%d bytes)";
 
 typedef struct s_gbox
 {
-  int32_t cat_len;
-  int32_t pmt_len;
-  int32_t ecm_len;
+    int32_t cat_len;
+    int32_t pmt_len;
+    int32_t ecm_len;
 } GBOX_LENS;
 
 typedef struct s_sssp
 {
-  uint16_t caid;
-  uint16_t pid;
-  uint32_t  prid;
+    uint16_t caid;
+    uint16_t pid;
+    uint32_t  prid;
 } SSSP_TAB;
 
 //added to support multiple instances with thread
 struct s_serial_client
 {
-	int32_t connected;
-	struct timeb tps;
-	struct timeb tpe;
-	char oscam_ser_usr[32];
-	char oscam_ser_device[64];
-	int32_t oscam_ser_port;
-	speed_t oscam_ser_baud;
-	int32_t oscam_ser_delay;
-	int32_t oscam_ser_timeout;
-	int32_t oscam_ser_proto;
-	int32_t serial_errors;
-	int32_t dsr9500type;
-	int32_t samsung_0a;   // number of 0A in ALL dcw sent into samsung
-	int32_t samsung_dcw;  // number of dcw sent into samsung before echo or ecm is received
+    int32_t connected;
+    struct timeb tps;
+    struct timeb tpe;
+    char oscam_ser_usr[32];
+    char oscam_ser_device[64];
+    int32_t oscam_ser_port;
+    speed_t oscam_ser_baud;
+    int32_t oscam_ser_delay;
+    int32_t oscam_ser_timeout;
+    int32_t oscam_ser_proto;
+    int32_t serial_errors;
+    int32_t dsr9500type;
+    int32_t samsung_0a;   // number of 0A in ALL dcw sent into samsung
+    int32_t samsung_dcw;  // number of dcw sent into samsung before echo or ecm is received
 
-	GBOX_LENS gbox_lens;
-	SSSP_TAB sssp_tab[SSSP_MAX_PID];
-	uint16_t sssp_srvid;
-	int32_t sssp_num;
-	int32_t sssp_fix;
+    GBOX_LENS gbox_lens;
+    SSSP_TAB sssp_tab[SSSP_MAX_PID];
+    uint16_t sssp_srvid;
+    int32_t sssp_num;
+    int32_t sssp_fix;
 };
 
 static pthread_mutex_t mutex;
@@ -88,56 +90,56 @@ static struct s_module *serial_ph = NULL;
 
 struct s_thread_param
 {
-	uint8_t module_idx;
-	struct s_serial_client serialdata;
+    uint8_t module_idx;
+    struct s_serial_client serialdata;
 };
 
 static int32_t chk_ser_srvid_match(uint16_t caid, uint16_t sid, uint32_t provid, SIDTAB *sidtab)
 {
-  int32_t i, rc=0;
+    int32_t i, rc = 0;
 
-  if (!sidtab->num_caid)
-    rc|=1;
-  else
-    for (i=0; (i<sidtab->num_caid) && (!(rc&1)); i++)
-      if (caid==sidtab->caid[i]) rc|=1;
+    if (!sidtab->num_caid)
+        rc |= 1;
+    else
+        for (i = 0; (i < sidtab->num_caid) && (!(rc & 1)); i++)
+            if (caid == sidtab->caid[i]) rc |= 1;
 
-  if (!sidtab->num_provid)
-    rc|=2;
-  else
-    for (i=0; (i<sidtab->num_provid) && (!(rc&2)); i++)
-      if (provid==sidtab->provid[i]) rc|=2;
+    if (!sidtab->num_provid)
+        rc |= 2;
+    else
+        for (i = 0; (i < sidtab->num_provid) && (!(rc & 2)); i++)
+            if (provid == sidtab->provid[i]) rc |= 2;
 
-  if (!sidtab->num_srvid)
-    rc|=4;
-  else
-    for (i=0; (i<sidtab->num_srvid) && (!(rc&4)); i++)
-      if (sid==sidtab->srvid[i]) rc|=4;
+    if (!sidtab->num_srvid)
+        rc |= 4;
+    else
+        for (i = 0; (i < sidtab->num_srvid) && (!(rc & 4)); i++)
+            if (sid == sidtab->srvid[i]) rc |= 4;
 
-  return(rc==7);
+    return (rc == 7);
 }
 
 static int32_t chk_ser_srvid(struct s_client *cl, uint16_t caid, uint16_t sid, uint32_t provid)
 {
-  int32_t nr, rc=0;
-  SIDTAB *sidtab;
+    int32_t nr, rc = 0;
+    SIDTAB *sidtab;
 
-  if (!cl->sidtabs.ok)
-  {
-    if (!cl->sidtabs.no) return(1);
-    rc=1;
-  }
-  for (nr=0, sidtab=cfg.sidtab; sidtab; sidtab=sidtab->next, nr++)
-    if (sidtab->num_caid | sidtab->num_provid | sidtab->num_srvid)
+    if (!cl->sidtabs.ok)
     {
-        if ((cl->sidtabs.no&((SIDTABBITS)1<<nr)) &&
-          (chk_ser_srvid_match(caid, sid, provid, sidtab)))
-        return(0);
-      if ((cl->sidtabs.ok&((SIDTABBITS)1<<nr)) &&
-          (chk_ser_srvid_match(caid, sid, provid, sidtab)))
-        rc=1;
+        if (!cl->sidtabs.no) return (1);
+        rc = 1;
     }
-  return(rc);
+    for (nr = 0, sidtab = cfg.sidtab; sidtab; sidtab = sidtab->next, nr++)
+        if (sidtab->num_caid | sidtab->num_provid | sidtab->num_srvid)
+        {
+            if ((cl->sidtabs.no & ((SIDTABBITS)1 << nr)) &&
+                    (chk_ser_srvid_match(caid, sid, provid, sidtab)))
+                return (0);
+            if ((cl->sidtabs.ok & ((SIDTABBITS)1 << nr)) &&
+                    (chk_ser_srvid_match(caid, sid, provid, sidtab)))
+                rc = 1;
+        }
+    return (rc);
 }
 
 static void oscam_wait_ser_fork(void)
