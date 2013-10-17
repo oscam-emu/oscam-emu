@@ -307,7 +307,8 @@ static void write_versionfile(bool use_stdout)
 	}
 
 	fprintf(fp, "Version:        oscam-%s-r%s\n", CS_VERSION, CS_SVN_VERSION);
-
+	fprintf(fp, "ConfigDir:      %s\n", cs_confdir);
+	
 	fprintf(fp, "\n");
 	write_conf(WEBIF, "Web interface support");
 	write_conf(TOUCH, "Touch interface support");

@@ -26,6 +26,14 @@
 #define SIO_READ_EEPROM_REQUEST       0x90
 #define SIO_WRITE_EEPROM_REQUEST      0x91
 #define SIO_ERASE_EEPROM_REQUEST      0x92
+#define CLK_BITS        0x8e
+#define CLK_BYTES       0x8f
+#define CLK_WAIT_HIGH   0x94
+#define CLK_WAIT_LOW    0x95
+#define EN_ADAPTIVE     0x96
+#define DIS_ADAPTIVE    0x97
+#define CLK_BYTES_OR_HIGH 0x9c
+#define CLK_BYTES_OR_LOW  0x0d
 
 #define SIO_RESET_SIO 0
 #define SIO_RESET_PURGE_RX 1
@@ -45,7 +53,7 @@
 
 #define SIO_RTS_CTS_HS (0x1 << 8)
 /** FTDI chip type */
-enum smartreader_chip_type { TYPE_AM = 0, TYPE_BM = 1, TYPE_2232C = 2, TYPE_R = 3, TYPE_2232H = 4, TYPE_4232H = 5 };
+enum smartreader_chip_type { TYPE_AM = 0, TYPE_BM = 1, TYPE_2232C = 2, TYPE_R = 3, TYPE_2232H = 4, TYPE_4232H = 5, TYPE_232H = 6 };
 /** Parity mode for smartreader_set_line_property() */
 enum smartreader_parity_type { NONE = 0, ODD = 1, EVEN = 2, MARK = 3, SPACE = 4 };
 /** Number of stop bits for smartreader_set_line_property() */

@@ -12,7 +12,7 @@
 #include "oscam-work.h"
 #include "oscam-reader.h"
 #include "reader-common.h"
-#include "csctapi/atr.h"
+//#include "csctapi/atr.h"
 #include "csctapi/icc_async.h"
 
 extern struct s_cardsystem cardsystems[CS_MAX_MOD];
@@ -161,26 +161,41 @@ void cardreader_do_reset(struct s_reader *reader)
 	reader_nullcard(reader);
 	ATR atr;
 	int32_t ret = 0;
+	int16_t i = 0;
+	int16_t j = 0;
+	if (reader->typ == R_SMART && reader->smartdev_found >= 2) j = 3; else j = 1; // we will do two full start attempts for triple
 
-	ret = ICC_Async_Reset(reader, &atr, reader_activate_card, reader_get_cardsystem);
+	for (i= 0; i < j; i++) {
 
-	if(ret == -1)
-		{ return; }
+		ret = ICC_Async_Reset(reader, &atr, reader_activate_card, reader_get_cardsystem);
 
-	if(ret == 0)
-	{
-		uint16_t deprecated;
-		for(deprecated = reader->deprecated; deprecated < 2; deprecated++)
+		if(ret == -1)
+			{ return; }
+
+		if(ret == 0)
 		{
-			if(!reader_activate_card(reader, &atr, deprecated)) { break; }
-			ret = reader_get_cardsystem(reader, &atr);
-			if(ret)
-				{ break; }
-			if(!deprecated)
-				{ rdr_log(reader, "Normal mode failed, reverting to Deprecated Mode"); }
+			uint16_t y;
+			uint16_t deprecated;
+			if (reader->typ == R_SMART ) y = 3; else y= 2;
+//			rdr_log(reader, "the restart atempts in deprecated is %u", y);
+			for(deprecated = reader->deprecated; deprecated < y; deprecated++)
+			{
+				if(!reader_activate_card(reader, &atr, deprecated)) { break; }
+				ret = reader_get_cardsystem(reader, &atr);
+				if(ret)
+					{ break; }
+				if(!deprecated)
+					{ rdr_log(reader, "Normal mode failed, reverting to Deprecated Mode"); }
+			}
 		}
+			if (ret){
+				rdr_log(reader,"THIS WAS A SUCCESFULL START ATTEMPT No  %u out of max alloted of %u", (i+1), j);
+				break;
+			}
+			else {
+				rdr_log(reader, "THIS WAS A FAILED START ATTEMPT No %u out of max alloted of %u", (i+1), j);
+			}
 	}
-
 	if(!ret)
 	{
 		reader->card_status = CARD_FAILURE;
@@ -290,6 +305,23 @@ bool cardreader_init(struct s_reader *reader)
 	}
 	else
 	{
+		if (reader->typ == R_SMART ){
+			rdr_log(reader, "clocking for smartreader with smartreader protocol");
+/*			if (reader->cardmhz <= 357) reader->cardmhz = 369; // 357 is not a default or supported by smartreader
+			if (reader->mhz >= 1600) reader->mhz = 1600; else
+			if (reader->mhz >= 1200) reader->mhz = 1200; else
+			if (reader->mhz >= 961)  reader->mhz =  961; else
+			if (reader->mhz >= 800)  reader->mhz =  800; else
+			if (reader->mhz >= 686)  reader->mhz =  686; else
+			if (reader->mhz >= 600)  reader->mhz =  600; else
+			if (reader->mhz >= 534)  reader->mhz =  534; else
+			if (reader->mhz >= 480)  reader->mhz =  480; else
+			if (reader->mhz >= 436)  reader->mhz =  436; else
+			if (reader->mhz >= 400)  reader->mhz =  400; else
+			if (reader->mhz >= 357)  reader->mhz =  369; else
+			if (reader->mhz >= 343)  reader->mhz =  343; else 
+			reader->mhz =  320;*/
+	    } 
 		rdr_log(reader, "Reader initialized (device=%s, detect=%s%s, mhz=%d, cardmhz=%d)",
 				reader->device,
 				reader->detect & 0x80 ? "!" : "",
@@ -343,9 +375,13 @@ int32_t cardreader_do_ecm(struct s_reader *reader, ECM_REQUEST *er, struct s_ecm
 
 int32_t cardreader_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 {
-	int32_t rc = -1;
-
+	int32_t rc;
+	if (reader->typ == R_SMART ) {  // check health does not work with new card status check but is actually not needed for emm.
+	rc = 1;
+	} else {
+	rc = -1;
 	rc = cardreader_do_checkhealth(reader);
+	}
 	if(rc)
 	{
 		if((1 << (ep->emm[0] % 0x80)) & reader->b_nano)

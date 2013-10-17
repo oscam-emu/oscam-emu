@@ -10,12 +10,16 @@ struct seca_data
 static uint64_t get_pbm(struct s_reader *reader, uint8_t idx)
 {
 	def_resp;
-	static const unsigned char ins34[] = { 0xc1, 0x34, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00 }; //data following is provider Package Bitmap Records
-	unsigned char ins32[] = { 0xc1, 0x32, 0x00, 0x00, 0x20 };             // get PBM
+	unsigned char ins34[] = { 0xc1, 0x34, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00}; // set request options
+	unsigned char ins32[] = { 0xc1, 0x32, 0x00, 0x00, 0x0A };             // get PBM
 	uint64_t pbm = 0;
-
+         
 	ins32[2] = idx;
-	write_cmd(ins34, ins34 + 5);  //prepare card for pbm request
+	if (!idx){ // change request options for first (=managment) provider only
+		ins32[4] = 0x0D;
+		ins34[5] = 0x04;
+	}
+	write_cmd(ins34, ins34 + 5);  //set request options
 	write_cmd(ins32, NULL);   //pbm request
 
 	switch(cta_res[0])
@@ -24,6 +28,10 @@ static uint64_t get_pbm(struct s_reader *reader, uint8_t idx)
 		rdr_log(reader, "no PBM for provider %u", idx + 1);
 		break;
 	case 0x83:
+		pbm = b2ll(8, cta_res + 1);
+		rdr_log(reader, "PBM for provider %u: %08llx", idx + 1, (unsigned long long) pbm);
+		break;
+	case 0xb2:
 		pbm = b2ll(8, cta_res + 1);
 		rdr_log(reader, "PBM for provider %u: %08llx", idx + 1, (unsigned long long) pbm);
 		break;
@@ -47,6 +55,7 @@ static int32_t set_provider_info(struct s_reader *reader, int32_t i)
 	uint32_t provid;
 
 	ins12[2] = i; //select provider
+	rdr_log(reader, "Request provider %i", i + 1);
 	write_cmd(ins12, NULL); // show provider properties
 
 	if((cta_res[25] != 0x90) || (cta_res[26] != 0x00)) { return ERROR; }
@@ -55,7 +64,15 @@ static int32_t set_provider_info(struct s_reader *reader, int32_t i)
 	memcpy(&reader->prid[i][2], cta_res, 2);
 
 	provid = b2ll(4, reader->prid[i]);
-
+	int seca_version = reader->card_atr[9] & 0X0F; //Get seca cardversion from cardatr
+	if(seca_version == 10 && provid == 0x006a){ // check for cds nagra smartcard (seca3) 
+		reader->secatype = 3;
+		rdr_log(reader, "Detected seca3 card");
+	}
+	if(seca_version == 7 && provid == 0x006a){ // check for cds seca smartcard (seca2)
+		reader->secatype = 2;
+		rdr_log(reader, "Detected seca2 card");
+	}
 	year = (cta_res[22] >> 1) + 1990;
 	month = ((cta_res[22] & 0x1) << 3) | (cta_res[23] >> 5);
 	day = (cta_res[23] & 0x1f);
@@ -119,7 +136,7 @@ static int32_t unlock_parental(struct s_reader *reader)
 	// c1 30 00 01 09
 	// 00 00 00 00 00 00 00 00 ff
 	static const uchar ins30[] = { 0xc1, 0x30, 0x00, 0x01, 0x09 };
-	static uchar ins30data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff };
+	static uchar ins30data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 	def_resp;
 
@@ -163,7 +180,7 @@ static int32_t seca_card_init(struct s_reader *reader, ATR *newatr)
 	uint64_t serial ;
 	uchar buf[256];
 	static const uchar ins0e[] = { 0xc1, 0x0e, 0x00, 0x00, 0x08 }; // get serial number (UA)
-	static const uchar ins16[] = { 0xc1, 0x16, 0x00, 0x00, 0x07 }; // get nr. of prividers
+	static const uchar ins16[] = { 0xc1, 0x16, 0x00, 0x00, 0x06 }; // get nr. of providers
 	int32_t i;
 
 	cs_clear_entitlement(reader);
@@ -248,25 +265,19 @@ static int32_t seca_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, struc
 {
 	if(er->ecm[3] == 0x00 && er->ecm[4] == 0x6a)    //provid006A=CDS NL uses seca2 and nagra/mediaguard3 crypt on same caid/provid only ecmpid is different
 	{
-		int seca_version = reader->card_atr[9] & 0X0F; //Get seca cardversion from cardatr
-		if((seca_version == 7) || (seca_version == 10))    // we only proces V7 or V10 cards from CDS NL
-		{
-			if(seca_version == 7) { reader->secatype = 2; }  // set the type of this reader to seca2
-			if(seca_version == 10) { reader->secatype = 3; }  // set the type of this reader to nagra/mediaguard3
-			int ecm_type = seca_version; //assume ecm type same as card in reader
-			if(er->ecm[8] == 0x00)    //this is a mediaguard3 ecm request
-			{
-				ecm_type = 10; //flag it!
-			}
-			if((er->ecm[8] == 0x10) && (er->ecm[9] == 0x01))    //this is a seca2 ecm request
-			{
-				ecm_type = 7; //flag it!
-			}
-			if(ecm_type != seca_version)   //only accept ecmrequest for right card!
-			{
-				return ERROR;
-			}
+		int32_t ecm_type = reader->secatype; // default assume ecmtype same as cardtype in reader
+		if(er->ecm[8] == 0x00){    //this is a mediaguard3 ecm request
+			ecm_type = 3; //flag it!
 		}
+		if((er->ecm[8] == 0x10) && (er->ecm[9] == 0x01)){    //this is a seca2 ecm request
+			ecm_type = 2; //flag it!
+		}
+		if(ecm_type != reader->secatype){   //only accept ecmrequest for right card!
+			return ERROR;
+		}
+	}
+	if(er->ecm[5] == 0x01){
+		rdr_log(reader, "WARNING: NANO01 used and card is giving encoded controlword instead of plain controlword!");
 	}
 	def_resp;
 	unsigned char ins3c[] = { 0xc1, 0x3c, 0x00, 0x00, 0x00 }; // coding cw
@@ -337,6 +348,13 @@ static int32_t seca_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, struc
 		return ERROR;
 	};// exit if response not 90 00
 	//TODO: if response is 9027 ppv mode is possible!
+	if (er->ecm[5]==0x01 && ((reader->card_atr[9] & 0X0F) == 10)){ // seca3: nano 01 in effect?
+		rdr_log(reader, "Received an encrypted controlword from the card that needs postprocessing by the receiver!");
+		if(reader->disablecrccws == 0){
+			reader->disablecrccws = 1;
+			rdr_log(reader, "WARNING: Encrypted controlwords detected-> disabling controlword crc checking!");
+		}
+	}
 	memcpy(ea->cw, cta_res, 16);
 	return OK;
 }

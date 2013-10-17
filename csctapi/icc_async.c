@@ -304,17 +304,26 @@ int32_t ICC_Async_Reset(struct s_reader *reader, struct s_ATR *atr,
 	return reader->crdr.do_reset(reader, atr, rdr_activate_card, rdr_get_cardsystem);
 }
 
+static uint32_t ICC_Async_GetClockRate_NewSmart(int32_t cardmhz)
+{
+
+	if (cardmhz <= 480) 
+		return (372L * 9600L); else
+		return (cardmhz * 10000L);	
+}
+
 static uint32_t ICC_Async_GetClockRate(int32_t cardmhz)
 {
 	switch(cardmhz)
 	{
 	case 357:
 	case 358:
+	case 369:
 		return (372L * 9600L);
-	case 368:
+	case 368: 
 		return (384L * 9600L);
 	default:
-		return cardmhz * 10000L;
+		return (cardmhz * 10000L);
 	}
 }
 
@@ -655,14 +664,21 @@ static int32_t InitCard(struct s_reader *reader, ATR *atr, unsigned char FI, uin
 
 			if(reader->protocol_type != ATR_PROTOCOL_TYPE_T14)    //dont switch for T14
 			{
-				uint32_t baud_temp = (double)D * ICC_Async_GetClockRate(reader->cardmhz) / (double)Fi;
-				rdr_log(reader, "Setting baudrate to %d bps", baud_temp);
-				call(reader->crdr.set_baudrate(reader, baud_temp));
-				reader->current_baudrate = baud_temp;
+				if ((reader->typ == R_SMART) && (reader->smartdev_found >= 2) ){
+					uint32_t baud_temp = (double)D * ICC_Async_GetClockRate_NewSmart(reader->cardmhz) / (double)Fi; // just a test
+					rdr_log(reader, "Setting baudrate to %d bps new", baud_temp);
+					call(reader->crdr.set_baudrate(reader, baud_temp));
+					reader->current_baudrate = baud_temp;
+				} else {
+					uint32_t baud_temp = (double)D * ICC_Async_GetClockRate(reader->cardmhz) / (double)Fi; // just a test
+					rdr_log(reader, "Setting baudrate to %d bps", baud_temp);
+					call(reader->crdr.set_baudrate(reader, baud_temp));
+					reader->current_baudrate = baud_temp;
+				}				
 			}
 		}
 	}
-	if(reader->mhz > 2000 && reader->typ == R_INTERNAL) { F = reader->cardmhz; }  // for PLL based internal readers
+	if(reader->mhz > 2000 && reader->typ == R_INTERNAL) { F = reader->mhz / reader->divider; }  // for PLL based internal readers
 	else { F = reader->mhz; } // all other readers
 	reader->worketu = (double)((1 / (double)D) * ((double)Fi / (double)F * 100));  // expressed in us
 	rdr_log(reader, "Calculated work ETU is %.2f us", reader->worketu);
@@ -709,13 +725,8 @@ static int32_t InitCard(struct s_reader *reader, ATR *atr, unsigned char FI, uin
 		reader->CWT = 0; // T0 protocol doesnt have char waiting time (used to detect errors within 1 single block of data)
 		reader->BWT = 0; // T0 protocol doesnt have block waiting time (used to detect unresponsive card, this is max time for starting a block answer)
 
-		if(reader->mhz > 2000 && reader->typ == R_INTERNAL)
-			rdr_debug_mask(reader, D_ATR, "Protocol: T=%i, WWT=%u, Clockrate=%u",
-						   reader->protocol_type, WWT,
-						   (reader->cardmhz * 10000));
-		else
-			rdr_debug_mask(reader, D_ATR, "Protocol: T=%i, WWT=%u, Clockrate=%u",
-						   reader->protocol_type, WWT, reader->mhz * 10000);
+		
+		rdr_debug_mask(reader, D_ATR, "Protocol: T=%i, WWT=%u, Clockrate=%u", reader->protocol_type, WWT, F * 10000);
 
 		reader->read_timeout = WWT; // Work waiting time used in T0 (max time to signal unresponsive card!)
 		reader->char_delay = GT + EGT; // Character delay is used on T0
@@ -807,7 +818,6 @@ static int32_t InitCard(struct s_reader *reader, ATR *atr, unsigned char FI, uin
 	SetRightParity(reader);  // some reader devices need to get set the right parity
 
 	uint32_t ETU = Fi / D;
-	F = atr_fs_table[FI];
 	if(atr->hbn >= 6 && !memcmp(atr->hb, "IRDETO", 6) && reader->protocol_type == ATR_PROTOCOL_TYPE_T14)
 	{
 		ETU = 0;    // for Irdeto T14 cards, do not set ETU
@@ -824,6 +834,9 @@ static int32_t InitCard(struct s_reader *reader, ATR *atr, unsigned char FI, uin
 	}
 	else if(reader->crdr.write_settings3)
 	{
+#if defined(__SH4__) || defined(STB04SCI)
+		Fi = F*10000; // workaround: SH4 internal reader needs frequency, not clock rate conversion factor (Fi) 
+#endif
 		call(reader->crdr.write_settings3(reader, ETU, Fi, WWT, reader->CWT, reader->BWT, EGT, (unsigned char)I));
 	}
 
@@ -832,7 +845,7 @@ static int32_t InitCard(struct s_reader *reader, ATR *atr, unsigned char FI, uin
 		if(reader->mhz > 2000)
 		{
 			rdr_log(reader, "PLL Reader: ATR Fsmax is %i MHz, clocking card to %.2f Mhz (nearest possible mhz specified reader->cardmhz)",
-					atr_fs_table[FI] / 1000000, (float) reader->cardmhz / 100);
+					atr_fs_table[FI] / 1000000, (float) reader->mhz / reader->divider / 100);
 		}
 		else
 		{
