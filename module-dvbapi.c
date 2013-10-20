@@ -2587,8 +2587,8 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 // set channel srvid+caid
 	dvbapi_client->last_srvid = demux[demux_id].program_number;
 	dvbapi_client->last_caid = 0;
-// reset idle-Time
-	dvbapi_client->last = time((time_t *)0);
+// reset idle-Time & last switch
+	dvbapi_client->lastswitch = dvbapi_client->last = time((time_t *)0);
 
 #if defined WITH_AZBOX || defined WITH_MCA
 	openxcas_sid = program_number;
@@ -3793,52 +3793,50 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
 		cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d %scontrolword received for PID #%d CAID %04X PROVID %06X ECMPID %04X CHID %04X VPID %04X", i,
 					  (er->rc >= E_NOTFOUND ? "no " : ""), j, er->caid, er->prid, er->pid, er->chid, er->vpid);
 
-		if(er->rc < E_NOTFOUND)   // check for delayed response on already expired ecmrequest
+		uint32_t status = dvbapi_check_ecm_delayed_delivery(i, er);
+
+		uint32_t comparecw0 = 0, comparecw1 = 0;
+		char ecmd5[17 * 3];
+		cs_hexdump(0, er->ecmd5, 16, ecmd5, sizeof(ecmd5));
+
+		if(status == 1)   // wrong ecmhash
 		{
-			uint32_t status = dvbapi_check_ecm_delayed_delivery(i, er);
-
-			uint32_t comparecw0 = 0, comparecw1 = 0;
-			char ecmd5[17 * 3];
-			cs_hexdump(0, er->ecmd5, 16, ecmd5, sizeof(ecmd5));
-
-			if(status == 1)   // wrong ecmhash
-			{
-				cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d not interested in response ecmhash %s (requested different one)", i, ecmd5);
+			cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d not interested in response ecmhash %s (requested different one)", i, ecmd5);
 				continue;
-			}
-			if(status == 2)   // no filter
-			{
-				cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d not interested in response ecmhash %s (filter already killed)", i, ecmd5);
-				continue;
-			}
+		}
+		if(status == 2)   // no filter
+		{
+			cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d not interested in response ecmhash %s (filter already killed)", i, ecmd5);
+			continue;
+		}
 
-			if(status == 0 || status == 3 || status == 4)   // 0=matching ecm hash, 2=no filter, 3=table reset, 4=cache-ex response
+		if(status == 0 || status == 3 || status == 4)   // 0=matching ecm hash, 2=no filter, 3=table reset, 4=cache-ex response
+		{
+			if(memcmp(er->cw, demux[i].lastcw[0], 8) == 0 && memcmp(er->cw + 8, demux[i].lastcw[1], 8) == 0)    // check for matching controlword
 			{
-				if(memcmp(er->cw, demux[i].lastcw[0], 8) == 0 && memcmp(er->cw + 8, demux[i].lastcw[1], 8) == 0)    // check for matching controlword
-				{
-					comparecw0 = 1;
-				}
-				else if(memcmp(er->cw, demux[i].lastcw[1], 8) == 0 && memcmp(er->cw + 8, demux[i].lastcw[0], 8) == 0)    // check for matching controlword
-				{
-					comparecw1 = 1;
-				}
-				if(comparecw0 == 1 || comparecw1 == 1)
-				{
-					cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d duplicate controlword ecm response hash %s (duplicate controlword!)", i, ecmd5);
-					nocw_write = 1;
-				}
+				comparecw0 = 1;
 			}
-
-			if(status == 3)   // table reset
+			else if(memcmp(er->cw, demux[i].lastcw[1], 8) == 0 && memcmp(er->cw + 8, demux[i].lastcw[0], 8) == 0)    // check for matching controlword
 			{
-				cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d luckyshot new controlword ecm response hash %s (ecm table reset)", i, ecmd5);
+				comparecw1 = 1;
 			}
-
-			if(status == 4)   // no check on cache-ex responses!
+			if(comparecw0 == 1 || comparecw1 == 1)
 			{
-				cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d new controlword from cache-ex reader (no ecmhash check possible)", i);
+				cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d duplicate controlword ecm response hash %s (duplicate controlword!)", i, ecmd5);
+				nocw_write = 1;
 			}
 		}
+
+		if(status == 3)   // table reset
+		{
+			cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d luckyshot new controlword ecm response hash %s (ecm table reset)", i, ecmd5);
+		}
+
+		if(status == 4)   // no check on cache-ex responses!
+		{
+			cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d new controlword from cache-ex reader (no ecmhash check possible)", i);
+		}
+		
 		handled = 1; // mark this ecm response as handled
 		if(er->rc < E_NOTFOUND && cfg.dvbapi_requestmode == 0 && (demux[i].pidindex == -1) && er->caid != 0)
 		{
