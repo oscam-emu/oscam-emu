@@ -2964,6 +2964,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uchar *buffer, i
 
 	if(demux[demux_id].demux_fd[filter_num].type == TYPE_ECM)
 	{
+		cs_debug_mask(D_DVBAPI, "[DVBAPI] Demuxer #%d Filter #%d fetched ecm data", demux_id, filter_num + 1);
 		if(len != (((buffer[1] & 0xf) << 8) | buffer[2]) + 3)   // invalid CAT length
 		{
 			cs_debug_mask(D_DVBAPI, "[DVBAPI] Received an ECM with invalid CAT length!");

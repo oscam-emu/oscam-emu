@@ -98,10 +98,25 @@ DESCRIPTIONS
 	  set standard SC frequency in units of 10 kHz, for Irdeto SC set to 600, for auto clock speed in Dreambox mode  set  to
 	  -1, refer to OVERCLOCKING, default:357
 
-       mhz = frequency
-	  set reader frequency in units of 10 kHz, if mhz > cardmhz you are in overclocking mode, for cardmhz swiching to MIPSel
-	  Dreambox mode set to 2700, for cardmhz swiching to PPC Dreambox mode set to 3150, for  cardmhz  swiching  to	Dreambox
-	  DM7025 mode set to 8300, refer to OVERCLOCKING, default:357
+       mhz = frequency *** EXTERNAL READERS ***
+	  set reader frequency in units of 10 kHz, if mhz > cardmhz you are in overclocking mode
+	  default:357
+	  
+	   mhz = frequency *** INTERNAL READERS ***
+	  set reader frequency in units of 10 kHz. If you use mhz >2000 oscam will switch to PLL clocking.
+	  Internal readers of boxes from Dream Multimedia GmbH can be clocked more precise with it.
+	  The used mhz should reflect the highest frequency of the PLL crystal in the internal cardreader.
+	  Oscam will calculate the best PLL divider that comes nearest to the wanted user card speed specified in cardmhz. 
+	  For models with PPC cpu use mhz = 3150, for models with MIPS cpu use mhz = 2700. Exception is the DM7025, you should use mhz = 8300
+	  E.G. You have a dream 800 HD PVR, thats a mips so you should set mhz to 2700. We got a nagra card that should run on 5 Mhz.
+	  If you want to clock the card ok just use mhz = 2700 and cardmhz = 500. If you want to overclock it use mhz = 2700 and cardmhz = 900
+	  Now your card will start to run 9 Mhz. Better monitor it! An overclocked card could run hot or crash suddenly.
+	  
+	  Keep in mind that most internal readers of non-dreamboxes clock the cards automatically and completely ignore any user clockspeed setting.
+	  But you should set mhz and cardmhz anyway, as its still used to calculate the correct timings in oscam. If you set mhz / cardmhz correct the timings
+	  will better match with the actual (automaticaly) clockspeed of the internal card reader. As for a result slighly better ecm responses or more stable
+	  functioning. Dont expect magic here, only overclocking the cardspeed can reduce the ecm response time. Bad timings can only delay it or make the card
+	  responses instable!
 
        deprecated = 0|1
 	  First  the  SC  will	be  initialized in normal mode. If it fails, the SC will be automatically reverted to deprecated
@@ -455,18 +470,6 @@ DESCRIPTIONS
 	  1 = use SSL for ghttp protocol, default:0
 
 OVERCLOCKING
-       ·  Dreambox and other internal readers
-
-	  For Dreambox and other internal readers the highest possible clockrate will be auto detected. The mhz  parameter  lets
-	  you  override  the  values chosen by OSCam, if it differs from 357 and 358, but usually you will not set any value for
-	  mhz.
-
-	  For certain Dreamboxes (especially PPC clones) the default mhz parameter leads to slow ECM times  and/or  "not  found"
-	  ECMs. By setting mhz to values like 200, 300, 400, ... 1600 you can find a value that works for your receiver and your
-	  card. The higher the mhz value, the slower the ECM time (strange enough).
-
-	  If you choose the value too low, your card is not recognized (no ATR or "card not supported"). If you choose the value
-	  too high, you get slow ECM times. Our experience is that either no mhz line, or a line mhz = 1000 works best.
 
        ·  Phoenix / Smartmouse reader
 
