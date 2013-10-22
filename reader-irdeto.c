@@ -548,7 +548,7 @@ static int32_t irdeto_card_init(struct s_reader *reader, ATR *newatr)
 		}
 		break;
 	}
-	if(reader->cardmhz != 600)
+	if((reader->cardmhz != 600 && reader->typ != R_INTERNAL) || (reader->typ == R_INTERNAL && (reader->cardmhz<510 || reader->cardmhz>690)))
 		{ rdr_log(reader, "WARNING: For Irdeto cards you will have to set 'cardmhz = 600' in oscam.server"); }
 
 	return irdeto_card_init_provider(reader);

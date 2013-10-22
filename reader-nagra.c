@@ -187,7 +187,7 @@ static void DateTimeCMD(struct s_reader *reader)
 static int32_t NegotiateSessionKey_Tiger(struct s_reader *reader)
 {
 	def_resp;
-	unsigned char vFixed[] = {0, 1, 2, 3, 0x11};
+	unsigned char exponent = 0x11;
 	unsigned char parte_fija[120];
 	unsigned char parte_variable[88];
 	unsigned char d1_rsa_modulo[88];
@@ -195,7 +195,7 @@ static int32_t NegotiateSessionKey_Tiger(struct s_reader *reader)
 	unsigned char sign1[8];
 	unsigned char sk[16];
 	unsigned char tmp[104];
-	unsigned char idea_sig[16];
+	unsigned char idea_key[16];
 	unsigned char rnd[88];
 	char tmp2[17];
 	struct nagra_data *csystem_data = reader->csystem_data;
@@ -215,7 +215,7 @@ static int32_t NegotiateSessionKey_Tiger(struct s_reader *reader)
 	BIGNUM *bnCT = BN_CTX_get(ctx);
 	BIGNUM *bnPT = BN_CTX_get(ctx);
 	BN_bin2bn(reader->rsa_mod, 120, bnN);
-	BN_bin2bn(vFixed + 4, 1, bnE);
+	BN_bin2bn(&exponent, 1, bnE);
 	BN_bin2bn(&cta_res[90], 120, bnCT);
 	BN_mod_exp(bnPT, bnCT, bnE, bnN, ctx);
 	memset(parte_fija, 0, 120);
@@ -226,8 +226,8 @@ static int32_t NegotiateSessionKey_Tiger(struct s_reader *reader)
 	rdr_debug_mask(reader, D_READER, "---------- SIG CHECK ---------------------");
 	memset(tmp, 0, 104);
 	memcpy(tmp + 4, parte_fija + 11, 100);
-	memset(idea_sig, 0x37, 16);
-	Signature(sign1, idea_sig, tmp, 104);
+	memset(idea_key, 0x37, 16);
+	Signature(sign1, idea_key, tmp, 104);
 	rdr_debug_mask(reader, D_READER, "sign1: %s", cs_hexdump(0, sign1, 8, tmp2, sizeof(tmp2)));
 	rdr_debug_mask(reader, D_READER, "sign2: %s", cs_hexdump(0, parte_fija + 111, 8, tmp2, sizeof(tmp2)));
 	if(!memcmp(parte_fija + 111, sign1, 8) == 0)
@@ -255,7 +255,7 @@ static int32_t NegotiateSessionKey_Tiger(struct s_reader *reader)
 	BIGNUM *bnCT1 = BN_CTX_get(ctx1);
 	BIGNUM *bnPT1 = BN_CTX_get(ctx1);
 	BN_bin2bn(d1_rsa_modulo, 88, bnN1);
-	BN_bin2bn(vFixed + 4, 1, bnE1);
+	BN_bin2bn(&exponent, 1, bnE1);
 	BN_bin2bn(cta_res + 2, 88, bnCT1);
 	BN_mod_exp(bnPT1, bnCT1, bnE1, bnN1, ctx1);
 	memset(parte_variable, 0, 88);
@@ -274,12 +274,13 @@ static int32_t NegotiateSessionKey_Tiger(struct s_reader *reader)
 	reader->prid[0][3] = parte_variable[74];
 	reader->caid = (SYSTEM_NAGRA | parte_variable[76]);
 	memcpy(sk, &parte_variable[79], 8);
-	memcpy(sk + 8, &parte_variable[79], 8);
+	memset(sk + 8, 0xBB, 8);
 	rdr_log_sensitive(reader, "type: NAGRA, caid: %04X, IRD ID: {%s}", reader->caid, cs_hexdump(1, reader->irdId, 4, tmp2, sizeof(tmp2)));
 	rdr_log(reader, "ProviderID: %s", cs_hexdump(1, reader->prid[0], 4, tmp2, sizeof(tmp2)));
 
-	memset(rnd, 0, 88);
-	memcpy(rnd, sk, 16);
+	memcpy(rnd, sk, 8);
+	memset(&rnd[8], 0xBB, 79);
+	rnd[87] = 0x6B;
 	ReverseMem(rnd, 88);
 
 
@@ -292,7 +293,7 @@ static int32_t NegotiateSessionKey_Tiger(struct s_reader *reader)
 	BIGNUM *bnCT3 = BN_CTX_get(ctx3);
 	BIGNUM *bnPT3 = BN_CTX_get(ctx3);
 	BN_bin2bn(d1_rsa_modulo, 88, bnN3);
-	BN_bin2bn(vFixed + 4, 1, bnE3);
+	BN_bin2bn(&exponent, 1, bnE3);
 	BN_bin2bn(rnd, 88, bnCT3);
 	BN_mod_exp(bnPT3, bnCT3, bnE3, bnN3, ctx3);
 	memset(d2_data, 0, 88);
