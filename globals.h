@@ -1316,7 +1316,8 @@ struct s_reader                                     //contains device info, read
 	////variables from protocol_t1.h
 	uint16_t    ifsc;             // Information field size for the ICC
 	unsigned char ns;               // Send sequence number
-	int             smartdev_found;
+	int16_t             smartdev_found;
+	int16_t				smart_type;
 #endif
 	unsigned char   rom[15];
 	unsigned char   irdId[4];

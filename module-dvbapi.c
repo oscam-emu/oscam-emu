@@ -438,13 +438,13 @@ static int32_t dvbapi_detect_api(void)
 	cs_log("Detected Coolstream API");
 	return 1;
 #else
-	int32_t i, devnum = -1, dmx_fd = 0, boxnum = sizeof(devices) / sizeof(struct box_devices);
+	int32_t i = 0, n = 0, devnum = -1, dmx_fd = 0, boxnum = sizeof(devices) / sizeof(struct box_devices);
 	char device_path[128], device_path2[128];
 
-	for(i = 0; i < boxnum; i++)
+	while (i < boxnum)
 	{
 		snprintf(device_path2, sizeof(device_path2), devices[i].demux_device, 0);
-		snprintf(device_path, sizeof(device_path), devices[i].path, 0);
+		snprintf(device_path, sizeof(device_path), devices[i].path, n);
 		strncat(device_path, device_path2, sizeof(device_path) - strlen(device_path) - 1);
 		if((dmx_fd = open(device_path, O_RDWR | O_NONBLOCK)) > 0)
 		{
@@ -453,6 +453,8 @@ static int32_t dvbapi_detect_api(void)
 			if(ret < 0) { cs_log("ERROR: Could not close demuxer fd (errno=%d %s)", errno, strerror(errno)); }
 			break;
 		}
+		/* try at least 8 adapters */
+		if ((strchr(devices[i].path, '%') != NULL) && (n < 8)) n++; else { n = 0; i++; }
 	}
 
 	if(devnum == -1) { return 0; }

@@ -33,7 +33,7 @@
 
 #define NUM_TXFERS 2
 static CS_MUTEX_LOCK sr_lock;
-
+static const char *const rdrtype_str[6] = {"SR","Infinity", "SRv2", "TripleP1", "TripleP2", "TripleP3"};
 struct sr_data
 {
 	int32_t F;
@@ -48,6 +48,7 @@ struct sr_data
 	libusb_device *usb_dev;
 	libusb_device_handle *usb_dev_handle;
 	enum smartreader_chip_type type;
+	enum smartreader_rdrtypename rdrtype;
 	uint8_t in_ep;
 	uint8_t out_ep;
 	int32_t index;
@@ -70,6 +71,8 @@ struct sr_data
 	int32_t poll;
 	pthread_t rt;
 	unsigned char modem_status;
+	uint16_t tripledelay;
+	int detectstart ;
 };
 
 static int32_t init_count;
@@ -253,10 +256,12 @@ static struct libusb_device *find_smartreader(struct s_reader *rdr, const char *
 					{
 						cs_log("Found reader with serial %s at %03d:%03d", dev_name, libusb_get_bus_number(dev), libusb_get_device_address(dev));
 						if(smartreader_check_endpoint(dev, in_endpoint, out_endpoint)) {
-							if(out_endpoint == 0x82) rdr->smartdev_found = 1 ;  else
-							if(out_endpoint == 0x81) rdr->smartdev_found = 2 ; else
-							if(out_endpoint == 0x83) rdr->smartdev_found = 3 ; else
-							if(out_endpoint == 0x85) rdr->smartdev_found = 4 ; else
+							if(out_endpoint == 0x82 && in_endpoint == 0x01 && usbdesc.idProduct == 0x6001) { rdr->smart_type = 0; rdr->smartdev_found = 1;} else
+							if(out_endpoint == 0x81 && in_endpoint == 0x01) { rdr->smart_type = 1; rdr->smartdev_found = 2;} else
+							if(out_endpoint == 0x81 && in_endpoint == 0x02 && usbdesc.idProduct == 0x6001) { rdr->smart_type = 2; rdr->smartdev_found = 3;} else
+							if(out_endpoint == 0x81 && in_endpoint == 0x02 && usbdesc.idProduct == 0x6011) { rdr->smart_type = 3; rdr->smartdev_found = 4;} else
+							if(out_endpoint == 0x83 && in_endpoint == 0x04 && usbdesc.idProduct == 0x6011) { rdr->smart_type = 4; rdr->smartdev_found = 5;} else
+							if(out_endpoint == 0x85 && in_endpoint == 0x06 && usbdesc.idProduct == 0x6011) { rdr->smart_type = 5; rdr->smartdev_found = 6;} else
 								rdr->smartdev_found = 0;
 						} 
 					}
@@ -266,12 +271,13 @@ static struct libusb_device *find_smartreader(struct s_reader *rdr, const char *
 			{
 				cs_debug_mask(D_DEVICE, "SR: Checking FTDI device: %03d on bus %03d", libusb_get_device_address(dev), libusb_get_bus_number(dev));
 				// check for smargo endpoints.
-				if(smartreader_check_endpoint(dev, in_endpoint, out_endpoint))
 						if(smartreader_check_endpoint(dev, in_endpoint, out_endpoint)) {
-							if(out_endpoint == 0x82) rdr->smartdev_found = 1 ; else
-							if(out_endpoint == 0x81) rdr->smartdev_found = 2 ; else
-							if(out_endpoint == 0x83) rdr->smartdev_found = 3 ; else
-							if(out_endpoint == 0x85) rdr->smartdev_found = 4 ; else
+							if(out_endpoint == 0x82 && in_endpoint == 0x01 && usbdesc.idProduct == 0x6001) { rdr->smart_type = 0; rdr->smartdev_found = 1;} else
+							if(out_endpoint == 0x81 && in_endpoint == 0x01) { rdr->smart_type = 1; rdr->smartdev_found = 2;} else
+							if(out_endpoint == 0x81 && in_endpoint == 0x02 && usbdesc.idProduct == 0x6001) { rdr->smart_type = 2; rdr->smartdev_found = 3;} else
+							if(out_endpoint == 0x81 && in_endpoint == 0x02 && usbdesc.idProduct == 0x6011) { rdr->smart_type = 3; rdr->smartdev_found = 4;} else
+							if(out_endpoint == 0x83 && in_endpoint == 0x04 && usbdesc.idProduct == 0x6011) { rdr->smart_type = 4; rdr->smartdev_found = 5;} else
+							if(out_endpoint == 0x85 && in_endpoint == 0x06 && usbdesc.idProduct == 0x6011) { rdr->smart_type = 5; rdr->smartdev_found = 6;} else
 								rdr->smartdev_found = 0;
 						} 
 			}
@@ -293,14 +299,14 @@ static struct libusb_device *find_smartreader(struct s_reader *rdr, const char *
 	return dev;
 }
 
-void smartreader_init(struct s_reader *reader, char *rdrtype)
+void smartreader_init(struct s_reader *reader)
 {
 	uint32_t i;
 	struct sr_data *crdr_data = reader->crdr_data;
 
 	crdr_data->usb_dev = NULL;
 	crdr_data->usb_dev_handle = NULL;
-	crdr_data->usb_read_timeout = 10000;
+	crdr_data->usb_read_timeout = 20000;
 	crdr_data->usb_write_timeout = 10000;
 
 	crdr_data->type = TYPE_BM;    /* chip type */
@@ -309,11 +315,12 @@ void smartreader_init(struct s_reader *reader, char *rdrtype)
 
 	crdr_data->writebuffer_chunksize = 4096;
 	crdr_data->max_packet_size = 0;
-	if(rdrtype)
+	rdr_log(reader,"initing smargo type %s", rdrtype_str[crdr_data->rdrtype]);
+	if(crdr_data->rdrtype)
 	{
 		for(i = 0; i < sizeof(reader_types) / sizeof(struct s_reader_types); ++i)
 		{
-			if(!strcasecmp(reader_types[i].name, rdrtype))
+			if(reader_types[i].rdrtypename == crdr_data->rdrtype)
 			{
 				crdr_data->in_ep = reader_types[i].in_ep;
 				crdr_data->out_ep = reader_types[i].out_ep;
@@ -322,7 +329,7 @@ void smartreader_init(struct s_reader *reader, char *rdrtype)
 				return;
 			}
 		}
-		rdr_log(reader, "Smartreader: The defined reader type %s is unknown. Using default Smartreader values.", rdrtype);
+		rdr_log(reader, "Smartreader: The defined reader type %u is unknown. Using default Smartreader values.", crdr_data->rdrtype);
 	}
 	crdr_data->in_ep = 0x01;
 	crdr_data->out_ep = 0x82;
@@ -344,6 +351,7 @@ static uint32_t  smartreader_determine_max_packet_size(struct s_reader *reader)
 	// Determine maximum packet size. Init with default value.
 	// New hi-speed devices from FTDI use a packet size of 512 bytes
 	// but could be connected to a normal speed USB hub -> 64 bytes packet size.
+	rdr_log(reader,"DE PACKET SIZE DETERMINATION USES READER TYPE %u", crdr_data->type);
 	if(crdr_data->type == TYPE_2232H || crdr_data->type == TYPE_4232H)
 		{ packet_size = 512; }
 	else
@@ -378,6 +386,7 @@ static uint32_t  smartreader_determine_max_packet_size(struct s_reader *reader)
 		}
 	}
 
+	if (crdr_data->rdrtype >= 3) packet_size = 512;
 	return packet_size;
 }
 
@@ -704,7 +713,7 @@ int smartreader_set_baudrate(struct s_reader *reader, int baudrate)
     actual_baudrate = smartreader_convert_baudrate(baudrate, reader, &value, &idx);
     if (actual_baudrate <= 0) {
         rdr_log(reader, "Silly baudrate <= 0.");
-		return ERROR;
+		return (-1);
 	}
 
     // Check within tolerance (about 5%)
@@ -713,14 +722,20 @@ int smartreader_set_baudrate(struct s_reader *reader, int baudrate)
                 ? (actual_baudrate * 21 < baudrate * 20)
                 : (baudrate * 21 < actual_baudrate * 20))) {
         rdr_log(reader, "Unsupported baudrate. Note: bitbang baudrates are automatically multiplied by 4");
-		return ERROR;
+		return (-1);
 	}
-    if (libusb_control_transfer(crdr_data->usb_dev_handle, FTDI_DEVICE_OUT_REQTYPE,
-                                SIO_SET_BAUDRATE_REQUEST, value,
-                                idx, NULL, 0, crdr_data->usb_write_timeout) < 0) {
+    if (libusb_control_transfer(crdr_data->usb_dev_handle, 
+								FTDI_DEVICE_OUT_REQTYPE,
+                                SIO_SET_BAUDRATE_REQUEST, 
+								value,
+                                idx, 
+								NULL, 
+								0, 
+								crdr_data->usb_write_timeout) < 0) {
         rdr_log(reader, "Setting new baudrate failed");
-		return ERROR;
+		return (-2);
 	}
+//	rdr_log(reader,"De baudrate is set on %u baud de value = %u  de idx = %u", baudrate, value, idx);
     crdr_data->baudrate = baudrate;
     return 0;
 }
@@ -879,7 +894,6 @@ static int32_t smartreader_set_latency_timer(struct s_reader *reader, uint16_t  
 		rdr_log(reader, "unable to set latency timer");
 		return (-2);
 	}
-
 	return 0;
 }
 
@@ -990,7 +1004,7 @@ static int32_t smartreader_usb_open_dev(struct s_reader *reader)
 		smartreader_usb_close_internal(reader);
 		rdr_log(reader, "Couldn't detach interface from kernel. Please unload the FTDI drivers");
 		return (LIBUSB_ERROR_NOT_SUPPORTED);
-	}
+	} 
 #endif
 	ret = libusb_get_device_descriptor(crdr_data->usb_dev, &usbdesc);
 
@@ -1062,7 +1076,7 @@ static int32_t smartreader_usb_open_dev(struct s_reader *reader)
 	else if(usbdesc.bcdDevice == 0x200)
 		{ crdr_data->type = TYPE_AM; }
 	else if((usbdesc.bcdDevice == 0x500) && (usbdesc.idProduct == 0x6011))
-		{ crdr_data->type = TYPE_2232C; }
+		{ crdr_data->type = TYPE_4232H; }
 	else if((usbdesc.bcdDevice == 0x500) && (usbdesc.idProduct != 0x6011))
 		{ crdr_data->type = TYPE_2232C; }
 	else if(usbdesc.bcdDevice == 0x600)
@@ -1074,6 +1088,8 @@ static int32_t smartreader_usb_open_dev(struct s_reader *reader)
 
 	// Determine maximum packet size
 	crdr_data->max_packet_size = smartreader_determine_max_packet_size(reader);
+	rdr_log(reader,"reader type is %u", crdr_data->type);
+	rdr_log(reader,"maw packet size is %u", crdr_data->max_packet_size);
 
 	if(smartreader_set_baudrate(reader, 9600) != 0)
 	{
@@ -1084,12 +1100,12 @@ static int32_t smartreader_usb_open_dev(struct s_reader *reader)
 		smartreader_usb_close_internal(reader);
 		rdr_log(reader, "set baudrate failed");
 		return (-7);
-	}
+	} 
 
 	return (0);
 }
 
-static void EnableSmartReader(struct s_reader *reader, int32_t clock_val, uint16_t  Fi, unsigned char Di, unsigned char Ni, unsigned char T, unsigned char inv, int32_t parity)
+static void EnableSmartReader(struct s_reader *reader, uint32_t baud_temp, int32_t clock_val, uint16_t  Fi, unsigned char Di, unsigned char Ni, unsigned char T, unsigned char inv, int32_t parity)
 {
 	struct sr_data *crdr_data = reader->crdr_data;
 	unsigned char FiDi[4];
@@ -1100,7 +1116,7 @@ static void EnableSmartReader(struct s_reader *reader, int32_t clock_val, uint16
 	unsigned char Invert[2];
 	unsigned char temp_T;
 
-	smartreader_set_baudrate(reader, crdr_data->baudrate);
+	smartreader_set_baudrate(reader, baud_temp);
 	smartreader_setflowctrl(reader, 0);
 	smartreader_set_line_property(reader, (enum smartreader_bits_type) 5, STOP_BIT_2, NONE);
 
@@ -1158,16 +1174,15 @@ static void EnableSmartReader(struct s_reader *reader, int32_t clock_val, uint16
 	Invert[1] = inv;
 	smart_write(reader, Invert, sizeof(Invert));
 
-//	cs_writelock(&sr_lock);
 	smartreader_set_line_property2(reader, BITS_8, STOP_BIT_2, parity, BREAK_ON);
 	//  send break for 350ms, also comes from JoePub debugging.
-	cs_sleepms(550);
+	cs_sleepms(400);
+
 	if(temp_T == 1)
 		{ smartreader_set_line_property2(reader, BITS_8, STOP_BIT_1, parity, BREAK_OFF); }
 	else
-		{ smartreader_set_line_property2(reader, BITS_8, STOP_BIT_2, parity, BREAK_OFF); }
+		{ smartreader_set_line_property2(reader, BITS_8, STOP_BIT_2, parity,BREAK_OFF); }
 
-//	cs_writeunlock(&sr_lock);
     
 	smart_flush(reader);
 }
@@ -1176,12 +1191,14 @@ static void EnableSmartReader(struct s_reader *reader, int32_t clock_val, uint16
 static void *ReaderThread(void *p)
 {
 	struct libusb_transfer *usbt[NUM_TXFERS];
-	unsigned char usb_buffers[NUM_TXFERS][64];
+//	unsigned char usb_buffers[NUM_TXFERS][512];
 	struct s_reader *reader;
-	int32_t ret, idx;
+	int32_t ret, idx, size;
 
 	reader = (struct s_reader *)p;
 	struct sr_data *crdr_data = reader->crdr_data;
+	if (crdr_data->rdrtype >= 3) size = 512; else size = 64;
+	unsigned char usb_buffers[NUM_TXFERS][size];
 	crdr_data->running = 1;
 
 	set_thread_name(__func__);
@@ -1193,7 +1210,7 @@ static void *ReaderThread(void *p)
 								  crdr_data->usb_dev_handle,
 								  crdr_data->out_ep,
 								  usb_buffers[idx],
-								  64,
+								  size,
 								  (void *)(&read_callback),
 								  p,
 								  0);
@@ -1249,10 +1266,11 @@ static int32_t SR_Init(struct s_reader *reader)
 	rdr_log(reader, "De SR_init");
 	if(!busname)
 	{
-		rdrtype = NULL;
+		rdrtype = "SR";
 		memcpy(device, reader->device, strlen(reader->device) + 1);
 		busname = strtok_r(device, ":", &saveptr1);
 		dev = strtok_r(NULL, search, &saveptr1);
+		rdr_log(reader, "TYPE IS SET ON %s", rdrtype);
 	}
 
 	if(!busname || !dev)
@@ -1260,16 +1278,38 @@ static int32_t SR_Init(struct s_reader *reader)
 		rdr_log(reader, "Wrong device format (%s), it should be Device=bus:dev", reader->device);
 		return ERROR;
 	}
-
 	cs_writelock(&sr_lock);
 	if(!reader->crdr_data && !cs_malloc(&reader->crdr_data, sizeof(struct sr_data)))
 		{ return ERROR; }
 	struct sr_data *crdr_data = reader->crdr_data;
+	crdr_data->detectstart = 0;
+	crdr_data->tripledelay = 0;
+	if (!strcasecmp(rdrtype, "SR")) {
+			crdr_data->rdrtype = SR;			
+	}
+		if (!strcasecmp(rdrtype, "Infinity")) {
+			crdr_data->rdrtype = Infinity;			
+	}
+	if (!strcasecmp(rdrtype, "SRv2")) {
+			crdr_data->tripledelay = 0;
+			crdr_data->rdrtype = SRv2;			
+	}
+ 	if (!strcasecmp(rdrtype, "TripleP1")) {
+			crdr_data->tripledelay = 0;
+			crdr_data->rdrtype = TripleP1;
+	}
+	if (!strcasecmp(rdrtype, "TripleP2")) {
+			crdr_data->tripledelay = 0;
+			crdr_data->rdrtype = TripleP2;
+	}
+	if (!strcasecmp(rdrtype, "TripleP3")) {
+			crdr_data->tripledelay = 0;
+			crdr_data->rdrtype = TripleP3;
+	}
+	
 
 	rdr_debug_mask(reader, D_DEVICE, "SR: Looking for device %s on bus %s", dev, busname);
-	if (reader->smartdev_found)
-		cs_sleepms(reader->smartdev_found);
-	smartreader_init(reader, rdrtype);
+	smartreader_init(reader);
 
 	if(!init_count)
 	{
@@ -1306,11 +1346,21 @@ static int32_t SR_Init(struct s_reader *reader)
 		rdr_log(reader, "unable to open smartreader device %s in bus %s endpoint in 0x%02X out 0x%02X (ret=%d)\n", dev, busname, crdr_data->in_ep, crdr_data->out_ep, ret);
 		return ERROR;
 	}
+	if (crdr_data->rdrtype >= 2) {
 
-	rdr_debug_mask(reader, D_DEVICE, "SR: Setting smartreader latency timer to 1ms");
+		cs_writeunlock(&sr_lock);
+		rdr_log(reader, "I'M SLEEPING FOR %u ms", crdr_data->tripledelay);
+		cs_sleepms(crdr_data->tripledelay);
+		cs_writelock(&sr_lock);
 
-	//Set the FTDI latency timer to 1ms
-	ret = smartreader_set_latency_timer(reader, 2);
+		rdr_debug_mask(reader, D_DEVICE, "SR: Setting smartreader latency timer to 2 ms");
+		//Set the FTDI latency timer to 2 ms is ftdi default latency.
+		ret = smartreader_set_latency_timer(reader, 2);
+	} else {
+		rdr_debug_mask(reader, D_DEVICE, "SR: Setting smartreader latency timer to 1 ms");
+		//Set the FTDI latency timer to 1 ms is ftdi default latency.
+		ret = smartreader_set_latency_timer(reader, 1);
+	}
 
 	//Set databits to 8o2
 	ret = smartreader_set_line_property(reader, BITS_8, STOP_BIT_2, ODD);
@@ -1337,6 +1387,7 @@ static int32_t SR_Init(struct s_reader *reader)
 		rdr_log(reader, "ERROR: Can't create smartreader thread (errno=%d %s)", ret, strerror(ret));
 		return ERROR;
 	}
+//	crdr_data->detectstart = 1;
 	return OK;
 }
 
@@ -1344,27 +1395,29 @@ static int32_t SR_Reset(struct s_reader *reader, ATR *atr)
 {
 	struct sr_data *crdr_data = reader->crdr_data;
 	unsigned char data[ATR_MAX_SIZE];
+	uint32_t baud_temp;
 	int32_t ret;
 	int32_t atr_ok;
-	uint32_t  i;
+	int32_t  i;
 	int32_t parity[4] = {EVEN, ODD, NONE, EVEN};    // the last EVEN is to try with different F, D values for irdeto card.
 	static const char *const parity_str[5] = {"NONE", "ODD", "EVEN", "MARK", "SPACE"};
 	rdr_log(reader," SR_reset wordt gerund");
 
 	if(reader->mhz == reader->cardmhz && reader->cardmhz * 10000 > 3690000)
-		{ crdr_data->fs = reader->mhz * 10000; }
-	else
-		{ crdr_data->fs = 3690000; }
+		{ crdr_data->fs = reader->cardmhz * 10000; }
+	else {
+		if (crdr_data->rdrtype >= 2) crdr_data->fs = reader->cardmhz * 10000; 
+		else crdr_data->fs = reader->cardmhz * 10000;
+		}
 
-//	cs_writelock(&sr_lock);
 	smart_fastpoll(reader, 1);
-	smart_flush(reader);
 	// set smartreader+ default values
 	crdr_data->F = 372;
 	crdr_data->D = 1;
 	crdr_data->N = 1;
 	crdr_data->T = 1;
 	crdr_data->inv = 0;
+	baud_temp = (double)(crdr_data->D * crdr_data->fs / (double)crdr_data->F); 
 
 	for(i = 0 ; i < 4 ; i++)
 	{
@@ -1372,8 +1425,7 @@ static int32_t SR_Reset(struct s_reader *reader, ATR *atr)
 		atr_ok = ERROR;
 		memset(data, 0, sizeof(data));
 		rdr_debug_mask(reader, D_DEVICE, "SR: Trying with parity %s", parity_str[parity[i]]);
-
-
+		
 		// special irdeto case
 		if(i == 3)
 		{
@@ -1382,10 +1434,11 @@ static int32_t SR_Reset(struct s_reader *reader, ATR *atr)
 			crdr_data->D = 1;
 			crdr_data->T = 2; // will be set to T=1 in EnableSmartReader
 			crdr_data->fs = 6000000;
+			baud_temp = (double)(crdr_data->D * crdr_data->fs / (double)crdr_data->F);
 		}
-
 		smart_flush(reader);
-		EnableSmartReader(reader, crdr_data->fs / 10000, crdr_data->F, (unsigned char)crdr_data->D, crdr_data->N, crdr_data->T, crdr_data->inv, parity[i]);
+		crdr_data->parity = parity[i];
+		EnableSmartReader(reader, baud_temp, crdr_data->fs / 10000, crdr_data->F, (unsigned char)crdr_data->D, crdr_data->N, crdr_data->T, crdr_data->inv, parity[i]);
 
 		//Reset smartcard
 
@@ -1398,6 +1451,7 @@ static int32_t SR_Reset(struct s_reader *reader, ATR *atr)
 
 		//Set the DTR HIGH and RTS LOW
 		smartreader_setdtr_rts(reader, 1, 0);
+
 
 		//Read the ATR
 		ret = smart_read(reader, data, ATR_MAX_SIZE, 1);
@@ -1417,7 +1471,9 @@ static int32_t SR_Reset(struct s_reader *reader, ATR *atr)
 			rdr_debug_mask(reader, D_DEVICE, "SR: Inverse convention detected, setting smartreader inv to 1");
 
 			crdr_data->inv = 1;
-			EnableSmartReader(reader, crdr_data->fs / 10000, crdr_data->F, (unsigned char)crdr_data->D, crdr_data->N, crdr_data->T, crdr_data->inv, parity[i]);
+			smart_flush(reader);
+			crdr_data->parity = parity[i];
+			EnableSmartReader(reader, baud_temp, crdr_data->fs / 10000, crdr_data->F, (unsigned char)crdr_data->D, crdr_data->N, crdr_data->T, crdr_data->inv, parity[i]);
 		}
 		// parse atr
 		if(ATR_InitFromArray(atr, data, ret) != ERROR)
@@ -1430,12 +1486,12 @@ static int32_t SR_Reset(struct s_reader *reader, ATR *atr)
 				crdr_data->irdeto = 1;
 			}
 		}
-
+		
 		if(atr_ok == OK) {break;}
 	}
 
 	smart_fastpoll(reader, 0);
-//	cs_writeunlock(&sr_lock);
+	
 	return atr_ok;
 }
 
@@ -1456,30 +1512,33 @@ static int32_t SR_Transmit(struct s_reader *reader, unsigned char *buffer, uint3
 
 static int32_t SR_GetStatus(struct s_reader *reader, int32_t *in)
 {
-	struct sr_data *crdr_data = reader->crdr_data; 
-	if (reader->smartdev_found >= 2 ) {
-//	rdr_log(reader, " de smart dev found = %u" , reader->smartdev_found); // needs to be removed after test
-    char usb_val[2];
-    int32_t state2;
+	struct sr_data *crdr_data = reader->crdr_data;
+	if (crdr_data->rdrtype == 2 || crdr_data->rdrtype == 3 || crdr_data->rdrtype == 4 || crdr_data->rdrtype == 5) {
+		if (crdr_data->rdrtype == 2 || crdr_data->rdrtype == 3 || crdr_data->rdrtype == 4 || crdr_data->rdrtype == 5) crdr_data->detectstart = 1;
+	char usb_val[2];
+	int32_t state2;
 
     if (crdr_data->usb_dev == NULL) {
 	rdr_log(reader,"usb device unavailable");
 	return ERROR;
 	}
+	rdr_debug_mask(reader, D_IFD, "THE DETECT START = %u card status is %u", crdr_data->detectstart, reader->card_status);
+	if (crdr_data->detectstart == 0) { *in = 1; return OK;} else
+	if (((crdr_data->detectstart == 1) && (reader->card_status != 1)) && ((crdr_data->detectstart == 1) && (reader->card_status != 0))) {
+//	if (((detectstart == 1) && (reader->card_status == CARD_INSERTED)) || ((detectstart == 1) &&  (reader->card_status == CARD_FAILURE)) || ((detectstart == 1) &&  (reader->card_status == 4))) {
 	cs_writelock(&sr_lock);
     if (libusb_control_transfer(crdr_data->usb_dev_handle, 
 								FTDI_DEVICE_IN_REQTYPE, 
 								SIO_POLL_MODEM_STATUS_REQUEST, 
-								0, crdr_data->index, 
+								2, crdr_data->index, 
 								(unsigned char *)usb_val, 
 								2, crdr_data->usb_read_timeout) != 1){
 	rdr_log(reader, "getting modem status failed ");
 	return ERROR;
 	}
-	cs_writeunlock(&sr_lock);
 	state2 = (usb_val[1] << 8) | (usb_val[0] & 0xFF);
-	rdr_debug_mask(reader, D_IFD, "the status of card in or out %u  (for v1 1152 is card out, for triple 1216 is card out or sometimes 192 is out for both)", state2);
-//	rdr_log(reader,"the status of card in or out %u  (for v1 1152 is card out, for triple 1216 is card out or sometimes 192 is out for both)", state2);
+	cs_writeunlock(&sr_lock);
+	rdr_debug_mask(reader, D_IFD, "the status of card in or out %u  ( 192 means card OUT)", state2);
     if ((state2 == 1216) || (state2 == 1152) || (state2 == 192)) {
         *in = 0; //NOCARD reader will be set to off
 	}
@@ -1487,7 +1546,7 @@ static int32_t SR_GetStatus(struct s_reader *reader, int32_t *in)
         *in = 1; //Card is in Aktivation should be ok if card is activated
 	}
 	return OK;
-
+	} else {*in = 1;rdr_log(reader,"CARD STILL IN AKTIVATION PROCESS NO DETECTION"); return OK;}
 	} else {
 	int32_t state;
 
@@ -1503,10 +1562,9 @@ static int32_t SR_GetStatus(struct s_reader *reader, int32_t *in)
 	else
 		{ *in = 0; } //NOCARD
 
-//	return OK;
+	return OK;
 	}
- return OK;	
-}
+ }
 
 static int32_t SR_Receive(struct s_reader *reader, unsigned char *buffer, uint32_t size, uint32_t delay, uint32_t timeout)   // delay and timeout not used (yet)!
 {
@@ -1515,7 +1573,7 @@ static int32_t SR_Receive(struct s_reader *reader, unsigned char *buffer, uint32
 	uint32_t  ret;
 
 	smart_fastpoll(reader, 1);
-	ret = smart_read(reader, buffer, size, 1);
+	ret = smart_read(reader, buffer, size, 2);
 	smart_fastpoll(reader, 0);
 	if(ret != size)
 		{ return ERROR; }
@@ -1540,18 +1598,17 @@ int32_t SR_WriteSettings(struct s_reader *reader, uint16_t  F, unsigned char D, 
 	else if(reader->mhz >= 480)  { reader->mhz =  480; }
 	else if(reader->mhz >= 436)  { reader->mhz =  436; }
 	else if(reader->mhz >= 400)  { reader->mhz =  400; }
-	else if(reader->mhz >= 357)  { reader->mhz =  369; }
+	else if(reader->mhz >= 369)  { reader->mhz =  369; }
+	else if(reader->mhz == 368)  { reader->mhz =  369; }
 	else if(reader->mhz >= 343)  { reader->mhz =  343; }
 	else
 		{ reader->mhz =  320; }
-//	cs_writelock(&sr_lock);
 	smart_fastpoll(reader, 1);
-	rdr_log(reader," The EnableSmarReader is called out off Sr_writesettings");
-//	smart_flush(reader);
-	EnableSmartReader(reader, reader->mhz, F, D, N, T, crdr_data->inv, crdr_data->parity);
-	smartreader_set_baudrate(reader, 3000000);
+	uint32_t baud_temp = (double)(D * (reader->mhz * 10000) / (double)F);
+	EnableSmartReader(reader, baud_temp, reader->mhz, F, D, N, T, crdr_data->inv, crdr_data->parity);
+	smartreader_set_baudrate(reader, baud_temp);
 	smart_fastpoll(reader, 0);
-//	cs_writeunlock(&sr_lock);
+	rdr_log(reader,"de baudrate set = %u", baud_temp);
 
 	return OK;
 }
@@ -1633,7 +1690,7 @@ static int32_t SR_FastReset_With_ATR(struct s_reader *reader, ATR *atr)
 	// A card with an active low reset is reset by maintaining RST in state L for at least 40 000 clock cycles
 	// so if we have a base freq of 3.5712MHz : 40000/3690000 = .0112007168458781 seconds, aka 11ms
 	// so if we have a base freq of 6.00MHz : 40000/6000000 = .0066666666666666 seconds, aka 6ms
-	cs_sleepms(20);
+	cs_sleepms(25);
 
 	//Set the DTR HIGH and RTS LOW
 	smartreader_setdtr_rts(reader, 1, 0);
@@ -1682,14 +1739,24 @@ int32_t sr_write_settings(struct s_reader *reader,
 static pthread_mutex_t init_lock_mutex;
 
 static int32_t sr_init_locks(struct s_reader *UNUSED(reader))
+//static int32_t sr_init_locks(struct s_reader *reader)
 {
 	// Prevent double initalization of sr_lock
+//	struct sr_data *crdr_data = reader->crdr_data;
 	if(pthread_mutex_trylock(&init_lock_mutex))
 	{
 		cs_lock_create(&sr_lock, 10, "sr_lock");
 	}
 	return 0;
 }
+
+/*static char SR_GetRdrtype(struct s_reader *reader)
+{
+	char const *type;
+	struct sr_data *crdr_data = reader->crdr_data;
+		type = rdrtype_str[crdr_data->rdrtype];
+	return *type;
+}*/
 
 void cardreader_smartreader(struct s_cardreader *crdr)
 {

@@ -64,6 +64,17 @@ enum smartreader_bits_type { BITS_7 = 7, BITS_8 = 8 };
 enum smartreader_break_type { BREAK_OFF = 0, BREAK_ON = 1 };
 
 /** Port interface for chips with multiple interfaces */
+
+enum smartreader_rdrtypename 
+{
+	SR			= 0,
+	Infinity	= 1,
+	SRv2		= 2,
+	TripleP1	= 3,
+	TripleP2	= 4,
+	TripleP3	= 5
+};
+
 enum smartreader_interface
 {
 	INTERFACE_ANY = 0,
@@ -75,7 +86,7 @@ enum smartreader_interface
 
 struct s_reader_types
 {
-	char *name;
+	uint16_t rdrtypename;
 	uint8_t in_ep;
 	uint8_t out_ep;
 	int32_t index;
@@ -84,12 +95,12 @@ struct s_reader_types
 
 const struct s_reader_types reader_types[] =
 {
-	{"SR", 0x01, 0x82, INTERFACE_A, 0},
-	{"SRv2", 0x02, 0x81, INTERFACE_A, 0},
-	{"Infinity", 0x01, 0x81, INTERFACE_A, 0},
-	{"TripleP1", 0x02, 0x81, INTERFACE_A, 0},
-	{"TripleP2", 0x04, 0x83, INTERFACE_B, 1},
-	{"TripleP3", 0x06, 0x85, INTERFACE_C, 2}
+	{ SR, 0x01, 0x82, INTERFACE_A, 0},			//  type 0
+	{ Infinity, 0x01, 0x81, INTERFACE_A, 0},	//  type 1
+	{ SRv2, 0x02, 0x81, INTERFACE_A, 0},		//  type 2
+	{ TripleP1, 0x02, 0x81, INTERFACE_A, 0},	//  type 3
+	{ TripleP2, 0x04, 0x83, INTERFACE_B, 1},	//  type 4
+	{ TripleP3, 0x06, 0x85, INTERFACE_C, 2}		// type 5
 };
 
 #endif // __SMARTREADER_TYPES_H__

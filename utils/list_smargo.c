@@ -42,6 +42,7 @@ static void smartreader_check_endpoint(libusb_device *usb_dev, libusb_device_han
 	int32_t busid, devid;
 	unsigned char iserialbuffer[128], iproductbuffer[128];
 	char *productptr = (char *)iproductbuffer;
+	static const char *const typename_str[6] = {"SR", "Infinity", "SRv2", "TripleP1", "TripleP2", "TripleP3"};
 
 	nb_endpoint_ok = 0;
 
@@ -62,7 +63,7 @@ static void smartreader_check_endpoint(libusb_device *usb_dev, libusb_device_han
 		for(m = 0; m < sizeof(reader_types) / sizeof(struct s_reader_types); ++m)
 		{
 			nb_endpoint_ok = 0;
-			for(j = 0; j < configDesc->bNumInterfaces; j++)
+			for(j = 0; j < (configDesc->bNumInterfaces); j++)
 			{
 				for(k = 0; k < configDesc->interface[j].num_altsetting; k++)
 				{
@@ -76,6 +77,7 @@ static void smartreader_check_endpoint(libusb_device *usb_dev, libusb_device_han
 					}
 				}
 			}
+			if ((usbdesc.idProduct = 0x6011) && (m == 2)) nb_endpoint_ok = 0;
 			if(nb_endpoint_ok == 2)
 			{
 				busid = libusb_get_bus_number(usb_dev);
@@ -87,8 +89,8 @@ static void smartreader_check_endpoint(libusb_device *usb_dev, libusb_device_han
 				printf("bus %03d, device %03d : %04x:%04x %s (type=%s, in_ep=%02x, out_ep=%02x; insert in oscam.server 'device = %s%sSerial:%s')\n",
 					   busid, devid,
 					   usbdesc.idVendor, usbdesc.idProduct, strlen(productptr) > 0 ? productptr : "Smartreader",
-					   reader_types[m].name, reader_types[m].in_ep, reader_types[m].out_ep,
-					   strcmp(reader_types[m].name, "SR") ? reader_types[m].name : "", strcmp(reader_types[m].name, "SR") ? ";" : "", iserialbuffer
+					   typename_str[reader_types[m].rdrtypename], reader_types[m].in_ep, reader_types[m].out_ep,
+					   reader_types[m].rdrtypename == 0 ? "" : typename_str[reader_types[m].rdrtypename] , reader_types[m].rdrtypename == 0 ? "" : ";", iserialbuffer
 					  );
 			}
 		}
