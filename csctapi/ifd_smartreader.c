@@ -1539,7 +1539,7 @@ static int32_t SR_GetStatus(struct s_reader *reader, int32_t *in)
 	state2 = (usb_val[1] << 8) | (usb_val[0] & 0xFF);
 	cs_writeunlock(&sr_lock);
 	rdr_debug_mask(reader, D_IFD, "the status of card in or out %u  ( 192 means card OUT)", state2);
-    if ((state2 == 1216) || (state2 == 1152) || (state2 == 192)) {
+    if (state2 == 192) {
         *in = 0; //NOCARD reader will be set to off
 	}
     else {
@@ -1603,11 +1603,20 @@ int32_t SR_WriteSettings(struct s_reader *reader, uint16_t  F, unsigned char D, 
 	else if(reader->mhz >= 343)  { reader->mhz =  343; }
 	else
 		{ reader->mhz =  320; }
-	smart_fastpoll(reader, 1);
+	pthread_mutex_lock(&crdr_data->g_usb_mutex);
+	crdr_data->poll = 1;
+	pthread_cond_signal(&crdr_data->g_usb_cond);
+	pthread_mutex_unlock(&crdr_data->g_usb_mutex);
+	cs_writelock(&sr_lock);
 	uint32_t baud_temp = (double)(D * (reader->mhz * 10000) / (double)F);
 	EnableSmartReader(reader, baud_temp, reader->mhz, F, D, N, T, crdr_data->inv, crdr_data->parity);
 	smartreader_set_baudrate(reader, baud_temp);
-	smart_fastpoll(reader, 0);
+	pthread_mutex_lock(&crdr_data->g_usb_mutex);
+	crdr_data->poll = 0;
+	pthread_cond_signal(&crdr_data->g_usb_cond);
+	pthread_mutex_unlock(&crdr_data->g_usb_mutex);
+	cs_sleepms(150);
+	cs_writeunlock(&sr_lock);
 	rdr_log(reader,"de baudrate set = %u", baud_temp);
 
 	return OK;
