@@ -1119,6 +1119,7 @@ static void EnableSmartReader(struct s_reader *reader, uint32_t baud_temp, int32
 
 	smartreader_set_baudrate(reader, baud_temp);
 	smartreader_setflowctrl(reader, 0);
+//	cs_sleepms(150);
 	smartreader_set_line_property(reader, (enum smartreader_bits_type) 5, STOP_BIT_2, NONE);
 
 	// command 1, set F and D parameter
@@ -1279,7 +1280,7 @@ static int32_t SR_Init(struct s_reader *reader)
 		rdr_log(reader, "Wrong device format (%s), it should be Device=bus:dev", reader->device);
 		return ERROR;
 	}
-	cs_writelock(&reader->sr_lock);
+//	cs_writelock(&reader->sr_lock);
 	if(!reader->crdr_data && !cs_malloc(&reader->crdr_data, sizeof(struct sr_data)))
 		{ return ERROR; }
 	struct sr_data *crdr_data = reader->crdr_data;
@@ -1349,10 +1350,10 @@ static int32_t SR_Init(struct s_reader *reader)
 	}
 	if (crdr_data->rdrtype >= 2) {
 
-		cs_writeunlock(&reader->sr_lock);
-		rdr_log(reader, "I'M SLEEPING FOR %u ms", crdr_data->tripledelay);
-		cs_sleepms(crdr_data->tripledelay);
-		cs_writelock(&reader->sr_lock);
+//		cs_writeunlock(&reader->sr_lock);
+//		rdr_log(reader, "I'M SLEEPING FOR %u ms", crdr_data->tripledelay);
+//		cs_sleepms(crdr_data->tripledelay);
+//		cs_writelock(&reader->sr_lock);
 
 		rdr_debug_mask(reader, D_DEVICE, "SR: Setting smartreader latency timer to 2 ms");
 		//Set the FTDI latency timer to 2 ms is ftdi default latency.
@@ -1380,7 +1381,7 @@ static int32_t SR_Init(struct s_reader *reader)
 	pthread_mutex_init(&crdr_data->g_usb_mutex, NULL);
 	pthread_cond_init(&crdr_data->g_usb_cond, NULL);
 
-	cs_writeunlock(&reader->sr_lock);
+//	cs_writeunlock(&reader->sr_lock);
 	rdr_log(reader," Pthread Wordt gecreeerd");
 	ret = pthread_create(&crdr_data->rt, NULL, ReaderThread, (void *)(reader));
 	if(ret)
@@ -1527,7 +1528,7 @@ static int32_t SR_GetStatus(struct s_reader *reader, int32_t *in)
 	if (crdr_data->detectstart == 0) { *in = 1; return OK;} else
 	if (((crdr_data->detectstart == 1) && (reader->card_status != 1)) && ((crdr_data->detectstart == 1) && (reader->card_status != 0))) {
 //	if (((detectstart == 1) && (reader->card_status == CARD_INSERTED)) || ((detectstart == 1) &&  (reader->card_status == CARD_FAILURE)) || ((detectstart == 1) &&  (reader->card_status == 4))) {
-	cs_writelock(&reader->sr_lock);
+//	cs_writelock(&reader->sr_lock);
     if (libusb_control_transfer(crdr_data->usb_dev_handle, 
 								FTDI_DEVICE_IN_REQTYPE, 
 								SIO_POLL_MODEM_STATUS_REQUEST, 
@@ -1538,7 +1539,7 @@ static int32_t SR_GetStatus(struct s_reader *reader, int32_t *in)
 	return ERROR;
 	}
 	state2 = (usb_val[1] << 8) | (usb_val[0] & 0xFF);
-	cs_writeunlock(&reader->sr_lock);
+//	cs_writeunlock(&reader->sr_lock);
 	rdr_debug_mask(reader, D_IFD, "the status of card in or out %u  ( 192 means card OUT)", state2);
     if (state2 == 192) {
         *in = 0; //NOCARD reader will be set to off
@@ -1604,21 +1605,14 @@ int32_t SR_WriteSettings(struct s_reader *reader, uint16_t  F, unsigned char D, 
 	else if(reader->mhz >= 343)  { reader->mhz =  343; }
 	else
 		{ reader->mhz =  320; }
-	pthread_mutex_lock(&crdr_data->g_usb_mutex);
-	crdr_data->poll = 1;
-	pthread_cond_signal(&crdr_data->g_usb_cond);
-	pthread_mutex_unlock(&crdr_data->g_usb_mutex);
-	cs_writelock(&reader->sr_lock);
+	smart_fastpoll(reader, 1);
 	uint32_t baud_temp = (double)(D * (reader->mhz * 10000) / (double)F);
+	smart_flush(reader);
 	EnableSmartReader(reader, baud_temp, reader->mhz, F, D, N, T, crdr_data->inv, crdr_data->parity);
 	smartreader_set_baudrate(reader, baud_temp);
-	pthread_mutex_lock(&crdr_data->g_usb_mutex);
-	crdr_data->poll = 0;
-	pthread_cond_signal(&crdr_data->g_usb_cond);
-	pthread_mutex_unlock(&crdr_data->g_usb_mutex);
-	cs_sleepms(150);
-	cs_writeunlock(&reader->sr_lock);
+	smart_fastpoll(reader, 0);
 	rdr_log(reader,"de baudrate set = %u", baud_temp);
+	cs_writeunlock(&reader->sr_lock);
 
 	return OK;
 }
@@ -1746,15 +1740,15 @@ int32_t sr_write_settings(struct s_reader *reader,
 	return OK;
 }
 
+
 static int32_t sr_init_locks(struct s_reader *reader)
 {
-	// Prevent double initalization of sr_lock
-	if(pthread_mutex_trylock(&reader->init_lock_mutex))
-	{
-		cs_lock_create(&reader->sr_lock, 0, "sr_lock");
-	}
+
+	cs_writelock(&reader->sr_lock);
+
 	return 0;
 }
+	
 
 void cardreader_smartreader(struct s_cardreader *crdr)
 {

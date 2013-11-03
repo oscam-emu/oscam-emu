@@ -1086,6 +1086,7 @@ static char *send_oscam_reader(struct templatevars *vars, struct uriparams *para
 	if(cfg.http_refresh > 0)
 	{
 		tpl_printf(vars, TPLADD, "REFRESHTIME", "%d", cfg.http_refresh);
+		tpl_addVar(vars, TPLADD, "REFRESHURL", "readers.html");
 		tpl_addVar(vars, TPLADD, "REFRESH", tpl_getTpl(vars, "REFRESH"));
 	}
 	if((strcmp(getParam(params, "action"), "disable") == 0) || (strcmp(getParam(params, "action"), "enable") == 0))
@@ -5633,6 +5634,7 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 	if(cfg.http_refresh > 0)
 	{
 		tpl_printf(vars, TPLADD, "REFRESHTIME", "%d", cfg.http_refresh);
+		tpl_addVar(vars, TPLADD, "REFRESHURL", "cacheex.html");
 		tpl_addVar(vars, TPLADD, "REFRESH", tpl_getTpl(vars, "REFRESH"));
 	}
 	char *level[] = {"NONE", "CACHE PULL", "CACHE PUSH", "REVERSE CACHE PUSH"};
