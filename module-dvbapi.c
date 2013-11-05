@@ -1500,7 +1500,7 @@ void dvbapi_process_emm(int32_t demux_index, int32_t filter_num, unsigned char *
 	i2b_buf(2, caid, epg.caid);
 	i2b_buf(4, provider, epg.provid);
 
-	epg.emmlen = len;
+	epg.emmlen = len > sizeof(epg.emm) ? sizeof(epg.emm) : len;
 	memcpy(epg.emm, buffer, epg.emmlen);
 
 #ifdef READER_IRDETO
