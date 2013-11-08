@@ -536,10 +536,10 @@ static const struct config_list cache_opts[] =
 	DEF_OPT_INT8("cwcycle_check_enable"     , OFS(cwcycle_check_enable),        0),
 	DEF_OPT_FUNC("cwcycle_check_caid"       , OFS(cwcycle_check_caidtab),       check_caidtab_fn),
 	DEF_OPT_INT32("cwcycle_maxlist"         , OFS(maxcyclelist),                500),
-	DEF_OPT_INT32("cwcycle_keeptime"        , OFS(keepcycletime),               0),
-	DEF_OPT_INT8("cwcycle_onbad"            , OFS(onbadcycle),                  0),
-	DEF_OPT_INT8("cwcycle_dropold"          , OFS(cwcycle_dropold),             0),
-	DEF_OPT_INT8("cwcycle_sensitive"        , OFS(cwcycle_sensitive),           0),
+	DEF_OPT_INT32("cwcycle_keeptime"        , OFS(keepcycletime),               15),
+	DEF_OPT_INT8("cwcycle_onbad"            , OFS(onbadcycle),                  1),
+	DEF_OPT_INT8("cwcycle_dropold"          , OFS(cwcycle_dropold),             1),
+	DEF_OPT_INT8("cwcycle_sensitive"        , OFS(cwcycle_sensitive),           4),
 	DEF_OPT_INT8("cwcycle_allowbadfromffb"      , OFS(cwcycle_allowbadfromffb),         0),
 #endif
 	DEF_LAST_OPT

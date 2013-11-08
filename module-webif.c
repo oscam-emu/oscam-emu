@@ -2223,7 +2223,7 @@ static char *send_oscam_reader_stats(struct templatevars *vars, struct uriparams
 
 				if(!apicall)
 				{
-					if(s->rc == 4)
+					if(s->rc == E_NOTFOUND)
 					{
 						tpl_addVar(vars, TPLAPPEND, "READERSTATSROWNOTFOUND", tpl_getTpl(vars, "READERSTATSBIT"));
 						tpl_addVar(vars, TPLADD, "READERSTATSNFHEADLINE", "\t\t<TR><TD CLASS=\"subheadline\" colspan=\"6\">Not found</TD>");
@@ -2231,7 +2231,7 @@ static char *send_oscam_reader_stats(struct templatevars *vars, struct uriparams
 								   urlencode(vars, rdr->label),
 								   stxt[s->rc]);
 					}
-					else if(s->rc == 5)
+					else if(s->rc == E_TIMEOUT)
 					{
 						tpl_addVar(vars, TPLAPPEND, "READERSTATSROWTIMEOUT", tpl_getTpl(vars, "READERSTATSBIT"));
 						tpl_addVar(vars, TPLADD, "READERSTATSTOHEADLINE", "\t\t<TR><TD CLASS=\"subheadline\" colspan=\"6\">Timeout</TD>");

@@ -54,6 +54,7 @@ int32_t stapi_set_pid(int32_t demux_id, int32_t num, int32_t idx, uint16_t pid, 
 int32_t stapi_write_cw(int32_t demux_id, uchar *cw, uint16_t *, int32_t, char *pmtfile);
 int32_t stapi_do_set_filter(int32_t demux_id, FILTERTYPE *filter, uint16_t *pids, int32_t pidcount, uchar *filt, uchar *mask, int32_t dev_id);
 int32_t stapi_do_remove_filter(int32_t demux_id, FILTERTYPE *filter, int32_t dev_id);
+int32_t stapi_activate_section_filter(int32_t fd, uchar *filter, uchar *mask);
 void *stapi_read_thread(void *);
 
 #endif

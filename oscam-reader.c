@@ -591,7 +591,7 @@ void casc_check_dcw(struct s_reader *reader, int32_t idx, int32_t rc, uchar *cw)
 	for(i = 0; i < cfg.max_pending; i++)
 	{
 		ecm = &cl->ecmtask[i];
-		if((ecm->rc >= 10) && ecm->caid == cl->ecmtask[idx].caid && (!memcmp(ecm->ecmd5, cl->ecmtask[idx].ecmd5, CS_ECMSTORESIZE)))
+		if((ecm->rc >= E_NOCARD) && ecm->caid == cl->ecmtask[idx].caid && (!memcmp(ecm->ecmd5, cl->ecmtask[idx].ecmd5, CS_ECMSTORESIZE)))
 		{
 			if(rc)
 			{
@@ -602,15 +602,15 @@ void casc_check_dcw(struct s_reader *reader, int32_t idx, int32_t rc, uchar *cw)
 				write_ecm_answer(reader, ecm, E_NOTFOUND, 0 , NULL, NULL);
 			}
 			ecm->idx = 0;
-			ecm->rc = 0;
+			ecm->rc = E_FOUND;
 		}
 
-		if(ecm->rc >= 10 && (t - (uint32_t)ecm->tps.time > ((cfg.ctimeout + 500) / 1000) + 1))  // drop timeouts
+		if(ecm->rc >= E_NOCARD && (t - (uint32_t)ecm->tps.time > ((cfg.ctimeout + 500) / 1000) + 1))  // drop timeouts
 		{
-			ecm->rc = 0;
+			ecm->rc = E_FOUND;
 		}
 
-		if(ecm->rc >= 10)
+		if(ecm->rc >= E_NOCARD)
 			{ pending++; }
 	}
 	cl->pending = pending;
@@ -866,7 +866,7 @@ void network_tcp_connection_close(struct s_reader *reader, char *reason)
 		for(i = 0; i < cfg.max_pending; i++)
 		{
 			cl->ecmtask[i].idx = 0;
-			cl->ecmtask[i].rc = 0;
+			cl->ecmtask[i].rc = E_FOUND;
 		}
 	}
 	// newcamd message ids are stored as a reference in ecmtask[].idx
@@ -894,24 +894,24 @@ int32_t casc_process_ecm(struct s_reader *reader, ECM_REQUEST *er)
 	for(i = 0; i < cfg.max_pending; i++)
 	{
 		ecm = &cl->ecmtask[i];
-		if((ecm->rc >= 10) && (t - (uint32_t)ecm->tps.time > ((cfg.ctimeout + 500) / 1000) + 1))  // drop timeouts
+		if((ecm->rc >= E_NOCARD) && (t - (uint32_t)ecm->tps.time > ((cfg.ctimeout + 500) / 1000) + 1))  // drop timeouts
 		{
-			ecm->rc = 0;
+			ecm->rc = E_FOUND;
 		}
 	}
 
 	for(n = -1, i = 0, sflag = 1; i < cfg.max_pending; i++)
 	{
 		ecm = &cl->ecmtask[i];
-		if(n < 0 && (ecm->rc < 10))  // free slot found
+		if(n < 0 && (ecm->rc < E_NOCARD))  // free slot found
 			{ n = i; }
 
 		// ecm already pending
 		// ... this level at least
-		if((ecm->rc >= 10) &&  er->caid == ecm->caid && (!memcmp(er->ecmd5, ecm->ecmd5, CS_ECMSTORESIZE)))
+		if((ecm->rc >= E_NOCARD) &&  er->caid == ecm->caid && (!memcmp(er->ecmd5, ecm->ecmd5, CS_ECMSTORESIZE)))
 			{ sflag = 0; }
 
-		if(ecm->rc >= 10)
+		if(ecm->rc >= E_NOCARD)
 			{ pending++; }
 	}
 	cl->pending = pending;
@@ -938,7 +938,7 @@ int32_t casc_process_ecm(struct s_reader *reader, ECM_REQUEST *er)
 		cl->ecmtask[n].idx = cl->idx++;
 	}
 
-	cl->ecmtask[n].rc = 10;
+	cl->ecmtask[n].rc = E_NOCARD;
 	cs_debug_mask(D_TRACE, "---- ecm_task %d, idx %d, sflag=%d", n, cl->ecmtask[n].idx, sflag);
 
 	cs_ddump_mask(D_ATR, er->ecm, er->ecmlen, "casc ecm (%s):", (reader) ? reader->label : "n/a");

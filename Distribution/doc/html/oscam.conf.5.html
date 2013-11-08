@@ -868,21 +868,21 @@ maximum CW cycle list entries, default:500, maximum:4000
 
 <B>cwcycle_keeptime</B> = <B>minutes</B>
 <DL COMPACT><DT><DD>
-minimum time a learned cycle time resists in memory, default:0, maximum:15
+minimum time a learned cycle time resists in memory, default:15, maximum:15
 </DL>
 
 <P>
 
 <B>cwcycle_onbad</B> = <B>0</B>|<B>1</B>
 <DL COMPACT><DT><DD>
-0 = log bad CW cycle only, 1 = drop bad CW cycle, default:0
+0 = log bad CW cycle only, 1 = drop bad CW cycle, default:1
 </DL>
 
 <P>
 
 <B>cwcycle_dropold</B> = <B>0</B>|<B>1</B>
 <DL COMPACT><DT><DD>
-1= drop old CW cycle, default:0
+1= drop old CW cycle, default:1
 </DL>
 
 <P>
@@ -891,10 +891,10 @@ minimum time a learned cycle time resists in memory, default:0, maximum:15
 <DL COMPACT><DT><DD>
 drop CW mode:
 <P>
-<BR>&nbsp;<B>0</B>&nbsp;=&nbsp;disabled&nbsp;(default)
+<BR>&nbsp;<B>0</B>&nbsp;=&nbsp;disabled
 <BR>&nbsp;<B>2</B>&nbsp;=&nbsp;2&nbsp;(or&nbsp;more)&nbsp;same&nbsp;bytes&nbsp;and&nbsp;drop&nbsp;new&nbsp;CW
 <BR>&nbsp;<B>3</B>&nbsp;=&nbsp;3&nbsp;(or&nbsp;more)&nbsp;same&nbsp;bytes&nbsp;and&nbsp;drop&nbsp;new&nbsp;CW
-<BR>&nbsp;<B>4</B>&nbsp;=&nbsp;4&nbsp;(or&nbsp;more)&nbsp;same&nbsp;bytes&nbsp;and&nbsp;drop&nbsp;new&nbsp;CW
+<BR>&nbsp;<B>4</B>&nbsp;=&nbsp;4&nbsp;(or&nbsp;more)&nbsp;same&nbsp;bytes&nbsp;and&nbsp;drop&nbsp;new&nbsp;CW&nbsp;(default)
 </DL>
 
 <P>

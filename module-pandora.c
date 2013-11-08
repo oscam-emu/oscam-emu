@@ -92,7 +92,7 @@ static void pandora_send_dcw(struct s_client *cl, ECM_REQUEST *er)
 	uchar msgbuf[CWS_NETMSGSIZE], len;
 	if(cfg.pand_skip_send_dw)
 		{ return; }
-	if(er->rc < 4)
+	if(er->rc < E_NOTFOUND)
 	{
 		msgbuf[0] = 2; //DW_FOUND
 		memcpy(&msgbuf[1], er->cw, 16);

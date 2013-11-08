@@ -4032,7 +4032,7 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
 			fprintf(ecmtxt, "caid: 0x%04X\npid: 0x%04X\nprov: 0x%06X\n", er->caid, er->pid, (uint) er->prid);
 			switch(er->rc)
 			{
-			case 0:
+			case E_FOUND:
 				if(er->selected_reader)
 				{
 					fprintf(ecmtxt, "reader: %s\n", er->selected_reader->label);
@@ -4045,19 +4045,19 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
 				}
 				break;
 
-			case 1:
+			case E_CACHE1:
 				fprintf(ecmtxt, "reader: Cache\n");
 				fprintf(ecmtxt, "from: cache1\n");
 				fprintf(ecmtxt, "protocol: none\n");
 				break;
 
-			case 2:
+			case E_CACHE2:
 				fprintf(ecmtxt, "reader: Cache\n");
 				fprintf(ecmtxt, "from: cache2\n");
 				fprintf(ecmtxt, "protocol: none\n");
 				break;
 
-			case 3:
+			case E_CACHEEX:
 				fprintf(ecmtxt, "reader: Cache\n");
 				fprintf(ecmtxt, "from: cache3\n");
 				fprintf(ecmtxt, "protocol: none\n");
@@ -4281,8 +4281,7 @@ int32_t dvbapi_activate_section_filter(int32_t fd, int32_t pid, uchar *filter, u
 #ifdef WITH_STAPI
 	case STAPI:
 	{
-		ret = oscam_stapi_FilterSet(fd, filter, mask);
-		if(ret) { ret = -1; }
+		ret = stapi_activate_section_filter(fd, filter, mask);
 		break;
 	}
 #endif

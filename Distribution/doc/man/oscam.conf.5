@@ -648,27 +648,27 @@ maximum CW cycle list entries, default:500, maximum:4000
 .PP
 \fBcwcycle_keeptime\fP = \fBminutes\fP
 .RS 3n
-minimum time a learned cycle time resists in memory, default:0, maximum:15
+minimum time a learned cycle time resists in memory, default:15, maximum:15
 .RE
 .PP
 \fBcwcycle_onbad\fP = \fB0\fP|\fB1\fP
 .RS 3n
-0 = log bad CW cycle only, 1 = drop bad CW cycle, default:0
+0 = log bad CW cycle only, 1 = drop bad CW cycle, default:1
 .RE
 .PP
 \fBcwcycle_dropold\fP = \fB0\fP|\fB1\fP
 .RS 3n
-1= drop old CW cycle, default:0
+1= drop old CW cycle, default:1
 .RE
 .PP
 \fBcwcycle_sensitive\fP = \fB0\fP|\fB2\fP|\fB3\fP|\fB4\fP
 .RS 3n
 drop CW mode:
 
- \fB0\fP = disabled (default)
+ \fB0\fP = disabled
  \fB2\fP = 2 (or more) same bytes and drop new CW
  \fB3\fP = 3 (or more) same bytes and drop new CW
- \fB4\fP = 4 (or more) same bytes and drop new CW
+ \fB4\fP = 4 (or more) same bytes and drop new CW (default)
 .RE
 .PP
 \fBcwcycle_allowbadfromffb\fP = \fB0\fP|\fB1\fP

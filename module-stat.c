@@ -460,6 +460,8 @@ static void add_stat(struct s_reader *rdr, ECM_REQUEST *er, int32_t ecm_time, in
 	// 11= expdate     #
 	// 12= disabled    #
 	// 13= stopped     #
+	// 30= ALREADY_SENT	#
+	// 31= WAITING		#
 	// 100= unhandled  #
 	//        + = adds statistic values
 	//        # = ignored because of duplicate values, temporary failures or softblocks

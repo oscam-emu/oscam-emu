@@ -177,6 +177,24 @@ int32_t stapi_open(void)
 	return 1;
 }
 
+int32_t stapi_activate_section_filter(int32_t fd, uchar *filter, uchar *mask)
+{
+	int n=0, ret=852049;
+	while (n<3 && ret==852049) {
+		ret = oscam_stapi_FilterSet(fd, filter, mask);
+		if(ret) {		
+			cs_debug_mask(D_DVBAPI, "Error: oscam_stapi_FilterSet; %d", ret);
+			cs_sleepms(50);
+			n++;
+		}
+	}
+	if(ret) {
+		cs_log("Error: stapi_activate_section_filter: %d", ret);
+		ret = -1; 
+	}
+	return ret;
+}
+
 int32_t stapi_set_filter(int32_t demux_id, uint16_t pid, uchar *filter, uchar *mask, int32_t num, char *pmtfile)
 {
 	int32_t i;

@@ -475,8 +475,8 @@ void cc_reset_pending(struct s_client *cl, int32_t ecm_idx)
 	int32_t i = 0;
 	for(i = 0; i < cfg.max_pending; i++)
 	{
-		if(cl->ecmtask[i].idx == ecm_idx && cl->ecmtask[i].rc == 101)
-			{ cl->ecmtask[i].rc = 100; } //Mark unused
+		if(cl->ecmtask[i].idx == ecm_idx && cl->ecmtask[i].rc == E_ALREADY_SENT)
+			{ cl->ecmtask[i].rc = E_UNHANDLED; } //Mark unused
 	}
 }
 
@@ -864,12 +864,12 @@ int32_t cc_get_nxt_ecm(struct s_client *cl)
 	for(i = 0; i < cfg.max_pending; i++)
 	{
 		er = &cl->ecmtask[i];
-		if((comp_timeb(&t, &er->tps) >= diff) && (er->rc >= 10))  // drop timeouts
+		if((comp_timeb(&t, &er->tps) >= diff) && (er->rc >= E_NOCARD))  // drop timeouts
 		{
 			write_ecm_answer(cl->reader, er, E_TIMEOUT, 0, NULL, NULL);
 		}
 
-		else if(er->rc >= 10 && er->rc <= 100)    // stil active and waiting
+		else if(er->rc >= E_NOCARD && er->rc <= E_UNHANDLED)    // stil active and waiting
 		{
 			pending++;
 			if(loop_check(cc->peer_node_id, er->client))
@@ -891,7 +891,7 @@ int32_t cc_get_nxt_ecm(struct s_client *cl)
 						for(found = j = 0; j < cfg.max_pending; j++)
 						{
 							erx = &cl->ecmtask[j];
-							if(i != j && erx->rc == 101 &&
+							if(i != j && erx->rc == E_ALREADY_SENT &&
 									er->caid == erx->caid &&
 									er->ecmd5 == erx->ecmd5)
 							{
@@ -1417,7 +1417,7 @@ int32_t cc_send_ecm(struct s_client *cl, ECM_REQUEST *er, uchar *buf)
 			return 0; // no queued ecms
 		}
 		cur_er = &cl->ecmtask[n];
-		cur_er->rc = 101; //mark ECM as already send
+		cur_er->rc = E_ALREADY_SENT; //mark ECM as already send
 		cs_debug_mask(D_READER, "cccam: ecm-task %d", cur_er->idx);
 
 		//sleepsend support:
@@ -1579,7 +1579,7 @@ int32_t cc_send_ecm(struct s_client *cl, ECM_REQUEST *er, uchar *buf)
 			else
 			{
 				//We didn't find a card and the last message was MSG_CARD_REMOVED - so we wait for a new card and process die ecm later
-				cur_er->rc = 102; //mark as waiting
+				cur_er->rc = E_WAITING; //mark as waiting
 			}
 		}
 		cs_readunlock(&cc->cards_busy);
@@ -1593,8 +1593,8 @@ int32_t cc_send_ecm(struct s_client *cl, ECM_REQUEST *er, uchar *buf)
 	for(i = 0; i < cfg.max_pending; i++)
 	{
 		er = &cl->ecmtask[i];
-		if(er->rc == 102)
-			{ er->rc = 100; }
+		if(er->rc == E_WAITING)
+			{ er->rc = E_UNHANDLED; }
 	}
 
 	if(!cc->extended_mode)
@@ -1615,14 +1615,14 @@ int32_t cc_send_ecm(struct s_client *cl, ECM_REQUEST *er, uchar *buf)
  for (i = 1, n = 1; i < cfg.max_pending; i++)
  {
  if ((t-cl->ecmtask[i].tps.time > ((cfg.ctimeout + 500) / 1000) + 1) &&
- (cl->ecmtask[i].rc>=10))      // drop timeouts
+ (cl->ecmtask[i].rc>=E_NOCARD))      // drop timeouts
  {
- cl->ecmtask[i].rc=0;
+ cl->ecmtask[i].rc=E_FOUND;
  }
  int32_t td=abs(1000*(ecmtask[i].tps.time-cc->found->tps.time)+ecmtask[i].tps.millitm-cc->found->tps.millitm);
- if (ecmtask[i].rc>=10 && ecmtask[i].cidx==cc->found->cidx && &ecmtask[i]!=cc->found){
+ if (ecmtask[i].rc>=E_NOCARD && ecmtask[i].cidx==cc->found->cidx && &ecmtask[i]!=cc->found){
  cs_log("aborting idx:%d caid:%04x client:%d timedelta:%d",ecmtask[i].idx,ecmtask[i].caid,ecmtask[i].cidx,td);
- ecmtask[i].rc=0;
+ ecmtask[i].rc=E_FOUND;
  ecmtask[i].rcEx=7;
  write_ecm_answer(rdr, fd_c2m, &ecmtask[i]);
  }
@@ -2836,7 +2836,7 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 				int32_t i = 0;
 				for(i = 0; i < cfg.max_pending; i++)
 				{
-					if(cl->ecmtask[i].idx == ecm_idx && cl->ecmtask[i].rc == 101)
+					if(cl->ecmtask[i].idx == ecm_idx && cl->ecmtask[i].rc == E_ALREADY_SENT)
 					{
 						cs_debug_mask(D_TRACE,
 									  "%s ext NOK %s", getprefix(), (buf[1] == MSG_CW_NOK1) ? "NOK1" : "NOK2");

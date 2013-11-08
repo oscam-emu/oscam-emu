@@ -322,8 +322,10 @@ typedef unsigned char uchar;
 #define E_DISABLED  12
 #define E_STOPPED       13 //for selection of error, use <= E_STOPPED and exclude selection of found
 ///////above is all notfound, some error or problem
+#define E_ALREADY_SENT	30
+#define E_WAITING		31
 #define E_99                99 //this code is undocumented
-#define E_UNHANDLED 100 //for selection of unhandled, use >= E_UNHANDLED
+#define E_UNHANDLED		100 //for selection of unhandled, use >= E_UNHANDLED
 
 #define CS_MAX_MOD 20
 #define MOD_CONN_TCP    1
@@ -1318,10 +1320,6 @@ struct s_reader                                     //contains device info, read
 	unsigned char ns;               // Send sequence number
 	int16_t             smartdev_found;
 	int16_t				smart_type;
-#ifdef CARDREADER_SMART
-	CS_MUTEX_LOCK 	sr_lock;						// moved from ifd_smartreader.c 
-	pthread_mutex_t init_lock_mutex;				// moved from ifd_smartreader.c 
-#endif
 #endif
 	unsigned char   rom[15];
 	unsigned char   irdId[4];
