@@ -1224,7 +1224,7 @@ void chk_dcw(struct s_ecm_answer *ea)  //ea here is not the original one, but a 
 			{ ert->grp |= eardr->grp; }
 	}
 
-	if(ert->rc < E_ALREADY_SENT)  { return; }  // //ecm request already send to client!
+	if(ert->rc < E_99)  { return; }  // //ecm request already send to client!
 
 	int32_t reader_left = 0, local_left = 0, reader_not_flb_left = 0, has_not_fallback = 0, has_local = 0;
 #ifdef CS_CACHEEX
