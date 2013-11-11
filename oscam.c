@@ -314,6 +314,13 @@ static void write_versionfile(bool use_stdout)
 	write_conf(TOUCH, "Touch interface support");
 	write_conf(WITH_SSL, "SSL support");
 	write_conf(HAVE_DVBAPI, "DVB API support");
+<<<<<<< HEAD
+	if(config_enabled(WITH_EMU))
+	{
+		write_conf(WITH_EMU, "Patched and enabled EMU support");
+	}
+=======
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 	if(config_enabled(HAVE_DVBAPI))
 	{
 		write_conf(WITH_AZBOX, "DVB API with AZBOX support");

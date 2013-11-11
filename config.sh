@@ -642,7 +642,11 @@ do
 		break
 	;;
 	'-r'|'--oscam-revision')
+<<<<<<< HEAD
+		(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'
+=======
 		echo "9016"
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 		break
 	;;
 	'-O'|'--detect-osx-sdk-version')

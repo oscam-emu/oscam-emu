@@ -25,6 +25,16 @@
 
 #if !defined(WITH_SSL) && !defined(WITH_LIBCRYPTO)
 
+<<<<<<< HEAD
+typedef struct MD5Context
+{
+	uint32_t buf[4];
+	uint32_t bits[2];
+	unsigned char in[64];
+} MD5_CTX;
+
+=======
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 #ifdef __i386__
 #define byteReverse(a, b)
 #else
@@ -148,7 +158,11 @@ static void MD5_Transform(uint32_t buf[4],  uint32_t in[16])
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
+<<<<<<< HEAD
+static void MD5_Init(MD5_CTX *ctx)
+=======
 void MD5_Init(MD5_CTX *ctx)
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 {
 	ctx->buf[0] = 0x67452301;
 	ctx->buf[1] = 0xefcdab89;
@@ -163,13 +177,33 @@ void MD5_Init(MD5_CTX *ctx)
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
+<<<<<<< HEAD
+static void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
+=======
 void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 {
 	uint32_t t;
 
 	/* Update bitcount */
 
 	t = ctx->bits[0];
+<<<<<<< HEAD
+	if((ctx->bits[0] = t + ((uint32_t) len << 3)) < t)
+		{ ctx->bits[1]++; }     /* Carry from low to high */
+	ctx->bits[1] += len >> 29;
+
+	t = (t >> 3) & 0x3f;    /* Bytes already in shsInfo->data */
+
+	/* Handle any leading odd-sized chunks */
+
+	if(t)
+	{
+		unsigned char *p = (unsigned char *)ctx->in + t;
+		t = 64 - t;
+		if(len < t)
+		{
+=======
 	if ((ctx->bits[0] = t + ((uint32_t) len << 3)) < t)
 	ctx->bits[1]++; 	/* Carry from low to high */
 	ctx->bits[1] += len >> 29;
@@ -182,6 +216,7 @@ void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
 		unsigned char *p = (unsigned char *)ctx->in + t;
 		t = 64 - t;
 		if (len < t) {
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 			memcpy(p, buf, len);
 			return;
 		}
@@ -193,7 +228,12 @@ void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
 	}
 
 	/* Process data in 64-byte chunks */
+<<<<<<< HEAD
+	while(len >= 64)
+	{
+=======
 	while (len >= 64) {
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 		memcpy(ctx->in, buf, 64);
 		byteReverse(ctx->in, 16);
 		MD5_Transform(ctx->buf, (uint32_t *) ctx->in);
@@ -206,10 +246,17 @@ void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
 }
 
 /*
+<<<<<<< HEAD
+ * Final wrapup - pad to 64-byte boundary with the bit pattern
+ * 1 0* (64-bit count of bits processed, MSB-first)
+ */
+static void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
+=======
  * Final wrapup - pad to 64-byte boundary with the bit pattern 
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 {
 	unsigned count;
 	unsigned char *p;
@@ -226,7 +273,12 @@ void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
 	count = 64 - 1 - count;
 
 	/* Pad out to 56 mod 64 */
+<<<<<<< HEAD
+	if(count < 8)
+	{
+=======
 	if (count < 8) {
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 		/* Two lots of padding:  Pad the first block to 64 bytes */
 		memset(p, 0, count);
 		byteReverse(ctx->in, 16);
@@ -234,7 +286,13 @@ void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
 
 		/* Now fill the next block with 56 bytes */
 		memset(ctx->in, 0, 56);
+<<<<<<< HEAD
+	}
+	else
+	{
+=======
 	} else {
+>>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 		/* Pad block to 56 bytes */
 		memset(p, 0, count - 8);
 	}
