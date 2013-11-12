@@ -219,21 +219,12 @@ typedef unsigned char uchar;
 /* ===========================
  *         constants
  * =========================== */
-<<<<<<< HEAD
-#define CS_VERSION    "1.20-unstable_svn"
+#define CS_VERSION    "1.20-emu"
 #ifndef CS_SVN_VERSION
 #   define CS_SVN_VERSION "test"
 #endif
 #ifndef CS_TARGET
 #   define CS_TARGET "unknown"
-=======
-#define CS_VERSION    "1.20-EMU"
-#ifndef CS_SVN_VERSION
-#  define CS_SVN_VERSION "test"
-#endif
-#ifndef CS_TARGET
-#	define CS_TARGET "unknown"
->>>>>>> cbb40b751df3cb09d0f796db7d4dbdaac9abc776
 #endif
 #ifndef CS_CONFDIR
 #define CS_CONFDIR    "/usr/local/etc"

@@ -305,11 +305,11 @@ int32_t ICC_Async_Reset(struct s_reader *reader, struct s_ATR *atr,
 	return reader->crdr.do_reset(reader, atr, rdr_activate_card, rdr_get_cardsystem);
 }
 
-static uint32_t ICC_Async_GetClockRate_NewSmart(int32_t cardmhz)
+/*static uint32_t ICC_Async_GetClockRate_NewSmart(int32_t cardmhz)
 {
  	return (cardmhz * 10000L);
 
-}
+}*/
 
 static uint32_t ICC_Async_GetClockRate(int32_t cardmhz)
 {
@@ -597,10 +597,8 @@ static uint32_t PPS_GetLength(unsigned char *block)
 
 static uint32_t ETU_to_us(struct s_reader *reader, uint32_t ETU)
 {
-	if ((reader->typ == R_SMART) && (reader->smartdev_found >= 3))
-		return (uint32_t)((double) ETU * reader->worketu);  // in us
-	else 
-		return (uint32_t)((double) ETU * reader->worketu);  // in us
+	
+	return (uint32_t)((double) ETU * reader->worketu);  // in us
 }
 
 static int32_t ICC_Async_SetParity(struct s_reader *reader, uint16_t parity)
@@ -665,25 +663,15 @@ static int32_t InitCard(struct s_reader *reader, ATR *atr, unsigned char FI, uin
 
 			if(reader->protocol_type != ATR_PROTOCOL_TYPE_T14)    //dont switch for T14
 			{
-				if ((reader->typ == R_SMART) && (reader->smartdev_found >= 3)){
-					uint32_t baud_temp = (double)D * ICC_Async_GetClockRate_NewSmart(reader->cardmhz) / (double)Fi; // just a test
-					rdr_log(reader, "Setting baudrate to %d bps new", baud_temp);
-					call(reader->crdr.set_baudrate(reader, baud_temp));
-					reader->current_baudrate = baud_temp;
-				} else {
 					uint32_t baud_temp = (double)D * ICC_Async_GetClockRate(reader->cardmhz) / (double)Fi; // just a test
 					rdr_log(reader, "Setting baudrate to %d bps", baud_temp);
 					call(reader->crdr.set_baudrate(reader, baud_temp));
-					reader->current_baudrate = baud_temp;
-				}				
+					reader->current_baudrate = baud_temp;				
 			}
 		}
 	}
 	if(reader->mhz > 2000 && reader->typ == R_INTERNAL) { F = reader->cardmhz; }  // for PLL based internal readers
 	else { F = reader->mhz; } // all other readers
-	if ((reader->typ == R_SMART) && (reader->smartdev_found >= 3))
-		reader->worketu = (double)((1 / (double)D) * ((double)Fi / (double)F * 100));  // expressed in us
-	else 
 	reader->worketu = (double)((1 / (double)D) * ((double)Fi / (double)F * 100));  // expressed in us
 	rdr_log(reader, "Calculated work ETU is %.2f us", reader->worketu);
 
@@ -859,8 +847,7 @@ static int32_t InitCard(struct s_reader *reader, ATR *atr, unsigned char FI, uin
 	}
 	else
 	{
-		cs_sleepms(1000);
-		rdr_log(reader, "ATR Fsmax is %i MHz, clocking card to wanted user cardspeed of %.2f MHz (specified in reader->mhz)",
+			rdr_log(reader, "ATR Fsmax is %i MHz, clocking card to wanted user cardspeed of %.2f MHz (specified in reader->mhz)",
 				atr_fs_table[FI] / 1000000, (float) reader->mhz / 100);
 	}
 
