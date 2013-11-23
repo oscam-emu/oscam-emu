@@ -4,6 +4,29 @@ OSCam-emu: Open Source Conditional Access Module Emulator
 
 OSCam-emu is an Oscam addon module to include emulator support and other functionality that collides with the goal of the original oscam developers.
 
+This patch creates functional emulator support on a client base so keys can't be reshared over the net, if you want a "shareable" EMU use OSEmu instead and add it as a reader to your plain oscam server.
+OSEmu can be found at https://github.com/oscam-emu/OSEmu
+
+
+Supported systems
+=================
+
+Currently only the following crypto systems are available:
+ - Cryptoworks
+ - NDS
+ - Viaaccess-2.3
+All of these are basicly working but far from complete so anyone filling in blanks is welcome...
+
+
+TODO
+====
+
+Work has to be done on the following items:
+ - Add other encryption systems
+ - Add keyfile support
+ - More keys
+
+
 Version history
 ===============
 
@@ -27,6 +50,7 @@ Building OSCam-emu from source
  - Run `./config.sh -g` to choose the features you want. (make sure to include at least all readers, constcw and emu support besides the wanted protocols)
 
  - Run `make` to compile OSCam.
+
 
 Help and Support
 ================
