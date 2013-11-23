@@ -2,88 +2,36 @@ OSCam-emu: Open Source Conditional Access Module Emulator
 =========================================================
 
 
-License
-=======
-
-OSCam-EMU: Open Source CAM Emulator
-Copyright (C) 2009-2013 OSCam developers
-
-OSCam-emu is an Oscam fork to include emulator support and other functionality that collides with the goal of the original oscam developers.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-For the full text of the licese, please read COPYING file in OSCam
-top directory or visit http://www.gnu.org/licenses/gpl-3.0.html
-
+OSCam-emu is an Oscam addon module to include emulator support and other functionality that collides with the goal of the original oscam developers.
 
 Version history
 ===============
 
 OSCam-emu history is accessible through GitHub commits at:
-   https://github.com/oscam-emu/oscam-emu/commits/master
-
-
-Repositories
-============
-
-SVN repository:
-   svn checkout https://github.com/oscam-emu/oscam-emu/trunk oscam-emu
+   https://github.com/oscam-emu/oscam-emu
 
 
 Building OSCam-emu from source
 ==========================
 
- - Get the lastest sources from GitHub or checkout SVN as above:
-    https://github.com/oscam-emu/oscam-emu/archive/master.zip
+ - Get the lastest oscam sources from SVN:
+    svn checkout http://www.streamboard.tv/svn/oscam/trunk oscam-svn
 
- - Go to oscam-emu-master directory.
+ - save the oscam-emu.patch file
 
- - Run `make config` to choose the features you want. (make sure to include at least all readers and emu besides the wanted protocol)
+ - Go to oscam-svn directory.
+
+ - Patch the source with the EMU patch:
+    patch -p1 < ../oscam-emu.patch
+
+ - Run `./config.sh -g` to choose the features you want. (make sure to include at least all readers, constcw and emu support besides the wanted protocols)
 
  - Run `make` to compile OSCam.
-
-For more information and examples on using the build system, please
-see README.build and README.config files.
-
-
-Building OScam-emu for different CPUs (cross-compilation)
-=====================================================
-
-non x86 platform can give issues so no official support for them right now, your on your own…
-
-
-Dependencies
-============
-
-OSCam by default do not depend on external libraries except when compilation
-with SSL is requested. In that case openssl (libcrypto) library must be
-installed.
-
-OSCam supports building with the following external dependencies:
-  - libcrypto (libssl) - 'make USE_LIBCRYPTO=1'
-  - libusb             - 'make USE_LIBUSB=1'
-  - PCSC               - 'make USE_PCSC=1'
-
-For more information and examples on using the build system, run `make help`.
-
 
 Help and Support
 ================
 
-man pages and configuration examples are in Distribution/doc directory.
-
-You may visit our issues system for filling in bug reports.
+You may visit our issues system for filling in bug reports regarding EMU issues.
    https://github.com/oscam-emu/oscam-emu/issues
 
 Configuration wiki:

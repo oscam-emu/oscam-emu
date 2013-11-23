@@ -1,7 +1,0 @@
-##TPLAPIHEADER##
-	<reader label="##READERNAME##" hostaddress="##APIHOST##" hostport="##APIHOSTPORT##">
-		<cardlist totalcards="##APITOTALCARDS##">
-##CARDLIST##
-		</cardlist>
-	</reader>
-##TPLAPIFOOTER##

@@ -1,7 +1,0 @@
-##TPLAPIHEADER##
-	<status>
-##APISTATUSBITS##
-	</status>
-	<log><![CDATA[ 
-   ##LOGHISTORY##
-	]]></log>##TPLAPIFOOTER##
