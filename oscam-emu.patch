@@ -731,19 +731,6 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  	get_servicename_or_null(client, er->srvid, er->caid, channame);
  	if(!channame[0])
  		{ schaninfo[0] = '\0'; }
-@@ -1001,11 +1012,11 @@
- #ifdef CS_CACHEEX
- 		if(check_client(er->cacheex_src))
- 		{
--			first_client->cwcacheexhit++;
- 			er->cacheex_src->cwcacheexhit++;
- 			if(er->cacheex_src->account)
- 				{ er->cacheex_src->account->cwcacheexhit++; }
- 		}
-+		first_client->cwcacheexhit++;
- #endif
- 		break;
- 	}
 @@ -1689,12 +1700,23 @@
  	// nagra
  	// is ecm[1] always 0x30 ?
@@ -772,14 +759,6 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  
  	// is cryptoworks, but which caid ?
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
-@@ -1842,7 +1864,6 @@
- 
- 	er->client = client;
- 	er->rc = E_UNHANDLED; // set default rc status to unhandled
--	er->cwc_next_cw_cycle = 2; //set it to: we dont know
- 	if(now - client->lastecm > cfg.hideclient_to) { client->lastswitch = 0; }       // user was on freetv or didn't request for some time so we reset lastswitch to get correct stats/webif display
- 	client->lastecm = now;
- 
 @@ -2107,6 +2128,15 @@
  	}
  
@@ -796,12 +775,3 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  #ifdef CS_CACHEEX
  	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
  	er->from_cacheex1_client = 0;
-@@ -2472,7 +2502,7 @@
- 	cs_hexdump(0, ecm->cw, 16, cwhex, sizeof(cwhex));
- #ifdef MODULE_GBOX
- 	struct gbox_ecm_request_ext *ere = ecm->src_data;
--	if(ere && check_client(ecm->client) && get_module(ecm->client)->num == R_GBOX && ere->gbox_hops)
-+	if(ere && ere->gbox_hops)
- 		{ return ecmfmt(ecm->caid, ecm->onid, ecm->prid, ecm->chid, ecm->pid, ecm->srvid, ecm->ecmlen, ecmd5hex, csphash, cwhex, result, size, ere->gbox_peer, ere->gbox_hops); }
- 	else
- #endif
