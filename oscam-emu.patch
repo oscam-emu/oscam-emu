@@ -1,28 +1,28 @@
 diff -Naur oscam-svn/Makefile oscam-emu/Makefile
---- oscam-svn/Makefile	2013-11-23 07:54:49.000000000 +0100
-+++ oscam-emu/Makefile	2013-11-23 07:59:22.000000000 +0100
-@@ -232,6 +232,7 @@
- SRC-$(CONFIG_IRDETO_GUESSING) += module-ird-guess.c
- SRC-$(CONFIG_LCDSUPPORT) += module-lcd.c
- SRC-$(CONFIG_LEDSUPPORT) += module-led.c
+--- oscam-svn/Makefile	2013-12-31 07:55:58.000000000 +0100
++++ oscam-emu/Makefile	2013-12-31 08:00:33.000000000 +0100
+@@ -220,6 +220,7 @@
+ SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
+ SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
+ SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator.c
- SRC-$(CONFIG_MODULE_MONITOR) += module-monitor.c
- SRC-$(CONFIG_MODULE_NEWCAMD) += module-newcamd.c
- SRC-$(CONFIG_MODULE_PANDORA) += module-pandora.c
+ SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
+ SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
+ SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 diff -Naur oscam-svn/config.h oscam-emu/config.h
---- oscam-svn/config.h	2013-11-23 07:54:49.000000000 +0100
-+++ oscam-emu/config.h	2013-11-23 07:55:46.000000000 +0100
-@@ -16,6 +16,7 @@
- //#define LCDSUPPORT 1
- //#define LEDSUPPORT 1
- //#define IPV6SUPPORT 1
+--- oscam-svn/config.h	2013-12-31 07:55:58.000000000 +0100
++++ oscam-emu/config.h	2013-12-31 08:01:31.000000000 +0100
+@@ -28,6 +28,7 @@
+ #define MODULE_RADEGAST 1
+ #define MODULE_SERIAL 1
+ #define MODULE_CONSTCW 1
 +#define WITH_EMU 1
+ #define MODULE_PANDORA 1
+ #define MODULE_GHTTP 1
  
- #define MODULE_MONITOR 1
- //#define MODULE_CAMD33 1
 diff -Naur oscam-svn/config.sh oscam-emu/config.sh
---- oscam-svn/config.sh	2013-11-23 07:54:51.000000000 +0100
-+++ oscam-emu/config.sh	2013-11-23 07:55:46.000000000 +0100
+--- oscam-svn/config.sh	2013-12-31 07:55:58.000000000 +0100
++++ oscam-emu/config.sh	2013-12-31 08:03:16.000000000 +0100
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
@@ -31,14 +31,14 @@ diff -Naur oscam-svn/config.sh oscam-emu/config.sh
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STINGER"
-@@ -17,6 +17,7 @@
- CONFIG_WITH_LB=y
- CONFIG_CS_CACHEEX=y
- CONFIG_CW_CYCLE_CHECK=y
+@@ -30,6 +30,7 @@
+ CONFIG_MODULE_RADEGAST=y
+ CONFIG_MODULE_SERIAL=y
+ CONFIG_MODULE_CONSTCW=y
 +CONFIG_WITH_EMU=y
- # CONFIG_LCDSUPPORT=n
- # CONFIG_LEDSUPPORT=n
- # CONFIG_IPV6SUPPORT=n
+ CONFIG_MODULE_PANDORA=y
+ CONFIG_MODULE_GHTTP=y
+ CONFIG_WITH_CARDREADER=y
 @@ -421,6 +422,7 @@
  		LCDSUPPORT			"LCD support"				$(check_test "LCDSUPPORT") \
  		LEDSUPPORT			"LED support"				$(check_test "LEDSUPPORT") \
@@ -48,7 +48,7 @@ diff -Naur oscam-svn/config.sh oscam-emu/config.sh
  
  	opt=${?}
 diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
---- oscam-svn/cscrypt/md5.c	2013-11-14 18:37:08.000000000 +0100
+--- oscam-svn/cscrypt/md5.c	2013-12-31 07:56:03.000000000 +0100
 +++ oscam-emu/cscrypt/md5.c	2013-10-20 23:05:30.000000000 +0200
 @@ -25,13 +25,6 @@
  
@@ -152,7 +152,7 @@ diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
  		memset(p, 0, count - 8);
  	}
 diff -Naur oscam-svn/cscrypt/md5.h oscam-emu/cscrypt/md5.h
---- oscam-svn/cscrypt/md5.h	2013-11-14 18:37:08.000000000 +0100
+--- oscam-svn/cscrypt/md5.h	2013-12-31 07:56:03.000000000 +0100
 +++ oscam-emu/cscrypt/md5.h	2013-10-20 23:05:30.000000000 +0200
 @@ -7,8 +7,17 @@
  #define MD5_DIGEST_LENGTH 16
@@ -174,29 +174,24 @@ diff -Naur oscam-svn/cscrypt/md5.h oscam-emu/cscrypt/md5.h
  
  #endif
 diff -Naur oscam-svn/globals.h oscam-emu/globals.h
---- oscam-svn/globals.h	2013-11-23 07:54:51.000000000 +0100
-+++ oscam-emu/globals.h	2013-11-23 07:55:46.000000000 +0100
-@@ -219,12 +219,12 @@
+--- oscam-svn/globals.h	2013-12-31 07:55:58.000000000 +0100
++++ oscam-emu/globals.h	2013-12-31 08:06:49.000000000 +0100
+@@ -219,7 +219,7 @@
  /* ===========================
   *         constants
   * =========================== */
 -#define CS_VERSION    "1.20-unstable_svn"
-+#define CS_VERSION    "1.20-EMU"
++#define CS_VERSION    "1.20-unstable_emu"
  #ifndef CS_SVN_VERSION
--#   define CS_SVN_VERSION "test"
-+#  define CS_SVN_VERSION "test"
+ #   define CS_SVN_VERSION "test"
  #endif
- #ifndef CS_TARGET
--#   define CS_TARGET "unknown"
-+#define CS_TARGET "unknown"
- #endif
- #ifndef CS_CONFDIR
- #define CS_CONFDIR    "/usr/local/etc"
-@@ -1916,4 +1916,6 @@
+@@ -1928,4 +1928,8 @@
  char *get_provider(uint16_t caid, uint32_t provid, char *buf, uint32_t buflen);
  void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
  
-+char ProcessECM(uint16_t CAID, unsigned char *ecm, unsigned char *dw);
++#ifdef WITH_EMU
++	char ProcessECM(uint16_t CAID, unsigned char *ecm, unsigned char *dw);
++#endif
 +
  #endif
 diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
@@ -710,30 +705,52 @@ diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
 +}
 +
 diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
---- oscam-svn/oscam-ecm.c	2013-11-23 07:54:49.000000000 +0100
-+++ oscam-emu/oscam-ecm.c	2013-11-23 07:55:46.000000000 +0100
-@@ -892,10 +892,10 @@
+--- oscam-svn/oscam-ecm.c	2013-12-31 07:55:58.000000000 +0100
++++ oscam-emu/oscam-ecm.c	2013-12-31 08:14:55.000000000 +0100
+@@ -916,12 +916,23 @@
  	}
  #endif
  
--	if(er->rc < E_NOTFOUND)
--		{ er->rcEx = 0; }
--
--	if(er->rcEx)
-+  if (er->rc < E_NOTFOUND) {
-+    if (er->rcEx == 1)
-+    snprintf(erEx, sizeof(erEx)-1, "emu");
-+  } else if (er->rcEx)
- 		{ snprintf(erEx, sizeof(erEx) - 1, "rejected %s%s", stxtWh[er->rcEx >> 4], stxtEx[er->rcEx & 0xf]); }
++#ifndef WITH_EMU
+ 	if(er->rc < E_NOTFOUND)
+ 		{ er->rcEx = 0; }
  
+ 	if(er->rcEx)
+ 		{ snprintf(erEx, sizeof(erEx) - 1, "rejected %s%s", stxtWh[er->rcEx >> 4], stxtEx[er->rcEx & 0xf]); }
++#endif
+ 
++#ifdef WITH_EMU
++	if(er->rc < E_NOTFOUND){
++		if (er->rcEx == 1)
++		snprintf(erEx, sizeof(erEx)-1, "found by emu");
++	}else if (er->rcEx){
++		snprintf(erEx, sizeof(erEx)-1, "rejected %s%s", stxtWh[er->rcEx>>4], stxtEx[er->rcEx & 0xf]);
++	}
++#endif
++		
  	get_servicename_or_null(client, er->srvid, er->caid, channame);
-@@ -1666,12 +1666,23 @@
+ 	if(!channame[0])
+ 		{ schaninfo[0] = '\0'; }
+@@ -1001,11 +1012,11 @@
+ #ifdef CS_CACHEEX
+ 		if(check_client(er->cacheex_src))
+ 		{
+-			first_client->cwcacheexhit++;
+ 			er->cacheex_src->cwcacheexhit++;
+ 			if(er->cacheex_src->account)
+ 				{ er->cacheex_src->account->cwcacheexhit++; }
+ 		}
++		first_client->cwcacheexhit++;
+ #endif
+ 		break;
+ 	}
+@@ -1689,12 +1700,23 @@
  	// nagra
  	// is ecm[1] always 0x30 ?
  	// is ecm[3] always 0x07 ?
 -	if((er->ecm[6] == 1) && (er->ecm[4] == er->ecm[2] - 2))
 -		{ er->caid = 0x1801; }
-+  if ((er->ecm[3]==0x07) && (er->ecm[4]==er->ecm[2]-2)) {
++    if ((er->ecm[3]==0x07) && (er->ecm[4]==er->ecm[2]-2)) {
 +    if (er->ecmlen == 0x91) er->caid=0x183D; else
 +    if (er->ecmlen == 0x8E) er->caid=0x1810; else
 +    if (er->ecmlen == 0x92) er->caid=0x1803; else
@@ -748,14 +765,22 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  	// seca2 - very poor
 -	if((er->ecm[8] == 0x10) && ((er->ecm[9] & 0xF1) == 1))
 -		{ last_hope = 0x100; }
-+  if ((er->ecm[5] < 0x02) && (er->ecmlen==0x64)) {
++    if ((er->ecm[5] < 0x02) && (er->ecmlen==0x64)) {
 +    er->caid = 0x100;
 +    er->prid = chk_provid(er->ecm, 0x100);
 +  }
  
  	// is cryptoworks, but which caid ?
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
-@@ -2070,6 +2081,15 @@
+@@ -1842,7 +1864,6 @@
+ 
+ 	er->client = client;
+ 	er->rc = E_UNHANDLED; // set default rc status to unhandled
+-	er->cwc_next_cw_cycle = 2; //set it to: we dont know
+ 	if(now - client->lastecm > cfg.hideclient_to) { client->lastswitch = 0; }       // user was on freetv or didn't request for some time so we reset lastswitch to get correct stats/webif display
+ 	client->lastecm = now;
+ 
+@@ -2107,6 +2128,15 @@
  	}
  
  
@@ -771,3 +796,12 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  #ifdef CS_CACHEEX
  	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
  	er->from_cacheex1_client = 0;
+@@ -2472,7 +2502,7 @@
+ 	cs_hexdump(0, ecm->cw, 16, cwhex, sizeof(cwhex));
+ #ifdef MODULE_GBOX
+ 	struct gbox_ecm_request_ext *ere = ecm->src_data;
+-	if(ere && check_client(ecm->client) && get_module(ecm->client)->num == R_GBOX && ere->gbox_hops)
++	if(ere && ere->gbox_hops)
+ 		{ return ecmfmt(ecm->caid, ecm->onid, ecm->prid, ecm->chid, ecm->pid, ecm->srvid, ecm->ecmlen, ecmd5hex, csphash, cwhex, result, size, ere->gbox_peer, ere->gbox_hops); }
+ 	else
+ #endif

@@ -13,8 +13,8 @@ Supported systems
 
 Currently only the following crypto systems are available:
  - Cryptoworks
- - NDS
- - Viaaccess-2.3
+ - NDS (proof off concept)
+ - Viaaccess-2.3 (proof off concept)
 All of these are basicly working but far from complete so anyone filling in blanks is welcome...
 
 
