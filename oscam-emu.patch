@@ -1,6 +1,6 @@
 diff -Naur oscam-svn/Makefile oscam-emu/Makefile
---- oscam-svn/Makefile	2013-12-31 07:55:58.000000000 +0100
-+++ oscam-emu/Makefile	2013-12-31 08:00:33.000000000 +0100
+--- oscam-svn/Makefile	2013-12-30 23:15:04.000000000 +0100
++++ oscam-emu/Makefile	2014-01-01 07:52:20.000000000 +0100
 @@ -220,6 +220,7 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
@@ -10,8 +10,8 @@ diff -Naur oscam-svn/Makefile oscam-emu/Makefile
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 diff -Naur oscam-svn/config.h oscam-emu/config.h
---- oscam-svn/config.h	2013-12-31 07:55:58.000000000 +0100
-+++ oscam-emu/config.h	2013-12-31 08:01:31.000000000 +0100
+--- oscam-svn/config.h	2013-09-30 14:41:39.000000000 +0200
++++ oscam-emu/config.h	2014-01-01 07:52:20.000000000 +0100
 @@ -28,6 +28,7 @@
  #define MODULE_RADEGAST 1
  #define MODULE_SERIAL 1
@@ -21,8 +21,8 @@ diff -Naur oscam-svn/config.h oscam-emu/config.h
  #define MODULE_GHTTP 1
  
 diff -Naur oscam-svn/config.sh oscam-emu/config.sh
---- oscam-svn/config.sh	2013-12-31 07:55:58.000000000 +0100
-+++ oscam-emu/config.sh	2013-12-31 08:03:16.000000000 +0100
+--- oscam-svn/config.sh	2013-09-30 19:37:59.000000000 +0200
++++ oscam-emu/config.sh	2014-01-01 07:52:20.000000000 +0100
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
@@ -49,7 +49,7 @@ diff -Naur oscam-svn/config.sh oscam-emu/config.sh
  	opt=${?}
 diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
 --- oscam-svn/cscrypt/md5.c	2013-12-31 07:56:03.000000000 +0100
-+++ oscam-emu/cscrypt/md5.c	2013-10-20 23:05:30.000000000 +0200
++++ oscam-emu/cscrypt/md5.c	2014-01-01 07:52:20.000000000 +0100
 @@ -25,13 +25,6 @@
  
  #if !defined(WITH_SSL) && !defined(WITH_LIBCRYPTO)
@@ -153,7 +153,7 @@ diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
  	}
 diff -Naur oscam-svn/cscrypt/md5.h oscam-emu/cscrypt/md5.h
 --- oscam-svn/cscrypt/md5.h	2013-12-31 07:56:03.000000000 +0100
-+++ oscam-emu/cscrypt/md5.h	2013-10-20 23:05:30.000000000 +0200
++++ oscam-emu/cscrypt/md5.h	2014-01-01 07:52:20.000000000 +0100
 @@ -7,8 +7,17 @@
  #define MD5_DIGEST_LENGTH 16
  
@@ -174,8 +174,8 @@ diff -Naur oscam-svn/cscrypt/md5.h oscam-emu/cscrypt/md5.h
  
  #endif
 diff -Naur oscam-svn/globals.h oscam-emu/globals.h
---- oscam-svn/globals.h	2013-12-31 07:55:58.000000000 +0100
-+++ oscam-emu/globals.h	2013-12-31 08:06:49.000000000 +0100
+--- oscam-svn/globals.h	2013-12-31 11:07:30.000000000 +0100
++++ oscam-emu/globals.h	2014-01-01 07:52:20.000000000 +0100
 @@ -219,7 +219,7 @@
  /* ===========================
   *         constants
@@ -185,7 +185,7 @@ diff -Naur oscam-svn/globals.h oscam-emu/globals.h
  #ifndef CS_SVN_VERSION
  #   define CS_SVN_VERSION "test"
  #endif
-@@ -1928,4 +1928,8 @@
+@@ -1927,4 +1927,8 @@
  char *get_provider(uint16_t caid, uint32_t provid, char *buf, uint32_t buflen);
  void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
  
@@ -196,7 +196,7 @@ diff -Naur oscam-svn/globals.h oscam-emu/globals.h
  #endif
 diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
 --- oscam-svn/module-emulator.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-emu/module-emulator.c	2013-10-20 23:05:30.000000000 +0200
++++ oscam-emu/module-emulator.c	2014-01-01 07:52:20.000000000 +0100
 @@ -0,0 +1,506 @@
 +#include <stdlib.h>
 +#include <stdint.h>
@@ -705,8 +705,8 @@ diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
 +}
 +
 diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
---- oscam-svn/oscam-ecm.c	2013-12-31 07:55:58.000000000 +0100
-+++ oscam-emu/oscam-ecm.c	2013-12-31 08:14:55.000000000 +0100
+--- oscam-svn/oscam-ecm.c	2013-12-29 14:43:43.000000000 +0100
++++ oscam-emu/oscam-ecm.c	2014-01-01 07:52:20.000000000 +0100
 @@ -916,12 +916,23 @@
  	}
  #endif
@@ -759,7 +759,7 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  
  	// is cryptoworks, but which caid ?
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
-@@ -2107,6 +2128,15 @@
+@@ -2107,6 +2129,15 @@
  	}
  
  
@@ -775,3 +775,14 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  #ifdef CS_CACHEEX
  	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
  	er->from_cacheex1_client = 0;
+diff -Naur oscam-svn/oscam.c oscam-emu/oscam.c
+--- oscam-svn/oscam.c	2013-12-14 19:11:11.000000000 +0100
++++ oscam-emu/oscam.c	2014-01-01 07:53:44.000000000 +0100
+@@ -335,6 +335,7 @@
+ 	write_conf(LCDSUPPORT, "LCD support");
+ 	write_conf(LEDSUPPORT, "LED support");
+ 	write_conf(IPV6SUPPORT, "IPv6 support");
++	write_conf(WITH_EMU, "EMU support");
+ 	write_conf(CS_CACHEEX, "Cache exchange support");
+ 
+ 	fprintf(fp, "\n");
