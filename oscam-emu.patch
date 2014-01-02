@@ -704,6 +704,22 @@ diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
 +	return 1;
 +}
 +
+diff -Naur oscam-svn/module-webif.c oscam-emu/module-webif.c
+--- oscam-svn/module-webif.c	2014-01-02 20:35:51.000000000 +0100
++++ oscam-emu/module-webif.c	2014-01-02 20:38:15.000000000 +0100
+@@ -7066,6 +7066,12 @@
+ 		else
+ 			{ cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader)); }
+ 	}
++#ifdef WITH_EMU
++	else if(er->rcEx == 1)
++	{
++		cs_strncpy(client->lastreader, "EMU", sizeof(client->lastreader));
++	}
++#endif
+ 	else
+ 	{
+ 		cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader));
 diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
 --- oscam-svn/oscam-ecm.c	2013-12-29 14:43:43.000000000 +0100
 +++ oscam-emu/oscam-ecm.c	2014-01-01 07:52:20.000000000 +0100
