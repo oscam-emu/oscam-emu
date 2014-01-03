@@ -714,7 +714,7 @@ diff -Naur oscam-svn/module-webif.c oscam-emu/module-webif.c
 +#ifdef WITH_EMU
 +	else if(er->rcEx == 1)
 +	{
-+		cs_strncpy(client->lastreader, "EMU", sizeof(client->lastreader));
++		cs_strncpy(client->lastreader, "internal emu", sizeof(client->lastreader));
 +	}
 +#endif
  	else
@@ -738,7 +738,7 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
 +#ifdef WITH_EMU
 +	if(er->rc < E_NOTFOUND){
 +		if (er->rcEx == 1)
-+		snprintf(erEx, sizeof(erEx)-1, "found by emu");
++		snprintf(erEx, sizeof(erEx)-1, "found by internal emu");
 +	}else if (er->rcEx){
 +		snprintf(erEx, sizeof(erEx)-1, "rejected %s%s", stxtWh[er->rcEx>>4], stxtEx[er->rcEx & 0xf]);
 +	}
