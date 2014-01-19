@@ -1,7 +1,7 @@
 diff -Naur oscam-svn/Makefile oscam-emu/Makefile
---- oscam-svn/Makefile	2013-12-30 23:15:04.000000000 +0100
-+++ oscam-emu/Makefile	2014-01-01 07:52:20.000000000 +0100
-@@ -220,6 +220,7 @@
+--- oscam-svn/Makefile	2014-01-19 08:39:54.000000000 +0100
++++ oscam-emu/Makefile	2014-01-19 08:41:28.000000000 +0100
+@@ -226,6 +226,7 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -10,28 +10,28 @@ diff -Naur oscam-svn/Makefile oscam-emu/Makefile
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 diff -Naur oscam-svn/config.h oscam-emu/config.h
---- oscam-svn/config.h	2013-09-30 14:41:39.000000000 +0200
-+++ oscam-emu/config.h	2014-01-01 07:52:20.000000000 +0100
-@@ -28,6 +28,7 @@
- #define MODULE_RADEGAST 1
- #define MODULE_SERIAL 1
- #define MODULE_CONSTCW 1
+--- oscam-svn/config.h	2014-01-19 08:39:59.000000000 +0100
++++ oscam-emu/config.h	2014-01-19 08:44:03.000000000 +0100
+@@ -12,6 +12,7 @@
+ #define CS_ANTICASC 1
+ #define WITH_DEBUG 1
+ #define WITH_LB 1
 +#define WITH_EMU 1
- #define MODULE_PANDORA 1
- #define MODULE_GHTTP 1
- 
+ #define CS_CACHEEX 1
+ #define CW_CYCLE_CHECK 1
+ //#define LCDSUPPORT 1
 diff -Naur oscam-svn/config.sh oscam-emu/config.sh
---- oscam-svn/config.sh	2013-09-30 19:37:59.000000000 +0200
-+++ oscam-emu/config.sh	2014-01-01 07:52:20.000000000 +0100
+--- oscam-svn/config.sh	2014-01-19 08:39:57.000000000 +0100
++++ oscam-emu/config.sh	2014-01-19 08:46:22.000000000 +0100
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT"
-+addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT WITH_EMU"
+-addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT CLOCKFIX"
++addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB WITH_EMU CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT CLOCKFIX"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STINGER"
-@@ -30,6 +30,7 @@
+@@ -31,6 +31,7 @@
  CONFIG_MODULE_RADEGAST=y
  CONFIG_MODULE_SERIAL=y
  CONFIG_MODULE_CONSTCW=y
@@ -39,17 +39,29 @@ diff -Naur oscam-svn/config.sh oscam-emu/config.sh
  CONFIG_MODULE_PANDORA=y
  CONFIG_MODULE_GHTTP=y
  CONFIG_WITH_CARDREADER=y
-@@ -421,6 +422,7 @@
+@@ -409,7 +410,7 @@
+ menu_addons() {
+ 	${DIALOG} --checklist "\nChoose add-ons:\n " $height $width $listheight \
+ 		WEBIF				"Web Interface"				$(check_test "WEBIF") \
+-		TOUCH				"Touch Web Interface"				$(check_test "TOUCH") \
++		TOUCH				"Touch Web Interface"		$(check_test "TOUCH") \
+ 		HAVE_DVBAPI			"DVB API"					$(check_test "HAVE_DVBAPI") \
+ 		IRDETO_GUESSING		"Irdeto guessing"			$(check_test "IRDETO_GUESSING") \
+ 		CS_ANTICASC			"Anti cascading"			$(check_test "CS_ANTICASC") \
+@@ -417,8 +418,9 @@
+ 		MODULE_MONITOR		"Monitor"					$(check_test "MODULE_MONITOR") \
+ 		WITH_SSL			"OpenSSL support"			$(check_test "WITH_SSL") \
+ 		WITH_LB				"Loadbalancing"				$(check_test "WITH_LB") \
++ 		WITH_EMU			"EMU support (experimental)"		$(check_test "WITH_EMU") \
+ 		CS_CACHEEX			"Cache exchange"			$(check_test "CS_CACHEEX") \
+-		CW_CYCLE_CHECK			"CW Cycle Check"			$(check_test "CW_CYCLE_CHECK") \
++		CW_CYCLE_CHECK		"CW Cycle Check"			$(check_test "CW_CYCLE_CHECK") \
  		LCDSUPPORT			"LCD support"				$(check_test "LCDSUPPORT") \
  		LEDSUPPORT			"LED support"				$(check_test "LEDSUPPORT") \
  		IPV6SUPPORT			"IPv6 support (experimental)"		$(check_test "IPV6SUPPORT") \
-+		WITH_EMU			"EMU support (experimental)"		$(check_test "WITH_EMU") \
- 		2> ${tempfile}
- 
- 	opt=${?}
 diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
---- oscam-svn/cscrypt/md5.c	2013-12-31 07:56:03.000000000 +0100
-+++ oscam-emu/cscrypt/md5.c	2014-01-01 07:52:20.000000000 +0100
+--- oscam-svn/cscrypt/md5.c	2014-01-19 08:39:55.000000000 +0100
++++ oscam-emu/cscrypt/md5.c	2014-01-19 08:41:28.000000000 +0100
 @@ -25,13 +25,6 @@
  
  #if !defined(WITH_SSL) && !defined(WITH_LIBCRYPTO)
@@ -152,8 +164,8 @@ diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
  		memset(p, 0, count - 8);
  	}
 diff -Naur oscam-svn/cscrypt/md5.h oscam-emu/cscrypt/md5.h
---- oscam-svn/cscrypt/md5.h	2013-12-31 07:56:03.000000000 +0100
-+++ oscam-emu/cscrypt/md5.h	2014-01-01 07:52:20.000000000 +0100
+--- oscam-svn/cscrypt/md5.h	2014-01-19 08:39:55.000000000 +0100
++++ oscam-emu/cscrypt/md5.h	2014-01-19 08:41:28.000000000 +0100
 @@ -7,8 +7,17 @@
  #define MD5_DIGEST_LENGTH 16
  
@@ -174,8 +186,8 @@ diff -Naur oscam-svn/cscrypt/md5.h oscam-emu/cscrypt/md5.h
  
  #endif
 diff -Naur oscam-svn/globals.h oscam-emu/globals.h
---- oscam-svn/globals.h	2013-12-31 11:07:30.000000000 +0100
-+++ oscam-emu/globals.h	2014-01-01 07:52:20.000000000 +0100
+--- oscam-svn/globals.h	2014-01-19 08:39:59.000000000 +0100
++++ oscam-emu/globals.h	2014-01-19 08:41:28.000000000 +0100
 @@ -219,7 +219,7 @@
  /* ===========================
   *         constants
@@ -196,7 +208,7 @@ diff -Naur oscam-svn/globals.h oscam-emu/globals.h
  #endif
 diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
 --- oscam-svn/module-emulator.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-emu/module-emulator.c	2014-01-01 07:52:20.000000000 +0100
++++ oscam-emu/module-emulator.c	2014-01-19 08:41:28.000000000 +0100
 @@ -0,0 +1,506 @@
 +#include <stdlib.h>
 +#include <stdint.h>
@@ -705,25 +717,25 @@ diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
 +}
 +
 diff -Naur oscam-svn/module-webif.c oscam-emu/module-webif.c
---- oscam-svn/module-webif.c	2014-01-02 20:35:51.000000000 +0100
-+++ oscam-emu/module-webif.c	2014-01-02 20:38:15.000000000 +0100
-@@ -7066,6 +7066,12 @@
+--- oscam-svn/module-webif.c	2014-01-19 08:39:59.000000000 +0100
++++ oscam-emu/module-webif.c	2014-01-19 08:41:28.000000000 +0100
+@@ -7135,6 +7135,12 @@
  		else
  			{ cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader)); }
  	}
 +#ifdef WITH_EMU
 +	else if(er->rcEx == 1)
 +	{
-+		cs_strncpy(client->lastreader, "internal emu", sizeof(client->lastreader));
++		cs_strncpy(client->lastreader, "EMU", sizeof(client->lastreader));
 +	}
 +#endif
  	else
  	{
  		cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader));
 diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
---- oscam-svn/oscam-ecm.c	2013-12-29 14:43:43.000000000 +0100
-+++ oscam-emu/oscam-ecm.c	2014-01-01 07:52:20.000000000 +0100
-@@ -916,12 +916,23 @@
+--- oscam-svn/oscam-ecm.c	2014-01-19 08:39:59.000000000 +0100
++++ oscam-emu/oscam-ecm.c	2014-01-19 08:41:28.000000000 +0100
+@@ -914,12 +914,23 @@
  	}
  #endif
  
@@ -738,7 +750,7 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
 +#ifdef WITH_EMU
 +	if(er->rc < E_NOTFOUND){
 +		if (er->rcEx == 1)
-+		snprintf(erEx, sizeof(erEx)-1, "found by internal emu");
++		snprintf(erEx, sizeof(erEx)-1, "found by emu");
 +	}else if (er->rcEx){
 +		snprintf(erEx, sizeof(erEx)-1, "rejected %s%s", stxtWh[er->rcEx>>4], stxtEx[er->rcEx & 0xf]);
 +	}
@@ -747,7 +759,7 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  	get_servicename_or_null(client, er->srvid, er->caid, channame);
  	if(!channame[0])
  		{ schaninfo[0] = '\0'; }
-@@ -1689,12 +1700,23 @@
+@@ -1687,12 +1698,23 @@
  	// nagra
  	// is ecm[1] always 0x30 ?
  	// is ecm[3] always 0x07 ?
@@ -775,7 +787,7 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  
  	// is cryptoworks, but which caid ?
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
-@@ -2107,6 +2129,15 @@
+@@ -2105,6 +2127,15 @@
  	}
  
  
@@ -792,13 +804,13 @@ diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
  	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
  	er->from_cacheex1_client = 0;
 diff -Naur oscam-svn/oscam.c oscam-emu/oscam.c
---- oscam-svn/oscam.c	2013-12-14 19:11:11.000000000 +0100
-+++ oscam-emu/oscam.c	2014-01-01 07:53:44.000000000 +0100
-@@ -335,6 +335,7 @@
+--- oscam-svn/oscam.c	2014-01-19 08:39:59.000000000 +0100
++++ oscam-emu/oscam.c	2014-01-19 08:51:11.000000000 +0100
+@@ -330,6 +330,7 @@
+ 	write_conf(WITH_DEBUG, "Debug mode");
+ 	write_conf(MODULE_MONITOR, "Monitor");
+ 	write_conf(WITH_LB, "Loadbalancing support");
++    write_conf(WITH_EMU, "EMU support");
+ 	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
  	write_conf(LCDSUPPORT, "LCD support");
  	write_conf(LEDSUPPORT, "LED support");
- 	write_conf(IPV6SUPPORT, "IPv6 support");
-+	write_conf(WITH_EMU, "EMU support");
- 	write_conf(CS_CACHEEX, "Cache exchange support");
- 
- 	fprintf(fp, "\n");
