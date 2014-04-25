@@ -1,37 +1,36 @@
-diff -Naur oscam-svn/Makefile oscam-emu/Makefile
---- oscam-svn/Makefile	2014-01-19 08:39:54.000000000 +0100
-+++ oscam-emu/Makefile	2014-01-19 08:41:28.000000000 +0100
-@@ -226,6 +226,7 @@
- SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
- SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
- SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
-+SRC-$(CONFIG_WITH_EMU) += module-emulator.c
- SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
- SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
- SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-diff -Naur oscam-svn/config.h oscam-emu/config.h
---- oscam-svn/config.h	2014-01-19 08:39:59.000000000 +0100
-+++ oscam-emu/config.h	2014-01-19 08:44:03.000000000 +0100
-@@ -12,6 +12,7 @@
- #define CS_ANTICASC 1
- #define WITH_DEBUG 1
- #define WITH_LB 1
-+#define WITH_EMU 1
- #define CS_CACHEEX 1
- #define CW_CYCLE_CHECK 1
+Index: config.h
+===================================================================
+--- config.h	(revision 9676)
++++ config.h	(working copy)
+@@ -20,7 +20,6 @@
  //#define LCDSUPPORT 1
-diff -Naur oscam-svn/config.sh oscam-emu/config.sh
---- oscam-svn/config.sh	2014-01-19 08:39:57.000000000 +0100
-+++ oscam-emu/config.sh	2014-01-19 08:46:22.000000000 +0100
+ //#define LEDSUPPORT 1
+ //#define IPV6SUPPORT 1
+-
+ #define MODULE_MONITOR 1
+ //#define MODULE_CAMD33 1
+ #define MODULE_CAMD35 1
+@@ -32,6 +31,7 @@
+ #define MODULE_RADEGAST 1
+ #define MODULE_SERIAL 1
+ #define MODULE_CONSTCW 1
++#define WITH_EMU 1
+ #define MODULE_PANDORA 1
+ #define MODULE_GHTTP 1
+ 
+Index: config.sh
+===================================================================
+--- config.sh	(revision 9676)
++++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT CLOCKFIX"
-+addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB WITH_EMU CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT CLOCKFIX"
+-addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT CLOCKFIX WEBIF_LIVELOG WEBIF_JQUERY DVBAPI_SAMYGO"
++addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT CLOCKFIX WITH_EMU WEBIF_LIVELOG WEBIF_JQUERY DVBAPI_SAMYGO"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STINGER"
-@@ -31,6 +31,7 @@
+@@ -34,6 +34,7 @@
  CONFIG_MODULE_RADEGAST=y
  CONFIG_MODULE_SERIAL=y
  CONFIG_MODULE_CONSTCW=y
@@ -39,29 +38,18 @@ diff -Naur oscam-svn/config.sh oscam-emu/config.sh
  CONFIG_MODULE_PANDORA=y
  CONFIG_MODULE_GHTTP=y
  CONFIG_WITH_CARDREADER=y
-@@ -409,7 +410,7 @@
- menu_addons() {
- 	${DIALOG} --checklist "\nChoose add-ons:\n " $height $width $listheight \
- 		WEBIF				"Web Interface"				$(check_test "WEBIF") \
--		TOUCH				"Touch Web Interface"				$(check_test "TOUCH") \
-+		TOUCH				"Touch Web Interface"		$(check_test "TOUCH") \
- 		HAVE_DVBAPI			"DVB API"					$(check_test "HAVE_DVBAPI") \
- 		IRDETO_GUESSING		"Irdeto guessing"			$(check_test "IRDETO_GUESSING") \
- 		CS_ANTICASC			"Anti cascading"			$(check_test "CS_ANTICASC") \
-@@ -417,8 +418,9 @@
- 		MODULE_MONITOR		"Monitor"					$(check_test "MODULE_MONITOR") \
- 		WITH_SSL			"OpenSSL support"			$(check_test "WITH_SSL") \
- 		WITH_LB				"Loadbalancing"				$(check_test "WITH_LB") \
-+ 		WITH_EMU			"EMU support (experimental)"		$(check_test "WITH_EMU") \
- 		CS_CACHEEX			"Cache exchange"			$(check_test "CS_CACHEEX") \
--		CW_CYCLE_CHECK			"CW Cycle Check"			$(check_test "CW_CYCLE_CHECK") \
-+		CW_CYCLE_CHECK		"CW Cycle Check"			$(check_test "CW_CYCLE_CHECK") \
- 		LCDSUPPORT			"LCD support"				$(check_test "LCDSUPPORT") \
- 		LEDSUPPORT			"LED support"				$(check_test "LEDSUPPORT") \
- 		IPV6SUPPORT			"IPv6 support (experimental)"		$(check_test "IPV6SUPPORT") \
-diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
---- oscam-svn/cscrypt/md5.c	2014-01-19 08:39:55.000000000 +0100
-+++ oscam-emu/cscrypt/md5.c	2014-01-19 08:41:28.000000000 +0100
+@@ -431,6 +432,7 @@
+ 		LEDSUPPORT			"LED support"					$(check_test "LEDSUPPORT") \
+ 		CLOCKFIX			"Clockfix (disable on old systems!)"		$(check_test "CLOCKFIX") \
+ 		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
++		WITH_EMU			"Emulator support (experimental)"		$(check_test "WITH_EMU") \
+ 		2> ${tempfile}
+ 
+ 	opt=${?}
+Index: cscrypt/md5.c
+===================================================================
+--- cscrypt/md5.c	(revision 9676)
++++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
  #if !defined(WITH_SSL) && !defined(WITH_LIBCRYPTO)
@@ -85,7 +73,7 @@ diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
  {
  	ctx->buf[0] = 0x67452301;
  	ctx->buf[1] = 0xefcdab89;
-@@ -170,27 +163,25 @@
+@@ -170,7 +163,7 @@
   * Update context to reflect the concatenation of another buffer full
   * of bytes.
   */
@@ -94,47 +82,8 @@ diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
  {
  	uint32_t t;
  
- 	/* Update bitcount */
- 
- 	t = ctx->bits[0];
--	if((ctx->bits[0] = t + ((uint32_t) len << 3)) < t)
--		{ ctx->bits[1]++; }     /* Carry from low to high */
-+	if ((ctx->bits[0] = t + ((uint32_t) len << 3)) < t)
-+	ctx->bits[1]++; 	/* Carry from low to high */
- 	ctx->bits[1] += len >> 29;
- 
--	t = (t >> 3) & 0x3f;    /* Bytes already in shsInfo->data */
-+	t = (t >> 3) & 0x3f;	/* Bytes already in shsInfo->data */
- 
- 	/* Handle any leading odd-sized chunks */
- 
--	if(t)
--	{
-+	if (t) {
- 		unsigned char *p = (unsigned char *)ctx->in + t;
- 		t = 64 - t;
--		if(len < t)
--		{
-+		if (len < t) {
- 			memcpy(p, buf, len);
- 			return;
- 		}
-@@ -202,8 +193,7 @@
- 	}
- 
- 	/* Process data in 64-byte chunks */
--	while(len >= 64)
--	{
-+	while (len >= 64) {
- 		memcpy(ctx->in, buf, 64);
- 		byteReverse(ctx->in, 16);
- 		MD5_Transform(ctx->buf, (uint32_t *) ctx->in);
-@@ -216,10 +206,10 @@
- }
- 
- /*
-- * Final wrapup - pad to 64-byte boundary with the bit pattern
-+ * Final wrapup - pad to 64-byte boundary with the bit pattern 
+@@ -219,7 +212,7 @@
+  * Final wrapup - pad to 64-byte boundary with the bit pattern
   * 1 0* (64-bit count of bits processed, MSB-first)
   */
 -static void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
@@ -142,74 +91,59 @@ diff -Naur oscam-svn/cscrypt/md5.c oscam-emu/cscrypt/md5.c
  {
  	unsigned count;
  	unsigned char *p;
-@@ -236,8 +226,7 @@
- 	count = 64 - 1 - count;
- 
- 	/* Pad out to 56 mod 64 */
--	if(count < 8)
--	{
-+	if (count < 8) {
- 		/* Two lots of padding:  Pad the first block to 64 bytes */
- 		memset(p, 0, count);
- 		byteReverse(ctx->in, 16);
-@@ -245,9 +234,7 @@
- 
- 		/* Now fill the next block with 56 bytes */
- 		memset(ctx->in, 0, 56);
--	}
--	else
--	{
-+	} else {
- 		/* Pad block to 56 bytes */
- 		memset(p, 0, count - 8);
- 	}
-diff -Naur oscam-svn/cscrypt/md5.h oscam-emu/cscrypt/md5.h
---- oscam-svn/cscrypt/md5.h	2014-01-19 08:39:55.000000000 +0100
-+++ oscam-emu/cscrypt/md5.h	2014-01-19 08:41:28.000000000 +0100
-@@ -7,8 +7,17 @@
+Index: cscrypt/md5.h
+===================================================================
+--- cscrypt/md5.h	(revision 9676)
++++ cscrypt/md5.h	(working copy)
+@@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
  
  unsigned char *MD5(const unsigned char *input, unsigned long len, unsigned char *output_hash);
 -#endif
-+
+ 
 +typedef struct MD5Context {
 +	uint32_t buf[4];
 +	uint32_t bits[2];
 +	unsigned char in[64];
 +} MD5_CTX;
- 
++
  char *__md5_crypt(const char *text_pass, const char *salt, char *crypted_passwd);
+-
 +void MD5_Init(MD5_CTX *ctx);
 +void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len);
 +void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx);
+ #endif
 +#endif
- 
- #endif
-diff -Naur oscam-svn/globals.h oscam-emu/globals.h
---- oscam-svn/globals.h	2014-01-19 08:39:59.000000000 +0100
-+++ oscam-emu/globals.h	2014-01-19 08:41:28.000000000 +0100
-@@ -219,7 +219,7 @@
- /* ===========================
-  *         constants
-  * =========================== */
--#define CS_VERSION    "1.20-unstable_svn"
-+#define CS_VERSION    "1.20-unstable_emu"
- #ifndef CS_SVN_VERSION
- #   define CS_SVN_VERSION "test"
- #endif
-@@ -1927,4 +1927,8 @@
+Index: globals.h
+===================================================================
+--- globals.h	(revision 9676)
++++ globals.h	(working copy)
+@@ -1938,4 +1938,8 @@
  char *get_provider(uint16_t caid, uint32_t provid, char *buf, uint32_t buflen);
  void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
  
 +#ifdef WITH_EMU
-+	char ProcessECM(uint16_t CAID, unsigned char *ecm, unsigned char *dw);
-+#endif
-+
++char ProcessECM(uint16_t CAID, unsigned char *ecm, unsigned char *dw);
  #endif
-diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
---- oscam-svn/module-emulator.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-emu/module-emulator.c	2014-01-19 08:41:28.000000000 +0100
-@@ -0,0 +1,506 @@
++
++#endif
+Index: Makefile
+===================================================================
+--- Makefile	(revision 9676)
++++ Makefile	(working copy)
+@@ -226,6 +226,7 @@
+ SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
+ SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
+ SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
++SRC-$(CONFIG_WITH_EMU) += module-emulator.c
+ SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
+ SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
+ SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
+Index: module-emulator.c
+===================================================================
+--- module-emulator.c	(revision 0)
++++ module-emulator.c	(working copy)
+@@ -0,0 +1,505 @@
 +#include <stdlib.h>
 +#include <stdint.h>
 +#include <string.h>
@@ -715,102 +649,107 @@ diff -Naur oscam-svn/module-emulator.c oscam-emu/module-emulator.c
 +		return CryptoworksProcessECM(ecm,dw);
 +	return 1;
 +}
-+
-diff -Naur oscam-svn/module-webif.c oscam-emu/module-webif.c
---- oscam-svn/module-webif.c	2014-01-19 08:39:59.000000000 +0100
-+++ oscam-emu/module-webif.c	2014-01-19 08:41:28.000000000 +0100
-@@ -7135,6 +7135,12 @@
+Index: module-webif.c
+===================================================================
+--- module-webif.c	(revision 9676)
++++ module-webif.c	(working copy)
+@@ -7642,6 +7642,12 @@
  		else
  			{ cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader)); }
  	}
 +#ifdef WITH_EMU
 +	else if(er->rcEx == 1)
 +	{
-+		cs_strncpy(client->lastreader, "EMU", sizeof(client->lastreader));
++		cs_strncpy(client->lastreader, "Emulator", sizeof(client->lastreader));
 +	}
 +#endif
  	else
  	{
  		cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader));
-diff -Naur oscam-svn/oscam-ecm.c oscam-emu/oscam-ecm.c
---- oscam-svn/oscam-ecm.c	2014-01-19 08:39:59.000000000 +0100
-+++ oscam-emu/oscam-ecm.c	2014-01-19 08:41:28.000000000 +0100
-@@ -914,12 +914,23 @@
+Index: oscam-ecm.c
+===================================================================
+--- oscam-ecm.c	(revision 9676)
++++ oscam-ecm.c	(working copy)
+@@ -918,12 +918,23 @@
  	}
  #endif
  
+-	if(er->rc < E_NOTFOUND)
+-		{ er->rcEx = 0; }
 +#ifndef WITH_EMU
- 	if(er->rc < E_NOTFOUND)
- 		{ er->rcEx = 0; }
++   if(er->rc < E_NOTFOUND)
++     { er->rcEx = 0; }
  
- 	if(er->rcEx)
- 		{ snprintf(erEx, sizeof(erEx) - 1, "rejected %s%s", stxtWh[er->rcEx >> 4], stxtEx[er->rcEx & 0xf]); }
+-	if(er->rcEx)
+-		{ snprintf(erEx, sizeof(erEx) - 1, "rejected %s%s", stxtWh[er->rcEx >> 4], stxtEx[er->rcEx & 0xf]); }
++	 if(er->rcEx)
++		 { snprintf(erEx, sizeof(erEx) - 1, "rejected %s%s", stxtWh[er->rcEx >> 4], stxtEx[er->rcEx & 0xf]); }
 +#endif
  
 +#ifdef WITH_EMU
-+	if(er->rc < E_NOTFOUND){
-+		if (er->rcEx == 1)
-+		snprintf(erEx, sizeof(erEx)-1, "found by emu");
-+	}else if (er->rcEx){
-+		snprintf(erEx, sizeof(erEx)-1, "rejected %s%s", stxtWh[er->rcEx>>4], stxtEx[er->rcEx & 0xf]);
-+	}
++  if(er->rc < E_NOTFOUND){
++    if (er->rcEx == 1)
++    snprintf(erEx, sizeof(erEx)-1, "found by Emulator");
++  }else if (er->rcEx){
++    snprintf(erEx, sizeof(erEx)-1, "rejected %s%s", stxtWh[er->rcEx>>4], stxtEx[er->rcEx & 0xf]);
++  }
 +#endif
-+		
++
  	get_servicename_or_null(client, er->srvid, er->caid, channame);
  	if(!channame[0])
  		{ schaninfo[0] = '\0'; }
-@@ -1687,12 +1698,23 @@
+@@ -1693,12 +1704,23 @@
  	// nagra
  	// is ecm[1] always 0x30 ?
  	// is ecm[3] always 0x07 ?
 -	if((er->ecm[6] == 1) && (er->ecm[4] == er->ecm[2] - 2))
 -		{ er->caid = 0x1801; }
-+    if ((er->ecm[3]==0x07) && (er->ecm[4]==er->ecm[2]-2)) {
-+    if (er->ecmlen == 0x91) er->caid=0x183D; else
-+    if (er->ecmlen == 0x8E) er->caid=0x1810; else
-+    if (er->ecmlen == 0x92) er->caid=0x1803; else
-+    er->caid=0x1801;
-+  }
-+
-+  if ((er->ecm[1] == 0x70) && (er->ecm[3] == 0x70)) {
-+    if (er->ecmlen==0x6C) er->caid = 0x0b01; else
-+    er->caid = 0x0b00;
-+  }
++	if ((er->ecm[3]==0x07) && (er->ecm[4]==er->ecm[2]-2)) {
++		if (er->ecmlen == 0x91) er->caid=0x183D; else
++		if (er->ecmlen == 0x8E) er->caid=0x1810; else
++		if (er->ecmlen == 0x92) er->caid=0x1803; else
++		er->caid=0x1801;
++	}
  
++	if ((er->ecm[1] == 0x70) && (er->ecm[3] == 0x70)) {
++		if (er->ecmlen==0x6C) er->caid = 0x0b01; else
++		er->caid = 0x0b00;
++	}
++
  	// seca2 - very poor
 -	if((er->ecm[8] == 0x10) && ((er->ecm[9] & 0xF1) == 1))
 -		{ last_hope = 0x100; }
-+    if ((er->ecm[5] < 0x02) && (er->ecmlen==0x64)) {
-+    er->caid = 0x100;
-+    er->prid = chk_provid(er->ecm, 0x100);
-+  }
++	if ((er->ecm[5] < 0x02) && (er->ecmlen==0x64)) {
++		er->caid = 0x100;
++		er->prid = chk_provid(er->ecm, 0x100);
++	}
  
  	// is cryptoworks, but which caid ?
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
-@@ -2105,6 +2127,15 @@
+@@ -2110,6 +2132,14 @@
+ 		return;
  	}
  
- 
 +#ifdef WITH_EMU
-+  if (!ProcessECM(er->caid,er->ecm,er->cw)) {
-+    er->rc = E_FOUND;
-+    er->rcEx = 1;
-+    send_dcw(client, er);
-+    return;
-+  }
++	if (!ProcessECM(er->caid,er->ecm,er->cw)) {
++		er->rc = E_FOUND;
++		er->rcEx = 1;
++		send_dcw(client, er);
++		return;
++	}
 +#endif
-+  
+ 
  #ifdef CS_CACHEEX
  	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
- 	er->from_cacheex1_client = 0;
-diff -Naur oscam-svn/oscam.c oscam-emu/oscam.c
---- oscam-svn/oscam.c	2014-01-19 08:39:59.000000000 +0100
-+++ oscam-emu/oscam.c	2014-01-19 08:51:11.000000000 +0100
-@@ -330,6 +330,7 @@
- 	write_conf(WITH_DEBUG, "Debug mode");
- 	write_conf(MODULE_MONITOR, "Monitor");
- 	write_conf(WITH_LB, "Loadbalancing support");
-+    write_conf(WITH_EMU, "EMU support");
- 	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
+Index: oscam.c
+===================================================================
+--- oscam.c	(revision 9676)
++++ oscam.c	(working copy)
+@@ -339,6 +339,7 @@
  	write_conf(LCDSUPPORT, "LCD support");
  	write_conf(LEDSUPPORT, "LED support");
+ 	write_conf(IPV6SUPPORT, "IPv6 support");
++	write_conf(WITH_EMU, "Emulator support");
+ 	switch (cs_getclocktype()) {
+ 		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
+ 		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
