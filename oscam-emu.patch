@@ -1,6 +1,6 @@
 Index: config.h
 ===================================================================
---- config.h	(revision 9676)
+--- config.h	(revision 9717)
 +++ config.h	(working copy)
 @@ -20,7 +20,6 @@
  //#define LCDSUPPORT 1
@@ -20,13 +20,13 @@ Index: config.h
  
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9676)
+--- config.sh	(revision 9717)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT CLOCKFIX WEBIF_LIVELOG WEBIF_JQUERY DVBAPI_SAMYGO"
-+addons="WEBIF TOUCH HAVE_DVBAPI IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_SSL WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT CLOCKFIX WITH_EMU WEBIF_LIVELOG WEBIF_JQUERY DVBAPI_SAMYGO"
+-addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI DVBAPI_SAMYGO IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI DVBAPI_SAMYGO IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STINGER"
@@ -38,9 +38,9 @@ Index: config.sh
  CONFIG_MODULE_PANDORA=y
  CONFIG_MODULE_GHTTP=y
  CONFIG_WITH_CARDREADER=y
-@@ -431,6 +432,7 @@
- 		LEDSUPPORT			"LED support"					$(check_test "LEDSUPPORT") \
- 		CLOCKFIX			"Clockfix (disable on old systems!)"		$(check_test "CLOCKFIX") \
+@@ -441,6 +442,7 @@
+ 		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
+ 		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
 +		WITH_EMU			"Emulator support (experimental)"		$(check_test "WITH_EMU") \
  		2> ${tempfile}
@@ -48,7 +48,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9676)
+--- cscrypt/md5.c	(revision 9717)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -93,7 +93,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9676)
+--- cscrypt/md5.h	(revision 9717)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -116,9 +116,9 @@ Index: cscrypt/md5.h
 +#endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9676)
+--- globals.h	(revision 9717)
 +++ globals.h	(working copy)
-@@ -1938,4 +1938,8 @@
+@@ -1941,4 +1941,8 @@
  char *get_provider(uint16_t caid, uint32_t provid, char *buf, uint32_t buflen);
  void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
  
@@ -129,7 +129,7 @@ Index: globals.h
 +#endif
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9676)
+--- Makefile	(revision 9717)
 +++ Makefile	(working copy)
 @@ -226,6 +226,7 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
@@ -651,9 +651,9 @@ Index: module-emulator.c
 +}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9676)
+--- module-webif.c	(revision 9717)
 +++ module-webif.c	(working copy)
-@@ -7642,6 +7642,12 @@
+@@ -7664,6 +7664,12 @@
  		else
  			{ cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader)); }
  	}
@@ -668,7 +668,7 @@ Index: module-webif.c
  		cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader));
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 9676)
+--- oscam-ecm.c	(revision 9717)
 +++ oscam-ecm.c	(working copy)
 @@ -918,12 +918,23 @@
  	}
@@ -743,12 +743,12 @@ Index: oscam-ecm.c
  	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9676)
+--- oscam.c	(revision 9717)
 +++ oscam.c	(working copy)
 @@ -339,6 +339,7 @@
+ 	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
  	write_conf(LCDSUPPORT, "LCD support");
  	write_conf(LEDSUPPORT, "LED support");
- 	write_conf(IPV6SUPPORT, "IPv6 support");
 +	write_conf(WITH_EMU, "Emulator support");
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
