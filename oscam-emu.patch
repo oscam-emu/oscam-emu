@@ -1,26 +1,18 @@
 Index: config.h
 ===================================================================
---- config.h	(revision 9717)
+--- config.h	(revision 9744)
 +++ config.h	(working copy)
-@@ -20,7 +20,6 @@
- //#define LCDSUPPORT 1
- //#define LEDSUPPORT 1
- //#define IPV6SUPPORT 1
--
- #define MODULE_MONITOR 1
- //#define MODULE_CAMD33 1
- #define MODULE_CAMD35 1
-@@ -32,6 +31,7 @@
+@@ -29,6 +29,7 @@
+ #define MODULE_CCCAM 1
+ #define MODULE_CCCSHARE 1
+ #define MODULE_GBOX 1
++#define WITH_EMU 1
  #define MODULE_RADEGAST 1
  #define MODULE_SERIAL 1
  #define MODULE_CONSTCW 1
-+#define WITH_EMU 1
- #define MODULE_PANDORA 1
- #define MODULE_GHTTP 1
- 
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9717)
+--- config.sh	(revision 9744)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -48,7 +40,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9717)
+--- cscrypt/md5.c	(revision 9744)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -93,7 +85,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9717)
+--- cscrypt/md5.h	(revision 9744)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -116,9 +108,9 @@ Index: cscrypt/md5.h
 +#endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9717)
+--- globals.h	(revision 9744)
 +++ globals.h	(working copy)
-@@ -1941,4 +1941,8 @@
+@@ -1974,4 +1974,8 @@
  char *get_provider(uint16_t caid, uint32_t provid, char *buf, uint32_t buflen);
  void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
  
@@ -129,7 +121,7 @@ Index: globals.h
 +#endif
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9717)
+--- Makefile	(revision 9744)
 +++ Makefile	(working copy)
 @@ -226,6 +226,7 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
@@ -651,9 +643,9 @@ Index: module-emulator.c
 +}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9717)
+--- module-webif.c	(revision 9744)
 +++ module-webif.c	(working copy)
-@@ -7664,6 +7664,12 @@
+@@ -7721,6 +7721,12 @@
  		else
  			{ cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader)); }
  	}
@@ -668,9 +660,9 @@ Index: module-webif.c
  		cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader));
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 9717)
+--- oscam-ecm.c	(revision 9744)
 +++ oscam-ecm.c	(working copy)
-@@ -918,12 +918,23 @@
+@@ -917,12 +917,23 @@
  	}
  #endif
  
@@ -698,7 +690,7 @@ Index: oscam-ecm.c
  	get_servicename_or_null(client, er->srvid, er->caid, channame);
  	if(!channame[0])
  		{ schaninfo[0] = '\0'; }
-@@ -1693,12 +1704,23 @@
+@@ -1824,12 +1835,23 @@
  	// nagra
  	// is ecm[1] always 0x30 ?
  	// is ecm[3] always 0x07 ?
@@ -726,7 +718,7 @@ Index: oscam-ecm.c
  
  	// is cryptoworks, but which caid ?
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
-@@ -2110,6 +2132,14 @@
+@@ -2241,6 +2263,14 @@
  		return;
  	}
  
@@ -743,9 +735,9 @@ Index: oscam-ecm.c
  	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9717)
+--- oscam.c	(revision 9744)
 +++ oscam.c	(working copy)
-@@ -339,6 +339,7 @@
+@@ -340,6 +340,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
  	write_conf(LCDSUPPORT, "LCD support");
  	write_conf(LEDSUPPORT, "LED support");
