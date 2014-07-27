@@ -1,6 +1,6 @@
 Index: config.h
 ===================================================================
---- config.h	(revision 9744)
+--- config.h	(revision 9811)
 +++ config.h	(working copy)
 @@ -29,6 +29,7 @@
  #define MODULE_CCCAM 1
@@ -12,7 +12,7 @@ Index: config.h
  #define MODULE_CONSTCW 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9744)
+--- config.sh	(revision 9811)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -40,7 +40,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9744)
+--- cscrypt/md5.c	(revision 9811)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -85,7 +85,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9744)
+--- cscrypt/md5.h	(revision 9811)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -108,9 +108,9 @@ Index: cscrypt/md5.h
 +#endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9744)
+--- globals.h	(revision 9811)
 +++ globals.h	(working copy)
-@@ -1974,4 +1974,8 @@
+@@ -1981,4 +1981,8 @@
  char *get_provider(uint16_t caid, uint32_t provid, char *buf, uint32_t buflen);
  void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
  
@@ -121,9 +121,9 @@ Index: globals.h
 +#endif
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9744)
+--- Makefile	(revision 9811)
 +++ Makefile	(working copy)
-@@ -226,6 +226,7 @@
+@@ -233,6 +233,7 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -135,7 +135,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,505 @@
+@@ -0,0 +1,1091 @@
 +#include <stdlib.h>
 +#include <stdint.h>
 +#include <string.h>
@@ -143,6 +143,7 @@ Index: module-emulator.c
 +#include "cscrypt/des.h"
 +#include "cscrypt/md5.h"
 +#include "globals.h"
++#include "oscam-aes.h"
 +
 +// Cryptoworks EMU
 +static char crw_0D00C000[]={0x22,0xEC,0xB8,0xB2,0x43,0x85,0xC3,0xB2,0x94,0x1E,0xF7,0xEC,0xC2,0xB5,0x4A,0x09}; // DigiTurk
@@ -624,6 +625,589 @@ Index: module-emulator.c
 +	return 0;
 +}
 +
++// Viaccess EMU
++static char via_030B00_X1[]={0x8B, 0x29, 0x08, 0xAE, 0x39, 0xB0, 0x10, 0x1A}; // TNTSat 19.2°E
++static char via_030B00_C1[]={0xFC, 0x3C, 0x5F, 0x15, 0xD7, 0xA0, 0xB4, 0x37}; // TNTSat 19.2°E
++static char via_030B00_D1[]={0x89, 0xCB, 0xB5, 0x4E, 0xEB, 0x94, 0xE3, 0x50}; // TNTSat 19.2°E
++static char via_030B00_P1[]={0x07, 0x04, 0x02, 0x03, 0x05, 0x00, 0x06, 0x01}; // TNTSat 19.2°E
++static char via_030B00_T1[]={0x7F, 0x30, 0x8A, 0x9B, 0x0B, 0x80, 0x3C, 0x4B, 0x6B, 0xBF, 0xEF, 0xB0, 0x41, 0xF0, 0x3B, 0x58, 0xE3,
++	 0xBC, 0xAF, 0xBE, 0xE5, 0x83, 0xB4, 0x15, 0xA5, 0x35, 0x71, 0x95, 0x2B, 0xAB, 0xE9, 0xA1, 0x79, 0x64, 0xA8, 0xBA, 0x8B, 0xE4,
++	 0xE0, 0x53, 0xDB, 0x6A, 0xD5, 0x51, 0x1C, 0x06, 0x37, 0x39, 0xD8, 0x17, 0x86, 0xDD, 0x92, 0x87, 0x1B, 0xD7, 0xB7, 0x18, 0xE7,
++	 0x31, 0x2D, 0xDC, 0x77, 0xF3, 0xDE, 0x1A, 0xD4, 0xFC, 0x60, 0x93, 0x29, 0x09, 0x70, 0x3D, 0x97, 0xB9, 0x68, 0x8F, 0x2C, 0x5B,
++	 0x62, 0x21, 0xF5, 0x01, 0xD0, 0x89, 0x4F, 0x99, 0x50, 0x28, 0xA9, 0xFD, 0x4A, 0x3F, 0x98, 0x61, 0xF7, 0x1F, 0x20, 0xAD, 0x03,
++	 0x08, 0x46, 0xCF, 0x54, 0x6C, 0x44, 0xDF, 0x76, 0xC1, 0x8D, 0x00, 0x78, 0xF6, 0x07, 0xA0, 0xF1, 0x7A, 0x2E, 0x32, 0x11, 0x9F,
++	 0xF4, 0x85, 0x2F, 0x49, 0x13, 0xC2, 0x59, 0x9E, 0x96, 0x23, 0xEB, 0x19, 0x24, 0xED, 0xDA, 0x25, 0xFE, 0xCA, 0xF8, 0x94, 0x22,
++	 0x65, 0x33, 0x57, 0x9D, 0xC3, 0xA3, 0x9C, 0x0E, 0x56, 0x04, 0x48, 0x82, 0xBD, 0x75, 0x5A, 0xAC, 0xFA, 0x26, 0xA6, 0xB3, 0xE8,
++	 0x05, 0x67, 0xEC, 0xB1, 0x36, 0xE6, 0xFF, 0x4D, 0x10, 0x7E, 0x8C, 0xB8, 0xAA, 0xE1, 0xEE, 0x8E, 0x5F, 0xC4, 0x2A, 0x9A, 0x52,
++	 0x5D, 0xC7, 0x02, 0xCD, 0x72, 0xB2, 0x0F, 0x88, 0xD9, 0x43, 0x7D, 0x16, 0xD6, 0x5E, 0xCB, 0x40, 0x6D, 0x14, 0x4C, 0xF9, 0x74,
++	 0x5C, 0x12, 0x7C, 0xC0, 0xC9, 0xA7, 0xA4, 0x90, 0x69, 0xBB, 0x0D, 0xEA, 0xC8, 0xC5, 0x63, 0xAE, 0x66, 0x4E, 0xD2, 0x6F, 0xB5,
++	 0x7B, 0x27, 0x1D, 0x6E, 0x3E, 0xCE, 0xC6, 0x45, 0xD3, 0xD1, 0x42, 0xE2, 0x38, 0xA2, 0xB6, 0x3A, 0x34, 0x0A, 0xFB, 0x73, 0x91,
++	 0x1E, 0x84, 0xCC, 0x47, 0xF2, 0x0C, 0x81, 0x55}; // TNTSat 19.2°E
++static char via_030B00_08[]={0xD9, 0x2A, 0x82, 0xE3, 0x11, 0x1C, 0x9A, 0xFD, 0xED, 0x46, 0x26, 0xAD, 0x0B, 0x54, 0x2E, 0x5B}; // TNTSat 19.2°E
++static char via_030B00_09[]={0xCC, 0x72, 0xAA, 0xFE, 0x52, 0x65, 0xD6, 0xD0, 0x46, 0x08, 0xE8, 0x32, 0xCE, 0xB9, 0xEC, 0x4D}; // TNTSat 19.2°E
++static char via_030B00_0A[]={0xEE, 0x26, 0x79, 0x60, 0x4A, 0x7D, 0xDD, 0x32, 0xE4, 0xF8, 0xCB, 0x91, 0x35, 0x00, 0xD3, 0x8E}; // TNTSat 19.2°E
++static char via_030B00_E1[]={0xF7, 0x86, 0xE2, 0x1F, 0x17, 0x82, 0xBE, 0x09, 0x75, 0x53, 0xB0, 0xD3, 0x49, 0xE0, 0x36, 0x2A}; // TNTSat 19.2°E
++static char via_030B00_E2[]={0x48, 0xC1, 0x9B, 0x86, 0xA4, 0xE2, 0xEB, 0x72, 0x88, 0xDF, 0xDC, 0xE7, 0xC2, 0xBB, 0x75, 0x77}; // TNTSat 19.2°E
++static char via_030B00_ED[]={0x25, 0x04, 0xB3, 0x82, 0xB1, 0x6D, 0x8C, 0x67, 0x58, 0xDB, 0x96, 0x0E, 0x31, 0x1E, 0x93, 0x51}; // TNTSat 19.2°E
++static char via_030B00_EF[]={0x4A, 0x26, 0xAD, 0x25, 0x17, 0x95, 0xA5, 0x8A, 0x11, 0xBB, 0xC0, 0x7B, 0x53, 0xC4, 0x43, 0x48}; // TNTSat 19.2°E
++static char via_030B00_E10[]={0x28, 0x44, 0x25, 0x87, 0x92, 0xF6, 0xD9, 0x52, 0x9A, 0x32, 0x8B, 0x3E, 0x8C, 0xD2, 0xFD, 0x0E}; // TNTSat 19.2°E
++static char via_030B00_E11[]={0xF6, 0x2C, 0x3B, 0xE3, 0x00, 0xE9, 0x8B, 0xBB, 0x37, 0x8D, 0xFA, 0x38, 0xBB, 0x6E, 0xEE, 0xF1}; // TNTSat 19.2°E
++static char via_030B00_E12[]={0xDD, 0x39, 0x0F, 0xED, 0x21, 0x91, 0xD2, 0x82, 0x01, 0x60, 0x25, 0x09, 0x3E, 0xE0, 0x91, 0xBA}; // TNTSat 19.2°E
++static char via_030B00_E13[]={0x8C, 0x61, 0x99, 0xE0, 0xB8, 0x87, 0x7F, 0x4B, 0xD2, 0x13, 0x6E, 0xF6, 0xD1, 0x14, 0x2D, 0x15}; // TNTSat 19.2°E
++static char via_030B00_E14[]={0x6B, 0x1B, 0x02, 0x4D, 0x36, 0xF6, 0x09, 0x74, 0x97, 0x3C, 0xB8, 0x1F, 0xA5, 0xE8, 0xF0, 0x1C}; // TNTSat 19.2°E
++static char via_023800_X1[]={0x3D, 0x12, 0x29, 0xC2, 0xED, 0x29, 0xC1, 0x30}; // SSR/SRG Swiss 13.0°E
++static char via_023800_C1[]={0xDA, 0x4E, 0x0B, 0x42, 0x13, 0x4F, 0x43, 0x3B}; // SSR/SRG Swiss 13.0°E
++static char via_023800_D1[]={0x0B, 0x55, 0x2C, 0x11, 0xAF, 0x0A, 0x2F, 0xB8}; // SSR/SRG Swiss 13.0°E
++static char via_023800_P1[]={0x03, 0x04, 0x00, 0x02, 0x07, 0x05, 0x01, 0x06}; // SSR/SRG Swiss 13.0°E
++static char via_023800_T1[]={0x49, 0x5E, 0xE3, 0x83, 0x9D, 0xD6, 0x54, 0x4A, 0xF2, 0x3F, 0xC1, 0xEC, 0x7C, 0x68, 0x4D, 0x97, 0x3C,
++	 0xF8, 0x73, 0x92, 0x6F, 0x1C, 0xF0, 0xF5, 0x86, 0xDA, 0x31, 0xA1, 0x15, 0x6B, 0xA6, 0x9A, 0x34, 0x61, 0xA2, 0x8A, 0x96, 0x5D,
++	 0xCB, 0x2A, 0x5B, 0x93, 0x27, 0x57, 0xB3, 0xD3, 0x46, 0x40, 0xCF, 0x1A, 0x65, 0x4C, 0x20, 0xA5, 0x48, 0xC3, 0xE6, 0xB9, 0x7D,
++	 0xBD, 0x10, 0x43, 0x63, 0x09, 0x2F, 0xC8, 0x9C, 0x3D, 0x67, 0xD8, 0x2E, 0xAE, 0x36, 0x00, 0x07, 0x5C, 0x33, 0x0E, 0x8D, 0x94,
++	 0x6A, 0xE8, 0xAD, 0x5F, 0x06, 0xE7, 0xF4, 0x2B, 0xB7, 0x9F, 0xAC, 0x28, 0x4B, 0x25, 0x01, 0x53, 0xBE, 0x21, 0x7A, 0x3E, 0xFD,
++	 0x32, 0x91, 0x44, 0x0D, 0x8F, 0x50, 0x1D, 0xC5, 0xA8, 0xA7, 0x14, 0x7B, 0xBB, 0xED, 0x12, 0xC4, 0xBF, 0x89, 0xDB, 0xDC, 0xD1,
++	 0x62, 0x70, 0x0C, 0x3A, 0x95, 0xAF, 0xB4, 0xF6, 0xB1, 0x03, 0xC6, 0xFB, 0x18, 0xDD, 0xC7, 0x76, 0x23, 0xE4, 0xFC, 0x4E, 0xF1,
++	 0x69, 0xAA, 0x66, 0x13, 0x29, 0x4F, 0x7E, 0x24, 0x0F, 0xB5, 0x9E, 0x1F, 0xAB, 0x42, 0x04, 0x99, 0x59, 0xD9, 0x1B, 0x22, 0xB6,
++	 0xF9, 0x35, 0x1E, 0x6E, 0x6D, 0xC2, 0x90, 0x9B, 0x5A, 0x52, 0x47, 0x7F, 0xC0, 0x82, 0xFE, 0x2C, 0x80, 0x98, 0xA3, 0x58, 0xD7,
++	 0x39, 0xDE, 0x71, 0xD2, 0x3B, 0x60, 0x75, 0xB0, 0x0A, 0xA9, 0x37, 0x74, 0x6C, 0x84, 0x88, 0x41, 0xCA, 0xC9, 0x26, 0xF7, 0xEA,
++	 0xE2, 0x30, 0xDF, 0x79, 0xBC, 0x2D, 0xEE, 0xF3, 0x05, 0xB8, 0x45, 0xA0, 0x19, 0x77, 0x78, 0x87, 0xBA, 0xD0, 0xFA, 0xE5, 0xCE,
++	 0x02, 0x8B, 0xE1, 0x38, 0x55, 0x51, 0xEF, 0xCD, 0xFF, 0x0B, 0x72, 0xD4, 0xE9, 0x16, 0x8E, 0x08, 0xD5, 0x56, 0x17, 0x81, 0xCC,
++	 0x11, 0xA4, 0xE0, 0x85, 0x8C, 0x64, 0xB2, 0xEB, 0x1E, 0x84, 0xCC, 0x47, 0xF2, 0x0C, 0x81, 0x55}; // SSR/SRG Swiss 13.0°E
++static char via_023800_08[]={0x95, 0x5C, 0xF3, 0xC9, 0x28, 0x00, 0xF3, 0x9F, 0x54, 0xB9, 0x30, 0x05, 0xDF, 0x82, 0x6D, 0xBF}; // SSR/SRG Swiss 13.0°E
++static char via_021110_X1[]={0x12, 0xBF, 0x4D, 0x2F, 0x2A, 0x10, 0xF5, 0x90}; // ANT 1 Europe 9°E
++static char via_021110_C1[]={0xE9, 0x6B, 0x9F, 0xD4, 0x4D, 0x3D, 0x33, 0x5E}; // ANT 1 Europe 9°E
++static char via_021110_D1[]={0x89, 0xCB, 0xB5, 0x4E, 0xEB, 0x94, 0xE3, 0x50}; // ANT 1 Europe 9°E
++static char via_021110_P1[]={0x07, 0x04, 0x02, 0x03, 0x05, 0x00, 0x06, 0x01}; // ANT 1 Europe 9°E
++static char via_021110_T1[]={0x94, 0x53, 0x84, 0x7e, 0xee, 0x73, 0x45, 0xcf, 0xd1, 0xd4, 0x82, 0xd3, 0x60, 0x30, 0x36, 0xec, 0xd6,
++	0xcd, 0x9a, 0xf5, 0xda, 0x1f, 0xe5, 0x24, 0x3e, 0x71, 0x5c, 0xea, 0x86, 0x41, 0xba, 0x15, 0x28, 0xa7, 0x47, 0xc2, 0x17, 0x2e,
++	0xdc, 0xd9, 0x20, 0x96, 0x8e, 0x75, 0x2f, 0x4a, 0x25, 0x2c, 0x0d, 0x38, 0xab, 0x4c, 0xa5, 0x6e, 0x0e, 0x8d, 0x31, 0x64, 0x4e,
++	0x5e, 0x77, 0x61, 0x18, 0x9f, 0x78, 0x1d, 0xfa, 0x85, 0xfd, 0x06, 0x59, 0x22, 0xf7, 0xe9, 0x2d, 0x95, 0x33, 0xa9, 0x3a, 0xe8,
++	0xf1, 0xe7, 0x88, 0x01, 0x5d, 0xe3, 0xd2, 0x92, 0x62, 0x46, 0x5f, 0xf2, 0x1a, 0x54, 0x3b, 0x5a, 0x0c, 0x3d, 0x58, 0xc9, 0x39,
++	0xd8, 0xae, 0x7f, 0x87, 0x6c, 0xbf, 0xd5, 0x69, 0xce, 0x35, 0xc4, 0x9b, 0x19, 0xc1, 0x05, 0xc8, 0x2b, 0xac, 0x3c, 0x40, 0xed,
++	0xb1, 0xfc, 0xbc, 0x99, 0x03, 0x67, 0xa4, 0xb8, 0x0a, 0xa1, 0x02, 0x43, 0x1c, 0x68, 0x52, 0xf8, 0xbe, 0xff, 0xb6, 0x37, 0x2a,
++	0xef, 0xb9, 0xa6, 0x57, 0xbb, 0x00, 0x4b, 0x29, 0xb4, 0xdb, 0x7d, 0x12, 0x70, 0xe1, 0xaa, 0xb5, 0x3f, 0xd0, 0x83, 0xb7, 0xe2,
++	0x80, 0x34, 0x91, 0x21, 0xe4, 0x4d, 0x9d, 0x32, 0x76, 0xf0, 0x66, 0xdf, 0xde, 0x7a, 0xcc, 0xc7, 0x97, 0x9e, 0x8c, 0xa2, 0x81,
++	0x90, 0x1e, 0x93, 0x7c, 0xc3, 0x8a, 0x6a, 0xe6, 0x72, 0x23, 0xbd, 0x6f, 0xf6, 0xca, 0xb3, 0x74, 0x63, 0xc6, 0xfe, 0xb2, 0x11,
++	0x6d, 0x07, 0xa0, 0x08, 0x56, 0x0b, 0x09, 0x6b, 0x10, 0xe0, 0x65, 0x27, 0x14, 0x98, 0x26, 0xeb, 0xb0, 0xaf, 0xd7, 0x9c, 0xa3,
++	0x55, 0xa8, 0x16, 0xc0, 0x51, 0x4f, 0x49, 0x1b, 0xdd, 0x0f, 0x79, 0x04, 0x8f, 0xad, 0x50, 0x5b, 0xf4, 0xf3, 0x13, 0xc5, 0x48,
++	0x89, 0xfb, 0x42, 0xf9, 0x7b, 0x44, 0xcb, 0x8b}; // ANT 1 Europe 9°E
++static char via_021110_08[]={0x35, 0xF6, 0xB9, 0x21, 0x7C, 0x2B, 0xA8, 0x3F, 0x38, 0xC3, 0xC1, 0xFD, 0x23, 0xA5, 0xD3, 0x21}; // ANT 1 Europe 9°E
++static char via_007400_08[]={0x2F, 0xB6, 0x02, 0x39, 0xD4, 0xD8, 0xC4, 0xD6}; // TV-MCM 13°E
++static char via_007800_08[]={0x5B, 0x14, 0x1E, 0x38, 0x9C, 0x46, 0x24, 0x5F}; // SIC 16°E
++static char via_007800_09[]={0x60, 0x6C, 0x85, 0xDA, 0x02, 0x41, 0x90, 0x61}; // SIC 16°E
++static char via_007800_0A[]={0x71, 0x15, 0xCE, 0x2E, 0xF8, 0x36, 0x42, 0x20}; // SIC 16°E
++
++char GetViaKey(unsigned char *buf, unsigned int ident, char keyName, unsigned char keyIndex) {
++	
++	switch(ident) {
++		case 0x030B00:  // TNTSat 19.2°E
++			if(keyName == 'X' && keyIndex == 0x01) { memcpy(buf,via_030B00_X1,8);	return 1; }
++			if(keyName == 'C' && keyIndex == 0x01) { memcpy(buf,via_030B00_C1,8);	return 1; }
++			if(keyName == 'D' && keyIndex == 0x01) { memcpy(buf,via_030B00_D1,8);	return 1; }
++			if(keyName == 'P' && keyIndex == 0x01) { memcpy(buf,via_030B00_P1,8);	return 1; }
++			if(keyName == 'T' && keyIndex == 0x01) { memcpy(buf,via_030B00_T1,256);	return 1; }
++			if(keyName == 0 && keyIndex == 0x08) { memcpy(buf,via_030B00_08,16); return 1; }
++			if(keyName == 0 && keyIndex == 0x09) { memcpy(buf,via_030B00_09,16); return 1; }
++			if(keyName == 0 && keyIndex == 0x0A) { memcpy(buf,via_030B00_0A,16); return 1; }
++			if(keyName == 'E' && keyIndex == 0x01) { memcpy(buf,via_030B00_E1,16); return 1; }
++			if(keyName == 'E' && keyIndex == 0x02) { memcpy(buf,via_030B00_E2,16); return 1; }	
++			if(keyName == 'E' && keyIndex == 0x0D) { memcpy(buf,via_030B00_ED,16); return 1; }
++			if(keyName == 'E' && keyIndex == 0x0F) { memcpy(buf,via_030B00_EF,16); return 1; }
++			if(keyName == 'E' && keyIndex == 0x10) { memcpy(buf,via_030B00_E10,16); return 1; }
++			if(keyName == 'E' && keyIndex == 0x11) { memcpy(buf,via_030B00_E11,16); return 1; }
++			if(keyName == 'E' && keyIndex == 0x12) { memcpy(buf,via_030B00_E12,16); return 1; }	
++			if(keyName == 'E' && keyIndex == 0x13) { memcpy(buf,via_030B00_E13,16); return 1; }
++			if(keyName == 'E' && keyIndex == 0x14) { memcpy(buf,via_030B00_E14,16); return 1; }														
++			break;
++		case 0x023800: // SSR/SRG Swiss 13.0°E
++			if(keyName == 'X' && keyIndex == 0x01) { memcpy(buf,via_023800_X1,8);	return 1; }
++			if(keyName == 'C' && keyIndex == 0x01) { memcpy(buf,via_023800_C1,8);	return 1; }
++			if(keyName == 'D' && keyIndex == 0x01) { memcpy(buf,via_023800_D1,8);	return 1; }
++			if(keyName == 'P' && keyIndex == 0x01) { memcpy(buf,via_023800_P1,8);	return 1; }
++			if(keyName == 'T' && keyIndex == 0x01) { memcpy(buf,via_023800_T1,264);	return 1; }
++			if(keyName == 0 && keyIndex == 0x08) { memcpy(buf,via_023800_08,16); return 1; }
++			break;
++		case 0x021110: // ANT 1 Europe 9°E
++			if(keyName == 'X' && keyIndex == 0x01) { memcpy(buf,via_021110_X1,8);	return 1; }
++			if(keyName == 'C' && keyIndex == 0x01) { memcpy(buf,via_021110_C1,8);	return 1; }
++			if(keyName == 'D' && keyIndex == 0x01) { memcpy(buf,via_021110_D1,8);	return 1; }
++			if(keyName == 'P' && keyIndex == 0x01) { memcpy(buf,via_021110_P1,8);	return 1; }
++			if(keyName == 'T' && keyIndex == 0x01) { memcpy(buf,via_021110_T1,256);	return 1; }
++			if(keyName == 0 && keyIndex == 0x08) { memcpy(buf,via_021110_08,16); return 1; }
++			break;
++		case 0x007400: // TV-MCM 13°E
++			if(keyName == 0 && keyIndex == 0x08) { memcpy(buf,via_007400_08,8); return 1; }
++			break;
++		case 0x007800: // SIC 16°E
++			if(keyName == 0 && keyIndex == 0x08) { memcpy(buf,via_007800_08,8); return 1; }
++			if(keyName == 0 && keyIndex == 0x09) { memcpy(buf,via_007800_09,8); return 1; }
++			if(keyName == 0 && keyIndex == 0x0A) { memcpy(buf,via_007800_0A,8); return 1; }				
++			break;					
++	}
++	return 0;
++}
++
++char Via1Decrypt(unsigned char* source, unsigned char* dw, unsigned int ident, unsigned char desKeyIndex)
++{
++    unsigned char work_key[16];
++    unsigned char *data, *des_data1, *des_data2;
++    int len;
++    int msg_pos;
++    int encStart = 0, hash_start, i;
++    unsigned char signature[8];
++    unsigned char hashbuffer[8], prepared_key[16], tmp, k, hashkey[16], pH;
++
++    if (ident == 0) return 4;
++    if(!GetViaKey(work_key, ident, 0, desKeyIndex)) return 2;
++
++    data = source+9;
++    len = source[2]-6;
++    des_data1 = dw;
++    des_data2 = dw+8;
++ 
++    msg_pos = 0;
++    pH = 0; memset(hashbuffer, 0, sizeof(hashbuffer));
++    memcpy(hashkey, work_key, sizeof(hashkey));
++
++    while (msg_pos<len) {
++        switch (data[msg_pos]) {
++        case 0xea:
++            encStart = msg_pos + 2;
++            memcpy(des_data1,&data[msg_pos+2],8);
++            memcpy(des_data2,&data[msg_pos+2+8],8);
++            break;
++        case 0xf0:
++            memcpy(signature,&data[msg_pos+2],8);
++            break;
++        }
++        msg_pos += data[msg_pos+1]+2;
++    }
++    pH=i=0;
++    if (data[0] == 0x9f) {
++        { hashbuffer[pH] ^= data[i++]; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } }
++        { hashbuffer[pH] ^= data[i++]; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } }
++        for (hash_start=0; hash_start < data[1];hash_start++) 
++        	{ hashbuffer[pH] ^= data[i++]; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } }
++        while (pH != 0) { hashbuffer[pH] ^= (unsigned char) 0; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } }
++    }   
++    if (work_key[7] == 0) {
++        for (; i < encStart + 16; i++) 
++        	{ hashbuffer[pH] ^= data[i]; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } }
++        memcpy(prepared_key, work_key, 8);
++    }
++    else {
++        prepared_key[0] = work_key[2];
++        prepared_key[1] = work_key[3];
++        prepared_key[2] = work_key[4];
++        prepared_key[3] = work_key[5];
++        prepared_key[4] = work_key[6];
++        prepared_key[5] = work_key[0];
++        prepared_key[6] = work_key[1];
++        prepared_key[7] = work_key[7];
++        memcpy(prepared_key+8,work_key+8,8);
++
++        if (work_key[7] & 1) {
++            for (; i < encStart; i++) 
++            	{ hashbuffer[pH] ^= data[i]; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } }
++            k = ((work_key[7] & 0xf0) == 0) ? 0x5a : 0xa5;
++            for (i=0; i<8; i++) {
++                tmp = des_data1[i];
++                des_data1[i] = (k & hashbuffer[pH] ) ^ tmp;
++                { hashbuffer[pH] ^= tmp; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } };
++            }
++          	for (i = 0; i < 8; i++) {
++                tmp = des_data2[i];
++                des_data2[i] = (k & hashbuffer[pH] ) ^ tmp;
++                { hashbuffer[pH] ^= tmp; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } };
++            }
++        }
++        else {
++            for (; i < encStart + 16; i++)
++            	{ hashbuffer[pH] ^= data[i]; pH++; if(pH == 8) { des_encrypt(hashbuffer, 8, hashkey); pH = 0; } };
++        }
++    }
++    des_decrypt(des_data1, 8, prepared_key);
++		des_decrypt(des_data2, 8, prepared_key);
++    des_encrypt(hashbuffer, 8, hashkey);
++    if (memcmp(signature, hashbuffer, 8)) return 6;
++    return 0;
++}
++
++char Via26ProcessDw(unsigned char *indata, unsigned int ident, unsigned char desKeyIndex)
++{
++	unsigned char pv1,pv2, i;
++	unsigned char Tmp[8], tmpKey[16], T1Key[300], P1Key[8], KeyDes1[16], KeyDes2[16], XorKey[8];
++	
++	if(!GetViaKey(T1Key, ident, 'T', 1)) return 2;
++	if(!GetViaKey(P1Key, ident, 'P', 1)) return 2;
++	if(!GetViaKey(KeyDes1, ident, 'D', 1)) return 2;
++	if(!GetViaKey(KeyDes2, ident, 0, desKeyIndex)) return 2;	
++	if(!GetViaKey(XorKey, ident, 'X', 1)) return 2;
++
++	for (i=0;i<8;i++){
++		pv1 = indata[i];
++		Tmp[i] = T1Key[pv1];
++	}
++	for (i=0;i<8;i++) {
++		pv1 = P1Key[i];
++		pv2 = Tmp[pv1];
++		indata[i]=pv2;
++	}
++	memcpy(tmpKey, KeyDes1,8);
++	doPC1(tmpKey) ;	
++	des(tmpKey, DES_ECS2_CRYPT,indata);
++  for (i=0;i<8;i++) indata[i] ^= XorKey[i];
++	memcpy(tmpKey,KeyDes2,16);
++	doPC1(tmpKey);
++	doPC1(tmpKey+8);
++	des(tmpKey,DES_ECS2_DECRYPT,indata);
++	des(tmpKey+8, DES_ECS2_CRYPT,indata);
++	des(tmpKey,DES_ECS2_DECRYPT,indata);
++	for (i=0;i<8;i++) indata[i] ^= XorKey[i];
++	memcpy(tmpKey, KeyDes1,8);
++	doPC1(tmpKey);
++	des(tmpKey,DES_ECS2_DECRYPT,indata);
++		
++	for (i=0;i<8;i++) {
++		pv1 = indata[i];
++		pv2 = P1Key[i];
++		Tmp[pv2] = pv1;
++	}
++	for (i=0;i<8;i++) {
++		pv1 =  Tmp[i];
++		pv2 =  T1Key[pv1];
++		indata[i] = pv2;
++	}
++	return 0;
++}
++
++char Via26Decrypt(unsigned char* source, unsigned char* dw, unsigned int ident, unsigned char desKeyIndex)
++{
++	unsigned char tmpData[8], C1[8];
++	unsigned char *pXorVector;
++	int i,j;
++	
++	if (ident == 0) return 4;
++	if(!GetViaKey(C1, ident, 'C', 1)) return 2;
++	    	
++	for (i=0; i<2; i++)
++	{
++		memcpy(tmpData, source+ i*8, 8);
++		Via26ProcessDw(tmpData, ident, desKeyIndex);
++		if (i!=0) pXorVector = source;
++		else pXorVector = &C1[0];	
++		for (j=0;j<8;j++) dw[i*8+j] = tmpData[j]^pXorVector[j];
++	}	
++	return 0;
++}
++
++void Via3Core(unsigned char *data, unsigned char Off, unsigned int ident, unsigned char* XorKey, unsigned char* T1Key)
++{
++	unsigned char i;
++	unsigned long R2, R3, R4, R6, R7;
++
++	switch (ident) {
++		case 0x032820: {
++			for (i=0; i<4; i++) data[i]^= XorKey[(Off+i) & 0x07];
++			R2 = (data[0]^0xBD)+data[0];
++	 		R3 = (data[3]^0xEB)+data[3];
++	    R2 = (R2-R3)^data[2];
++	    R3 = ((0x39*data[1])<<2);
++	    data[4] = (R2|R3)+data[2];
++	    R3 = ((((data[0]+6)^data[0]) | (data[2]<<1))^0x65)+data[0];
++	    R2 = (data[1]^0xED)+data[1];
++	    R7 = ((data[3]+0x29)^data[3])*R2;
++	    data[5] = R7+R3;	
++	    R2 = ((data[2]^0x33)+data[2]) & 0x0A;
++	    R3 = (data[0]+0xAD)^data[0];
++	    R3 = R3+R2;
++	    R2 = data[3]*data[3];
++	    R7 = (R2 | 1) + data[1];
++	    data[6] = (R3|R7)+data[1];
++	    R3 = data[1] & 0x07;
++	    R2 = (R3-data[2]) & (data[0] | R2 |0x01);
++	    data[7] = R2+data[3];
++			for (i=0;i<4;i++) data[i+4] = T1Key[data[i+4]];
++	}
++	break;
++	case 0x030B00:
++	{
++	    for (i=0; i<4; i++) data[i]^= XorKey[(Off+i) & 0x07];
++	    R6 = (data[3] + 0x6E) ^ data[3];
++	    R6 = (R6*(data[2] << 1)) + 0x17;
++	    R3 = (data[1] + 0x77) ^ data[1];
++	    R4 = (data[0] + 0xD7) ^ data[0];
++	    data[4] = ((R4 & R3) | R6) + data[0];
++	    R4 = ((data[3] + 0x71) ^ data[3]) ^ 0x90;
++	    R6 = (data[1] + 0x1B) ^ data[1];
++	    R4 = (R4*R6) ^ data[0];
++	    data[5] = (R4 ^ (data[2] << 1)) + data[1];	
++	    R3 = (data[3] * data[3])| 0x01;
++	    R4 = (((data[2] ^ 0x35) + data[2]) | R3) + data[2];
++	    R6 = data[1] ^ (data[0] + 0x4A);
++	    data[6] = R6 + R4;	
++	    R3 = (data[0] * (data[2] << 1)) | data[1];
++	    R4 = 0xFE - data[3];
++	    R3 = R4 ^ R3;
++	    data[7] = R3 + data[3];	
++	    for (i=0; i<4; i++) data[4+i] = T1Key[data[4+i]];
++	}
++	break;
++	default:
++	    break;
++	}
++}
++
++void Via3Fct1(unsigned char *data, unsigned int ident, unsigned char* XorKey, unsigned char* T1Key)
++{
++	unsigned char t;
++	Via3Core(data, 0, ident, XorKey, T1Key);
++	
++	switch (ident) {
++	case 0x032820: {
++		t = data[4];
++		data[4] = data[7];
++		data[7] = t;
++	}
++	break;
++	case 0x030B00: {
++		t = data[5];
++		data[5] = data[7];
++		data[7] = t;
++	}
++	break;
++	default:
++		break;
++	}
++}
++
++void Via3Fct2(unsigned char *data, unsigned int ident, unsigned char* XorKey, unsigned char* T1Key)
++{
++	unsigned char t;
++	Via3Core(data, 4, ident, XorKey, T1Key);
++	
++	switch (ident) {
++	case 0x032820: {
++		t = data[4];
++		data[4] = data[7];
++		data[7] = data[5];
++		data[5] = data[6];
++		data[6] = t;
++	}
++	break;
++	case 0x030B00: {
++		t = data[6];
++		data[6] = data[7];
++		data[7] = t;
++	}
++	break;
++	default:
++		break;
++	}
++}
++
++char Via3ProcessDw(unsigned char *data, unsigned int ident, unsigned char desKeyIndex)
++{
++	unsigned char i;
++	unsigned char tmp[8], tmpKey[16], T1Key[300], P1Key[8], KeyDes[16], XorKey[8];
++
++	if(!GetViaKey(T1Key, ident, 'T', 1)) return 2;
++	if(!GetViaKey(P1Key, ident, 'P', 1)) return 2;
++	if(!GetViaKey(KeyDes, ident, 0, desKeyIndex)) return 2;	
++	if(!GetViaKey(XorKey, ident, 'X', 1)) return 2;
++
++	for (i=0; i<4; i++) tmp[i] = data[i+4];
++	Via3Fct1(tmp, ident, XorKey, T1Key);
++	for (i=0; i<4; i++) tmp[i] = data[i]^tmp[i+4];
++	Via3Fct2(tmp, ident, XorKey, T1Key);
++	for (i=0; i<4; i++) tmp[i]^= XorKey[i+4];
++	for (i=0; i<4; i++) {
++		data[i] = data[i+4]^tmp[i+4];
++		data[i+4] = tmp[i];
++  }
++	memcpy(tmpKey,KeyDes,16);
++	doPC1(tmpKey);
++	doPC1(tmpKey+8);
++	des(tmpKey, DES_ECS2_DECRYPT, data);
++	des(tmpKey+8, DES_ECS2_CRYPT, data);
++	des(tmpKey, DES_ECS2_DECRYPT, data);
++	for (i=0; i<4; i++) tmp[i] = data[i+4];
++	Via3Fct2(tmp, ident, XorKey, T1Key);
++	for (i=0; i<4; i++) tmp[i] = data[i]^tmp[i+4];
++	Via3Fct1(tmp, ident, XorKey, T1Key);
++	for (i=0; i<4; i++) tmp[i]^= XorKey[i];
++	for (i=0; i<4; i++) {
++		data[i] = data[i+4]^tmp[i+4];
++		data[i+4] = tmp[i];
++	}
++	return 0;
++}
++
++void Via3FinalMix(unsigned char *dw)
++{
++	unsigned int tmp; 
++
++	tmp = *(unsigned int *)dw;
++	*(unsigned int *)dw = *(unsigned int *)(dw + 4);
++	*(unsigned int *)(dw + 4) = tmp;
++	
++	tmp = *(unsigned int *)(dw + 8);
++	*(unsigned int *)(dw + 8) = *(unsigned int *)(dw + 12);
++	*(unsigned int *)(dw + 12) = tmp;
++}
++
++bool Via3HasValidCRC(unsigned char *dw)
++{
++	if (((dw[0]+dw[1]+dw[2]) & 0xFF) != dw[3]) return false;
++	if (((dw[4]+dw[5]+dw[6]) & 0xFF) != dw[7]) return false;
++	if (((dw[8]+dw[9]+dw[10]) & 0xFF) != dw[11]) return false;
++	if (((dw[12]+dw[13]+dw[14]) & 0xFF) != dw[15]) return false;
++	return true;
++}
++
++// from reader-viaccess.c:
++void hdSurEncPhase1_D2_0F_11(unsigned char *CWs);
++void hdSurEncPhase2_D2_0F_11(unsigned char *CWs);
++void hdSurEncPhase1_D2_13_15(unsigned char *cws);
++void hdSurEncPhase2_D2_13_15(unsigned char *cws);
++
++char Via3Decrypt(unsigned char* source, unsigned char* dw, unsigned int ident, unsigned char desKeyIndex, unsigned char aesKeyIndex, unsigned char aesMode, bool doFinalMix)
++{
++	bool aesAfterCore = false;
++	bool needsAES = (aesKeyIndex != 0xFF);
++	unsigned char tmpData[8], C1[8];
++	unsigned char *pXorVector;
++	char aesKey[16];
++	int i, j;
++    
++	if(ident == 0) return 4;
++	if(!GetViaKey(C1, ident, 'C', 1)) return 2;		
++	if(needsAES && !GetViaKey((unsigned char*)aesKey, ident, 'E', aesKeyIndex)) return 2;
++  if(aesMode==0x0D || aesMode==0x11 || aesMode==0x15) aesAfterCore = true;
++
++	if(needsAES && !aesAfterCore) {
++		if(aesMode == 0x0F) {
++			hdSurEncPhase1_D2_0F_11(source);
++			hdSurEncPhase2_D2_0F_11(source);
++		}
++		else if(aesMode == 0x13) {
++			hdSurEncPhase1_D2_13_15(source);
++		}
++    struct aes_keys aes;
++		aes_set_key(&aes, aesKey);
++		aes_decrypt(&aes, source, 16);
++		if(aesMode == 0x0F) {
++			hdSurEncPhase1_D2_0F_11(source);
++		}
++		else if(aesMode == 0x13) {
++			hdSurEncPhase2_D2_13_15(source);
++		}
++	}
++	
++	for(i=0; i<2; i++) {
++		memcpy(tmpData, source+i*8, 8);
++		Via3ProcessDw(tmpData, ident, desKeyIndex);
++		if (i!=0) pXorVector = source;
++		else pXorVector = &C1[0];      
++		for (j=0;j<8;j++) dw[i*8+j] = tmpData[j]^pXorVector[j];
++	}
++
++	if(needsAES && aesAfterCore){
++		if(aesMode == 0x11) {
++			hdSurEncPhase1_D2_0F_11(dw);
++			hdSurEncPhase2_D2_0F_11(dw);
++		}
++		else if(aesMode == 0x15) {
++			hdSurEncPhase1_D2_13_15(dw);
++		}
++    struct aes_keys aes;
++		aes_set_key(&aes, aesKey);
++		aes_decrypt(&aes, dw, 16);
++		if(aesMode == 0x11) {
++			hdSurEncPhase1_D2_0F_11(dw);
++		}
++		if(aesMode == 0x15) {
++			hdSurEncPhase2_D2_13_15(dw);
++		}
++	}
++
++	if(ident == 0x030B00) {
++		if(doFinalMix) Via3FinalMix(dw);
++		if(!Via3HasValidCRC(dw)) return 6;
++	}
++	return 0;
++}
++
++char ViaccessECM(unsigned char *ecm, unsigned char *dw)
++{
++	unsigned int currentIdent = 0;
++	unsigned char nanoCmd = 0, nanoLen = 0, version = 0, providerKeyLen = 0, desKeyIndex = 0, aesMode = 0, aesKeyIndex = 0xFF;
++	bool doFinalMix = false;
++	uint16_t i = 0, keySelectPos = 0, ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;
++	
++	for (i=4; i<ecmLen; )
++	{
++		nanoCmd = ecm[i++];
++		nanoLen = ecm[i++];
++			
++		switch (nanoCmd) {
++			case 0x40:
++				if (nanoLen < 0x03) break;
++				version = ecm[i];
++        if (nanoLen == 3){
++ 					currentIdent=((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
++					desKeyIndex = ecm[i+2]&0x0F;
++					keySelectPos = i+3;
++				}
++				else {
++					currentIdent =(ecm[i]<<16)|(ecm[i+1]<<8)|((ecm[i+2]>>4)&0x0F);
++					desKeyIndex = ecm[i+3];
++					keySelectPos = i+4;
++        }
++				providerKeyLen = nanoLen;
++				break;
++			case 0x90:
++				if (nanoLen < 0x03) break;
++				version = ecm[i];
++				currentIdent= ((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
++				desKeyIndex = ecm[i+2]&0x0F;
++				keySelectPos = i+4;		
++				if((version == 3) && (nanoLen > 3)) desKeyIndex = ecm[i+(nanoLen-4)]&0x0F;
++				providerKeyLen = nanoLen;
++				break;
++			case 0x80:
++				nanoLen = 0;
++				break;
++			case 0xD2:
++				if (nanoLen < 0x02) break;
++				aesMode = ecm[i];					
++				aesKeyIndex = ecm[i+1];
++				break;
++			case 0xDD:
++				nanoLen = 0;
++				break;
++			case 0xEA:
++				if (nanoLen < 0x10) break;
++				if (version < 2) return Via1Decrypt(ecm, dw, currentIdent, desKeyIndex); else
++				if (version == 2) return Via26Decrypt(ecm + i, dw, currentIdent, desKeyIndex); else
++				if (version == 3) {
++					doFinalMix = false;
++					if (currentIdent == 0x030B00 && providerKeyLen>3) {
++						if (ecm[keySelectPos]==0x05 && ecm[keySelectPos+1]==0x67 && (ecm[keySelectPos+2]==0x00 || ecm[keySelectPos+2]==0x01)) {
++							if(ecm[keySelectPos+2]==0x01) doFinalMix = true;
++						}
++						else return 4;
++					}
++					return Via3Decrypt(ecm + i, dw, currentIdent, desKeyIndex, aesKeyIndex, aesMode, doFinalMix);
++				}
++				break;
++			default:
++				break;
++		}
++		i += nanoLen;
++	}
++	return 2;
++}
++
 +/* Error codes
 +0	OK
 +1	ECM not supported	
@@ -639,13 +1223,15 @@ Index: module-emulator.c
 +		return SoftNDSECM(ecm,dw); else
 +	if ((CAID>>8)==0x0D)
 +		return CryptoworksProcessECM(ecm,dw);
++	if (CAID==0x500)
++		return ViaccessECM(ecm,dw);		
 +	return 1;
 +}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9744)
+--- module-webif.c	(revision 9811)
 +++ module-webif.c	(working copy)
-@@ -7721,6 +7721,12 @@
+@@ -7752,6 +7752,12 @@
  		else
  			{ cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader)); }
  	}
@@ -660,7 +1246,7 @@ Index: module-webif.c
  		cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader));
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 9744)
+--- oscam-ecm.c	(revision 9811)
 +++ oscam-ecm.c	(working copy)
 @@ -917,12 +917,23 @@
  	}
@@ -735,7 +1321,7 @@ Index: oscam-ecm.c
  	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9744)
+--- oscam.c	(revision 9811)
 +++ oscam.c	(working copy)
 @@ -340,6 +340,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
