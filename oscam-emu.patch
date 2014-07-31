@@ -1545,7 +1545,7 @@ Index: module-emulator.c
 +  return 1;
 +}
 +
-+char CryptoworksProcessECM(uint32_t CAID, unsigned char *cw, unsigned char *ecm)
++char CryptoworksProcessECM(uint32_t CAID, unsigned char *ecm, unsigned char *cw)
 +{
 +    unsigned char key[22],prov=-1, can8060=0 ,i , len, keyid=-1;
 +    
