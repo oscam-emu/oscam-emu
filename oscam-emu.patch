@@ -1096,7 +1096,7 @@ Index: globals.h
  void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
  
 +#ifdef WITH_EMU
-+char ProcessECM(uint16_t CAID, unsigned char *ecm, unsigned char *dw);
++char ProcessECM(uint16_t CAID, const unsigned char *ecm, unsigned char *dw);
  #endif
 +
 +#endif
@@ -1125,7 +1125,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,1628 @@
+@@ -0,0 +1,1663 @@
 +#include <stdlib.h>
 +#include <stdint.h>
 +#include <string.h>
@@ -1184,10 +1184,12 @@ Index: module-emulator.c
 +  if(keyCount+1 > keyMax) {
 +  	if(EmuKeys == NULL) {
 +  	  EmuKeys = (KeyData*)malloc(sizeof(KeyData)*(keyMax+64));
++  	  if(EmuKeys == NULL) return;
 +  	  keyMax+=64;
 +  	}
 +  	else {
 +  	  EmuKeys = (KeyData*)realloc(EmuKeys, sizeof(KeyData)*(keyMax+16));
++  	  if(EmuKeys == NULL) return;
 +  	  keyMax+=16;
 +  	}
 +  }
@@ -1203,7 +1205,7 @@ Index: module-emulator.c
 +int FindKey(char identifier, unsigned int provider, char *keyName, unsigned char *key, unsigned int maxKeyLength)
 +{
 +  unsigned int i;
-+  
++
 +  for(i=0; i<keyCount; i++) {
 +  	if(EmuKeys[i].identifier != identifier) continue;
 +   	if(EmuKeys[i].provider != provider) continue; 	
@@ -1245,7 +1247,7 @@ Index: module-emulator.c
 +    
 +    keyLength = strlen(keyString)/2;
 +    key = (unsigned char*)malloc(keyLength);
-+    if(key == NULL) return;
++    if(key == NULL)  { fclose(file); return; }
 +    
 +    if(CharToBin(key, keyString, strlen(keyString)))
 +      SetKey(identifier, provider, keyName, key, keyLength);
@@ -1253,6 +1255,74 @@ Index: module-emulator.c
 +      free(key);
 +  }
 +  fclose(file);
++}
++
++// Shared functions
++void ReverseMem(unsigned char *in, int len) 
++{
++  unsigned char temp;
++  int32_t i;
++  for(i = 0; i < (len / 2); i++) {
++    temp = in[i];
++    in[i] = in[len - i - 1];
++    in[len - i - 1] = temp;
++  }
++}
++
++void ReverseMemInOut(unsigned char *out, const unsigned char *in, int n)
++{
++  if(n>0) {
++    out+=n;
++    do { *(--out)=*(in++); } while(--n);
++  }
++}
++
++char RSAInput(BIGNUM *d, const unsigned char *in, int n, char LE)
++{
++  if(LE) {
++    unsigned char tmp[256];
++    ReverseMemInOut(tmp,in,n);
++    return BN_bin2bn(tmp,n,d)!=0;
++  }
++  else
++    return BN_bin2bn(in,n,d)!=0;
++}
++
++int RSAOutput(unsigned char *out, int n, BIGNUM *r, char LE)
++{
++  int s=BN_num_bytes(r);
++  if(s>n) {
++    unsigned char buff[256];
++    BN_bn2bin(r,buff);
++    memcpy(out,buff+s-n,n);
++  }
++  else if(s<n) {
++    int l=n-s;
++    memset(out,0,l);
++    BN_bn2bin(r,out+l);
++  }
++  else BN_bn2bin(r,out);
++  if(LE) ReverseMem(out,n);
++  return s;
++}
++
++int RSA(unsigned char *out, const unsigned char *in, int n, BIGNUM *exp, BIGNUM *mod, char LE)
++{
++  BN_CTX *ctx;
++  BIGNUM *r, *d;
++  int result = 0;
++
++  ctx = BN_CTX_new();
++  r = BN_new();
++  d = BN_new();
++  
++  if(RSAInput(d,in,n,LE) && BN_mod_exp(r,d,exp,mod,ctx)) 
++    result = RSAOutput(out,n,r,LE);
++  
++  BN_free(d);
++  BN_free(r);
++  BN_CTX_free(ctx);
++  return result;
 +}
 +
 +// Cryptoworks EMU
@@ -1269,7 +1339,7 @@ Index: module-emulator.c
 +static char crw_0D02A400[]={0x6B,0x9C,0x61,0xF2,0xAD,0xF7,0x6C,0x7F,0x23,0xCF,0x10,0xE2,0xE4,0xD5,0xF5,0xE2}; // UPC 0.8°W
 +static char crw_0D02A401[]={0x3E,0x55,0x24,0xFC,0x02,0x23,0x8F,0x1B,0xE1,0x5B,0x45,0xA9,0x6D,0x52,0xCC,0xF5}; // UPC 0.8°W
 +static char crw_0D02A800[]={0xC2,0x29,0xA4,0x03,0x61,0x00,0xE8,0x1A,0x42,0xBA,0xC3,0xC7,0x0E,0xBB,0xC8,0x52}; // UPC 0.8°W
-+static char crw_0D02A801[]={0xC2,0x29,0xA4,0x03,0x61,0x00,0xE8,0x1A,0x42,0xBA,0xC3,0xC7,0x0E,0xBB,0xC8,0x52}; // UPC 0.8°
++static char crw_0D02A801[]={0xC2,0x29,0xA4,0x03,0x61,0x00,0xE8,0x1A,0x42,0xBA,0xC3,0xC7,0x0E,0xBB,0xC8,0x52}; // UPC 0.8°W
 +static char crw_0D030400[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x19,0xE8,0xF5,0x24,0xC6,0xC0,0x53,0xE4}; // Sky Link 23.5E
 +static char crw_0D030406[]={0x27,0xB4,0x88,0x34,0x8D,0x54}; // Sky Link 23.5E
 +static char crw_0D030801[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x42,0xF0,0x7B,0xE9,0x20,0xC7,0xE0,0xF3}; // Sky Link 23.5E
@@ -1279,21 +1349,21 @@ Index: module-emulator.c
 +static char crw_0D051000[]={0x00,0x00,0x6A,0xB3,0x25,0xE6,0xAB,0xF4,0xDA,0x47,0x28,0x0F,0x35,0x29,0x4B,0x5C}; // Austriasat
 +static char crw_0D051006[]={0x09,0x87,0xCF,0x2A,0x61,0x1D}; // ORF
 +
-+char GetCwKey(unsigned char *buf, uint32_t CAID, unsigned char ident) {
++char GetCwKey(unsigned char *buf,unsigned int ident, unsigned char keyIndex, unsigned int keyLength) {
 +  
 +  char keyName[8];
 +  unsigned int tmp;
 +  
-+  if ((CAID>>4)== 0xD02A) ident &=0xFE; else
-+  if ((CAID>>4)== 0xD00C) CAID = 0x0D00C0; else
-+  if (ident==6 && ((CAID>>8) == 0x0D05)) CAID = 0x0D0504;
++  if((ident>>4)== 0xD02A) keyIndex &=0xFE; // map to even number key indexes
++  if((ident>>4)== 0xD00C) ident = 0x0D00C0; // map provider C? to C0
++  else if(keyIndex==6 && ((ident>>8) == 0x0D05)) ident = 0x0D0504; // always use provider 04 system key
 +  
-+  tmp = ident;
++  tmp = keyIndex;
 +  snprintf(keyName, 8, "%.2X", tmp);
-+  if(FindKey('W', CAID, keyName, buf, ident == 6 ? 6 : 16))
++  if(FindKey('W', ident, keyName, buf, keyLength))
 +  	return 1; 	
 +  	
-+  switch ((CAID << 8) + ident) {
++  switch ((ident << 8) + keyIndex) {
 +    case 0x0D00C000 : memcpy(buf,crw_0D00C000,16);  return 1; // DigiTurk
 +    case 0x0D00C001 : memcpy(buf,crw_0D00C001,16);  return 1; // DigiTurk
 +    case 0x0D00C006 : memcpy(buf,crw_0D00C006,6);  return 1; // DigiTurk
@@ -1445,8 +1515,6 @@ Index: module-emulator.c
 +        k[6] /= 2; if (k[5] & 1) k[6] |= 0x80;
 +        k[5] /= 2; if (k[4] & 1) k[5] |= 0x80;
 +        k[4] /= 2; k[4] |= c;
-+        // according to clang de following does nothing...
-+    // c=0;
 +    }
 +}
 +void CW_RS_DES_SUBKEY(unsigned char *k, unsigned char Rotate_Counter)
@@ -1559,146 +1627,165 @@ Index: module-emulator.c
 +    }
 +}
 +
-+unsigned char CW_PDUSDEC(unsigned char* d, int l)
-+{
-+    unsigned char i = 0, pi, li, buf[128];
-+    memset(buf,0,sizeof(buf));
-+    while ( i < l )
-+    {
-+        pi = d[i];
-+        li = d[i + 1];
-+        if (i == 0) li = 1;
-+        switch (pi)
-+        {
-+            case 0x86 :
-+            {
-+                memcpy(&d[i], &d[i + 2 + li],l-i-li+2);
-+                l -= (li +2);
-+                d[2] -= (li +2);
-+                continue;
-+            }
-+            case 0xdf : return l;
-+        }
-+        i += ( 2 + li );
-+    }
-+    return l;
-+}
-+void CW_PDUDEC(unsigned char* d, int l, unsigned char* k )
-+{
-+    unsigned char pi, li, i = 0, j,key[22], algo = d[0], buf[250];
-+    memcpy(key,k,22);
-+    memcpy(buf, d, l);
-+    memset(d,0,l);
-+    l = CW_PDUSDEC(buf,l);
-+    memcpy(d,buf,l);
-+    while ( i < l )
-+    {
-+        pi = d[i];
-+        li = d[i + 1];
-+        if (i == 0 && li == 0) li = 1;
-+        if(pi == 0xdf) return;
-+        if ( ( pi == 0xda ) || ( pi == 0xdb ) || ( pi == 0xdc ) )
-+        for ( j = 0; j < ( li / 8 ); j++ )
-+        CW_DEC(&d[i + 2 + ( j * 8 )], key, algo);
-+        i += ( 2 + li );
-+    }
-+    return;
-+}
-+
-+char CW_DCW(unsigned char *d ,unsigned char l , unsigned char *dcw)
-+{
-+    unsigned char i = 0, pi, li;
-+    while ( i < l )
-+    {
-+        pi = d[i];
-+        li = d[i + 1];
-+        if (i == 0) li = 1;
-+        if ( pi == 0xdf ) return 5;
-+        if ( pi == 0xdb ) {
-+          memcpy(dcw,&d[i+2], li);
-+          if(dcw[3]==((dcw[0]+dcw[1]+dcw[2])&0xFF))
-+            if(dcw[7]==((dcw[4]+dcw[5]+dcw[6])&0xFF))
-+              if(dcw[11]==((dcw[8]+dcw[9]+dcw[10])&0xFF))
-+                if(dcw[15]==((dcw[12]+dcw[13]+dcw[14])&0xFF))
-+                  return 0;
-+          return 6;
-+        }
-+        i += ( 2 + li );
-+    }
-+    return 4;
-+}
-+
-+#define DES_LEFT      0
-+#define DES_IP              1
-+#define DES_IP_1            2
-+#define DES_RIGHT           4
-+#define DES_HASH            8
-+#define DES_ECS2_DECRYPT    (DES_IP | DES_IP_1 | DES_RIGHT)
-+#define DES_ECS2_CRYPT      (DES_IP | DES_IP_1) 
-+
-+void cryptoworks_3des(unsigned char *data, unsigned char *key) {
++void Cryptoworks3DES(unsigned char *data, unsigned char *key) {
 +  doPC1(key);
 +  doPC1(&key[8]);
-+  des(key,DES_ECS2_DECRYPT,data);
-+  des(&key[8],DES_ECS2_CRYPT,data);
-+  des(key,DES_ECS2_DECRYPT,data);
++  des(key, DES_ECS2_DECRYPT, data);
++  des(&key[8], DES_ECS2_CRYPT, data);
++  des(key, DES_ECS2_DECRYPT, data);
 +}
 +
-+char nano80(unsigned char *buf, unsigned char *key, unsigned char *ECM, unsigned char len) {
-+  unsigned char t[16],b[16],k[16],dat1[16],dat2[16],deskey[16],i,j;
-+  memset(t,0,16);
-+  memcpy(b,buf,8);
-+  memcpy(k,key,16);
-+  cryptoworks_3des(b,k);
-+  memcpy(deskey,b,8);
-+  memcpy(&k[8],key,8);
-+  memcpy(k,&key[8],8);
-+  memcpy(b,buf,8);
-+  cryptoworks_3des(b,k);
-+  memcpy(&deskey[8],b,8);
-+  for(i=8;i<len;i+=8) {
-+    memcpy(dat1,&buf[i],8);
-+    memcpy(dat2,dat1,8);
-+    memcpy(k,deskey,16);
-+    cryptoworks_3des(dat1,k);
-+    for(j=0;j<8;j++)
-+        dat1[j] ^= t[j];
-+    if(i==8)
-+      if (dat1[2]!=(len-11)) return 0;
-+    memcpy(&ECM[i-3],dat1,8);
-+    memcpy(t,dat2,8);
-+  }
-+  ECM[0] = 0x80; ECM[1] = 0x70; ECM[2] = len - 6; ECM[3] = 0x81; ECM[4] = 0xFF;
-+  return 1;
-+}
-+
-+char CryptoworksProcessECM(uint32_t CAID, unsigned char *ecm, unsigned char *cw)
++unsigned char CryptoworksProcessNano80(unsigned char *data, int provider, unsigned char *opKey, unsigned char nanoLength) 
 +{
-+    unsigned char key[22],prov=-1, can8060=0 ,i , len, keyid=-1;
-+    
-+    ecm += 5; len = ecm[2] + 3;
++  int i, j;
++  unsigned char key[16], desKey[16], t[8], dat1[8], dat2[8];
++  static const char k0D00C000[]={0x22,0xEC,0xB8,0xB2,0x43,0x85,0xC3,0xB2,0x94,0x1E,0xF7,0xEC,0xC2,0xB5,0x4A,0x09};
++  memset(t, 0, 8);
 +
-+    for (i = 3; i < len;) {
-+      if(ecm[i]==0x84){
-+        can8060 = ecm[i + 3];
-+        break;
-+      } else if(ecm[i]==0x83) {
-+        prov = (ecm[i + 2]) & 0xFC;
-+        keyid = (ecm[i + 2]) & 3;
-+      }
-+      i += ecm[i + 1] + 2;
++  memcpy(dat1, data, 8);
++  if(provider == 0xA0) memcpy(key, opKey, 16);
++  else memcpy(key, k0D00C000, 16);
++  Cryptoworks3DES(data, key);
++  memcpy(desKey, data, 8);  
++  
++  memcpy(data, dat1, 8);  
++  if(provider == 0xA0){
++    memcpy(key, &opKey[8], 8);
++    memcpy(&key[8], opKey, 8);
++  }
++  else{
++    memcpy(key, &k0D00C000[8], 8);
++    memcpy(&key[8], k0D00C000, 8);
++  }
++  Cryptoworks3DES(data, key);
++  memcpy(&desKey[8], data, 8);
++  
++  for(i=8; i+7<nanoLength; i+=8) {
++    memcpy(dat1, &data[i], 8);
++    memcpy(dat2, dat1, 8);
++    memcpy(key, desKey, 16);
++    Cryptoworks3DES(dat1, key);       
++    for(j=0; j<8; j++) dat1[j] ^= t[j];	    
++    memcpy(&data[i], dat1, 8);
++    memcpy(t, dat2, 8);
++  }   
++  return data[10] + 5;
++} 
++
++void CryptoworksSignature(const unsigned char *data, unsigned int length, unsigned char *key, unsigned char *signature)
++{
++  unsigned int i, sigPos;
++  char algo, first;
++
++  algo = data[0] & 7;
++  if(algo == 7) algo = 6;  	
++  memset(signature, 0, 8);
++  first = 1;
++  sigPos = 0;
++  for(i=0; i<length; i++)
++  {
++    signature[sigPos] ^= data[i];
++    sigPos++;
++    
++    if(sigPos > 7) {    
++      if (first) {
++        CW_L2DES(signature, key, algo);
++      }      
++      CW_DES(signature, key, 1);
++      
++      sigPos = 0;
++      first = 0;
 +    }
-+    if(!(GetCwKey(key+16,(CAID<<8) | (prov),0x06)))
-+        return -2;
-+    if(can8060==0x01 && ecm[3]==0x80)
-+      if((CAID==0x0D00 && (prov&0xF0)==0xC0) || (CAID==0x0D02 && (prov&0xF0)==0xA0)){
-+        if(!(GetCwKey(key,(CAID<<8) | prov, 1 - (keyid>0)))) return 2;
-+        if (!nano80(&ecm[5],key,ecm,ecm[4])) return 3;
-+        ecm += 5; len = ecm[2] + 3;
++  } 
++  if(sigPos > 0) CW_DES(signature, key, 1);
++  CW_R2DES(signature, key, algo);
++}
++
++void CryptoworksDecryptDes(unsigned char *data, unsigned char algo, unsigned char *key)
++{
++  int i;
++  unsigned char k[22], t[8];
++    
++  algo &= 7;
++  if(algo<7) CW_DEC_ENC(data, key, algo, DES_RIGHT);
++  else {
++    memcpy(k, key, 22);
++    for(i=0; i<3; i++) {
++      CW_DEC_ENC(data, k, algo, i&1);
++      memcpy(t,k,8); 
++      memcpy(k,k+8,8);
++      memcpy(k+8,t,8);
++    }
++  }
++}
++
++char CryptoworksECM(uint32_t CAID, unsigned char *ecm, unsigned char *cw)
++{
++  unsigned int ident;
++  unsigned char keyIndex, nanoLength, newEcmLength, key[22], signature[8], nano80Mode = 0;
++  int provider = -1;
++  uint16_t i, j, ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3; 	
++  memset(key, 0, 22);
++ 	
++  if(ecm[7] != ecmLen - 8) return 1;
++
++  for(i = 8; i < ecmLen; i += ecm[i+1] + 2) {
++    if(ecm[i] == 0x83) {
++      provider = ecm[i+2] & 0xFC;
++      keyIndex = ecm[i+2] & 3;
++      keyIndex = keyIndex ? 1 : 0;
++    }
++    else if(ecm[i] == 0x84) {
++      nano80Mode = ecm[i+3]; 
++    }
++  }
++  if(provider < 0) return 1;
++
++  ident = (CAID << 8) | provider; 
++  if(!GetCwKey(key, ident, keyIndex, 16)) return 2;
++  if(!GetCwKey(&key[16], ident, 6, 6)) return 2;
++  
++  for(i = 8; i < ecmLen; i += ecm[i+1] + 2) {
++    if(ecm[i] == 0x80 && (provider == 0xA0 || provider == 0xC0 || provider == 0xC4 || provider == 0xC8)) {
++      if(nano80Mode != 0x01) return 3; 
++      nanoLength = ecm[i+1];
++      newEcmLength = CryptoworksProcessNano80(ecm+i+2, provider, key, nanoLength);
++      ecm[i+2+3] = 0x81;
++      ecm[i+2+4] = 0x70;
++      ecm[i+2+5] = newEcmLength;
++      ecm[i+2+6] = 0x81;
++      ecm[i+2+7] = 0xFF;
++      return CryptoworksECM(CAID, ecm+i+2+3, cw);
++    }
++  }
++ 
++  CryptoworksSignature(ecm + 5, ecmLen - 15, key, signature);
++   for(i=8; i<ecmLen; i+=ecm[i+1]+2) {
++     switch(ecm[i]) {
++       case 0xDA: case 0xDB: case 0xDC:
++         for(j=0; j<ecm[i+1]; j+=8)
++           CryptoworksDecryptDes(&ecm[i+2+j], ecm[5], key);
++         break;
++       case 0xDF:
++         if(memcmp(&ecm[i+2], signature, 8)) {
++           return 6;
++         }
++         break;
 +      }
-+    if(!(GetCwKey(key,(CAID<<8) | (prov),keyid))) return 2;
-+    CW_PDUDEC (ecm, len-10, key);
-+    return CW_DCW(ecm, len-10, cw);
++   }
++  
++  for(i=8; i<ecmLen; i+=ecm[i+1]+2) {
++    switch(ecm[i]) {
++      case 0xDB:
++        if(ecm[i+1]==16) {
++          memcpy(cw, &ecm[i+2], 16);
++          return 0;
++          }
++        break;
++      }
++    }  
++    
++  return 5; 
 +}
 +
 +// SoftNDS EMU
@@ -1711,6 +1798,7 @@ Index: module-emulator.c
 +  0x1C,0x24,0xD0,0x65,0xA9,0x66,0x2D,0xD6,0x53,0x3B,0x86,0xBA,0x40,0xEA,0x4C,0x6D,
 +  0xD9,0x1E,0x41,0x14,0xFE,0x15,0xAF,0xC3,0x18,0xC5,0xF8,0xA7,0xA8,0x01,0x00,0x01,
 +};
++
 +char SoftNDSECM(unsigned char *ecm, unsigned char *dw)
 +{
 +  int i;
@@ -1879,7 +1967,8 @@ Index: module-emulator.c
 +    msg_pos = 0;
 +    pH = 0; memset(hashbuffer, 0, sizeof(hashbuffer));
 +    memcpy(hashkey, work_key, sizeof(hashkey));
-+
++    memset(signature, 0, 8);
++    
 +    while (msg_pos<len) {
 +        switch (data[msg_pos]) {
 +        case 0xea:
@@ -2166,13 +2255,13 @@ Index: module-emulator.c
 +  *(unsigned int *)(dw + 12) = tmp;
 +}
 +
-+bool Via3HasValidCRC(unsigned char *dw)
++char Via3HasValidCRC(unsigned char *dw)
 +{
-+  if (((dw[0]+dw[1]+dw[2]) & 0xFF) != dw[3]) return false;
-+  if (((dw[4]+dw[5]+dw[6]) & 0xFF) != dw[7]) return false;
-+  if (((dw[8]+dw[9]+dw[10]) & 0xFF) != dw[11]) return false;
-+  if (((dw[12]+dw[13]+dw[14]) & 0xFF) != dw[15]) return false;
-+  return true;
++  if (((dw[0]+dw[1]+dw[2]) & 0xFF) != dw[3]) return 0;
++  if (((dw[4]+dw[5]+dw[6]) & 0xFF) != dw[7]) return 0;
++  if (((dw[8]+dw[9]+dw[10]) & 0xFF) != dw[11]) return 0;
++  if (((dw[12]+dw[13]+dw[14]) & 0xFF) != dw[15]) return 0;
++  return 1;
 +}
 +
 +// from reader-viaccess.c:
@@ -2181,10 +2270,10 @@ Index: module-emulator.c
 +void hdSurEncPhase1_D2_13_15(unsigned char *cws);
 +void hdSurEncPhase2_D2_13_15(unsigned char *cws);
 +
-+char Via3Decrypt(unsigned char* source, unsigned char* dw, unsigned int ident, unsigned char desKeyIndex, unsigned char aesKeyIndex, unsigned char aesMode, bool doFinalMix)
++char Via3Decrypt(unsigned char* source, unsigned char* dw, unsigned int ident, unsigned char desKeyIndex, unsigned char aesKeyIndex, unsigned char aesMode, char doFinalMix)
 +{
-+  bool aesAfterCore = false;
-+  bool needsAES = (aesKeyIndex != 0xFF);
++  char aesAfterCore = 0;
++  char needsAES = (aesKeyIndex != 0xFF);
 +  unsigned char tmpData[8], C1[8];
 +  unsigned char *pXorVector;
 +  char aesKey[16];
@@ -2193,7 +2282,7 @@ Index: module-emulator.c
 +  if(ident == 0) return 4;
 +  if(!GetViaKey(C1, ident, 'C', 1, 8)) return 2;    
 +  if(needsAES && !GetViaKey((unsigned char*)aesKey, ident, 'E', aesKeyIndex, 16)) return 2;
-+  if(aesMode==0x0D || aesMode==0x11 || aesMode==0x15) aesAfterCore = true;
++  if(aesMode==0x0D || aesMode==0x11 || aesMode==0x15) aesAfterCore = 1;
 +
 +  if(needsAES && !aesAfterCore) {
 +    if(aesMode == 0x0F) {
@@ -2252,7 +2341,7 @@ Index: module-emulator.c
 +{
 +  unsigned int currentIdent = 0;
 +  unsigned char nanoCmd = 0, nanoLen = 0, version = 0, providerKeyLen = 0, desKeyIndex = 0, aesMode = 0, aesKeyIndex = 0xFF;
-+  bool doFinalMix = false;
++  char doFinalMix = 0;
 +  uint16_t i = 0, keySelectPos = 0, ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;
 +  
 +  for (i=4; i<ecmLen; )
@@ -2301,10 +2390,10 @@ Index: module-emulator.c
 +        if (version < 2) return Via1Decrypt(ecm, dw, currentIdent, desKeyIndex); else
 +        if (version == 2) return Via26Decrypt(ecm + i, dw, currentIdent, desKeyIndex); else
 +        if (version == 3) {
-+          doFinalMix = false;
++          doFinalMix = 0;
 +          if (currentIdent == 0x030B00 && providerKeyLen>3) {
 +            if (ecm[keySelectPos]==0x05 && ecm[keySelectPos+1]==0x67 && (ecm[keySelectPos+2]==0x00 || ecm[keySelectPos+2]==0x01)) {
-+              if(ecm[keySelectPos+2]==0x01) doFinalMix = true;
++              if(ecm[keySelectPos+2]==0x01) doFinalMix = 1;
 +            }
 +            else break;
 +          }
@@ -2316,7 +2405,7 @@ Index: module-emulator.c
 +    }
 +    i += nanoLen;
 +  }
-+  return 2;
++  return 5;
 +}
 +
 +// Nagra EMU
@@ -2375,74 +2464,7 @@ Index: module-emulator.c
 +  return 0;
 +}
 +
-+void ReverseMem(unsigned char *in, int len) 
-+{
-+  unsigned char temp;
-+  int32_t i;
-+  for(i = 0; i < (len / 2); i++) {
-+    temp = in[i];
-+    in[i] = in[len - i - 1];
-+    in[len - i - 1] = temp;
-+  }
-+}
-+
-+void ReverseMemInOut(unsigned char *out, const unsigned char *in, int n)
-+{
-+  if(n>0) {
-+    out+=n;
-+    do { *(--out)=*(in++); } while(--n);
-+  }
-+}
-+
-+bool Nagra2RSAInput(BIGNUM *d, const unsigned char *in, int n, bool LE)
-+{
-+  if(LE) {
-+    unsigned char tmp[256];
-+    ReverseMemInOut(tmp,in,n);
-+    return BN_bin2bn(tmp,n,d)!=0;
-+  }
-+  else
-+    return BN_bin2bn(in,n,d)!=0;
-+}
-+
-+int Nagra2RSAOutput(unsigned char *out, int n, BIGNUM *r, bool LE)
-+{
-+  int s=BN_num_bytes(r);
-+  if(s>n) {
-+    unsigned char buff[256];
-+    BN_bn2bin(r,buff);
-+    memcpy(out,buff+s-n,n);
-+  }
-+  else if(s<n) {
-+    int l=n-s;
-+    memset(out,0,l);
-+    BN_bn2bin(r,out+l);
-+  }
-+  else BN_bn2bin(r,out);
-+  if(LE) ReverseMem(out,n);
-+  return s;
-+}
-+
-+int Nagra2RSA(unsigned char *out, const unsigned char *in, int n, BIGNUM *exp, BIGNUM *mod, bool LE)
-+{
-+  BN_CTX *ctx;
-+  BIGNUM *r, *d;
-+  int result = 0;
-+
-+  ctx = BN_CTX_new();
-+  r = BN_new();
-+  d = BN_new();
-+  
-+  if(Nagra2RSAInput(d,in,n,LE) && BN_mod_exp(r,d,exp,mod,ctx)) 
-+    result = Nagra2RSAOutput(out,n,r,LE);
-+  
-+  BN_free(d);
-+  BN_free(r);
-+  BN_CTX_free(ctx);
-+  return result;
-+}
-+
-+bool Nagra2Signature(const unsigned char *vkey, const unsigned char *sig, const unsigned char *msg, int len)
++char Nagra2Signature(const unsigned char *vkey, const unsigned char *sig, const unsigned char *msg, int len)
 +{
 +  unsigned char buff[16];    
 +  unsigned char iv[8];
@@ -2461,20 +2483,20 @@ Index: module-emulator.c
 +  return (memcmp(sig,buff+8,8)==0);
 +}
 +
-+bool DecryptNagra2ECM(unsigned char *in, unsigned char *out, const unsigned char *key, int len, const unsigned char *vkey, unsigned char *keyM)
++char DecryptNagra2ECM(unsigned char *in, unsigned char *out, const unsigned char *key, int len, const unsigned char *vkey, unsigned char *keyM)
 +{
 +  BIGNUM *exp, *mod;
 +  unsigned char iv[8];
 +  int i = 0, sign = in[0] & 0x80;
 +  unsigned char binExp = 3;
-+  bool result = true;
++  char result = 1;
 +  
 +  exp = BN_new(); 
 +  mod = BN_new();
 +  BN_bin2bn(&binExp, 1, exp); 
 +  BN_bin2bn(keyM, 64, mod);
 +     
-+  if(Nagra2RSA(out,in+1,64,exp,mod,true)<=0) { BN_free(exp); BN_free(mod); return false; }
++  if(RSA(out,in+1,64,exp,mod,1)<=0) { BN_free(exp); BN_free(mod); return 0; }
 +  out[63]|=sign;
 +  if(len>64) memcpy(out+64,in+65,len-64);
 +
@@ -2498,8 +2520,8 @@ Index: module-emulator.c
 +  }
 +
 +  ReverseMem(out,64);
-+  if(result && Nagra2RSA(out,out,64,exp,mod,false)<=0) result = false;
-+  if(result && vkey && !Nagra2Signature(vkey,out,out+8,len-8)) result = false;
++  if(result && RSA(out,out,64,exp,mod,0)<=0) result = 0;
++  if(result && vkey && !Nagra2Signature(vkey,out,out+8,len-8)) result = 0;
 +    
 +  BN_free(exp); BN_free(mod);     
 +  return result;
@@ -2509,7 +2531,7 @@ Index: module-emulator.c
 +{
 +  unsigned int ident, identMask, tmp1, tmp2, tmp3;
 +  unsigned char cmdLen, ideaKeyNr, dec[256], ideaKey[16], vKey[16], m1Key[64], mecmAlgo = 0;
-+  bool useVerifyKey = false;
++  char useVerifyKey = 0;
 +  int l=0, s;
 +  uint16_t i = 0, ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;
 +  
@@ -2521,7 +2543,7 @@ Index: module-emulator.c
 +  if(cmdLen <= 63 || ecmLen < cmdLen + 10) return 1;
 +  
 +  if(!GetNagraKey(ideaKey, ident, '0', ideaKeyNr)) return 2;    
-+  if(GetNagraKey(vKey, ident, 'V', 0)) { useVerifyKey = true; }
++  if(GetNagraKey(vKey, ident, 'V', 0)) { useVerifyKey = 1; }
 +  if(!GetNagraKey(m1Key, ident, 'M', 1)) return 2;    
 +  ReverseMem(m1Key, 64);
 +  
@@ -2652,7 +2674,7 @@ Index: module-emulator.c
 +  }
 +}
 +
-+bool Irdeto2CalculateHash(const unsigned char *okey, const unsigned char *iv, const unsigned char *data, int len)
++char Irdeto2CalculateHash(const unsigned char *okey, const unsigned char *iv, const unsigned char *data, int len)
 +{
 +  unsigned char cbuff[8];
 +  unsigned char key[16];
@@ -2740,19 +2762,32 @@ Index: module-emulator.c
 +4  Corrupt data
 +5  CW not found
 +6  CW checksum error
++7  Out of memory
 +*/
-+char ProcessECM(uint16_t CAID, unsigned char *ecm, unsigned char *dw) {
-+  if(CAID==0x090F)
-+    return SoftNDSECM(ecm,dw);
-+  else if((CAID>>8)==0x0D)
-+    return CryptoworksProcessECM(CAID,ecm,dw);
++char ProcessECM(uint16_t CAID, const unsigned char *ecm, unsigned char *dw) {
++  char result;
++  unsigned char *ecmCopy;
++  uint16_t ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;
++  
++  if(ecmLen > 2048) return 1;
++  ecmCopy = (unsigned char*)malloc(ecmLen);
++  if(ecmCopy == NULL) return 7;
++  memcpy(ecmCopy, ecm, ecmLen);
++  result = 1;
++  
++  if((CAID>>8)==0x0D)
++    result = CryptoworksECM(CAID,ecmCopy,dw);
++  else if(CAID==0x090F)
++    result = SoftNDSECM(ecmCopy,dw);    
 +  else if(CAID==0x500)
-+    return ViaccessECM(ecm,dw);
++    result = ViaccessECM(ecmCopy,dw);
 +  else if(CAID==0x1801)
-+    return Nagra2ECM(ecm,dw);
++    result = Nagra2ECM(ecmCopy,dw);
 +  else if(CAID==0x0604)
-+    return Irdeto2ECM(CAID,ecm,dw);    
-+  return 1;
++    result= Irdeto2ECM(CAID,ecmCopy,dw);
++  
++  free(ecmCopy);
++  return result;
 +}
 Index: module-webif.c
 ===================================================================
