@@ -67,7 +67,7 @@ Building OSCam-emu from source
  - OR: Instead of 'patch', you may also use 'svn patch':
     svn patch ../oscam-emu.patch
     
- - Put a SoftCam.Key file into the oscam-svn directory
+ - Put a SoftCam.Key file into the oscam-svn directory (for example from skystar.org)
 
  - Run `./config.sh -g` to choose the features you want. (make sure to include at least all readers, constcw and emu support besides the wanted protocols)
 
