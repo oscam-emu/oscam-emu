@@ -1025,7 +1025,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,1512 @@
+@@ -0,0 +1,1535 @@
 +#include <stdlib.h>
 +#include <stdint.h>
 +#include <string.h>
@@ -1050,68 +1050,91 @@ Index: module-emulator.c
 +}
 +
 +typedef struct {
-+	char identifier;
-+	unsigned int provider;
-+	char keyName[8];
-+	unsigned char *key;
-+	unsigned int keyLength;
++  char identifier;
++  unsigned int provider;
++  char keyName[8];
++  unsigned char *key;
++  unsigned int keyLength;
 +} KeyData;
-+KeyData *EmuKeys = NULL;
-+unsigned int keyCount = 0;
-+unsigned int keyMax = 0;
++
++typedef struct {
++  KeyData *EmuKeys;
++  unsigned int keyCount;
++  unsigned int keyMax;
++} KeyDataContainer;
++
++KeyDataContainer CwKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
++KeyDataContainer ViKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
++KeyDataContainer NagraKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
++KeyDataContainer IrdetoKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
++
++KeyDataContainer *GetKeyContainer(char identifier) 
++{
++  switch(identifier) {
++    case 'W': return &CwKeys;
++    case 'V': return &ViKeys;
++    case 'N': return &NagraKeys;
++    case 'I': return &IrdetoKeys;  	
++    default:  return NULL;
++  }
++  return NULL;
++}
 +
 +void SetKey(char identifier, unsigned int provider, char *keyName, unsigned char *key, unsigned int keyLength) 
 +{
 +  unsigned int i;
++  KeyDataContainer *KeyDB;
 +  identifier = (char)toupper((int)identifier);
 +  
-+  switch(identifier) {
-+   case 'I': case 'V': case 'N': case 'W': break;
-+   default: return;
-+  }
-+  
-+  for(i=0; i<keyCount; i++) {
-+    if(EmuKeys[i].identifier != identifier) continue;
-+    if(EmuKeys[i].provider != provider) continue;  
-+    if(strcmp(EmuKeys[i].keyName, keyName)) continue;
++  KeyDB = NULL;
++  KeyDB = GetKeyContainer(identifier);
++  if(KeyDB == NULL) return;
++
++  for(i=0; i<KeyDB->keyCount; i++) {
++    if(KeyDB->EmuKeys[i].provider != provider) continue;  
++    if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) continue;
 +	
-+	free(EmuKeys[i].key);
-+    EmuKeys[i].key = key;
-+    EmuKeys[i].keyLength = keyLength;
++	free(KeyDB->EmuKeys[i].key);
++    KeyDB->EmuKeys[i].key = key;
++    KeyDB->EmuKeys[i].keyLength = keyLength;
 +    return;
 +  }	
-+	
-+  if(keyCount+1 > keyMax) {
-+   if(EmuKeys == NULL) {
-+     EmuKeys = (KeyData*)malloc(sizeof(KeyData)*(keyMax+64));
-+     if(EmuKeys == NULL) return;
-+     keyMax+=64;
++
++  if(KeyDB->keyCount+1 > KeyDB->keyMax) {
++   if(KeyDB->EmuKeys == NULL) {
++     KeyDB->EmuKeys = (KeyData*)malloc(sizeof(KeyData)*(KeyDB->keyMax+64));
++     if(KeyDB->EmuKeys == NULL) return;
++     KeyDB->keyMax+=64;
 +   }
 +   else {
-+     EmuKeys = (KeyData*)realloc(EmuKeys, sizeof(KeyData)*(keyMax+16));
-+     if(EmuKeys == NULL) return;
-+     keyMax+=16;
++     KeyDB->EmuKeys = (KeyData*)realloc(KeyDB->EmuKeys, sizeof(KeyData)*(KeyDB->keyMax+16));
++     if(KeyDB->EmuKeys == NULL) return;
++     KeyDB->keyMax+=16;
 +   }
 +  }
-+  EmuKeys[keyCount].identifier = identifier;
-+  EmuKeys[keyCount].provider = provider;
-+  memcpy(EmuKeys[keyCount].keyName, keyName, 8);
-+  EmuKeys[keyCount].keyName[7] = 0;
-+  EmuKeys[keyCount].key = key;
-+  EmuKeys[keyCount].keyLength = keyLength;  
-+  keyCount++;
++
++  KeyDB->EmuKeys[KeyDB->keyCount].identifier = identifier;
++  KeyDB->EmuKeys[KeyDB->keyCount].provider = provider;
++  memcpy(KeyDB->EmuKeys[KeyDB->keyCount].keyName, keyName, 8);
++  KeyDB->EmuKeys[KeyDB->keyCount].keyName[7] = 0;
++  KeyDB->EmuKeys[KeyDB->keyCount].key = key;
++  KeyDB->EmuKeys[KeyDB->keyCount].keyLength = keyLength;  
++  KeyDB->keyCount++;
 +}
 +
 +int FindKey(char identifier, unsigned int provider, char *keyName, unsigned char *key, unsigned int maxKeyLength)
 +{
 +  unsigned int i;
-+
-+  for(i=0; i<keyCount; i++) {
-+    if(EmuKeys[i].identifier != identifier) continue;
-+    if(EmuKeys[i].provider != provider) continue;  
-+    if(strcmp(EmuKeys[i].keyName, keyName)) continue;
-+	
-+    memcpy(key, EmuKeys[i].key, EmuKeys[i].keyLength > maxKeyLength ? maxKeyLength : EmuKeys[i].keyLength);
++  KeyDataContainer *KeyDB;
++  
++  KeyDB = NULL;
++  KeyDB = GetKeyContainer(identifier);
++  if(KeyDB == NULL) return 0; 
++  
++  for(i=0; i<KeyDB->keyCount; i++) {
++    if(KeyDB->EmuKeys[i].provider != provider) continue;  
++    if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) continue;	
++    memcpy(key, KeyDB->EmuKeys[i].key, KeyDB->EmuKeys[i].keyLength > maxKeyLength ? maxKeyLength : KeyDB->EmuKeys[i].keyLength);
 +    return 1;
 +  }
 +  return 0;  
