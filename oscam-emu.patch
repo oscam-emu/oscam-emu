@@ -1010,13 +1010,16 @@ Index: Makefile
  SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_cbc.c
  SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_ecb.c
  SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_skey.c
-@@ -233,6 +235,10 @@
+@@ -233,6 +235,13 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator.c
++UNAME := $(shell uname -s)
++ifneq ($(UNAME),Darwin)
 +ifeq "$(CONFIG_WITH_EMU)" "y"
 +override LDFLAGS += -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default
++endif
 +endif
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
@@ -1025,7 +1028,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,1535 @@
+@@ -0,0 +1,1537 @@
 +#include <stdlib.h>
 +#include <stdint.h>
 +#include <string.h>
@@ -1180,6 +1183,7 @@ Index: module-emulator.c
 +  fclose(file);
 +}
 +
++#ifndef __APPLE__
 +extern char SoftCamKey_Data[]    asm("_binary_SoftCam_Key_start");
 +extern char SoftCamKey_DataEnd[] asm("_binary_SoftCam_Key_end");
 +
@@ -1209,6 +1213,7 @@ Index: module-emulator.c
 +    line = strtok_r(NULL, "\n", &saveptr);
 +  }
 +}
++#endif
 +
 +// Shared functions
 +void ReverseMem(unsigned char *in, int len) 
@@ -2665,21 +2670,26 @@ Index: oscam.c
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
  		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
-@@ -1148,6 +1149,9 @@
+@@ -1148,6 +1149,11 @@
  	}
  }
  
 +void ReadKeyFile(char *path);
++#ifndef __APPLE__
 +void ReadKeyMemory(void);
++#endif
 +
  int32_t main(int32_t argc, char *argv[])
  {
  	int32_t i, j;
-@@ -1325,6 +1329,8 @@
+@@ -1325,6 +1331,11 @@
  	init_hitcache();
  #endif
  	init_config();
++#ifndef __APPLE__
 +	ReadKeyMemory();
++#endif
++	ReadKeyFile("/var/keys/");
 +	ReadKeyFile(cs_confdir);
  	cs_init_log();
  	if(!oscam_pidfile && cfg.pidfile)
