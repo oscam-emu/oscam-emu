@@ -1194,7 +1194,7 @@ Index: module-emulator.c
 +  unsigned char *key;
 +  char identifier;
 +
-+  keyData = (unsigned char*)malloc(SoftCamKey_DataEnd-SoftCamKey_Data+1);
++  keyData = (char*)malloc(SoftCamKey_DataEnd-SoftCamKey_Data+1);
 +  if(keyData == NULL) return;
 +  memcpy(keyData, SoftCamKey_Data, SoftCamKey_DataEnd-SoftCamKey_Data);
 +  keyData[SoftCamKey_DataEnd-SoftCamKey_Data] = 0x00;
