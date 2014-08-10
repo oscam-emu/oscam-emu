@@ -4,8 +4,7 @@ OSCam-emu: Open Source Conditional Access Module Emulator
 
 OSCam-emu is an Oscam addon module to include emulator support and other functionality that collides with the goal of the original oscam developers.
 
-This patch creates functional emulator support on a client base, so keys cannot be reshared over the net.
-If you want a "shareable" EMU you can add a dummy reader like this:
+This patch creates functional emulator support but you need to add a dummy reader like this for the keys to be found (this is an example and should reflect the contents off your SoftCam.Key file:
 
 [reader]
 label                         = Emulator
