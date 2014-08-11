@@ -7,9 +7,9 @@ Index: CMakeLists.txt
  #--------------------------------------------------------------------------------
  
 +if (NOT OSCamOperatingSystem MATCHES "Mac OS X")
-+    execute_process(COMMAND touch  ${CMAKE_CURRENT_SOURCE_DIR}/SoftCam.Key)
-+    execute_process(COMMAND touch  ${CMAKE_CURRENT_SOURCE_DIR}/utils/SoftCam.Key)
-+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default" )
++ execute_process(COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/SoftCam.Key)
++ execute_process(COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/utils/SoftCam.Key)
++ set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default" )
 +endif (NOT OSCamOperatingSystem MATCHES "Mac OS X")
 +
  #----------------------- installation -----------------------------
@@ -1666,7 +1666,7 @@ Index: module-emulator.c
 +char CryptoworksECM(uint32_t CAID, unsigned char *ecm, unsigned char *cw)
 +{
 +  unsigned int ident;
-+  unsigned char keyIndex, nanoLength, newEcmLength, key[22], signature[8], nano80Mode = 0;
++  unsigned char keyIndex = 0, nanoLength, newEcmLength, key[22], signature[8], nano80Mode = 0;
 +  int provider = -1;
 +  uint16_t i, j, ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;  
 +  memset(key, 0, 22);
@@ -2756,7 +2756,7 @@ Index: module-emulator.c
 +		rdr->ftab.filts[7].caid = 0x0604; 
 +		rdr->ftab.filts[7].prids[0] = 0x000000;	rdr->ftab.filts[7].nprids = 1; 
 +		
-+		rdr->grp = 0xFFFFFFFFFFFFFFFF;
++		rdr->grp = 0xFFFFFFFFFFFFFFFFULL;
 +		rdr->disablecrccws = 1;
 +	
 +		cardreader_emu(&rdr->crdr);
