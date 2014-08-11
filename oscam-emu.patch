@@ -1,6 +1,6 @@
 Index: config.h
 ===================================================================
---- config.h	(revision 9812)
+--- config.h	(revision 9823)
 +++ config.h	(working copy)
 @@ -29,6 +29,7 @@
  #define MODULE_CCCAM 1
@@ -12,7 +12,7 @@ Index: config.h
  #define MODULE_CONSTCW 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9812)
+--- config.sh	(revision 9823)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -40,7 +40,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/des.h
 ===================================================================
---- cscrypt/des.h	(revision 9812)
+--- cscrypt/des.h	(revision 9823)
 +++ cscrypt/des.h	(working copy)
 @@ -15,6 +15,34 @@
  #define DES_ECS2_DECRYPT    (DES_IP | DES_IP_1 | DES_RIGHT)
@@ -560,7 +560,7 @@ Index: cscrypt/des_enc.c
 +#endif
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9812)
+--- cscrypt/md5.c	(revision 9823)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -605,7 +605,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9812)
+--- cscrypt/md5.h	(revision 9823)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -984,22 +984,32 @@ Index: cscrypt/set_key.c
 +	}
 +
 +#endif
+Index: csctapi/cardreaders.h
+===================================================================
+--- csctapi/cardreaders.h	(revision 9823)
++++ csctapi/cardreaders.h	(working copy)
+@@ -13,5 +13,6 @@
+ void cardreader_smartreader(struct s_cardreader *crdr);
+ void cardreader_stapi(struct s_cardreader *crdr);
+ void cardreader_stinger(struct s_cardreader *crdr);
++void cardreader_emu(struct s_cardreader *crdr);
+ 
+ #endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9812)
+--- globals.h	(revision 9823)
 +++ globals.h	(working copy)
-@@ -1981,4 +1981,8 @@
- char *get_provider(uint16_t caid, uint32_t provid, char *buf, uint32_t buflen);
- void add_provider(uint16_t caid, uint32_t provid, const char *name, const char *sat, const char *lang);
- 
-+#ifdef WITH_EMU
-+char ProcessECM(uint16_t CAID, const unsigned char *ecm, unsigned char *dw);
- #endif
-+
-+#endif
+@@ -287,6 +287,7 @@
+ /////////////////// readers that do not reed baudrate setting and timings are guarded by reader itself (large buffer built in): AFTER R_SMART
+ #define R_SMART     0x7 // Smartreader+
+ #define R_PCSC      0x8 // PCSC
++#define R_EMU       0x17  // Reader emu
+ /////////////////// proxy readers after R_CS378X
+ #define R_CAMD35    0x20  // Reader cascading camd 3.5x
+ #define R_CAMD33    0x21  // Reader cascading camd 3.3x
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9812)
+--- Makefile	(revision 9823)
 +++ Makefile	(working copy)
 @@ -199,6 +199,8 @@
  SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/bn_word.c
@@ -1010,7 +1020,7 @@ Index: Makefile
  SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_cbc.c
  SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_ecb.c
  SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_skey.c
-@@ -233,6 +235,13 @@
+@@ -233,6 +235,14 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -1018,6 +1028,7 @@ Index: Makefile
 +UNAME := $(shell uname -s)
 +ifneq ($(UNAME),Darwin)
 +ifeq "$(CONFIG_WITH_EMU)" "y"
++TOUCH_SK := $(shell touch SoftCam.Key)
 +override LDFLAGS += -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default
 +endif
 +endif
@@ -1028,7 +1039,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,1540 @@
+@@ -0,0 +1,1698 @@
 +#include <stdlib.h>
 +#include <stdint.h>
 +#include <string.h>
@@ -1040,6 +1051,8 @@ Index: module-emulator.c
 +#include "cscrypt/md5.h"
 +#include "globals.h"
 +#include "oscam-aes.h"
++#include "oscam-string.h"
++#include "oscam-config.h"
 +
 +// Key DB
 +int CharToBin(unsigned char *out, char *in, unsigned int inLen)
@@ -1144,7 +1157,7 @@ Index: module-emulator.c
 +  return 0;  
 +}
 +
-+void ReadKeyFile(char *path)
++void read_emu_keyfile(char *path)
 +{
 +  char line[1200], keyName[8], keyString[1026];
 +  unsigned int pathLength, provider, keyLength;
@@ -1187,7 +1200,7 @@ Index: module-emulator.c
 +extern char SoftCamKey_Data[]    asm("_binary_SoftCam_Key_start");
 +extern char SoftCamKey_DataEnd[] asm("_binary_SoftCam_Key_end");
 +
-+void ReadKeyMemory(void)
++void read_emu_keymemory(void)
 +{
 +  char *keyData, *line, *saveptr, keyName[8], keyString[1026];
 +  unsigned int provider, keyLength;
@@ -2569,56 +2582,212 @@ Index: module-emulator.c
 +  free(ecmCopy);
 +  return result;
 +}
++
++
++// oscam virtual emu card reader
++#define CS_OK      1
++#define CS_ERROR   0
++
++int32_t emu_do_ecm(struct s_reader *UNUSED(rdr), const struct ecm_request_t *er, struct s_ecm_answer *ea)
++{
++	if (!ProcessECM(er->caid, er->ecm, ea->cw)) {		
++		return CS_OK;
++	}
++	
++	return CS_ERROR;
++}
++
++int32_t emu_card_info(struct s_reader *rdr) 
++{
++	rdr_log(rdr, "ready for requests");
++	return CS_OK;
++}
++
++int32_t emu_card_init(struct s_reader *UNUSED(rdr), struct s_ATR *UNUSED(atr)) 
++{
++	return CS_OK;
++}
++
++int32_t emu_do_emm(struct s_reader *UNUSED(rdr), struct emm_packet_t *UNUSED(emm)) {return CS_OK;}
++int32_t emu_get_emm_type(struct emm_packet_t *UNUSED(emm), struct s_reader *UNUSED(rdr)) {return CS_OK;}
++int32_t emu_get_emm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **UNUSED(filter), unsigned int *UNUSED(a)) {return CS_ERROR;}
++int32_t emu_get_tunemm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **UNUSED(filter), unsigned int *UNUSED(a)) {return CS_ERROR;}
++
++void reader_emu(struct s_cardsystem *ph)
++{
++	ph->do_ecm = emu_do_ecm;	
++	ph->do_emm = emu_do_emm;
++	ph->card_info = emu_card_info;
++	ph->card_init = emu_card_init;
++	ph->get_emm_type = emu_get_emm_type;
++	ph->get_emm_filter = emu_get_emm_filter;
++	ph->get_tunemm_filter = emu_get_tunemm_filter;
++	ph->caids[0] = 0x090F;
++	ph->caids[1] = 0x500;
++	ph->caids[2] = 0x1801;
++	ph->caids[3] = 0x0604;
++	ph->desc = "emu";
++}
++
++#define CR_OK 0
++#define CR_ERROR 1
++
++static int32_t EMU_Init(struct s_reader *UNUSED(reader)) { return CR_OK; }
++static int32_t EMU_GetStatus(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; return CR_OK; }
++static int32_t EMU_SetParity(struct s_reader *UNUSED(reader), uchar UNUSED(parity)) { return CR_OK; }
++static int32_t EMU_Activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { return CR_OK; }
++static int32_t EMU_Transmit(struct s_reader *UNUSED(reader), unsigned char *UNUSED(buffer), uint32_t UNUSED(size),
++ uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
++static int32_t EMU_Receive(struct s_reader *UNUSED(reader), unsigned char *UNUSED(buffer), uint32_t UNUSED(size),
++ uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
++static int32_t EMU_Close(struct s_reader *UNUSED(reader)) { return CR_OK; }
++static int32_t EMU_write_settings(struct s_reader *UNUSED(reader),uint32_t UNUSED(ETU),uint32_t UNUSED(EGT),
++unsigned char UNUSED(P),unsigned char UNUSED(I),uint16_t UNUSED(Fi), unsigned char UNUSED(Di),
++ unsigned char UNUSED(Ni)) { return CR_OK; }
++static int32_t EMU_init_locks(struct s_reader *UNUSED(reader)) { return CR_OK; }
++static int32_t EMU_card_write(struct s_reader *UNUSED(pcsc_reader),const uchar *UNUSED(buf) ,unsigned char *UNUSED(cta_res),
++  uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
++static int32_t EMU_set_protocol(struct s_reader *UNUSED(rdr),unsigned char *UNUSED(params),uint32_t *UNUSED(length),
++  uint32_t UNUSED(len_request)) { return CR_OK; }
++	
++void cardreader_emu(struct s_cardreader *crdr)
++{
++	crdr->desc           = "emu";
++	crdr->typ            = R_EMU;
++	crdr->skip_extra_atr_parsing = 1;
++	crdr->reader_init    = EMU_Init;
++	crdr->get_status     = EMU_GetStatus;
++	crdr->set_parity     = EMU_SetParity;
++	crdr->activate       = EMU_Activate;
++	crdr->transmit       = EMU_Transmit;
++	crdr->receive        = EMU_Receive;
++	crdr->close          = EMU_Close;
++	crdr->write_settings = EMU_write_settings;
++	crdr->lock_init      = EMU_init_locks;
++	crdr->card_write     = EMU_card_write;
++	crdr->set_protocol   = EMU_set_protocol;
++}
++
++void add_emu_reader(void)
++{
++	LL_ITER itr;
++	struct s_reader *rdr;
++	char haveEmuReader = 0, *emuName = "Emulator";
++	
++	itr = ll_iter_create(configured_readers);
++	while((rdr = ll_iter_next(&itr)))
++	{
++		if(rdr->typ == R_EMU) {
++		  	haveEmuReader = 1;
++		  	break;
++		}
++	}	
++	
++	rdr = NULL;
++	
++	if(!haveEmuReader) {
++		if(!cs_malloc(&rdr, sizeof(struct s_reader))) return;
++		reader_set_defaults(rdr);
++		
++		rdr->enable = 1;
++		rdr->typ = R_EMU;
++		strncpy(rdr->label, emuName, strlen(emuName));
++		strncpy(rdr->device, emuName, strlen(emuName));
++		rdr->ctab.caid[0] = 0x0D00;
++		rdr->ctab.mask[0] = 0x0F00;
++		rdr->ctab.caid[1] = 0x090F;
++		rdr->ctab.caid[2] = 0x0500;
++		rdr->ctab.caid[3] = 0x1801;
++		rdr->ctab.caid[4] = 0x0604;
++		
++		rdr->ftab.nfilts = 8;
++		rdr->ftab.filts[0].caid = 0x0D00; 
++		rdr->ftab.filts[0].prids[0] = 0x000000; rdr->ftab.filts[0].prids[1] = 0x000004;
++		rdr->ftab.filts[0].prids[2] = 0x000010; rdr->ftab.filts[0].prids[3] = 0x000014;	
++		rdr->ftab.filts[0].prids[4] = 0x000020; rdr->ftab.filts[0].prids[5] = 0x0000C0;
++		rdr->ftab.filts[0].prids[6] = 0x0000C4; rdr->ftab.filts[0].prids[7] = 0x0000CC;
++		rdr->ftab.filts[0].nprids = 8; 
++		rdr->ftab.filts[1].caid = 0x0D02; 
++		rdr->ftab.filts[1].prids[0] = 0x000000; rdr->ftab.filts[1].prids[1] = 0x00008C;
++		rdr->ftab.filts[1].prids[2] = 0x0000A0; rdr->ftab.filts[1].prids[3] = 0x0000A4;	
++		rdr->ftab.filts[1].prids[4] = 0x0000A8; rdr->ftab.filts[1].nprids = 5; 
++		rdr->ftab.filts[2].caid = 0x0D03; 
++		rdr->ftab.filts[2].prids[0] = 0x000000; rdr->ftab.filts[2].prids[1] = 0x000004;
++		rdr->ftab.filts[2].prids[2] = 0x000008; rdr->ftab.filts[2].prids[3] = 0x000024;	
++		rdr->ftab.filts[2].prids[4] = 0x000028; rdr->ftab.filts[2].nprids = 5; 
++		rdr->ftab.filts[3].caid = 0x0D05; 
++		rdr->ftab.filts[3].prids[0] = 0x000000; rdr->ftab.filts[3].prids[1] = 0x000004;
++		rdr->ftab.filts[3].prids[2] = 0x000010; rdr->ftab.filts[3].nprids = 3; 
++		rdr->ftab.filts[4].caid = 0x090F; 
++		rdr->ftab.filts[4].prids[0] = 0x000000; rdr->ftab.filts[4].nprids = 1; 
++		rdr->ftab.filts[5].caid = 0x0500; 
++		rdr->ftab.filts[5].prids[0] = 0x030B00; rdr->ftab.filts[5].prids[1] = 0x023800;
++		rdr->ftab.filts[5].prids[2] = 0x021110; rdr->ftab.filts[5].prids[3] = 0x007400;	
++		rdr->ftab.filts[5].prids[4] = 0x007800; rdr->ftab.filts[5].nprids = 5; 
++		rdr->ftab.filts[6].caid = 0x1801;
++		rdr->ftab.filts[6].prids[0] = 0x000000;	rdr->ftab.filts[6].nprids = 1; 
++		rdr->ftab.filts[7].caid = 0x0604; 
++		rdr->ftab.filts[7].prids[0] = 0x000000;	rdr->ftab.filts[7].nprids = 1; 
++		
++		rdr->grp = 0xFFFFFFFFFFFFFFFF;
++		rdr->disablecrccws = 1;
++	
++		cardreader_emu(&rdr->crdr);
++		
++		reader_fixups_fn(rdr);	
++		ll_append(configured_readers, rdr);	
++	}
++}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9812)
+--- module-webif.c	(revision 9823)
 +++ module-webif.c	(working copy)
-@@ -7752,6 +7752,12 @@
- 		else
- 			{ cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader)); }
- 	}
-+#ifdef WITH_EMU
-+	else if(er->rcEx == 1)
-+	{
-+		cs_strncpy(client->lastreader, "Emulator", sizeof(client->lastreader));
-+	}
-+#endif
- 	else
- 	{
- 		cs_strncpy(client->lastreader, stxt[er->rc], sizeof(client->lastreader));
+@@ -2227,6 +2227,7 @@
+ 	case R_PCSC :
+ 		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGSTDHWREADERBIT"));
+ 		break;
++	case R_EMU:		
+ 	case R_CAMD35 :
+ 		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
+ 		break;
+Index: oscam-config-reader.c
+===================================================================
+--- oscam-config-reader.c	(revision 9823)
++++ oscam-config-reader.c	(working copy)
+@@ -329,6 +329,7 @@
+ 			{ "newcamd",    R_NEWCAMD },
+ 			{ "newcamd525", R_NEWCAMD },
+ 			{ "newcamd524", R_NEWCAMD },
++			{ "emu",        R_EMU },
+ 			{ NULL        , 0 }
+ 		}, *p;
+ 		int i;
+@@ -916,7 +917,7 @@
+ }
+ 
+ 
+-static void reader_fixups_fn(void *var)
++void reader_fixups_fn(void *var)
+ {
+ 	struct s_reader *rdr = var;
+ #ifdef WITH_LB
+Index: oscam-config.h
+===================================================================
+--- oscam-config.h	(revision 9823)
++++ oscam-config.h	(working copy)
+@@ -22,6 +22,7 @@
+ int32_t free_readerdb(void);
+ int32_t write_server(void);
+ void    reload_readerdb(void);
++void reader_fixups_fn(void *var);
+ 
+ void    chk_sidtab(char *token, char *value, struct s_sidtab *sidtab);
+ int32_t init_sidtab(void);
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 9812)
+--- oscam-ecm.c	(revision 9823)
 +++ oscam-ecm.c	(working copy)
-@@ -917,12 +917,23 @@
- 	}
- #endif
- 
--	if(er->rc < E_NOTFOUND)
--		{ er->rcEx = 0; }
-+#ifndef WITH_EMU
-+   if(er->rc < E_NOTFOUND)
-+     { er->rcEx = 0; }
- 
--	if(er->rcEx)
--		{ snprintf(erEx, sizeof(erEx) - 1, "rejected %s%s", stxtWh[er->rcEx >> 4], stxtEx[er->rcEx & 0xf]); }
-+	 if(er->rcEx)
-+		 { snprintf(erEx, sizeof(erEx) - 1, "rejected %s%s", stxtWh[er->rcEx >> 4], stxtEx[er->rcEx & 0xf]); }
-+#endif
- 
-+#ifdef WITH_EMU
-+  if(er->rc < E_NOTFOUND){
-+    if (er->rcEx == 1)
-+    snprintf(erEx, sizeof(erEx)-1, "found by Emulator");
-+  }else if (er->rcEx){
-+    snprintf(erEx, sizeof(erEx)-1, "rejected %s%s", stxtWh[er->rcEx>>4], stxtEx[er->rcEx & 0xf]);
-+  }
-+#endif
-+
- 	get_servicename_or_null(client, er->srvid, er->caid, channame);
- 	if(!channame[0])
- 		{ schaninfo[0] = '\0'; }
-@@ -1824,12 +1835,23 @@
+@@ -1824,12 +1824,23 @@
  	// nagra
  	// is ecm[1] always 0x30 ?
  	// is ecm[3] always 0x07 ?
@@ -2646,24 +2815,9 @@ Index: oscam-ecm.c
  
  	// is cryptoworks, but which caid ?
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
-@@ -2241,6 +2263,14 @@
- 		return;
- 	}
- 
-+#ifdef WITH_EMU
-+	if (!ProcessECM(er->caid,er->ecm,er->cw)) {
-+		er->rc = E_FOUND;
-+		er->rcEx = 1;
-+		send_dcw(client, er);
-+		return;
-+	}
-+#endif
- 
- #ifdef CS_CACHEEX
- 	int8_t cacheex = client->account ? client->account->cacheex.mode : 0;
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9812)
+--- oscam.c	(revision 9823)
 +++ oscam.c	(working copy)
 @@ -340,6 +340,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
@@ -2673,27 +2827,98 @@ Index: oscam.c
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
  		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
-@@ -1148,6 +1149,11 @@
+@@ -1148,6 +1149,12 @@
  	}
  }
  
-+void ReadKeyFile(char *path);
++void read_emu_keyfile(char *path);
++void add_emu_reader(void);
 +#ifndef __APPLE__
-+void ReadKeyMemory(void);
++void read_emu_keymemory(void);
 +#endif
 +
  int32_t main(int32_t argc, char *argv[])
  {
  	int32_t i, j;
-@@ -1325,6 +1331,11 @@
+@@ -1248,6 +1255,9 @@
+ #ifdef READER_DGCRYPT
+ 		reader_dgcrypt,
+ #endif
++#ifdef WITH_EMU
++		reader_emu,
++#endif
+ 		0
+ 	};
+ 
+@@ -1287,6 +1297,9 @@
+ #ifdef CARDREADER_STINGER
+ 		cardreader_stinger,
+ #endif
++#ifdef WITH_EMU
++		cardreader_emu,
++#endif
+ 		0
+ 	};
+ 
+@@ -1325,6 +1338,11 @@
  	init_hitcache();
  #endif
  	init_config();
 +#ifndef __APPLE__
-+	ReadKeyMemory();
++	read_emu_keymemory();
 +#endif
-+	ReadKeyFile("/var/keys/");
-+	ReadKeyFile(cs_confdir);
++	read_emu_keyfile("/var/keys/");
++	read_emu_keyfile(cs_confdir);
  	cs_init_log();
  	if(!oscam_pidfile && cfg.pidfile)
  		{ oscam_pidfile = cfg.pidfile; }
+@@ -1359,6 +1377,9 @@
+ 
+ 	init_sidtab();
+ 	init_readerdb();
++#ifdef WITH_EMU
++	add_emu_reader();
++#endif	
+ 	cfg.account = init_userdb();
+ 	init_signal();
+ 	init_srvid();
+Index: reader-common.c
+===================================================================
+--- reader-common.c	(revision 9823)
++++ reader-common.c	(working copy)
+@@ -14,6 +14,7 @@
+ #include "reader-common.h"
+ //#include "csctapi/atr.h"
+ #include "csctapi/icc_async.h"
++#include "readers.h"
+ 
+ extern struct s_cardsystem cardsystems[CS_MAX_MOD];
+ extern char *RDR_CD_TXT[];
+@@ -227,6 +228,16 @@
+ int32_t cardreader_do_checkhealth(struct s_reader *reader)
+ {
+ 	struct s_client *cl = reader->client;
++	
++	if(reader->typ == R_EMU){ 
++		if(reader->card_status != CARD_INSERTED) {
++			reader->card_status = CARD_INSERTED; 
++			reader_emu(&reader->csystem);
++			reader->csystem.active = 1;
++		}
++		return 1;
++	}
++	
+ 	if(reader_card_inserted(reader))
+ 	{
+ 		if(reader->card_status == NO_CARD || reader->card_status == UNKNOWN)
+Index: readers.h
+===================================================================
+--- readers.h	(revision 9823)
++++ readers.h	(working copy)
+@@ -15,5 +15,6 @@
+ void reader_bulcrypt(struct s_cardsystem *);
+ void reader_griffin(struct s_cardsystem *);
+ void reader_dgcrypt(struct s_cardsystem *);
++void reader_emu(struct s_cardsystem *ph);
+ 
+ #endif

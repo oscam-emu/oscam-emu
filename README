@@ -4,19 +4,8 @@ OSCam-emu: Open Source Conditional Access Module Emulator
 
 OSCam-emu is an Oscam addon module to include emulator support and other functionality that collides with the goal of the original oscam developers.
 
-This patch creates functional emulator support on a client base, so keys cannot be reshared over the net.
-If you want a "shareable" EMU you can add a dummy reader like this:
-
-[reader]
-label                         = Emulator
-protocol                      = camd35
-device                        = 127.0.0.1
-caid                          = 0D00,0D02,0D03,0D05,090F,0500,1801,0604
-ident                         = 0D00:000000,000004,000010,000014,000020,0000C0,0000C4,0000CC;0D02:000000,00008C,0000A0,0000A4,0000A8;0D03:000000,000004,000008,000024,000028;0D05:000000,000004,000010;090F:000000;0500:030B00,023800,021110,007400,007800;1801:000000;0604:000000
-group                         = 1
-
-Or use OSEmu instead and add it as a reader to your plain oscam server.
-OSEmu can be found at https://github.com/oscam-emu/OSEmu
+This patch creates a virtual card reader which is configured automatically.
+You may save the default reader configuration with the webif and then modify it to your own liking.
 
 Key file ("SoftCam.Key"):
 OSEmu does not require, but will make us of "SoftCam.Key" if available.
