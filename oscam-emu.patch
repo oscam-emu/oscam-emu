@@ -1057,7 +1057,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,1698 @@
+@@ -0,0 +1,1708 @@
 +#include <stdlib.h>
 +#include <stdint.h>
 +#include <string.h>
@@ -2650,7 +2650,17 @@ Index: module-emulator.c
 +#define CR_OK 0
 +#define CR_ERROR 1
 +
-+static int32_t EMU_Init(struct s_reader *UNUSED(reader)) { return CR_OK; }
++extern char cs_confdir[128];
++
++static int32_t EMU_Init(struct s_reader *UNUSED(reader))
++{ 
++#ifndef __APPLE__
++	read_emu_keymemory();
++#endif
++	read_emu_keyfile("/var/keys/");
++	read_emu_keyfile(cs_confdir);	
++	return CR_OK; 
++}
 +static int32_t EMU_GetStatus(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; return CR_OK; }
 +static int32_t EMU_SetParity(struct s_reader *UNUSED(reader), uchar UNUSED(parity)) { return CR_OK; }
 +static int32_t EMU_Activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { return CR_OK; }
@@ -2845,20 +2855,7 @@ Index: oscam.c
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
  		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
-@@ -1148,6 +1149,12 @@
- 	}
- }
- 
-+void read_emu_keyfile(char *path);
-+void add_emu_reader(void);
-+#ifndef __APPLE__
-+void read_emu_keymemory(void);
-+#endif
-+
- int32_t main(int32_t argc, char *argv[])
- {
- 	int32_t i, j;
-@@ -1248,6 +1255,9 @@
+@@ -1248,6 +1249,9 @@
  #ifdef READER_DGCRYPT
  		reader_dgcrypt,
  #endif
@@ -2868,7 +2865,7 @@ Index: oscam.c
  		0
  	};
  
-@@ -1287,6 +1297,9 @@
+@@ -1287,6 +1291,9 @@
  #ifdef CARDREADER_STINGER
  		cardreader_stinger,
  #endif
@@ -2878,19 +2875,7 @@ Index: oscam.c
  		0
  	};
  
-@@ -1325,6 +1338,11 @@
- 	init_hitcache();
- #endif
- 	init_config();
-+#ifndef __APPLE__
-+	read_emu_keymemory();
-+#endif
-+	read_emu_keyfile("/var/keys/");
-+	read_emu_keyfile(cs_confdir);
- 	cs_init_log();
- 	if(!oscam_pidfile && cfg.pidfile)
- 		{ oscam_pidfile = cfg.pidfile; }
-@@ -1359,6 +1377,9 @@
+@@ -1359,6 +1366,9 @@
  
  	init_sidtab();
  	init_readerdb();
