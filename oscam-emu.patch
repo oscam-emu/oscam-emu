@@ -2778,6 +2778,19 @@ Index: module-webif.c
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
+Index: oscam-chk.c
+===================================================================
+--- oscam-chk.c	(revision 9823)
++++ oscam-chk.c	(working copy)
+@@ -674,7 +674,7 @@
+ 		return 0;
+ 	}
+ 
+-	if(!is_network_reader(rdr) && ((rdr->caid >> 8) != ((er->caid >> 8) & 0xFF) && (rdr->caid >> 8) != ((er->ocaid >> 8) & 0xFF)))
++	if(!rdr->typ == R_EMU && !is_network_reader(rdr) && ((rdr->caid >> 8) != ((er->caid >> 8) & 0xFF) && (rdr->caid >> 8) != ((er->ocaid >> 8) & 0xFF)))
+ 	{
+ 		int i, caid_found = 0;
+ 		for(i = 0; i < (int)ARRAY_SIZE(rdr->csystem.caids); i++)
 Index: oscam-config-reader.c
 ===================================================================
 --- oscam-config-reader.c	(revision 9823)
@@ -2855,7 +2868,18 @@ Index: oscam.c
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
  		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
-@@ -1248,6 +1249,9 @@
+@@ -1148,6 +1149,10 @@
+ 	}
+ }
+ 
++#ifdef WITH_EMU
++	void add_emu_reader(void);
++#endif	
++
+ int32_t main(int32_t argc, char *argv[])
+ {
+ 	int32_t i, j;
+@@ -1248,6 +1253,9 @@
  #ifdef READER_DGCRYPT
  		reader_dgcrypt,
  #endif
@@ -2865,7 +2889,7 @@ Index: oscam.c
  		0
  	};
  
-@@ -1287,6 +1291,9 @@
+@@ -1287,6 +1295,9 @@
  #ifdef CARDREADER_STINGER
  		cardreader_stinger,
  #endif
@@ -2875,7 +2899,7 @@ Index: oscam.c
  		0
  	};
  
-@@ -1359,6 +1366,9 @@
+@@ -1359,6 +1370,9 @@
  
  	init_sidtab();
  	init_readerdb();
