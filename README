@@ -8,10 +8,11 @@ This patch creates a virtual card reader which is configured automatically.
 You may save the default reader configuration with the webif and then modify it to your own liking.
 
 Key file ("SoftCam.Key"):
-OSEmu does not require, but will make us of "SoftCam.Key" if available.
+OSCam-emu does not require, but will make us of "SoftCam.Key" if available.
 "SoftCam.Key" is searched in the oscam config folder (where oscam.conf is located).
 
-
+You may use OSEmu instead and add it as a reader to your plain oscam server.
+OSEmu can be found at https://github.com/oscam-emu/OSEmu
 
 Supported systems
 =================
