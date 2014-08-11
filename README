@@ -9,7 +9,7 @@ You may save the default reader configuration with the webif and then modify it 
 
 Key file ("SoftCam.Key"):
 OSCam-emu does not require, but will make us of "SoftCam.Key" if available.
-"SoftCam.Key" is searched in the oscam config folder (where oscam.conf is located).
+"SoftCam.Key" is searched in the oscam config folder (where oscam.conf is located) and also in "/var/keys".
 
 You may use OSEmu instead and add it as a reader to your plain oscam server.
 OSEmu can be found at https://github.com/oscam-emu/OSEmu
