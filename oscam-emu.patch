@@ -19,14 +19,14 @@ Index: config.h
 ===================================================================
 --- config.h	(revision 9823)
 +++ config.h	(working copy)
-@@ -29,6 +29,7 @@
- #define MODULE_CCCAM 1
- #define MODULE_CCCSHARE 1
- #define MODULE_GBOX 1
+@@ -1,6 +1,7 @@
+ #ifndef CONFIG_H_
+ #define CONFIG_H_
+ 
 +#define WITH_EMU 1
- #define MODULE_RADEGAST 1
- #define MODULE_SERIAL 1
- #define MODULE_CONSTCW 1
+ #define WEBIF 1
+ #define WEBIF_LIVELOG 1
+ #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
 --- config.sh	(revision 9823)
