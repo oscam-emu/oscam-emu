@@ -2,13 +2,15 @@ Index: CMakeLists.txt
 ===================================================================
 --- CMakeLists.txt	(revision 9826)
 +++ CMakeLists.txt	(working copy)
-@@ -701,6 +701,12 @@
+@@ -701,6 +701,14 @@
  
  #--------------------------------------------------------------------------------
  
 +if (NOT OSCamOperatingSystem MATCHES "Mac OS X")
 + execute_process(COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/SoftCam.Key)
 + execute_process(COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/utils/SoftCam.Key)
++ execute_process(COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/SoftCam.Key)
++ execute_process(COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/utils/SoftCam.Key)
 + set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default" )
 +endif (NOT OSCamOperatingSystem MATCHES "Mac OS X")
 +
