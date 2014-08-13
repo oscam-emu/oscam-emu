@@ -1,25 +1,52 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 9826)
+--- CMakeLists.txt	(revision 9827)
 +++ CMakeLists.txt	(working copy)
-@@ -701,6 +701,14 @@
+@@ -396,6 +396,13 @@
+ # Manage config.h based on command line parameters
+ # Manipulate config file based on given parameters and read unset parameters
+ 
++execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --enabled WITH_EMU OUTPUT_VARIABLE CONFIG_WITH_EMU OUTPUT_STRIP_TRAILING_WHITESPACE)
++if (CONFIG_WITH_EMU MATCHES "Y" AND NOT WITH_EMU EQUAL 1)
++	add_definitions ("-DWITH_EMU")
++	set (WITH_EMU "1")
++	message(STATUS "  EMU is added by config compiling with EMU")
++endif(CONFIG_WITH_EMU MATCHES "Y" AND NOT WITH_EMU EQUAL 1)
++
+ execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
+ string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
+ 
+@@ -701,6 +708,18 @@
  
  #--------------------------------------------------------------------------------
  
 +if (NOT OSCamOperatingSystem MATCHES "Mac OS X")
-+ execute_process(COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/SoftCam.Key)
-+ execute_process(COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/utils/SoftCam.Key)
-+ execute_process(COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/SoftCam.Key)
-+ execute_process(COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/utils/SoftCam.Key)
-+ set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default" )
++  if(WITH_EMU)
++	if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/SoftCam.Key)
++ 		execute_process(COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/SoftCam.Key ${CMAKE_CURRENT_BINARY_DIR}/SoftCam.Key)
++	else(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/SoftCam.Key)
++		execute_process(COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/SoftCam.Key)
++	endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/SoftCam.Key)
++	execute_process(COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/utils/SoftCam.Key)
++	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default" )
++  endif(WITH_EMU)
 +endif (NOT OSCamOperatingSystem MATCHES "Mac OS X")
 +
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
+@@ -789,4 +808,8 @@
+  endif(STATICLIBUSB AND NOT LIBUSBDIR)
+ endif (HAVE_LIBUSB)
+ 
++if (WITH_EMU)
++	message(STATUS "  Compile with EMU support")
++endif (WITH_EMU)
++
+ message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 9826)
+--- config.h	(revision 9827)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -31,7 +58,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9826)
+--- config.sh	(revision 9827)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -59,7 +86,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/des.h
 ===================================================================
---- cscrypt/des.h	(revision 9826)
+--- cscrypt/des.h	(revision 9827)
 +++ cscrypt/des.h	(working copy)
 @@ -15,6 +15,34 @@
  #define DES_ECS2_DECRYPT    (DES_IP | DES_IP_1 | DES_RIGHT)
@@ -579,7 +606,7 @@ Index: cscrypt/des_enc.c
 +#endif
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9826)
+--- cscrypt/md5.c	(revision 9827)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -624,7 +651,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9826)
+--- cscrypt/md5.h	(revision 9827)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -1005,7 +1032,7 @@ Index: cscrypt/set_key.c
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 9826)
+--- csctapi/cardreaders.h	(revision 9827)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -13,5 +13,6 @@
  void cardreader_smartreader(struct s_cardreader *crdr);
@@ -1016,7 +1043,7 @@ Index: csctapi/cardreaders.h
  #endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9826)
+--- globals.h	(revision 9827)
 +++ globals.h	(working copy)
 @@ -287,6 +287,7 @@
  /////////////////// readers that do not reed baudrate setting and timings are guarded by reader itself (large buffer built in): AFTER R_SMART
@@ -1028,7 +1055,7 @@ Index: globals.h
  #define R_CAMD33    0x21  // Reader cascading camd 3.3x
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9826)
+--- Makefile	(revision 9827)
 +++ Makefile	(working copy)
 @@ -199,6 +199,8 @@
  SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/bn_word.c
@@ -2765,7 +2792,7 @@ Index: module-emulator.c
 +}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9826)
+--- module-webif.c	(revision 9827)
 +++ module-webif.c	(working copy)
 @@ -2227,6 +2227,7 @@
  	case R_PCSC :
@@ -2777,7 +2804,7 @@ Index: module-webif.c
  		break;
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 9826)
+--- oscam-chk.c	(revision 9827)
 +++ oscam-chk.c	(working copy)
 @@ -674,7 +674,7 @@
  		return 0;
@@ -2790,7 +2817,7 @@ Index: oscam-chk.c
  		for(i = 0; i < (int)ARRAY_SIZE(rdr->csystem.caids); i++)
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 9826)
+--- oscam-config-reader.c	(revision 9827)
 +++ oscam-config-reader.c	(working copy)
 @@ -329,6 +329,7 @@
  			{ "newcamd",    R_NEWCAMD },
@@ -2811,7 +2838,7 @@ Index: oscam-config-reader.c
  #ifdef WITH_LB
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 9826)
+--- oscam-config.h	(revision 9827)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -2823,9 +2850,9 @@ Index: oscam-config.h
  int32_t init_sidtab(void);
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 9826)
+--- oscam-ecm.c	(revision 9827)
 +++ oscam-ecm.c	(working copy)
-@@ -1836,12 +1836,23 @@
+@@ -1846,12 +1846,23 @@
  	// nagra
  	// is ecm[1] always 0x30 ?
  	// is ecm[3] always 0x07 ?
@@ -2855,7 +2882,7 @@ Index: oscam-ecm.c
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9826)
+--- oscam.c	(revision 9827)
 +++ oscam.c	(working copy)
 @@ -340,6 +340,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
@@ -2908,7 +2935,7 @@ Index: oscam.c
  	init_srvid();
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 9826)
+--- reader-common.c	(revision 9827)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -2918,11 +2945,12 @@ Index: reader-common.c
  
  extern struct s_cardsystem cardsystems[CS_MAX_MOD];
  extern char *RDR_CD_TXT[];
-@@ -227,6 +228,16 @@
+@@ -227,6 +228,18 @@
  int32_t cardreader_do_checkhealth(struct s_reader *reader)
  {
  	struct s_client *cl = reader->client;
 +	
++#ifdef WITH_EMU
 +	if(reader->typ == R_EMU){ 
 +		if(reader->card_status != CARD_INSERTED) {
 +			reader->card_status = CARD_INSERTED; 
@@ -2931,13 +2959,14 @@ Index: reader-common.c
 +		}
 +		return 1;
 +	}
-+	
++#endif
++
  	if(reader_card_inserted(reader))
  	{
  		if(reader->card_status == NO_CARD || reader->card_status == UNKNOWN)
 Index: readers.h
 ===================================================================
---- readers.h	(revision 9826)
+--- readers.h	(revision 9827)
 +++ readers.h	(working copy)
 @@ -15,5 +15,6 @@
  void reader_bulcrypt(struct s_cardsystem *);
