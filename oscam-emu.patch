@@ -76,7 +76,36 @@ Index: config.sh
  CONFIG_MODULE_PANDORA=y
  CONFIG_MODULE_GHTTP=y
  CONFIG_WITH_CARDREADER=y
-@@ -441,6 +442,7 @@
+@@ -284,12 +285,13 @@
+ 
+ update_deps() {
+ 	# Calculate dependencies
+-	enabled_any $(get_opts readers) $(get_opts card_readers) && enable_opt WITH_CARDREADER >/dev/null
+-	disabled_all $(get_opts readers) $(get_opts card_readers) && disable_opt WITH_CARDREADER >/dev/null
++	enabled_any $(get_opts readers) $(get_opts card_readers) WITH_EMU && enable_opt WITH_CARDREADER >/dev/null
++	disabled_all $(get_opts readers) $(get_opts card_readers) WITH_EMU && disable_opt WITH_CARDREADER >/dev/null
+ 	disabled WEBIF && disable_opt WEBIF_LIVELOG >/dev/null
+ 	disabled WEBIF && disable_opt WEBIF_JQUERY >/dev/null
+ 	enabled MODULE_CCCSHARE && enable_opt MODULE_CCCAM >/dev/null
+ 	enabled_any CARDREADER_DB2COM CARDREADER_MP35 CARDREADER_SC8IN1 CARDREADER_STINGER && enable_opt CARDREADER_PHOENIX >/dev/null
++	enabled WITH_EMU && enable_opt READER_VIACCESS >/dev/null
+ }
+ 
+ list_config() {
+@@ -330,9 +332,9 @@
+ 	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
+ 	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
+ 	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
+-	enabled_any MODULE_NEWCAMD READER_DRE && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+-	enabled_any MODULE_CCCAM READER_NAGRA && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
+-	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
++	enabled_any MODULE_NEWCAMD READER_DRE WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
++	enabled_any MODULE_CCCAM READER_NAGRA WITH_EMU && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
++	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA WITH_EMU && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
+ }
+ 
+ make_config_c() {
+@@ -441,6 +443,7 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
@@ -2121,51 +2150,51 @@ Index: module-emulator.c
 +void Via3Core(unsigned char *data, unsigned char Off, unsigned int ident, unsigned char* XorKey, unsigned char* T1Key)
 +{
 +  unsigned char i;
-+  unsigned long R2, R3, R4, R6, R7;
++  unsigned long lR2, lR3, lR4, lR6, lR7;
 +
 +  switch (ident) {
 +  case 0x032820: {
 +    for (i=0; i<4; i++) data[i]^= XorKey[(Off+i) & 0x07];
-+    R2 = (data[0]^0xBD)+data[0];
-+    R3 = (data[3]^0xEB)+data[3];
-+    R2 = (R2-R3)^data[2];
-+    R3 = ((0x39*data[1])<<2);
-+    data[4] = (R2|R3)+data[2];
-+    R3 = ((((data[0]+6)^data[0]) | (data[2]<<1))^0x65)+data[0];
-+    R2 = (data[1]^0xED)+data[1];
-+    R7 = ((data[3]+0x29)^data[3])*R2;
-+    data[5] = R7+R3;  
-+    R2 = ((data[2]^0x33)+data[2]) & 0x0A;
-+    R3 = (data[0]+0xAD)^data[0];
-+    R3 = R3+R2;
-+    R2 = data[3]*data[3];
-+    R7 = (R2 | 1) + data[1];
-+    data[6] = (R3|R7)+data[1];
-+    R3 = data[1] & 0x07;
-+    R2 = (R3-data[2]) & (data[0] | R2 |0x01);
-+    data[7] = R2+data[3];
++    lR2 = (data[0]^0xBD)+data[0];
++    lR3 = (data[3]^0xEB)+data[3];
++    lR2 = (lR2-lR3)^data[2];
++    lR3 = ((0x39*data[1])<<2);
++    data[4] = (lR2|lR3)+data[2];
++    lR3 = ((((data[0]+6)^data[0]) | (data[2]<<1))^0x65)+data[0];
++    lR2 = (data[1]^0xED)+data[1];
++    lR7 = ((data[3]+0x29)^data[3])*lR2;
++    data[5] = lR7+lR3;  
++    lR2 = ((data[2]^0x33)+data[2]) & 0x0A;
++    lR3 = (data[0]+0xAD)^data[0];
++    lR3 = lR3+lR2;
++    lR2 = data[3]*data[3];
++    lR7 = (lR2 | 1) + data[1];
++    data[6] = (lR3|lR7)+data[1];
++    lR3 = data[1] & 0x07;
++    lR2 = (lR3-data[2]) & (data[0] | lR2 |0x01);
++    data[7] = lR2+data[3];
 +    for (i=0;i<4;i++) data[i+4] = T1Key[data[i+4]];
 +  }
 +  break;
 +  case 0x030B00: {
 +    for (i=0; i<4; i++) data[i]^= XorKey[(Off+i) & 0x07];
-+    R6 = (data[3] + 0x6E) ^ data[3];
-+    R6 = (R6*(data[2] << 1)) + 0x17;
-+    R3 = (data[1] + 0x77) ^ data[1];
-+    R4 = (data[0] + 0xD7) ^ data[0];
-+    data[4] = ((R4 & R3) | R6) + data[0];
-+    R4 = ((data[3] + 0x71) ^ data[3]) ^ 0x90;
-+    R6 = (data[1] + 0x1B) ^ data[1];
-+    R4 = (R4*R6) ^ data[0];
-+    data[5] = (R4 ^ (data[2] << 1)) + data[1];  
-+    R3 = (data[3] * data[3])| 0x01;
-+    R4 = (((data[2] ^ 0x35) + data[2]) | R3) + data[2];
-+    R6 = data[1] ^ (data[0] + 0x4A);
-+    data[6] = R6 + R4;  
-+    R3 = (data[0] * (data[2] << 1)) | data[1];
-+    R4 = 0xFE - data[3];
-+    R3 = R4 ^ R3;
-+    data[7] = R3 + data[3];  
++    lR6 = (data[3] + 0x6E) ^ data[3];
++    lR6 = (lR6*(data[2] << 1)) + 0x17;
++    lR3 = (data[1] + 0x77) ^ data[1];
++    lR4 = (data[0] + 0xD7) ^ data[0];
++    data[4] = ((lR4 & lR3) | lR6) + data[0];
++    lR4 = ((data[3] + 0x71) ^ data[3]) ^ 0x90;
++    lR6 = (data[1] + 0x1B) ^ data[1];
++    lR4 = (lR4*lR6) ^ data[0];
++    data[5] = (lR4 ^ (data[2] << 1)) + data[1];  
++    lR3 = (data[3] * data[3])| 0x01;
++    lR4 = (((data[2] ^ 0x35) + data[2]) | lR3) + data[2];
++    lR6 = data[1] ^ (data[0] + 0x4A);
++    data[6] = lR6 + lR4;  
++    lR3 = (data[0] * (data[2] << 1)) | data[1];
++    lR4 = 0xFE - data[3];
++    lR3 = lR4 ^ lR3;
++    data[7] = lR3 + data[3];  
 +    for (i=0; i<4; i++) data[4+i] = T1Key[data[4+i]];
 +  }
 +  break;
