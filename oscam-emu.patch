@@ -2121,51 +2121,51 @@ Index: module-emulator.c
 +void Via3Core(unsigned char *data, unsigned char Off, unsigned int ident, unsigned char* XorKey, unsigned char* T1Key)
 +{
 +  unsigned char i;
-+  unsigned long R2, R3, R4, R6, R7;
++  unsigned long lR2, lR3, lR4, lR6, lR7;
 +
 +  switch (ident) {
 +  case 0x032820: {
 +    for (i=0; i<4; i++) data[i]^= XorKey[(Off+i) & 0x07];
-+    R2 = (data[0]^0xBD)+data[0];
-+    R3 = (data[3]^0xEB)+data[3];
-+    R2 = (R2-R3)^data[2];
-+    R3 = ((0x39*data[1])<<2);
-+    data[4] = (R2|R3)+data[2];
-+    R3 = ((((data[0]+6)^data[0]) | (data[2]<<1))^0x65)+data[0];
-+    R2 = (data[1]^0xED)+data[1];
-+    R7 = ((data[3]+0x29)^data[3])*R2;
-+    data[5] = R7+R3;  
-+    R2 = ((data[2]^0x33)+data[2]) & 0x0A;
-+    R3 = (data[0]+0xAD)^data[0];
-+    R3 = R3+R2;
-+    R2 = data[3]*data[3];
-+    R7 = (R2 | 1) + data[1];
-+    data[6] = (R3|R7)+data[1];
-+    R3 = data[1] & 0x07;
-+    R2 = (R3-data[2]) & (data[0] | R2 |0x01);
-+    data[7] = R2+data[3];
++    lR2 = (data[0]^0xBD)+data[0];
++    lR3 = (data[3]^0xEB)+data[3];
++    lR2 = (lR2-lR3)^data[2];
++    lR3 = ((0x39*data[1])<<2);
++    data[4] = (lR2|lR3)+data[2];
++    lR3 = ((((data[0]+6)^data[0]) | (data[2]<<1))^0x65)+data[0];
++    lR2 = (data[1]^0xED)+data[1];
++    lR7 = ((data[3]+0x29)^data[3])*lR2;
++    data[5] = lR7+lR3;  
++    lR2 = ((data[2]^0x33)+data[2]) & 0x0A;
++    lR3 = (data[0]+0xAD)^data[0];
++    lR3 = lR3+lR2;
++    lR2 = data[3]*data[3];
++    lR7 = (lR2 | 1) + data[1];
++    data[6] = (lR3|lR7)+data[1];
++    lR3 = data[1] & 0x07;
++    lR2 = (lR3-data[2]) & (data[0] | lR2 |0x01);
++    data[7] = lR2+data[3];
 +    for (i=0;i<4;i++) data[i+4] = T1Key[data[i+4]];
 +  }
 +  break;
 +  case 0x030B00: {
 +    for (i=0; i<4; i++) data[i]^= XorKey[(Off+i) & 0x07];
-+    R6 = (data[3] + 0x6E) ^ data[3];
-+    R6 = (R6*(data[2] << 1)) + 0x17;
-+    R3 = (data[1] + 0x77) ^ data[1];
-+    R4 = (data[0] + 0xD7) ^ data[0];
-+    data[4] = ((R4 & R3) | R6) + data[0];
-+    R4 = ((data[3] + 0x71) ^ data[3]) ^ 0x90;
-+    R6 = (data[1] + 0x1B) ^ data[1];
-+    R4 = (R4*R6) ^ data[0];
-+    data[5] = (R4 ^ (data[2] << 1)) + data[1];  
-+    R3 = (data[3] * data[3])| 0x01;
-+    R4 = (((data[2] ^ 0x35) + data[2]) | R3) + data[2];
-+    R6 = data[1] ^ (data[0] + 0x4A);
-+    data[6] = R6 + R4;  
-+    R3 = (data[0] * (data[2] << 1)) | data[1];
-+    R4 = 0xFE - data[3];
-+    R3 = R4 ^ R3;
-+    data[7] = R3 + data[3];  
++    lR6 = (data[3] + 0x6E) ^ data[3];
++    lR6 = (lR6*(data[2] << 1)) + 0x17;
++    lR3 = (data[1] + 0x77) ^ data[1];
++    lR4 = (data[0] + 0xD7) ^ data[0];
++    data[4] = ((lR4 & lR3) | lR6) + data[0];
++    lR4 = ((data[3] + 0x71) ^ data[3]) ^ 0x90;
++    lR6 = (data[1] + 0x1B) ^ data[1];
++    lR4 = (lR4*lR6) ^ data[0];
++    data[5] = (lR4 ^ (data[2] << 1)) + data[1];  
++    lR3 = (data[3] * data[3])| 0x01;
++    lR4 = (((data[2] ^ 0x35) + data[2]) | lR3) + data[2];
++    lR6 = data[1] ^ (data[0] + 0x4A);
++    data[6] = lR6 + lR4;  
++    lR3 = (data[0] * (data[2] << 1)) | data[1];
++    lR4 = 0xFE - data[3];
++    lR3 = lR4 ^ lR3;
++    data[7] = lR3 + data[3];  
 +    for (i=0; i<4; i++) data[4+i] = T1Key[data[4+i]];
 +  }
 +  break;
