@@ -76,7 +76,35 @@ Index: config.sh
  CONFIG_MODULE_PANDORA=y
  CONFIG_MODULE_GHTTP=y
  CONFIG_WITH_CARDREADER=y
-@@ -441,6 +442,7 @@
+@@ -284,12 +285,13 @@
+ 
+ update_deps() {
+ 	# Calculate dependencies
+-	enabled_any $(get_opts readers) $(get_opts card_readers) && enable_opt WITH_CARDREADER >/dev/null
++	enabled_any $(get_opts readers) $(get_opts card_readers) WITH_EMU && enable_opt WITH_CARDREADER >/dev/null
+ 	disabled_all $(get_opts readers) $(get_opts card_readers) && disable_opt WITH_CARDREADER >/dev/null
+ 	disabled WEBIF && disable_opt WEBIF_LIVELOG >/dev/null
+ 	disabled WEBIF && disable_opt WEBIF_JQUERY >/dev/null
+ 	enabled MODULE_CCCSHARE && enable_opt MODULE_CCCAM >/dev/null
+ 	enabled_any CARDREADER_DB2COM CARDREADER_MP35 CARDREADER_SC8IN1 CARDREADER_STINGER && enable_opt CARDREADER_PHOENIX >/dev/null
++	enabled WITH_EMU && enable_opt READER_VIACCESS >/dev/null
+ }
+ 
+ list_config() {
+@@ -330,9 +332,9 @@
+ 	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
+ 	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
+ 	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
+-	enabled_any MODULE_NEWCAMD READER_DRE && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+-	enabled_any MODULE_CCCAM READER_NAGRA && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
+-	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
++	enabled_any MODULE_NEWCAMD READER_DRE WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
++	enabled_any MODULE_CCCAM READER_NAGRA WITH_EMU && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
++	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA WITH_EMU && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
+ }
+ 
+ make_config_c() {
+@@ -441,6 +443,7 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
