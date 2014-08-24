@@ -3082,6 +3082,17 @@ Index: module-webif.c
  		{ "oscam.services",  MNU_CFG_FSERVICES, FTYPE_CONFIG },
  		{ "oscam.whitelist", MNU_CFG_WHITELIST, FTYPE_CONFIG },
  		{ "oscam.srvid",     MNU_CFG_FSRVID,    FTYPE_CONFIG },
+@@ -6885,8 +6914,8 @@
+ 		memcpy(*result + bufsize, buf2, n);
+ 		bufsize += n;
+ 
+-		//max request size 100kb
+-		if(bufsize > 102400)
++		//max request size 200kb
++		if(bufsize > 204800)
+ 		{
+ 			cs_log("error: too much data received from %s", cs_inet_ntoa(in));
+ 			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
 --- oscam-chk.c	(revision 9836)
