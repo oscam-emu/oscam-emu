@@ -3044,7 +3044,7 @@ Index: module-webif.c
 +						if(item->isKey) {
 +							tpl_addVar(vars, TPLADD, "ENTSTARTDATE", "");
 +							tpl_addVar(vars, TPLADD, "ENTENDDATE", "");
-+							cs_hexdump(1, item->key, item->keyLength, keyBuffer, sizeof(keyBuffer));
++							cs_hexdump(0, item->key, item->keyLength, keyBuffer, sizeof(keyBuffer));
 +							tpl_addVar(vars, TPLADD, "ENTEXPIERED", "e_valid");
 +							tpl_printf(vars, TPLADD, "ENTCAID", "%04X", item->caid);
 +							tpl_printf(vars, TPLADD, "ENTPROVID", "%06X", item->provid);
