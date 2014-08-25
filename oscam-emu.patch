@@ -1294,7 +1294,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,2036 @@
+@@ -0,0 +1,2047 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -2855,7 +2855,7 @@ Index: module-emulator.c
 +}
 +
 +// Viaccess EMM EMU
-+int8_t ViaccessEMM(uint8_t *emm)
++int8_t ViaccessEMM(uint8_t *emm, uint32_t *keysAdded)
 +{
 +  uint8_t nanoCmd = 0, *oemm = emm, *tmp, *newKeyD0, *newEcmKey;
 +  uint16_t i = 0, j = 0, k = 0, emmLen = (((emm[1] & 0x0f)<< 8) | emm[2])+3;
@@ -2969,6 +2969,7 @@ Index: module-emulator.c
 +          	memcpy(newEcmKey, ecmKeys[j], 16);
 +            snprintf(keyName, 8, "E%X", ecmKeyIndex[j]);
 +            if(!SetKey('V', ecmProvider, keyName, newEcmKey, 16)) free(newEcmKey);
++            keysAdded++;
 +            cs_hexdump(0, ecmKeys[j], 16, keyValue, sizeof(keyValue));
 +            cs_log("[Emu] Key found in EMM: V %X %s %s", ecmProvider, keyName, keyValue);
 +          }
@@ -2989,11 +2990,11 @@ Index: module-emulator.c
 +2  Key not found
 +3  Nano80 problem
 +4  Corrupt data
-+5  CW not found
-+6  CW checksum error
++5  
++6  Checksum error
 +7  Out of memory
 +*/
-+int8_t ProcessEMM(uint16_t caid, uint32_t UNUSED(provider), const uint8_t *emm) {
++int8_t ProcessEMM(uint16_t caid, uint32_t UNUSED(provider), const uint8_t *emm, uint32_t *keysAdded) {
 +  int8_t result;
 +  uint8_t *emmCopy;
 +  uint16_t emmLen = (((emm[1] & 0x0f)<< 8) | emm[2])+3;
@@ -3005,7 +3006,7 @@ Index: module-emulator.c
 +  result = 1;
 +   
 +  if(caid==0x500)
-+    result = ViaccessEMM(emmCopy);
++    result = ViaccessEMM(emmCopy, keysAdded);
 + 
 +  free(emmCopy);
 +  return result;
@@ -3024,13 +3025,18 @@ Index: module-emulator.c
 +  return CS_ERROR;
 +}
 +
-+int32_t emu_do_emm(struct s_reader *UNUSED(rdr), struct emm_packet_t *emm)
++static void refresh_entitlements(struct s_reader *reader);
++
++int32_t emu_do_emm(struct s_reader *rdr, struct emm_packet_t *emm)
 +{
++  uint32_t keysAdded = 0;
++  
 +  if (!ProcessEMM((emm->caid[0] << 8) | emm->caid[1],
-+      (emm->provid[0] << 24) | (emm->provid[1] << 16) | (emm->provid[2] << 8) | emm->provid[3], emm->emm)) {    
++      (emm->provid[0] << 24) | (emm->provid[1] << 16) | (emm->provid[2] << 8) | emm->provid[3], emm->emm, &keysAdded)) {    
++    if(keysAdded > 0) refresh_entitlements(rdr);
 +    return CS_OK;
 +  }
-+  
++   
 +  return CS_ERROR;
 +}
 +
@@ -3189,18 +3195,10 @@ Index: module-emulator.c
 +  }
 +}
 +
-+extern char cs_confdir[128];
-+
-+static int32_t EMU_Init(struct s_reader *reader)
++static void refresh_entitlements(struct s_reader *reader)
 +{
 +  uint32_t i;
-+  
-+#ifndef __APPLE__
-+  read_emu_keymemory();
-+#endif
-+  read_emu_keyfile("/var/keys/");
-+  read_emu_keyfile(cs_confdir);
-+
++  	
 +  if(reader->ll_entitlements) 
 +    ll_clear_data(reader->ll_entitlements);
 +
@@ -3218,7 +3216,20 @@ Index: module-emulator.c
 +    
 +  for(i=0; i<IrdetoKeys.keyCount; i++)
 +    emu_add_entitlement(reader, IrdetoKeys.EmuKeys[i].provider > 0xFFFF ? IrdetoKeys.EmuKeys[i].provider>>8 : IrdetoKeys.EmuKeys[i].provider,
-+       0, IrdetoKeys.EmuKeys[i].key, IrdetoKeys.EmuKeys[i].keyName, IrdetoKeys.EmuKeys[i].keyLength);  
++       0, IrdetoKeys.EmuKeys[i].key, IrdetoKeys.EmuKeys[i].keyName, IrdetoKeys.EmuKeys[i].keyLength); 
++}
++
++extern char cs_confdir[128];
++
++static int32_t EMU_Init(struct s_reader *reader)
++{
++#ifndef __APPLE__
++  read_emu_keymemory();
++#endif
++  read_emu_keyfile("/var/keys/");
++  read_emu_keyfile(cs_confdir);
++ 
++  refresh_entitlements(reader);
 + 
 +  return CR_OK; 
 +}
