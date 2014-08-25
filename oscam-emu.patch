@@ -1407,7 +1407,7 @@ Index: module-emulator.c
 +    return 1;
 +  }
 +  
-+  if(identifier != 'V' && strcmp(keyName, "D0") != 0)
++  if(identifier != 'V' || strcmp(keyName, "D0") != 0)
 +    cs_log("[Emu] Key not found: %c %X %s", identifier, provider, keyName);
 +  return 0;  
 +}
@@ -2964,9 +2964,9 @@ Index: module-emulator.c
 +          memcpy(newKeyD0, keyD0, 2);
 +          if(!SetKey('V', ecmProvider, "D0", newKeyD0, 2)) free(newKeyD0);
 +          for(j=0; j<ecmKeyCount; j++) {
-+          	newEcmKey = (uint8_t*)malloc(sizeof(uint8_t)*16);
-+          	if(newEcmKey == NULL) return 7;
-+          	memcpy(newEcmKey, ecmKeys[j], 16);
++            newEcmKey = (uint8_t*)malloc(sizeof(uint8_t)*16);
++            if(newEcmKey == NULL) return 7;
++            memcpy(newEcmKey, ecmKeys[j], 16);
 +            snprintf(keyName, 8, "E%X", ecmKeyIndex[j]);
 +            if(!SetKey('V', ecmProvider, keyName, newEcmKey, 16)) free(newEcmKey);
 +            (*keysAdded)++;
@@ -3096,7 +3096,7 @@ Index: module-emulator.c
 +  }
 +}
 +
-+int32_t emu_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter **emm_filters, unsigned int *filter_count)
++int32_t emu_get_emm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **emm_filters, unsigned int *filter_count)
 +{
 +  if(*emm_filters == NULL)
 +  {
@@ -3190,7 +3190,7 @@ Index: module-emulator.c
 +static void refresh_entitlements(struct s_reader *reader)
 +{
 +  uint32_t i;
-+  	
++    
 +  if(reader->ll_entitlements) 
 +    ll_clear_data(reader->ll_entitlements);
 +
