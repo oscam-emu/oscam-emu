@@ -1294,7 +1294,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,2047 @@
+@@ -0,0 +1,2042 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -1361,7 +1361,7 @@ Index: module-emulator.c
 +    if(KeyDB->EmuKeys[i].provider != provider) continue;  
 +    if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) continue;
 +  
-+  free(KeyDB->EmuKeys[i].key);
++    free(KeyDB->EmuKeys[i].key);
 +    KeyDB->EmuKeys[i].key = key;
 +    KeyDB->EmuKeys[i].keyLength = keyLength;
 +    return 1;
@@ -2959,17 +2959,17 @@ Index: module-emulator.c
 +        if(fletcher_crc32(oemm + 3, emmLen - 11) != ui1) return 4;
 +
 +        if(haveNewD0) {
-+          newKeyD0 = malloc(sizeof(uint8_t)*2);
++          newKeyD0 = (uint8_t*)malloc(sizeof(uint8_t)*2);
 +          if(newKeyD0 == NULL) return 7;
 +          memcpy(newKeyD0, keyD0, 2);
 +          if(!SetKey('V', ecmProvider, "D0", newKeyD0, 2)) free(newKeyD0);
 +          for(j=0; j<ecmKeyCount; j++) {
-+          	newEcmKey = malloc(sizeof(uint8_t)*16);
++          	newEcmKey = (uint8_t*)malloc(sizeof(uint8_t)*16);
 +          	if(newEcmKey == NULL) return 7;
 +          	memcpy(newEcmKey, ecmKeys[j], 16);
 +            snprintf(keyName, 8, "E%X", ecmKeyIndex[j]);
 +            if(!SetKey('V', ecmProvider, keyName, newEcmKey, 16)) free(newEcmKey);
-+            keysAdded++;
++            (*keysAdded)++;
 +            cs_hexdump(0, ecmKeys[j], 16, keyValue, sizeof(keyValue));
 +            cs_log("[Emu] Key found in EMM: V %X %s %s", ecmProvider, keyName, keyValue);
 +          }
@@ -3100,7 +3100,7 @@ Index: module-emulator.c
 +{
 +  if(*emm_filters == NULL)
 +  {
-+    const unsigned int max_filter_count = 5;
++    const unsigned int max_filter_count = 4;
 +    if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +      { return CS_ERROR; }
 +
@@ -3131,14 +3131,6 @@ Index: module-emulator.c
 +    filters[idx].enabled   = 1;
 +    filters[idx].filter[0] = 0x8D;
 +    filters[idx].mask[0]   = 0xFF;
-+    idx++;
-+
-+    filters[idx].type = EMM_SHARED;
-+    filters[idx].enabled   = 1;
-+    filters[idx].filter[0] = 0x8E;
-+    filters[idx].mask[0]   = 0xFF;
-+    memcpy(&filters[idx].filter[1], &rdr->sa[0][0], 3);
-+    memset(&filters[idx].mask[1], 0xFF, 3);
 +    idx++;
 +
 +    *filter_count = idx;
@@ -3332,6 +3324,9 @@ Index: module-emulator.c
 +    rdr->ftab.filts[7].prids[0] = 0x000000; rdr->ftab.filts[7].nprids = 1; 
 +    
 +    rdr->auprovid = 0x030B00;
++    rdr->cachemm = 1;
++    rdr->rewritemm = 1;
++    rdr->logemm = 2;
 +    
 +    rdr->grp = 0xFFFFFFFFFFFFFFFFULL;
 +    rdr->disablecrccws = 1;
@@ -3667,6 +3662,39 @@ Index: reader-common.c
  	if(reader_card_inserted(reader))
  	{
  		if(reader->card_status == NO_CARD || reader->card_status == UNKNOWN)
+Index: reader-viaccess.c
+===================================================================
+--- reader-viaccess.c	(revision 9836)
++++ reader-viaccess.c	(working copy)
+@@ -1324,7 +1324,7 @@
+ {
+ 	if(*emm_filters == NULL)
+ 	{
+-		const unsigned int max_filter_count = 4;
++		const unsigned int max_filter_count = 6;
+ 		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
+ 			{ return ERROR; }
+ 
+@@ -1332,7 +1332,18 @@
+ 		*filter_count = 0;
+ 
+ 		int32_t idx = 0;
+-
++		filters[idx].type = EMM_GLOBAL;
++		filters[idx].enabled   = 1;
++		filters[idx].filter[0] = 0x8A;
++		filters[idx].mask[0]   = 0xFF;
++		idx++;
++		
++		filters[idx].type = EMM_GLOBAL;
++		filters[idx].enabled   = 1;
++		filters[idx].filter[0] = 0x8B;
++		filters[idx].mask[0]   = 0xFF;
++		idx++;		
++		
+ 		filters[idx].type = EMM_SHARED;
+ 		filters[idx].enabled   = 1;
+ 		filters[idx].filter[0] = 0x8C;
 Index: readers.h
 ===================================================================
 --- readers.h	(revision 9836)
