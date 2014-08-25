@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 9827)
+--- CMakeLists.txt	(revision 9836)
 +++ CMakeLists.txt	(working copy)
 @@ -396,6 +396,13 @@
  # Manage config.h based on command line parameters
@@ -46,7 +46,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 9827)
+--- config.h	(revision 9836)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -58,7 +58,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9827)
+--- config.sh	(revision 9836)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -115,7 +115,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/des.h
 ===================================================================
---- cscrypt/des.h	(revision 9827)
+--- cscrypt/des.h	(revision 9836)
 +++ cscrypt/des.h	(working copy)
 @@ -5,6 +5,40 @@
  extern "C" {
@@ -696,7 +696,7 @@ Index: cscrypt/des_enc.c
 +#endif
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9827)
+--- cscrypt/md5.c	(revision 9836)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -741,7 +741,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9827)
+--- cscrypt/md5.h	(revision 9836)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -1177,7 +1177,7 @@ Index: cscrypt/set_key.c
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 9827)
+--- csctapi/cardreaders.h	(revision 9836)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -13,5 +13,6 @@
  void cardreader_smartreader(struct s_cardreader *crdr);
@@ -1188,7 +1188,7 @@ Index: csctapi/cardreaders.h
  #endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9827)
+--- globals.h	(revision 9836)
 +++ globals.h	(working copy)
 @@ -287,6 +287,7 @@
  /////////////////// readers that do not reed baudrate setting and timings are guarded by reader itself (large buffer built in): AFTER R_SMART
@@ -1198,9 +1198,22 @@ Index: globals.h
  /////////////////// proxy readers after R_CS378X
  #define R_CAMD35    0x20  // Reader cascading camd 3.5x
  #define R_CAMD33    0x21  // Reader cascading camd 3.3x
+@@ -674,6 +675,12 @@
+ 	uint32_t        class;              // the class needed for some systems
+ 	time_t          start;              // startdate
+ 	time_t          end;                // enddate
++#ifdef WITH_EMU	
++	bool            isKey;
++	char            name[8];
++	uint8_t         *key;
++	uint32_t        keyLength;
++#endif
+ } S_ENTITLEMENT;
+ 
+ struct s_client ;
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9827)
+--- Makefile	(revision 9836)
 +++ Makefile	(working copy)
 @@ -199,6 +199,8 @@
  SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/bn_word.c
@@ -1226,11 +1239,62 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
+Index: module-dvbapi.c
+===================================================================
+--- module-dvbapi.c	(revision 9836)
++++ module-dvbapi.c	(working copy)
+@@ -888,6 +888,7 @@
+ int32_t dvbapi_start_emm_filter(int32_t demux_index)
+ {
+ 	unsigned int j, fcount = 0, fcount_added = 0;
++	unsigned int u;
+ 	const char *typtext[] = { "UNIQUE", "SHARED", "GLOBAL", "UNKNOWN" };
+ 
+ 	if(!demux[demux_index].EMMpidcount)
+@@ -916,8 +917,10 @@
+ 
+ 		caid = ncaid = rdr->caid;
+ 
+-		struct s_cardsystem *cs;
+-		if(!rdr->caid)
++		struct s_cardsystem *cs, csl;
++		if(rdr->typ == R_EMU)
++			{ reader_emu(&csl); cs = &csl; }
++		else if(!rdr->caid)
+ 			{ cs = get_cardsystem_by_caid(rdr->csystem.caids[0]); } //Bulcrypt
+ 		else
+ 			{ cs = get_cardsystem_by_caid(rdr->caid); }
+@@ -972,8 +975,24 @@
+ 			else
+ 			{
+ 				// provid 0 is safe since oscam sets filter with e.g. rdr->sa & doesn't add filter twice (is_emmfilter_in_list)
+-				if(!rdr->caid)
++				if(rdr->typ == R_EMU) 
+ 				{
++					for(l=-1, u=0; l<0 && u<8 && rdr->csystem.caids[u]!=0; u++) 
++					{
++						if(rdr->auprovid)
++						{
++							l = dvbapi_find_emmpid(demux_index, emmtype, rdr->csystem.caids[u], rdr->auprovid);
++							if(l < 0)
++								{ l = dvbapi_find_emmpid(demux_index, emmtype, rdr->csystem.caids[u], 0); }
++						}
++						else
++						{
++							l = dvbapi_find_emmpid(demux_index, emmtype, rdr->csystem.caids[u], 0);
++						}
++					}					
++				}
++				else if(!rdr->caid)
++				{
+ 					l = dvbapi_find_emmpid(demux_index, emmtype, rdr->csystem.caids[0], 0); //Bulcrypt
+ 					if(l < 0)
+ 						{ l = dvbapi_find_emmpid(demux_index, emmtype, rdr->csystem.caids[1], 0); }
 Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,1704 @@
+@@ -0,0 +1,2042 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -1242,28 +1306,28 @@ Index: module-emulator.c
 +#include "oscam-config.h"
 +
 +// Key DB
-+int CharToBin(unsigned char *out, char *in, unsigned int inLen)
++int32_t CharToBin(uint8_t *out, char *in, uint32_t inLen)
 +{
-+  unsigned int i, tmp;
++  uint32_t i, tmp;
 +  for(i=0; i<inLen/2; i++) {
 +    if(sscanf(in + i*2, "%02X", &tmp) != 1) return 0;
-+    out[i] = (unsigned char)tmp;
++    out[i] = (uint8_t)tmp;
 +  }
 +  return 1;
 +}
 +
 +typedef struct {
 +  char identifier;
-+  unsigned int provider;
++  uint32_t provider;
 +  char keyName[8];
-+  unsigned char *key;
-+  unsigned int keyLength;
++  uint8_t *key;
++  uint32_t keyLength;
 +} KeyData;
 +
 +typedef struct {
 +  KeyData *EmuKeys;
-+  unsigned int keyCount;
-+  unsigned int keyMax;
++  uint32_t keyCount;
++  uint32_t keyMax;
 +} KeyDataContainer;
 +
 +KeyDataContainer CwKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
@@ -1277,15 +1341,15 @@ Index: module-emulator.c
 +    case 'W': return &CwKeys;
 +    case 'V': return &ViKeys;
 +    case 'N': return &NagraKeys;
-+    case 'I': return &IrdetoKeys;  	
++    case 'I': return &IrdetoKeys;    
 +    default:  return NULL;
 +  }
 +  return NULL;
 +}
 +
-+int SetKey(char identifier, unsigned int provider, char *keyName, unsigned char *key, unsigned int keyLength) 
++int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *key, uint32_t keyLength) 
 +{
-+  unsigned int i;
++  uint32_t i;
 +  KeyDataContainer *KeyDB;
 +  identifier = (char)toupper((int)identifier);
 +  
@@ -1296,12 +1360,12 @@ Index: module-emulator.c
 +  for(i=0; i<KeyDB->keyCount; i++) {
 +    if(KeyDB->EmuKeys[i].provider != provider) continue;  
 +    if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) continue;
-+	
-+	free(KeyDB->EmuKeys[i].key);
++  
++    free(KeyDB->EmuKeys[i].key);
 +    KeyDB->EmuKeys[i].key = key;
 +    KeyDB->EmuKeys[i].keyLength = keyLength;
 +    return 1;
-+  }	
++  }  
 +
 +  if(KeyDB->keyCount+1 > KeyDB->keyMax) {
 +   if(KeyDB->EmuKeys == NULL) {
@@ -1318,7 +1382,8 @@ Index: module-emulator.c
 +
 +  KeyDB->EmuKeys[KeyDB->keyCount].identifier = identifier;
 +  KeyDB->EmuKeys[KeyDB->keyCount].provider = provider;
-+  memcpy(KeyDB->EmuKeys[KeyDB->keyCount].keyName, keyName, 8);
++  if(strlen(keyName) < 8) strncpy(KeyDB->EmuKeys[KeyDB->keyCount].keyName, keyName, 8);
++  else memcpy(KeyDB->EmuKeys[KeyDB->keyCount].keyName, keyName, 8);
 +  KeyDB->EmuKeys[KeyDB->keyCount].keyName[7] = 0;
 +  KeyDB->EmuKeys[KeyDB->keyCount].key = key;
 +  KeyDB->EmuKeys[KeyDB->keyCount].keyLength = keyLength;  
@@ -1326,9 +1391,9 @@ Index: module-emulator.c
 +  return 1;
 +}
 +
-+int FindKey(char identifier, unsigned int provider, char *keyName, unsigned char *key, unsigned int maxKeyLength)
++int32_t FindKey(char identifier, uint32_t provider, char *keyName, uint8_t *key, uint32_t maxKeyLength)
 +{
-+  unsigned int i;
++  uint32_t i;
 +  KeyDataContainer *KeyDB;
 +  
 +  KeyDB = NULL;
@@ -1337,18 +1402,21 @@ Index: module-emulator.c
 +  
 +  for(i=0; i<KeyDB->keyCount; i++) {
 +    if(KeyDB->EmuKeys[i].provider != provider) continue;  
-+    if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) continue;	
++    if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) continue;  
 +    memcpy(key, KeyDB->EmuKeys[i].key, KeyDB->EmuKeys[i].keyLength > maxKeyLength ? maxKeyLength : KeyDB->EmuKeys[i].keyLength);
 +    return 1;
 +  }
++  
++  if(identifier != 'V' && strcmp(keyName, "D0") != 0)
++    cs_log("[Emu] Key not found: %c %X %s", identifier, provider, keyName);
 +  return 0;  
 +}
 +
 +void read_emu_keyfile(char *path)
 +{
 +  char line[1200], keyName[8], keyString[1026];
-+  unsigned int pathLength, provider, keyLength;
-+  unsigned char *key;
++  uint32_t pathLength, provider, keyLength;
++  uint8_t *key;
 +  char *filepath, *filename;
 +  FILE *file = NULL;
 +  char identifier;
@@ -1373,7 +1441,7 @@ Index: module-emulator.c
 +    if(sscanf(line, "%c %8x %7s %1024s", &identifier, &provider, keyName, keyString) != 4) continue;
 +    
 +    keyLength = strlen(keyString)/2;
-+    key = (unsigned char*)malloc(keyLength);
++    key = (uint8_t*)malloc(keyLength);
 +    if(key == NULL)  { fclose(file); return; }
 +    
 +    if(!CharToBin(key, keyString, strlen(keyString))
@@ -1384,14 +1452,14 @@ Index: module-emulator.c
 +}
 +
 +#ifndef __APPLE__
-+extern char SoftCamKey_Data[]    asm("_binary_SoftCam_Key_start");
-+extern char SoftCamKey_DataEnd[] asm("_binary_SoftCam_Key_end");
++extern uint8_t SoftCamKey_Data[]    asm("_binary_SoftCam_Key_start");
++extern uint8_t SoftCamKey_DataEnd[] asm("_binary_SoftCam_Key_end");
 +
 +void read_emu_keymemory(void)
 +{
 +  char *keyData, *line, *saveptr, keyName[8], keyString[1026];
-+  unsigned int provider, keyLength;
-+  unsigned char *key;
++  uint32_t provider, keyLength;
++  uint8_t *key;
 +  char identifier;
 +
 +  keyData = (char*)malloc(SoftCamKey_DataEnd-SoftCamKey_Data+1);
@@ -1402,11 +1470,11 @@ Index: module-emulator.c
 +  line = strtok_r(keyData, "\n", &saveptr);
 +  while(line != NULL) {
 +    if(sscanf(line, "%c %8x %7s %1024s", &identifier, &provider, keyName, keyString) != 4) {
-+    	 line = strtok_r(NULL, "\n", &saveptr);
-+    	 continue;
++       line = strtok_r(NULL, "\n", &saveptr);
++       continue;
 +    }
 +    keyLength = strlen(keyString)/2;
-+    key = (unsigned char*)malloc(keyLength);
++    key = (uint8_t*)malloc(keyLength);
 +    if(key == NULL) { free(keyData); return; }
 +    
 +    if(!CharToBin(key, keyString, strlen(keyString))
@@ -1419,9 +1487,9 @@ Index: module-emulator.c
 +#endif
 +
 +// Shared functions
-+void ReverseMem(unsigned char *in, int len) 
++void ReverseMem(uint8_t *in, int32_t len) 
 +{
-+  unsigned char temp;
++  uint8_t temp;
 +  int32_t i;
 +  for(i = 0; i < (len / 2); i++) {
 +    temp = in[i];
@@ -1430,7 +1498,7 @@ Index: module-emulator.c
 +  }
 +}
 +
-+void ReverseMemInOut(unsigned char *out, const unsigned char *in, int n)
++void ReverseMemInOut(uint8_t *out, const uint8_t *in, int32_t n)
 +{
 +  if(n>0) {
 +    out+=n;
@@ -1438,10 +1506,10 @@ Index: module-emulator.c
 +  }
 +}
 +
-+char EmuRSAInput(BIGNUM *d, const unsigned char *in, int n, char LE)
++int8_t EmuRSAInput(BIGNUM *d, const uint8_t *in, int32_t n, int8_t le)
 +{
-+  if(LE) {
-+    unsigned char tmp[256];
++  if(le) {
++    uint8_t tmp[256];
 +    ReverseMemInOut(tmp,in,n);
 +    return BN_bin2bn(tmp,n,d)!=0;
 +  }
@@ -1449,36 +1517,36 @@ Index: module-emulator.c
 +    return BN_bin2bn(in,n,d)!=0;
 +}
 +
-+int EmuRSAOutput(unsigned char *out, int n, BIGNUM *r, char LE)
++int32_t EmuRSAOutput(uint8_t *out, int32_t n, BIGNUM *r, int8_t le)
 +{
-+  int s=BN_num_bytes(r);
++  int32_t s=BN_num_bytes(r);
 +  if(s>n) {
-+    unsigned char buff[256];
++    uint8_t buff[256];
 +    BN_bn2bin(r,buff);
 +    memcpy(out,buff+s-n,n);
 +  }
 +  else if(s<n) {
-+    int l=n-s;
++    int32_t l=n-s;
 +    memset(out,0,l);
 +    BN_bn2bin(r,out+l);
 +  }
 +  else BN_bn2bin(r,out);
-+  if(LE) ReverseMem(out,n);
++  if(le) ReverseMem(out,n);
 +  return s;
 +}
 +
-+int EmuRSA(unsigned char *out, const unsigned char *in, int n, BIGNUM *exp, BIGNUM *mod, char LE)
++int32_t EmuRSA(uint8_t *out, const uint8_t *in, int32_t n, BIGNUM *exp, BIGNUM *mod, int8_t le)
 +{
 +  BN_CTX *ctx;
 +  BIGNUM *r, *d;
-+  int result = 0;
++  int32_t result = 0;
 +
 +  ctx = BN_CTX_new();
 +  r = BN_new();
 +  d = BN_new();
 +  
-+  if(EmuRSAInput(d,in,n,LE) && BN_mod_exp(r,d,exp,mod,ctx)) 
-+    result = EmuRSAOutput(out,n,r,LE);
++  if(EmuRSAInput(d,in,n,le) && BN_mod_exp(r,d,exp,mod,ctx)) 
++    result = EmuRSAOutput(out,n,r,le);
 +  
 +  BN_free(d);
 +  BN_free(r);
@@ -1487,10 +1555,10 @@ Index: module-emulator.c
 +}
 +
 +// Cryptoworks EMU
-+char GetCwKey(unsigned char *buf,unsigned int ident, unsigned char keyIndex, unsigned int keyLength) {
++int8_t GetCwKey(uint8_t *buf,uint32_t ident, uint8_t keyIndex, uint32_t keyLength) {
 +  
 +  char keyName[8];
-+  unsigned int tmp;
++  uint32_t tmp;
 +  
 +  if((ident>>4)== 0xD02A) keyIndex &=0xFE; // map to even number key indexes
 +  if((ident>>4)== 0xD00C) ident = 0x0D00C0; // map provider C? to C0
@@ -1504,56 +1572,58 @@ Index: module-emulator.c
 +  return 0;
 +}
 +
-+static const unsigned char cw_sbox1[64] =
++static const uint8_t cw_sbox1[64] =
 +{
 +    0xD8,0xD7,0x83,0x3D,0x1C,0x8A,0xF0,0xCF,0x72,0x4C,0x4D,0xF2,0xED,0x33,0x16,0xE0,
 +    0x8F,0x28,0x7C,0x82,0x62,0x37,0xAF,0x59,0xB7,0xE0,0x00,0x3F,0x09,0x4D,0xF3,0x94,
 +    0x16,0xA5,0x58,0x83,0xF2,0x4F,0x67,0x30,0x49,0x72,0xBF,0xCD,0xBE,0x98,0x81,0x7F,
 +    0xA5,0xDA,0xA7,0x7F,0x89,0xC8,0x78,0xA7,0x8C,0x05,0x72,0x84,0x52,0x72,0x4D,0x38
 +};
-+static const unsigned char cw_sbox2[64] =
++static const uint8_t cw_sbox2[64] =
 +{
 +    0xD8,0x35,0x06,0xAB,0xEC,0x40,0x79,0x34,0x17,0xFE,0xEA,0x47,0xA3,0x8F,0xD5,0x48,
 +    0x0A,0xBC,0xD5,0x40,0x23,0xD7,0x9F,0xBB,0x7C,0x81,0xA1,0x7A,0x14,0x69,0x6A,0x96,
 +    0x47,0xDA,0x7B,0xE8,0xA1,0xBF,0x98,0x46,0xB8,0x41,0x45,0x9E,0x5E,0x20,0xB2,0x35,
 +    0xE4,0x2F,0x9A,0xB5,0xDE,0x01,0x65,0xF8,0x0F,0xB2,0xD2,0x45,0x21,0x4E,0x2D,0xDB
 +};
-+static const unsigned char cw_sbox3[64] =
++static const uint8_t cw_sbox3[64] =
 +{
 +    0xDB,0x59,0xF4,0xEA,0x95,0x8E,0x25,0xD5,0x26,0xF2,0xDA,0x1A,0x4B,0xA8,0x08,0x25,
 +    0x46,0x16,0x6B,0xBF,0xAB,0xE0,0xD4,0x1B,0x89,0x05,0x34,0xE5,0x74,0x7B,0xBB,0x44,
 +    0xA9,0xC6,0x18,0xBD,0xE6,0x01,0x69,0x5A,0x99,0xE0,0x87,0x61,0x56,0x35,0x76,0x8E,
 +    0xF7,0xE8,0x84,0x13,0x04,0x7B,0x9B,0xA6,0x7A,0x1F,0x6B,0x5C,0xA9,0x86,0x54,0xF9
 +};
-+static const unsigned char cw_sbox4[64] =
++static const uint8_t cw_sbox4[64] =
 +{
 +    0xBC,0xC1,0x41,0xFE,0x42,0xFB,0x3F,0x10,0xB5,0x1C,0xA6,0xC9,0xCF,0x26,0xD1,0x3F,
 +    0x02,0x3D,0x19,0x20,0xC1,0xA8,0xBC,0xCF,0x7E,0x92,0x4B,0x67,0xBC,0x47,0x62,0xD0,
 +    0x60,0x9A,0x9E,0x45,0x79,0x21,0x89,0xA9,0xC3,0x64,0x74,0x9A,0xBC,0xDB,0x43,0x66,
 +    0xDF,0xE3,0x21,0xBE,0x1E,0x16,0x73,0x5D,0xA2,0xCD,0x8C,0x30,0x67,0x34,0x9C,0xCB
 +};
-+static const unsigned char AND_bit1[8] = {0x00,0x40,0x04,0x80,0x21,0x10,0x02,0x08};
-+static const unsigned char AND_bit2[8] = {0x80,0x08,0x01,0x40,0x04,0x20,0x10,0x02};
-+static const unsigned char AND_bit3[8] = {0x82,0x40,0x01,0x10,0x00,0x20,0x04,0x08};
-+static const unsigned char AND_bit4[8] = {0x02,0x10,0x04,0x40,0x80,0x08,0x01,0x20};
++static const uint8_t AND_bit1[8] = {0x00,0x40,0x04,0x80,0x21,0x10,0x02,0x08};
++static const uint8_t AND_bit2[8] = {0x80,0x08,0x01,0x40,0x04,0x20,0x10,0x02};
++static const uint8_t AND_bit3[8] = {0x82,0x40,0x01,0x10,0x00,0x20,0x04,0x08};
++static const uint8_t AND_bit4[8] = {0x02,0x10,0x04,0x40,0x80,0x08,0x01,0x20};
 +
-+void CW_SWAP_KEY(unsigned char *key)
++void CW_SWAP_KEY(uint8_t *key)
 +{
-+    unsigned char k[8];
++    uint8_t k[8];
 +    memcpy(k, key, 8);
 +    memcpy(key, key + 8, 8);
 +    memcpy(key + 8, k, 8);
 +}
-+void CW_SWAP_DATA(unsigned char *k)
++
++void CW_SWAP_DATA(uint8_t *k)
 +{
-+    unsigned char d[4];
++    uint8_t d[4];
 +    memcpy(d, k + 4, 4);
 +    memcpy(k + 4 ,k ,4);
 +    memcpy(k, d, 4);
 +}
-+void CW_DES_ROUND(unsigned char *d,unsigned char *k)
++
++void CW_DES_ROUND(uint8_t *d,uint8_t *k)
 +{
-+    unsigned char aa[44] = {1,0,3,1,2,2,3,2,1,3,1,1,3,0,1,2,3,1,3,2,2,0,7
++    uint8_t aa[44] = {1,0,3,1,2,2,3,2,1,3,1,1,3,0,1,2,3,1,3,2,2,0,7
 +    ,6,5,4,7,6,5,7,6,5,6,7,5,7,5,7,6,6,7,5,4,4},
 +    bb[44] = {0x80,0x08,0x10,0x02,0x08,0x40,0x01,0x20,0x40,0x80,0x04,0x10,0x04,
 +        0x01,0x01,0x02,0x20,0x20,0x02,0x01,
@@ -1561,7 +1631,7 @@ Index: module-emulator.c
 +    ,0x08,0x40,0x01,0x02,0x80,0x10,0x40,0x40,0x10,0x08,0x01},
 +    ff[4] = {0x02,0x10,0x04,0x04},
 +    l[24] = {0,2,4,6,7,5,3,1,4,5,6,7,7,6,5,4,7,4,5,6,4,7,6,5};
-+    unsigned char des_td[8], i, o, n, c = 1, m = 0, r = 0, *a = aa,*b = bb, *f = ff, *p1 = l,*p2 = l+8,*p3 = l+16;
++    uint8_t des_td[8], i, o, n, c = 1, m = 0, r = 0, *a = aa,*b = bb, *f = ff, *p1 = l,*p2 = l+8,*p3 = l+16;
 +    for (m = 0; m < 2; m++)
 +    for(i = 0; i < 4; i++)
 +    des_td[*p1++] = (m) ? ((d[*p2++]*2) & 0x3F) | ((d[*p3++] & 0x80) ? 0x01 : 0x00):
@@ -1585,9 +1655,10 @@ Index: module-emulator.c
 +    }
 +    CW_SWAP_DATA(d);
 +}
-+void CW_48_Key(unsigned char *inkey, unsigned char *outkey, unsigned char algotype)
++
++void CW_48_Key(uint8_t *inkey, uint8_t *outkey, uint8_t algotype)
 +{
-+    unsigned char Round_Counter ,i = 8,*key128 = inkey, *key48 = inkey + 0x10;
++    uint8_t Round_Counter ,i = 8,*key128 = inkey, *key48 = inkey + 0x10;
 +    Round_Counter = 7 - (algotype & 7);
 +    memset (outkey, 0, 16);
 +    memcpy(outkey, key48, 6);
@@ -1595,10 +1666,11 @@ Index: module-emulator.c
 +    if (i > 1)
 +    outkey[i-2] = key128[i];
 +}
-+void CW_LS_DES_KEY(unsigned char *key,unsigned char Rotate_Counter)
++
++void CW_LS_DES_KEY(uint8_t *key,uint8_t Rotate_Counter)
 +{
-+    unsigned char round[] = {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1,1}, i, n;
-+    unsigned short k[8];
++    uint8_t round[] = {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1,1}, i, n;
++    uint16_t k[8];
 +    n = round[Rotate_Counter];
 +    for (i = 0; i < 8; i++) k[i] = key[i];
 +    for (i = 1; i < n + 1; i++)
@@ -1612,11 +1684,12 @@ Index: module-emulator.c
 +        k[1] = (k[1]*2) | ((k[2] & 0xF00) ? 1 : 0); k[2] &= 0xff;
 +        k[0] = ((k[0]*2) | ((k[1] & 0xF00) ? 1 : 0)) & 0xFF; k[1] &= 0xff;
 +    }
-+    for (i = 0; i < 8; i++) key[i] = (unsigned char) k[i];
++    for (i = 0; i < 8; i++) key[i] = (uint8_t) k[i];
 +}
-+void CW_RS_DES_KEY(unsigned char *k, unsigned char Rotate_Counter)
++
++void CW_RS_DES_KEY(uint8_t *k, uint8_t Rotate_Counter)
 +{
-+    unsigned char i,c;
++    uint8_t i,c;
 +    for (i = 1; i < Rotate_Counter+1; i++)
 +    {
 +        c = (k[3] & 0x10) ? 0x80 : 0;
@@ -1631,15 +1704,17 @@ Index: module-emulator.c
 +        k[4] /= 2; k[4] |= c;
 +    }
 +}
-+void CW_RS_DES_SUBKEY(unsigned char *k, unsigned char Rotate_Counter)
++
++void CW_RS_DES_SUBKEY(uint8_t *k, uint8_t Rotate_Counter)
 +{
-+    unsigned char round[] = {1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1};
++    uint8_t round[] = {1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1};
 +    CW_RS_DES_KEY(k, round[Rotate_Counter]);
 +}
-+void CW_PREP_KEY(unsigned char *key )
++
++void CW_PREP_KEY(uint8_t *key )
 +{
-+    unsigned char DES_key[8],j;
-+    int Round_Counter = 6,i,a;
++    uint8_t DES_key[8],j;
++    int32_t Round_Counter = 6,i,a;
 +    key[7] = 6;
 +    memset(DES_key, 0 , 8);
 +    do
@@ -1665,9 +1740,10 @@ Index: module-emulator.c
 +    memcpy(key,DES_key,8);
 +    CW_RS_DES_KEY(key,4);
 +}
-+void CW_L2DES(unsigned char *data, unsigned char *key, unsigned char algo)
++
++void CW_L2DES(uint8_t *data, uint8_t *key, uint8_t algo)
 +{
-+    unsigned char i, k0[22], k1[22];
++    uint8_t i, k0[22], k1[22];
 +    memcpy(k0,key,22);
 +    memcpy(k1,key,22);
 +    CW_48_Key(k0, k1,algo);
@@ -1678,9 +1754,10 @@ Index: module-emulator.c
 +        CW_DES_ROUND( data ,k1);
 +    }
 +}
-+void CW_R2DES(unsigned char *data, unsigned char *key, unsigned char algo)
++
++void CW_R2DES(uint8_t *data, uint8_t *key, uint8_t algo)
 +{
-+    unsigned char i, k0[22],k1[22];
++    uint8_t i, k0[22],k1[22];
 +    memcpy(k0,key,22);
 +    memcpy(k1,key,22);
 +    CW_48_Key(k0, k1, algo);
@@ -1694,29 +1771,32 @@ Index: module-emulator.c
 +    }
 +    CW_SWAP_DATA(data);
 +}
-+void CW_DES(unsigned char *data, unsigned char *inkey, unsigned char m)
++
++void CW_DES(uint8_t *data, uint8_t *inkey, uint8_t m)
 +{
-+    unsigned char key[22], i;
++    uint8_t key[22], i;
 +    memcpy(key, inkey + 9, 8);
 +    CW_PREP_KEY( key );
 +    for (i = 16; i > 0; i--)
 +    {
-+        if (m == 1) CW_LS_DES_KEY(key, (unsigned char) (i-1));
++        if (m == 1) CW_LS_DES_KEY(key, (uint8_t) (i-1));
 +        CW_DES_ROUND( data ,key);
-+        if (m == 0) CW_RS_DES_SUBKEY(key, (unsigned char) (i-1));
++        if (m == 0) CW_RS_DES_SUBKEY(key, (uint8_t) (i-1));
 +    }
 +}
-+void CW_DEC_ENC(unsigned char *d, unsigned char *k, unsigned char a,unsigned char m)
++
++void CW_DEC_ENC(uint8_t *d, uint8_t *k, uint8_t a,uint8_t m)
 +{
-+    unsigned char n = m & 1;
++    uint8_t n = m & 1;
 +    CW_L2DES(d , k, a);
 +    CW_DES (d , k, n);
 +    CW_R2DES(d , k, a);
 +    if (m & 2) CW_SWAP_KEY(k);
 +}
-+void CW_DEC(unsigned char *d, unsigned char *key, unsigned char algo)
++
++void CW_DEC(uint8_t *d, uint8_t *key, uint8_t algo)
 +{
-+    unsigned char k0[22], algo_type = algo & 7,mode = 0, i;
++    uint8_t k0[22], algo_type = algo & 7,mode = 0, i;
 +    memcpy(k0,key,22);
 +    if (algo_type < 7)
 +    CW_DEC_ENC(d , k0, algo_type, mode);
@@ -1724,24 +1804,25 @@ Index: module-emulator.c
 +    for (i = 0; i < 3; i++)
 +    {
 +        mode = !mode;
-+        CW_DEC_ENC(d , k0, algo_type ,(unsigned char) (mode | 2));
-+    }
-+}
-+void CW_ENC(unsigned char *d, unsigned char *key, unsigned char algo)
-+{
-+    unsigned char k0[22], algo_type = algo & 7,mode = 1, i;
-+    memcpy(k0,key,22);
-+    if (algo_type < 7)
-+    CW_DEC_ENC(d , k0, algo_type, mode);
-+    else
-+    for (i = 0; i < 3; i++)
-+    {
-+        mode = !mode;
-+        CW_DEC_ENC(d , k0, algo_type , (unsigned char) (mode | 2));
++        CW_DEC_ENC(d , k0, algo_type ,(uint8_t) (mode | 2));
 +    }
 +}
 +
-+void Cryptoworks3DES(unsigned char *data, unsigned char *key) {
++void CW_ENC(uint8_t *d, uint8_t *key, uint8_t algo)
++{
++    uint8_t k0[22], algo_type = algo & 7,mode = 1, i;
++    memcpy(k0,key,22);
++    if (algo_type < 7)
++    CW_DEC_ENC(d , k0, algo_type, mode);
++    else
++    for (i = 0; i < 3; i++)
++    {
++        mode = !mode;
++        CW_DEC_ENC(d , k0, algo_type , (uint8_t) (mode | 2));
++    }
++}
++
++void Cryptoworks3DES(uint8_t *data, uint8_t *key) {
 +  doPC1(key);
 +  doPC1(&key[8]);
 +  des(key, DES_ECS2_DECRYPT, data);
@@ -1749,10 +1830,10 @@ Index: module-emulator.c
 +  des(key, DES_ECS2_DECRYPT, data);
 +}
 +
-+unsigned char CryptoworksProcessNano80(unsigned char *data, int provider, unsigned char *opKey, unsigned char nanoLength) 
++uint8_t CryptoworksProcessNano80(uint8_t *data, int32_t provider, uint8_t *opKey, uint8_t nanoLength) 
 +{
-+  int i, j;
-+  unsigned char key[16], desKey[16], t[8], dat1[8], dat2[8], k0D00C000[16];
++  int32_t i, j;
++  uint8_t key[16], desKey[16], t[8], dat1[8], dat2[8], k0D00C000[16];
 +  if(provider != 0xA0 && !GetCwKey(k0D00C000, 0x0D00C0, 0, 16)) return 2;
 +  memset(t, 0, 8);
 +
@@ -1779,17 +1860,17 @@ Index: module-emulator.c
 +    memcpy(dat2, dat1, 8);
 +    memcpy(key, desKey, 16);
 +    Cryptoworks3DES(dat1, key);       
-+    for(j=0; j<8; j++) dat1[j] ^= t[j];	    
++    for(j=0; j<8; j++) dat1[j] ^= t[j];      
 +    memcpy(&data[i], dat1, 8);
 +    memcpy(t, dat2, 8);
 +  }   
 +  return data[10] + 5;
 +} 
 +
-+void CryptoworksSignature(const unsigned char *data, unsigned int length, unsigned char *key, unsigned char *signature)
++void CryptoworksSignature(const uint8_t *data, uint32_t length, uint8_t *key, uint8_t *signature)
 +{
-+  unsigned int i, sigPos;
-+  char algo, first;
++  uint32_t i, sigPos;
++  int8_t algo, first;
 +
 +  algo = data[0] & 7;
 +  if(algo == 7) algo = 6;   
@@ -1815,10 +1896,10 @@ Index: module-emulator.c
 +  CW_R2DES(signature, key, algo);
 +}
 +
-+void CryptoworksDecryptDes(unsigned char *data, unsigned char algo, unsigned char *key)
++void CryptoworksDecryptDes(uint8_t *data, uint8_t algo, uint8_t *key)
 +{
-+  int i;
-+  unsigned char k[22], t[8];
++  int32_t i;
++  uint8_t k[22], t[8];
 +    
 +  algo &= 7;
 +  if(algo<7) CW_DEC_ENC(data, key, algo, DES_RIGHT);
@@ -1833,11 +1914,11 @@ Index: module-emulator.c
 +  }
 +}
 +
-+char CryptoworksECM(uint32_t CAID, unsigned char *ecm, unsigned char *cw)
++int8_t CryptoworksECM(uint32_t caid, uint8_t *ecm, uint8_t *cw)
 +{
-+  unsigned int ident;
-+  unsigned char keyIndex = 0, nanoLength, newEcmLength, key[22], signature[8], nano80Mode = 0;
-+  int provider = -1;
++  uint32_t ident;
++  uint8_t keyIndex = 0, nanoLength, newEcmLength, key[22], signature[8], nano80Mode = 0;
++  int32_t provider = -1;
 +  uint16_t i, j, ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;  
 +  memset(key, 0, 22);
 +  
@@ -1855,7 +1936,7 @@ Index: module-emulator.c
 +  }
 +  if(provider < 0) return 1;
 +
-+  ident = (CAID << 8) | provider; 
++  ident = (caid << 8) | provider; 
 +  if(!GetCwKey(key, ident, keyIndex, 16)) return 2;
 +  if(!GetCwKey(&key[16], ident, 6, 6)) return 2;
 +  
@@ -1869,7 +1950,7 @@ Index: module-emulator.c
 +      ecm[i+2+5] = newEcmLength;
 +      ecm[i+2+6] = 0x81;
 +      ecm[i+2+7] = 0xFF;
-+      return CryptoworksECM(CAID, ecm+i+2+3, cw);
++      return CryptoworksECM(caid, ecm+i+2+3, cw);
 +    }
 +  }
 + 
@@ -1903,9 +1984,9 @@ Index: module-emulator.c
 +}
 +
 +// SoftNDS EMU
-+const unsigned char nds_const[]={0x0F,0x1E,0x2D,0x3C,0x4B,0x5A,0x69,0x78,0x87,0x96,0xA5,0xB4,0xC3,0xD2,0xE1,0xF0};
++const uint8_t nds_const[]={0x0F,0x1E,0x2D,0x3C,0x4B,0x5A,0x69,0x78,0x87,0x96,0xA5,0xB4,0xC3,0xD2,0xE1,0xF0};
 +
-+const unsigned char viasat_const[]=
++const uint8_t viasat_const[]=
 +{
 +  0x15,0x85,0xC5,0xE4,0xB8,0x52,0xEC,0xF7,0xC3,0xD9,0x08,0xBA,0x22,0x4A,0x66,0xF2,
 +  0x82,0x15,0x4F,0xB2,0x18,0x48,0x63,0x97,0xDC,0x19,0xD8,0x51,0x9A,0x39,0xFC,0xCA,
@@ -1913,11 +1994,11 @@ Index: module-emulator.c
 +  0xD9,0x1E,0x41,0x14,0xFE,0x15,0xAF,0xC3,0x18,0xC5,0xF8,0xA7,0xA8,0x01,0x00,0x01,
 +};
 +
-+char SoftNDSECM(unsigned char *ecm, unsigned char *dw)
++int8_t SoftNDSECM(uint8_t *ecm, uint8_t *dw)
 +{
-+  int i;
-+  unsigned char *tDW;
-+  unsigned char digest[16];
++  int32_t i;
++  uint8_t *tDW;
++  uint8_t digest[16];
 +  MD5_CTX mdContext;
 +  memset(dw,0,16);
 +  tDW = &dw[ecm[0]==0x81 ? 8 : 0];
@@ -1935,23 +2016,26 @@ Index: module-emulator.c
 +}
 +
 +// Viaccess EMU
-+char GetViaKey(unsigned char *buf, unsigned int ident, char keyName, unsigned int keyIndex, unsigned int keyLength) {
++int8_t GetViaKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex, uint32_t keyLength) {
 +  
 +  char keyStr[8];
 +  snprintf(keyStr, 8, "%c%X", keyName, keyIndex);  
 +  if(FindKey('V', ident, keyStr, buf, keyLength))
-+   return 1;    
++    return 1; 
++   
++  if(ident == 0xD00040 && FindKey('V', 0x030B00, keyStr, buf, keyLength))
++    return 1;
 +  
 +  return 0;
 +}
 +
-+void Via1Mod(const unsigned char* key2, unsigned char* data)
++void Via1Mod(const uint8_t* key2, uint8_t* data)
 +{
-+  int kb, db;
++  int32_t kb, db;
 +  for (db=7; db>=0; db--) {
 +    for (kb=7; kb>3; kb--) {
-+      int a0=kb^db;
-+      int pos=7;
++      int32_t a0=kb^db;
++      int32_t pos=7;
 +      if (a0&4) {
 +        a0^=7;
 +        pos^=7;
@@ -1963,8 +2047,8 @@ Index: module-emulator.c
 +  }
 +  for (db=0; db<8; db++) {
 +    for (kb=0; kb<4; kb++) {
-+      int a0=kb^db;
-+      int pos=7;
++      int32_t a0=kb^db;
++      int32_t pos=7;
 +      if (a0&4) {
 +        a0^=7;
 +        pos^=7;
@@ -1976,29 +2060,29 @@ Index: module-emulator.c
 +  }
 +}
 +
-+void Via1Decode(unsigned char *data, unsigned char *key)
++void Via1Decode(uint8_t *data, uint8_t *key)
 +{
 +  Via1Mod(key+8, data);
 +  des(key, DES_ECM_CRYPT, data);
 +  Via1Mod(key+8, data);
 +}
 +
-+void Via1Hash(unsigned char *data, unsigned char *key)
++void Via1Hash(uint8_t *data, uint8_t *key)
 +{
 +  Via1Mod(key+8, data);
 +  des(key, DES_ECM_HASH, data);
 +  Via1Mod(key+8, data);
 +}
 +
-+char Via1Decrypt(unsigned char* source, unsigned char* dw, unsigned int ident, unsigned char desKeyIndex)
++int8_t Via1Decrypt(uint8_t* source, uint8_t* dw, uint32_t ident, uint8_t desKeyIndex)
 +{
-+    unsigned char work_key[16];
-+    unsigned char *data, *des_data1, *des_data2;
-+    int len;
-+    int msg_pos;
-+    int encStart = 0, hash_start, i;
-+    unsigned char signature[8];
-+    unsigned char hashbuffer[8], prepared_key[16], tmp, k, hashkey[16], pH;
++    uint8_t work_key[16];
++    uint8_t *data, *des_data1, *des_data2;
++    int32_t len;
++    int32_t msg_pos;
++    int32_t encStart = 0, hash_start, i;
++    uint8_t signature[8];
++    uint8_t hashbuffer[8], prepared_key[16], tmp, k, hashkey[16], pH;
 +
 +    if (ident == 0) return 4;
 +    memset(work_key, 0, 16);
@@ -2033,7 +2117,7 @@ Index: module-emulator.c
 +        { hashbuffer[pH] ^= data[i++]; pH++; if(pH == 8) { Via1Hash(hashbuffer, hashkey); pH = 0; } }
 +        for (hash_start=0; hash_start < data[1];hash_start++) 
 +          { hashbuffer[pH] ^= data[i++]; pH++; if(pH == 8) { Via1Hash(hashbuffer, hashkey); pH = 0; } }
-+        while (pH != 0) { hashbuffer[pH] ^= (unsigned char) 0; pH++; if(pH == 8) 
++        while (pH != 0) { hashbuffer[pH] ^= (uint8_t) 0; pH++; if(pH == 8) 
 +         { Via1Hash(hashbuffer, hashkey); pH = 0; } }
 +    }   
 +    if (work_key[7] == 0) {
@@ -2079,10 +2163,10 @@ Index: module-emulator.c
 +    return 0;
 +}
 +
-+char Via26ProcessDw(unsigned char *indata, unsigned int ident, unsigned char desKeyIndex)
++int8_t Via26ProcessDw(uint8_t *indata, uint32_t ident, uint8_t desKeyIndex)
 +{
-+  unsigned char pv1,pv2, i;
-+  unsigned char Tmp[8], tmpKey[16], T1Key[300], P1Key[8], KeyDes1[16], KeyDes2[16], XorKey[8];
++  uint8_t pv1,pv2, i;
++  uint8_t Tmp[8], tmpKey[16], T1Key[300], P1Key[8], KeyDes1[16], KeyDes2[16], XorKey[8];
 +  
 +  if(!GetViaKey(T1Key, ident, 'T', 1, 300)) return 2;
 +  if(!GetViaKey(P1Key, ident, 'P', 1, 8)) return 2;
@@ -2127,11 +2211,11 @@ Index: module-emulator.c
 +  return 0;
 +}
 +
-+char Via26Decrypt(unsigned char* source, unsigned char* dw, unsigned int ident, unsigned char desKeyIndex)
++int8_t Via26Decrypt(uint8_t* source, uint8_t* dw, uint32_t ident, uint8_t desKeyIndex)
 +{
-+  unsigned char tmpData[8], C1[8];
-+  unsigned char *pXorVector;
-+  int i,j;
++  uint8_t tmpData[8], C1[8];
++  uint8_t *pXorVector;
++  int32_t i,j;
 +  
 +  if (ident == 0) return 4;
 +  if(!GetViaKey(C1, ident, 'C', 1, 8)) return 2;
@@ -2147,10 +2231,10 @@ Index: module-emulator.c
 +  return 0;
 +}
 +
-+void Via3Core(unsigned char *data, unsigned char Off, unsigned int ident, unsigned char* XorKey, unsigned char* T1Key)
++void Via3Core(uint8_t *data, uint8_t Off, uint32_t ident, uint8_t* XorKey, uint8_t* T1Key)
 +{
-+  unsigned char i;
-+  unsigned long lR2, lR3, lR4, lR6, lR7;
++  uint8_t i;
++  uint32_t lR2, lR3, lR4, lR6, lR7;
 +
 +  switch (ident) {
 +  case 0x032820: {
@@ -2203,9 +2287,9 @@ Index: module-emulator.c
 +  }
 +}
 +
-+void Via3Fct1(unsigned char *data, unsigned int ident, unsigned char* XorKey, unsigned char* T1Key)
++void Via3Fct1(uint8_t *data, uint32_t ident, uint8_t* XorKey, uint8_t* T1Key)
 +{
-+  unsigned char t;
++  uint8_t t;
 +  Via3Core(data, 0, ident, XorKey, T1Key);
 +  
 +  switch (ident) {
@@ -2226,9 +2310,9 @@ Index: module-emulator.c
 +  }
 +}
 +
-+void Via3Fct2(unsigned char *data, unsigned int ident, unsigned char* XorKey, unsigned char* T1Key)
++void Via3Fct2(uint8_t *data, uint32_t ident, uint8_t* XorKey, uint8_t* T1Key)
 +{
-+  unsigned char t;
++  uint8_t t;
 +  Via3Core(data, 4, ident, XorKey, T1Key);
 +  
 +  switch (ident) {
@@ -2251,10 +2335,10 @@ Index: module-emulator.c
 +  }
 +}
 +
-+char Via3ProcessDw(unsigned char *data, unsigned int ident, unsigned char desKeyIndex)
++int8_t Via3ProcessDw(uint8_t *data, uint32_t ident, uint8_t desKeyIndex)
 +{
-+  unsigned char i;
-+  unsigned char tmp[8], tmpKey[16], T1Key[300], P1Key[8], KeyDes[16], XorKey[8];
++  uint8_t i;
++  uint8_t tmp[8], tmpKey[16], T1Key[300], P1Key[8], KeyDes[16], XorKey[8];
 +
 +  if(!GetViaKey(T1Key, ident, 'T', 1, 300)) return 2;
 +  if(!GetViaKey(P1Key, ident, 'P', 1, 8)) return 2;
@@ -2288,20 +2372,20 @@ Index: module-emulator.c
 +  return 0;
 +}
 +
-+void Via3FinalMix(unsigned char *dw)
++void Via3FinalMix(uint8_t *dw)
 +{
-+  unsigned int tmp; 
++  uint32_t tmp; 
 +
-+  tmp = *(unsigned int *)dw;
-+  *(unsigned int *)dw = *(unsigned int *)(dw + 4);
-+  *(unsigned int *)(dw + 4) = tmp;
++  tmp = *(uint32_t *)dw;
++  *(uint32_t *)dw = *(uint32_t *)(dw + 4);
++  *(uint32_t *)(dw + 4) = tmp;
 +  
-+  tmp = *(unsigned int *)(dw + 8);
-+  *(unsigned int *)(dw + 8) = *(unsigned int *)(dw + 12);
-+  *(unsigned int *)(dw + 12) = tmp;
++  tmp = *(uint32_t *)(dw + 8);
++  *(uint32_t *)(dw + 8) = *(uint32_t *)(dw + 12);
++  *(uint32_t *)(dw + 12) = tmp;
 +}
 +
-+char Via3HasValidCRC(unsigned char *dw)
++int8_t Via3HasValidCRC(uint8_t *dw)
 +{
 +  if (((dw[0]+dw[1]+dw[2]) & 0xFF) != dw[3]) return 0;
 +  if (((dw[4]+dw[5]+dw[6]) & 0xFF) != dw[7]) return 0;
@@ -2311,23 +2395,23 @@ Index: module-emulator.c
 +}
 +
 +// from reader-viaccess.c:
-+void hdSurEncPhase1_D2_0F_11(unsigned char *CWs);
-+void hdSurEncPhase2_D2_0F_11(unsigned char *CWs);
-+void hdSurEncPhase1_D2_13_15(unsigned char *cws);
-+void hdSurEncPhase2_D2_13_15(unsigned char *cws);
++void hdSurEncPhase1_D2_0F_11(uint8_t *CWs);
++void hdSurEncPhase2_D2_0F_11(uint8_t *CWs);
++void hdSurEncPhase1_D2_13_15(uint8_t *cws);
++void hdSurEncPhase2_D2_13_15(uint8_t *cws);
 +
-+char Via3Decrypt(unsigned char* source, unsigned char* dw, unsigned int ident, unsigned char desKeyIndex, unsigned char aesKeyIndex, unsigned char aesMode, char doFinalMix)
++int8_t Via3Decrypt(uint8_t* source, uint8_t* dw, uint32_t ident, uint8_t desKeyIndex, uint8_t aesKeyIndex, uint8_t aesMode, int8_t doFinalMix)
 +{
-+  char aesAfterCore = 0;
-+  char needsAES = (aesKeyIndex != 0xFF);
-+  unsigned char tmpData[8], C1[8];
-+  unsigned char *pXorVector;
++  int8_t aesAfterCore = 0;
++  int8_t needsAES = (aesKeyIndex != 0xFF);
++  uint8_t tmpData[8], C1[8];
++  uint8_t *pXorVector;
 +  char aesKey[16];
-+  int i, j;
++  int32_t i, j;
 +    
 +  if(ident == 0) return 4;
 +  if(!GetViaKey(C1, ident, 'C', 1, 8)) return 2;    
-+  if(needsAES && !GetViaKey((unsigned char*)aesKey, ident, 'E', aesKeyIndex, 16)) return 2;
++  if(needsAES && !GetViaKey((uint8_t*)aesKey, ident, 'E', aesKeyIndex, 16)) return 2;
 +  if(aesMode==0x0D || aesMode==0x11 || aesMode==0x15) aesAfterCore = 1;
 +
 +  if(needsAES && !aesAfterCore) {
@@ -2383,11 +2467,11 @@ Index: module-emulator.c
 +  return 0;
 +}
 +
-+char ViaccessECM(unsigned char *ecm, unsigned char *dw)
++int8_t ViaccessECM(uint8_t *ecm, uint8_t *dw)
 +{
-+  unsigned int currentIdent = 0;
-+  unsigned char nanoCmd = 0, nanoLen = 0, version = 0, providerKeyLen = 0, desKeyIndex = 0, aesMode = 0, aesKeyIndex = 0xFF;
-+  char doFinalMix = 0;
++  uint32_t currentIdent = 0;
++  uint8_t nanoCmd = 0, nanoLen = 0, version = 0, providerKeyLen = 0, desKeyIndex = 0, aesMode = 0, aesKeyIndex = 0xFF;
++  int8_t doFinalMix = 0;
 +  uint16_t i = 0, keySelectPos = 0, ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;
 +  
 +  for (i=4; i<ecmLen; )
@@ -2455,21 +2539,21 @@ Index: module-emulator.c
 +}
 +
 +// Nagra EMU
-+char GetNagraKey(unsigned char *buf, unsigned int ident, char keyName, unsigned int keyIndex)
++int8_t GetNagraKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex)
 +{
 +  char keyStr[8];
-+  snprintf(keyStr, 8, "%c%X", keyName, keyIndex);	
++  snprintf(keyStr, 8, "%c%X", keyName, keyIndex);  
 +  if(FindKey('N', ident, keyStr, buf, keyName == 'M' ? 64 : 16))
-+   return 1;	  
++   return 1;    
 +
 +  return 0;
 +}
 +
-+char Nagra2Signature(const unsigned char *vkey, const unsigned char *sig, const unsigned char *msg, int len)
++int8_t Nagra2Signature(const uint8_t *vkey, const uint8_t *sig, const uint8_t *msg, int32_t len)
 +{
-+  unsigned char buff[16];    
-+  unsigned char iv[8];
-+  int i,j;
++  uint8_t buff[16];    
++  uint8_t iv[8];
++  int32_t i,j;
 +  
 +  memcpy(buff,vkey,sizeof(buff));
 +  for(i=0; i<len; i+=8) {
@@ -2484,13 +2568,13 @@ Index: module-emulator.c
 +  return (memcmp(sig,buff+8,8)==0);
 +}
 +
-+char DecryptNagra2ECM(unsigned char *in, unsigned char *out, const unsigned char *key, int len, const unsigned char *vkey, unsigned char *keyM)
++int8_t DecryptNagra2ECM(uint8_t *in, uint8_t *out, const uint8_t *key, int32_t len, const uint8_t *vkey, uint8_t *keyM)
 +{
 +  BIGNUM *exp, *mod;
-+  unsigned char iv[8];
-+  int i = 0, sign = in[0] & 0x80;
-+  unsigned char binExp = 3;
-+  char result = 1;
++  uint8_t iv[8];
++  int32_t i = 0, sign = in[0] & 0x80;
++  uint8_t binExp = 3;
++  int8_t result = 1;
 +  
 +  exp = BN_new(); 
 +  mod = BN_new();
@@ -2502,7 +2586,7 @@ Index: module-emulator.c
 +  if(len>64) memcpy(out+64,in+65,len-64);
 +
 +  if(in[0]&0x04) {
-+    unsigned char tmp[8];
++    uint8_t tmp[8];
 +    DES_key_schedule ks1, ks2;
 +    ReverseMemInOut(tmp,&key[0],8);
 +    DES_key_sched((DES_cblock *)tmp,&ks1);
@@ -2528,12 +2612,12 @@ Index: module-emulator.c
 +  return result;
 +}
 +
-+char Nagra2ECM(unsigned char *ecm, unsigned char *dw)
++int8_t Nagra2ECM(uint8_t *ecm, uint8_t *dw)
 +{
-+  unsigned int ident, identMask, tmp1, tmp2, tmp3;
-+  unsigned char cmdLen, ideaKeyNr, dec[256], ideaKey[16], vKey[16], m1Key[64], mecmAlgo = 0;
-+  char useVerifyKey = 0;
-+  int l=0, s;
++  uint32_t ident, identMask, tmp1, tmp2, tmp3;
++  uint8_t cmdLen, ideaKeyNr, dec[256], ideaKey[16], vKey[16], m1Key[64], mecmAlgo = 0;
++  int8_t useVerifyKey = 0;
++  int32_t l=0, s;
 +  uint16_t i = 0, ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;
 +  
 +  cmdLen = ecm[4] - 5;  
@@ -2574,38 +2658,38 @@ Index: module-emulator.c
 +   
 +  identMask = ident & 0xFF00;
 +  if (identMask == 0x1100 || identMask == 0x500 || identMask == 0x3100) {   
-+    tmp1 = *(unsigned int*)dw;
-+    tmp2 = *(unsigned int*)(dw + 4);
-+    tmp3 = *(unsigned int*)(dw + 12);  
-+    *(unsigned int*)dw = *(unsigned int*)(dw + 8);
-+    *(unsigned int*)(dw + 4) = tmp3;
-+    *(unsigned int*)(dw + 8) = tmp1;
-+    *(unsigned int*)(dw + 12) = tmp2;
++    tmp1 = *(uint32_t*)dw;
++    tmp2 = *(uint32_t*)(dw + 4);
++    tmp3 = *(uint32_t*)(dw + 12);  
++    *(uint32_t*)dw = *(uint32_t*)(dw + 8);
++    *(uint32_t*)(dw + 4) = tmp3;
++    *(uint32_t*)(dw + 8) = tmp1;
++    *(uint32_t*)(dw + 12) = tmp2;
 +  }
 +  return 0;
 +}
 +
 +// Irdeto EMU
-+char GetIrdetoKey(unsigned char *buf, unsigned int ident, char keyName, unsigned int keyIndex)
++int8_t GetIrdetoKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex)
 +{
 +  char keyStr[8];
-+  snprintf(keyStr, 8, "%c%X", keyName, keyIndex);	
++  snprintf(keyStr, 8, "%c%X", keyName, keyIndex);  
 +  if(FindKey('I', ident, keyStr, buf, 16))
 +   return 1;
 +
 +  return 0;
 +}
 +
-+static inline void xxor(unsigned char *data, int len, const unsigned char *v1, const unsigned char *v2)
++static inline void xxor(uint8_t *data, int32_t len, const uint8_t *v1, const uint8_t *v2)
 +{
 +  switch(len) {
 +    case 16:
-+      *((unsigned int *)data+3) = *((unsigned int *)v1+3) ^ *((unsigned int *)v2+3);
-+      *((unsigned int *)data+2) = *((unsigned int *)v1+2) ^ *((unsigned int *)v2+2);
++      *((uint32_t *)data+3) = *((uint32_t *)v1+3) ^ *((uint32_t *)v2+3);
++      *((uint32_t *)data+2) = *((uint32_t *)v1+2) ^ *((uint32_t *)v2+2);
 +    case 8:
-+      *((unsigned int *)data+1) = *((unsigned int *)v1+1) ^ *((unsigned int *)v2+1);
++      *((uint32_t *)data+1) = *((uint32_t *)v1+1) ^ *((uint32_t *)v2+1);
 +    case 4:
-+      *((unsigned int *)data+0) = *((unsigned int *)v1+0) ^ *((unsigned int *)v2+0);
++      *((uint32_t *)data+0) = *((uint32_t *)v1+0) ^ *((uint32_t *)v2+0);
 +      break;
 +    default:
 +      while(len--) *data++ = *v1++ ^ *v2++;
@@ -2613,11 +2697,11 @@ Index: module-emulator.c
 +    }
 +}
 +
-+void Irdeto2Encrypt(unsigned char *data, const unsigned char *seed, const unsigned char *okey, int len)
++void Irdeto2Encrypt(uint8_t *data, const uint8_t *seed, const uint8_t *okey, int32_t len)
 +{
-+  const unsigned char *tmp = seed; 
-+  unsigned char key[16];
-+  int i; 
++  const uint8_t *tmp = seed; 
++  uint8_t key[16];
++  int32_t i; 
 +  
 +  memcpy(key, okey, 16);
 +  doPC1(key);
@@ -2633,11 +2717,11 @@ Index: module-emulator.c
 +  }
 +}
 +
-+void Irdeto2Decrypt(unsigned char *data, const unsigned char *seed, const unsigned char *okey, int len)
++void Irdeto2Decrypt(uint8_t *data, const uint8_t *seed, const uint8_t *okey, int32_t len)
 +{
-+  unsigned char buf[2][8];
-+  unsigned char key[16];
-+  int i, n=0;
++  uint8_t buf[2][8];
++  uint8_t key[16];
++  int32_t i, n=0;
 +
 +  memcpy(key, okey, 16);
 +  doPC1(key);
@@ -2654,11 +2738,11 @@ Index: module-emulator.c
 +  }
 +}
 +
-+char Irdeto2CalculateHash(const unsigned char *okey, const unsigned char *iv, const unsigned char *data, int len)
++int8_t Irdeto2CalculateHash(const uint8_t *okey, const uint8_t *iv, const uint8_t *data, int32_t len)
 +{
-+  unsigned char cbuff[8];
-+  unsigned char key[16];
-+  int l, y;
++  uint8_t cbuff[8];
++  uint8_t key[16];
++  int32_t l, y;
 +  
 +  memcpy(key, okey, 16);
 +  doPC1(key);
@@ -2682,16 +2766,16 @@ Index: module-emulator.c
 +  return memcmp(cbuff,&data[len],8)==0;
 +}
 +
-+char Irdeto2ECM(uint16_t CAID, unsigned char *ecm, unsigned char *dw)
++int8_t Irdeto2ECM(uint16_t caid, uint8_t *ecm, uint8_t *dw)
 +{
-+  unsigned char keyNr=0, length, end, key[16], keyM1[16], keyIV[16], tmp[16];
-+  unsigned int i, l, ident;
++  uint8_t keyNr=0, length, end, key[16], keyM1[16], keyIV[16], tmp[16];
++  uint32_t i, l, ident;
 +
 +  uint16_t ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;
 +  
 +  length = ecm[11]; 
 +  keyNr = ecm[9];
-+  ident = ecm[8] | CAID << 8;
++  ident = ecm[8] | caid << 8;
 +    
 +  if(ecmLen < length+12) return 1;
 +  if(!GetIrdetoKey(key, ident, '0', keyNr)) return 2;
@@ -2744,32 +2828,189 @@ Index: module-emulator.c
 +6  CW checksum error
 +7  Out of memory
 +*/
-+char ProcessECM(uint16_t CAID, const unsigned char *ecm, unsigned char *dw) {
-+  char result;
-+  unsigned char *ecmCopy;
++int8_t ProcessECM(uint16_t caid, const uint8_t *ecm, uint8_t *dw) {
++  int8_t result;
++  uint8_t *ecmCopy;
 +  uint16_t ecmLen = (((ecm[1] & 0x0f)<< 8) | ecm[2])+3;
 +  
 +  if(ecmLen > 1024) return 1;
-+  ecmCopy = (unsigned char*)malloc(ecmLen);
++  ecmCopy = (uint8_t*)malloc(ecmLen);
 +  if(ecmCopy == NULL) return 7;
 +  memcpy(ecmCopy, ecm, ecmLen);
 +  result = 1;
 +  
-+  if((CAID>>8)==0x0D)
-+    result = CryptoworksECM(CAID,ecmCopy,dw);
-+  else if(CAID==0x090F)
++  if((caid>>8)==0x0D)
++    result = CryptoworksECM(caid,ecmCopy,dw);
++  else if(caid==0x090F)
 +    result = SoftNDSECM(ecmCopy,dw);    
-+  else if(CAID==0x500)
++  else if(caid==0x500)
 +    result = ViaccessECM(ecmCopy,dw);
-+  else if(CAID==0x1801)
++  else if(caid==0x1801)
 +    result = Nagra2ECM(ecmCopy,dw);
-+  else if(CAID==0x0604)
-+    result= Irdeto2ECM(CAID,ecmCopy,dw);
++  else if(caid==0x0604)
++    result= Irdeto2ECM(caid,ecmCopy,dw);
 +  
 +  free(ecmCopy);
 +  return result;
 +}
 +
++// Viaccess EMM EMU
++int8_t ViaccessEMM(uint8_t *emm, uint32_t *keysAdded)
++{
++  uint8_t nanoCmd = 0, *oemm = emm, *tmp, *newKeyD0, *newEcmKey;
++  uint16_t i = 0, j = 0, k = 0, emmLen = (((emm[1] & 0x0f)<< 8) | emm[2])+3;
++  uint8_t ecmKeys[6][16], keyD0[2], emmKey[16], emmXorKey[16], provName[17];
++  uint8_t ecmKeyCount = 0, emmKeyIndex = 0; 
++  int8_t nanoLen = 0, haveEmmXorKey = 0, haveNewD0 = 0;
++  uint32_t ui1, ui2, ui3, ecmKeyIndex[6], provider = 0, ecmProvider = 0;
++  char keyName[8], keyValue[36];
++  struct aes_keys aes;
++  
++  if(emmLen < 50) return 1;
++
++  memset(keyD0, 0, 2);
++  memset(ecmKeyIndex, 0, sizeof(uint32_t)*6);
++  
++  for(i=3; i<emmLen; ) {
++    nanoCmd = emm[i++];
++    nanoLen = emm[i++];
++      
++    switch(nanoCmd) {
++      case 0x90:{
++        if(nanoLen != 3) break;
++        ui1 = emm[i+2];
++        ui2 = emm[i+1];
++        ui3 = emm[i];
++        provider = (ui1 | (ui2 << 8) | (ui3 << 16));
++        if(provider == 0x00D00040) ecmProvider = 0x030B00;
++        else return 1;
++        break;
++      }
++      case 0xD2:{
++        if(nanoLen < 2) break;
++        emmKeyIndex = emm[i+1];
++        break;
++      }
++      case 0x41:{   
++        if(!GetViaKey(emmKey, provider, 'M', emmKeyIndex, 16)) return 2;
++        memset(provName, 0, 17);
++        memset(emmXorKey, 0, 16);
++        k = nanoLen < 16 ? nanoLen : 16;
++        memcpy(provName, &emm[i], k);     
++        aes_set_key(&aes, (char*)emmKey);
++        aes_decrypt(&aes, emmXorKey, 16);        
++        for(j=0;j<16;j++) provName[j] ^= emmXorKey[j];     
++        provName[k] = 0;
++                
++        if(strcmp((char*)provName, "TNTSAT") != 0 && strcmp((char*)provName, "TNTSATPRO") != 0 
++          &&strcmp((char*)provName, "CSAT V") != 0) return 1;
++        break;
++      }
++      case 0xBA:{
++        GetViaKey(keyD0, ecmProvider, 'D', 0, 2);
++        ui1 = (emm[i] << 8) | emm[i+1];
++        if( (uint32_t)((keyD0[0] << 8) | keyD0[1]) < ui1 || (keyD0[0] == 0x00 && keyD0[1] == 0x00)){
++          keyD0[0] = emm[i];
++          keyD0[1] = emm[i+1];
++          haveNewD0 = 1;
++          break;
++        }
++        return 0;
++      }
++      case 0xBC:{
++        break;
++      }
++      case 0x43:{
++        if(nanoLen != 16) break;
++        memcpy(emmXorKey, &emm[i], 16);
++        haveEmmXorKey = 1;
++        break;
++      }
++      case 0x44:{
++        if (!haveEmmXorKey) memset(emmXorKey, 0, 16);
++        tmp = (uint8_t*)malloc(((nanoLen/16)+1)*16*sizeof(uint8_t));
++        memcpy(tmp, &emm[i], nanoLen);
++        aes_set_key(&aes, (char*)emmKey);     
++        for(j=0;j<nanoLen;j+=16)  {
++         aes_decrypt(&aes, emmXorKey, 16);
++         for(k=0;k<16;k++) tmp[j+k] ^= emmXorKey[k];
++        }
++        memcpy(&emm[i-2], tmp, nanoLen);
++        free(tmp);
++        nanoLen = -2;
++        break;
++      } 
++      case 0x68:{ 
++        if(nanoLen != 23 || emm[i] != 0xD2 || emm[i+1] != 0x02 || emm[i+2] != 0x0D
++          || emm[i+4] != 0x01 || emm[i+5] != 0x11) break;
++        emmKeyIndex = emm[i+3];      
++        if(ecmKeyCount > 5) break;
++        ecmKeyIndex[ecmKeyCount] = emm[i+6];
++        memcpy(&ecmKeys[ecmKeyCount], &emm[i+7], 16);    
++        if(!GetViaKey(emmKey, provider, 'M', emmKeyIndex, 16)) return 2;
++        aes_set_key(&aes, (char*)emmKey);
++        aes_decrypt(&aes, ecmKeys[ecmKeyCount], 16);
++        ecmKeyCount++;
++        break;
++      }
++      case 0xF0:{
++        if(nanoLen != 4) break;
++        ui1 = ((emm[i+2] << 8) | (emm[i+1] << 16) | (emm[i] << 24) | emm[i+3]);
++        if(fletcher_crc32(oemm + 3, emmLen - 11) != ui1) return 4;
++
++        if(haveNewD0) {
++          newKeyD0 = (uint8_t*)malloc(sizeof(uint8_t)*2);
++          if(newKeyD0 == NULL) return 7;
++          memcpy(newKeyD0, keyD0, 2);
++          if(!SetKey('V', ecmProvider, "D0", newKeyD0, 2)) free(newKeyD0);
++          for(j=0; j<ecmKeyCount; j++) {
++          	newEcmKey = (uint8_t*)malloc(sizeof(uint8_t)*16);
++          	if(newEcmKey == NULL) return 7;
++          	memcpy(newEcmKey, ecmKeys[j], 16);
++            snprintf(keyName, 8, "E%X", ecmKeyIndex[j]);
++            if(!SetKey('V', ecmProvider, keyName, newEcmKey, 16)) free(newEcmKey);
++            (*keysAdded)++;
++            cs_hexdump(0, ecmKeys[j], 16, keyValue, sizeof(keyValue));
++            cs_log("[Emu] Key found in EMM: V %X %s %s", ecmProvider, keyName, keyValue);
++          }
++        }
++        break;
++      }  
++      default:
++        break;
++    }
++    i += nanoLen;
++  }
++  return 0;
++}
++
++/* Error codes
++0  OK
++1  EMM not supported  
++2  Key not found
++3  Nano80 problem
++4  Corrupt data
++5  
++6  Checksum error
++7  Out of memory
++*/
++int8_t ProcessEMM(uint16_t caid, uint32_t UNUSED(provider), const uint8_t *emm, uint32_t *keysAdded) {
++  int8_t result;
++  uint8_t *emmCopy;
++  uint16_t emmLen = (((emm[1] & 0x0f)<< 8) | emm[2])+3;
++  
++  if(emmLen > 1024) return 1;
++  emmCopy = (uint8_t*)malloc(emmLen);
++  if(emmCopy == NULL) return 7;
++  memcpy(emmCopy, emm, emmLen);
++  result = 1;
++   
++  if(caid==0x500)
++    result = ViaccessEMM(emmCopy, keysAdded);
++ 
++  free(emmCopy);
++  return result;
++}
 +
 +// oscam virtual emu card reader
 +#define CS_OK      1
@@ -2777,169 +3018,340 @@ Index: module-emulator.c
 +
 +int32_t emu_do_ecm(struct s_reader *UNUSED(rdr), const struct ecm_request_t *er, struct s_ecm_answer *ea)
 +{
-+	if (!ProcessECM(er->caid, er->ecm, ea->cw)) {		
-+		return CS_OK;
-+	}
-+	
-+	return CS_ERROR;
++  if (!ProcessECM(er->caid, er->ecm, ea->cw)) {    
++    return CS_OK;
++  }
++  
++  return CS_ERROR;
 +}
 +
-+int32_t emu_card_info(struct s_reader *rdr) 
++static void refresh_entitlements(struct s_reader *reader);
++
++int32_t emu_do_emm(struct s_reader *rdr, struct emm_packet_t *emm)
 +{
-+	rdr_log(rdr, "ready for requests");
-+	return CS_OK;
++  uint32_t keysAdded = 0;
++  
++  if (!ProcessEMM((emm->caid[0] << 8) | emm->caid[1],
++      (emm->provid[0] << 24) | (emm->provid[1] << 16) | (emm->provid[2] << 8) | emm->provid[3], emm->emm, &keysAdded)) {    
++    if(keysAdded > 0) refresh_entitlements(rdr);
++    return CS_OK;
++  }
++   
++  return CS_ERROR;
 +}
 +
-+int32_t emu_card_init(struct s_reader *UNUSED(rdr), struct s_ATR *UNUSED(atr)) 
++static int32_t EMU_Init(struct s_reader *reader);
++
++int32_t emu_card_info(struct s_reader *rdr) {
++  EMU_Init(rdr);
++  return CS_OK;
++}
++
++int32_t emu_card_init(struct s_reader *UNUSED(rdr), struct s_ATR *UNUSED(atr)) {return CS_OK;}
++
++int32_t emu_get_emm_type(struct emm_packet_t *ep, struct s_reader *rdr)
 +{
-+	return CS_OK;
++  uint32_t provid = 0;
++  rdr_debug_mask(rdr, D_EMM, "Entered emu_get_emm_type ep->emm[0]=%02x", ep->emm[0]);
++
++  if(ep->emm[3] == 0x90 && ep->emm[4] == 0x03)
++  {
++    provid = ep->emm[5] << 16 | ep->emm[6] << 8 | (ep->emm[7] & 0xFE);
++    i2b_buf(4, provid, ep->provid);
++  }
++
++  switch(ep->emm[0]){
++  case 0x88:
++    ep->type = UNIQUE;
++    memset(ep->hexserial, 0, 8);
++    memcpy(ep->hexserial, ep->emm + 4, 4);
++    rdr_debug_mask(rdr, D_EMM, "UNIQUE");
++    return CS_OK;
++    
++  case 0x8A:
++  case 0x8B:
++    ep->type = GLOBAL;
++    rdr_debug_mask(rdr, D_EMM, "GLOBAL");
++    return CS_OK;
++
++  case 0x8C:
++  case 0x8D:
++    ep->type = SHARED;
++    rdr_debug_mask(rdr, D_EMM, "SHARED (part)");
++    // We need those packets to pass otherwise we would never
++    // be able to complete EMM reassembly
++    return CS_OK;
++
++  case 0x8E:
++    ep->type = SHARED;
++    memset(ep->hexserial, 0, 8);
++    memcpy(ep->hexserial, ep->emm + 3, 3);
++    rdr_debug_mask(rdr, D_EMM, "SHARED");
++    return CS_OK;
++
++  default:
++    ep->type = UNKNOWN;
++    rdr_debug_mask(rdr, D_EMM, "UNKNOWN");
++    return CS_OK;
++  }
 +}
 +
-+int32_t emu_do_emm(struct s_reader *UNUSED(rdr), struct emm_packet_t *UNUSED(emm)) {return CS_OK;}
-+int32_t emu_get_emm_type(struct emm_packet_t *UNUSED(emm), struct s_reader *UNUSED(rdr)) {return CS_OK;}
-+int32_t emu_get_emm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **UNUSED(filter), unsigned int *UNUSED(a)) {return CS_ERROR;}
-+int32_t emu_get_tunemm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **UNUSED(filter), unsigned int *UNUSED(a)) {return CS_ERROR;}
++int32_t emu_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter **emm_filters, unsigned int *filter_count)
++{
++  if(*emm_filters == NULL)
++  {
++    const unsigned int max_filter_count = 4;
++    if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
++      { return CS_ERROR; }
++
++    struct s_csystem_emm_filter *filters = *emm_filters;
++    *filter_count = 0;
++
++    int32_t idx = 0;
++
++    filters[idx].type = EMM_GLOBAL;
++    filters[idx].enabled   = 1;
++    filters[idx].filter[0] = 0x8A;
++    filters[idx].mask[0]   = 0xFF;
++    idx++;
++
++    filters[idx].type = EMM_GLOBAL;
++    filters[idx].enabled   = 1;
++    filters[idx].filter[0] = 0x8B;
++    filters[idx].mask[0]   = 0xFF;
++    idx++;
++
++    filters[idx].type = EMM_SHARED;
++    filters[idx].enabled   = 1;
++    filters[idx].filter[0] = 0x8C;
++    filters[idx].mask[0]   = 0xFF;
++    idx++;
++
++    filters[idx].type = EMM_SHARED;
++    filters[idx].enabled   = 1;
++    filters[idx].filter[0] = 0x8D;
++    filters[idx].mask[0]   = 0xFF;
++    idx++;
++
++    *filter_count = idx;
++  }  
++  
++  return CS_OK;
++}
++
 +
 +void reader_emu(struct s_cardsystem *ph)
 +{
-+	ph->do_ecm = emu_do_ecm;	
-+	ph->do_emm = emu_do_emm;
-+	ph->card_info = emu_card_info;
-+	ph->card_init = emu_card_init;
-+	ph->get_emm_type = emu_get_emm_type;
-+	ph->get_emm_filter = emu_get_emm_filter;
-+	ph->get_tunemm_filter = emu_get_tunemm_filter;
-+	ph->caids[0] = 0x090F;
-+	ph->caids[1] = 0x500;
-+	ph->caids[2] = 0x1801;
-+	ph->caids[3] = 0x0604;
-+	ph->desc = "emu";
++  ph->do_ecm = emu_do_ecm;  
++  ph->do_emm = emu_do_emm;
++  ph->card_info = emu_card_info;
++  ph->card_init = emu_card_init;
++  ph->get_emm_type = emu_get_emm_type;
++  ph->get_emm_filter = emu_get_emm_filter;
++  ph->get_tunemm_filter = emu_get_emm_filter;
++  //emm au caids must be listed here
++  ph->caids[0] = 0x090F;
++  ph->caids[1] = 0x0500;
++  ph->caids[2] = 0x1801;
++  ph->caids[3] = 0x0604;
++  ph->desc = "emu";
 +}
++
 +
 +#define CR_OK 0
 +#define CR_ERROR 1
 +
++static void emu_add_entitlement(struct s_reader *rdr, uint16_t caid, uint32_t provid, uint8_t *key, char *keyName, uint32_t keyLength)
++{
++  if(!rdr->ll_entitlements) { rdr->ll_entitlements = ll_create("ll_entitlements"); }
++
++  S_ENTITLEMENT *item;
++  if(cs_malloc(&item, sizeof(S_ENTITLEMENT)))
++  {
++
++    // fill item
++    item->caid = caid;
++    item->provid = provid;
++    item->id = 0;
++    item->class = 0;
++    item->start = 0;
++    item->end = 2147472000;
++    item->type = 0;
++    item->isKey = 1;
++    memcpy(item->name, keyName, 8); 
++    item->key = key;
++    item->keyLength = keyLength;
++
++    //add item
++    ll_append(rdr->ll_entitlements, item);
++  }
++}
++
++static void refresh_entitlements(struct s_reader *reader)
++{
++  uint32_t i;
++  	
++  if(reader->ll_entitlements) 
++    ll_clear_data(reader->ll_entitlements);
++
++  for(i=0; i<CwKeys.keyCount; i++)
++    emu_add_entitlement(reader, CwKeys.EmuKeys[i].provider>>8, CwKeys.EmuKeys[i].provider&0xFF, 
++      CwKeys.EmuKeys[i].key, CwKeys.EmuKeys[i].keyName, CwKeys.EmuKeys[i].keyLength);
++
++  for(i=0; i<ViKeys.keyCount; i++)
++    emu_add_entitlement(reader, 0x500, ViKeys.EmuKeys[i].provider, ViKeys.EmuKeys[i].key, ViKeys.EmuKeys[i].keyName,
++    ViKeys.EmuKeys[i].keyLength);
++    
++  for(i=0; i<NagraKeys.keyCount; i++)
++    emu_add_entitlement(reader, 0x1801, NagraKeys.EmuKeys[i].provider, NagraKeys.EmuKeys[i].key, NagraKeys.EmuKeys[i].keyName,
++    NagraKeys.EmuKeys[i].keyLength);
++    
++  for(i=0; i<IrdetoKeys.keyCount; i++)
++    emu_add_entitlement(reader, IrdetoKeys.EmuKeys[i].provider > 0xFFFF ? IrdetoKeys.EmuKeys[i].provider>>8 : IrdetoKeys.EmuKeys[i].provider,
++       0, IrdetoKeys.EmuKeys[i].key, IrdetoKeys.EmuKeys[i].keyName, IrdetoKeys.EmuKeys[i].keyLength); 
++}
++
 +extern char cs_confdir[128];
 +
-+static int32_t EMU_Init(struct s_reader *UNUSED(reader))
-+{ 
++static int32_t EMU_Init(struct s_reader *reader)
++{
 +#ifndef __APPLE__
-+	read_emu_keymemory();
++  read_emu_keymemory();
 +#endif
-+	read_emu_keyfile("/var/keys/");
-+	read_emu_keyfile(cs_confdir);	
-+	return CR_OK; 
++  read_emu_keyfile("/var/keys/");
++  read_emu_keyfile(cs_confdir);
++ 
++  refresh_entitlements(reader);
++ 
++  return CR_OK; 
 +}
++    
 +static int32_t EMU_GetStatus(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; return CR_OK; }
 +static int32_t EMU_SetParity(struct s_reader *UNUSED(reader), uchar UNUSED(parity)) { return CR_OK; }
 +static int32_t EMU_Activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { return CR_OK; }
-+static int32_t EMU_Transmit(struct s_reader *UNUSED(reader), unsigned char *UNUSED(buffer), uint32_t UNUSED(size),
++static int32_t EMU_Transmit(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
 + uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
-+static int32_t EMU_Receive(struct s_reader *UNUSED(reader), unsigned char *UNUSED(buffer), uint32_t UNUSED(size),
++static int32_t EMU_Receive(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
 + uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
 +static int32_t EMU_Close(struct s_reader *UNUSED(reader)) { return CR_OK; }
 +static int32_t EMU_write_settings(struct s_reader *UNUSED(reader),uint32_t UNUSED(ETU),uint32_t UNUSED(EGT),
-+unsigned char UNUSED(P),unsigned char UNUSED(I),uint16_t UNUSED(Fi), unsigned char UNUSED(Di),
-+ unsigned char UNUSED(Ni)) { return CR_OK; }
++uint8_t UNUSED(P),uint8_t UNUSED(I),uint16_t UNUSED(Fi), uint8_t UNUSED(Di),
++ uint8_t UNUSED(Ni)) { return CR_OK; }
 +static int32_t EMU_init_locks(struct s_reader *UNUSED(reader)) { return CR_OK; }
-+static int32_t EMU_card_write(struct s_reader *UNUSED(pcsc_reader),const uchar *UNUSED(buf) ,unsigned char *UNUSED(cta_res),
++static int32_t EMU_card_write(struct s_reader *UNUSED(pcsc_reader),const uchar *UNUSED(buf) ,uint8_t *UNUSED(cta_res),
 +  uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
-+static int32_t EMU_set_protocol(struct s_reader *UNUSED(rdr),unsigned char *UNUSED(params),uint32_t *UNUSED(length),
++static int32_t EMU_set_protocol(struct s_reader *UNUSED(rdr),uint8_t *UNUSED(params),uint32_t *UNUSED(length),
 +  uint32_t UNUSED(len_request)) { return CR_OK; }
-+	
++  
 +void cardreader_emu(struct s_cardreader *crdr)
 +{
-+	crdr->desc           = "emu";
-+	crdr->typ            = R_EMU;
-+	crdr->skip_extra_atr_parsing = 1;
-+	crdr->reader_init    = EMU_Init;
-+	crdr->get_status     = EMU_GetStatus;
-+	crdr->set_parity     = EMU_SetParity;
-+	crdr->activate       = EMU_Activate;
-+	crdr->transmit       = EMU_Transmit;
-+	crdr->receive        = EMU_Receive;
-+	crdr->close          = EMU_Close;
-+	crdr->write_settings = EMU_write_settings;
-+	crdr->lock_init      = EMU_init_locks;
-+	crdr->card_write     = EMU_card_write;
-+	crdr->set_protocol   = EMU_set_protocol;
++  crdr->desc           = "emu";
++  crdr->typ            = R_EMU;
++  crdr->skip_extra_atr_parsing = 1;
++  crdr->reader_init    = EMU_Init;
++  crdr->get_status     = EMU_GetStatus;
++  crdr->set_parity     = EMU_SetParity;
++  crdr->activate       = EMU_Activate;
++  crdr->transmit       = EMU_Transmit;
++  crdr->receive        = EMU_Receive;
++  crdr->close          = EMU_Close;
++  crdr->write_settings = EMU_write_settings;
++  crdr->lock_init      = EMU_init_locks;
++  crdr->card_write     = EMU_card_write;
++  crdr->set_protocol   = EMU_set_protocol;
 +}
 +
 +void add_emu_reader(void)
 +{
-+	LL_ITER itr;
-+	struct s_reader *rdr;
-+	char haveEmuReader = 0, *emuName = "Emulator";
-+	
-+	itr = ll_iter_create(configured_readers);
-+	while((rdr = ll_iter_next(&itr)))
-+	{
-+		if(rdr->typ == R_EMU) {
-+		  	haveEmuReader = 1;
-+		  	break;
-+		}
-+	}	
-+	
-+	rdr = NULL;
-+	
-+	if(!haveEmuReader) {
-+		if(!cs_malloc(&rdr, sizeof(struct s_reader))) return;
-+		reader_set_defaults(rdr);
-+		
-+		rdr->enable = 1;
-+		rdr->typ = R_EMU;
-+		strncpy(rdr->label, emuName, strlen(emuName));
-+		strncpy(rdr->device, emuName, strlen(emuName));
-+		rdr->ctab.caid[0] = 0x0D00;
-+		rdr->ctab.mask[0] = 0x0F00;
-+		rdr->ctab.caid[1] = 0x090F;
-+		rdr->ctab.caid[2] = 0x0500;
-+		rdr->ctab.caid[3] = 0x1801;
-+		rdr->ctab.caid[4] = 0x0604;
-+		
-+		rdr->ftab.nfilts = 8;
-+		rdr->ftab.filts[0].caid = 0x0D00; 
-+		rdr->ftab.filts[0].prids[0] = 0x000000; rdr->ftab.filts[0].prids[1] = 0x000004;
-+		rdr->ftab.filts[0].prids[2] = 0x000010; rdr->ftab.filts[0].prids[3] = 0x000014;	
-+		rdr->ftab.filts[0].prids[4] = 0x000020; rdr->ftab.filts[0].prids[5] = 0x0000C0;
-+		rdr->ftab.filts[0].prids[6] = 0x0000C4; rdr->ftab.filts[0].prids[7] = 0x0000CC;
-+		rdr->ftab.filts[0].nprids = 8; 
-+		rdr->ftab.filts[1].caid = 0x0D02; 
-+		rdr->ftab.filts[1].prids[0] = 0x000000; rdr->ftab.filts[1].prids[1] = 0x00008C;
-+		rdr->ftab.filts[1].prids[2] = 0x0000A0; rdr->ftab.filts[1].prids[3] = 0x0000A4;	
-+		rdr->ftab.filts[1].prids[4] = 0x0000A8; rdr->ftab.filts[1].nprids = 5; 
-+		rdr->ftab.filts[2].caid = 0x0D03; 
-+		rdr->ftab.filts[2].prids[0] = 0x000000; rdr->ftab.filts[2].prids[1] = 0x000004;
-+		rdr->ftab.filts[2].prids[2] = 0x000008; rdr->ftab.filts[2].prids[3] = 0x000024;	
-+		rdr->ftab.filts[2].prids[4] = 0x000028; rdr->ftab.filts[2].nprids = 5; 
-+		rdr->ftab.filts[3].caid = 0x0D05; 
-+		rdr->ftab.filts[3].prids[0] = 0x000000; rdr->ftab.filts[3].prids[1] = 0x000004;
-+		rdr->ftab.filts[3].prids[2] = 0x000010; rdr->ftab.filts[3].nprids = 3; 
-+		rdr->ftab.filts[4].caid = 0x090F; 
-+		rdr->ftab.filts[4].prids[0] = 0x000000; rdr->ftab.filts[4].nprids = 1; 
-+		rdr->ftab.filts[5].caid = 0x0500; 
-+		rdr->ftab.filts[5].prids[0] = 0x030B00; rdr->ftab.filts[5].prids[1] = 0x023800;
-+		rdr->ftab.filts[5].prids[2] = 0x021110; rdr->ftab.filts[5].prids[3] = 0x007400;	
-+		rdr->ftab.filts[5].prids[4] = 0x007800; rdr->ftab.filts[5].nprids = 5; 
-+		rdr->ftab.filts[6].caid = 0x1801;
-+		rdr->ftab.filts[6].prids[0] = 0x000000;	rdr->ftab.filts[6].nprids = 1; 
-+		rdr->ftab.filts[7].caid = 0x0604; 
-+		rdr->ftab.filts[7].prids[0] = 0x000000;	rdr->ftab.filts[7].nprids = 1; 
-+		
-+		rdr->grp = 0xFFFFFFFFFFFFFFFFULL;
-+		rdr->disablecrccws = 1;
-+	
-+		cardreader_emu(&rdr->crdr);
-+		
-+		reader_fixups_fn(rdr);	
-+		ll_append(configured_readers, rdr);	
-+	}
++  LL_ITER itr;
++  struct s_reader *rdr;
++  int8_t haveEmuReader = 0;
++  char *emuName = "Emulator";
++  
++  itr = ll_iter_create(configured_readers);
++  while((rdr = ll_iter_next(&itr)))
++  {
++    if(rdr->typ == R_EMU) {
++        haveEmuReader = 1;
++        break;
++    }
++  }  
++  
++  rdr = NULL;
++  
++  if(!haveEmuReader) {
++    if(!cs_malloc(&rdr, sizeof(struct s_reader))) return;
++    reader_set_defaults(rdr);
++    
++    rdr->enable = 1;
++    rdr->typ = R_EMU;
++    strncpy(rdr->label, emuName, strlen(emuName));
++    strncpy(rdr->device, emuName, strlen(emuName));
++    rdr->ctab.caid[0] = 0x0D00;
++    rdr->ctab.mask[0] = 0x0F00;
++    rdr->ctab.caid[1] = 0x090F;
++    rdr->ctab.caid[2] = 0x0500;
++    rdr->ctab.caid[3] = 0x1801;
++    rdr->ctab.caid[4] = 0x0604;
++    
++    rdr->ftab.nfilts = 8;
++    rdr->ftab.filts[0].caid = 0x0D00; 
++    rdr->ftab.filts[0].prids[0] = 0x000000; rdr->ftab.filts[0].prids[1] = 0x000004;
++    rdr->ftab.filts[0].prids[2] = 0x000010; rdr->ftab.filts[0].prids[3] = 0x000014;  
++    rdr->ftab.filts[0].prids[4] = 0x000020; rdr->ftab.filts[0].prids[5] = 0x0000C0;
++    rdr->ftab.filts[0].prids[6] = 0x0000C4; rdr->ftab.filts[0].prids[7] = 0x0000CC;
++    rdr->ftab.filts[0].nprids = 8; 
++    rdr->ftab.filts[1].caid = 0x0D02; 
++    rdr->ftab.filts[1].prids[0] = 0x000000; rdr->ftab.filts[1].prids[1] = 0x00008C;
++    rdr->ftab.filts[1].prids[2] = 0x0000A0; rdr->ftab.filts[1].prids[3] = 0x0000A4;  
++    rdr->ftab.filts[1].prids[4] = 0x0000A8; rdr->ftab.filts[1].nprids = 5; 
++    rdr->ftab.filts[2].caid = 0x0D03; 
++    rdr->ftab.filts[2].prids[0] = 0x000000; rdr->ftab.filts[2].prids[1] = 0x000004;
++    rdr->ftab.filts[2].prids[2] = 0x000008; rdr->ftab.filts[2].prids[3] = 0x000024;  
++    rdr->ftab.filts[2].prids[4] = 0x000028; rdr->ftab.filts[2].nprids = 5; 
++    rdr->ftab.filts[3].caid = 0x0D05; 
++    rdr->ftab.filts[3].prids[0] = 0x000000; rdr->ftab.filts[3].prids[1] = 0x000004;
++    rdr->ftab.filts[3].prids[2] = 0x000010; rdr->ftab.filts[3].nprids = 3; 
++    rdr->ftab.filts[4].caid = 0x090F; 
++    rdr->ftab.filts[4].prids[0] = 0x000000; rdr->ftab.filts[4].nprids = 1; 
++    rdr->ftab.filts[5].caid = 0x0500; 
++    rdr->ftab.filts[5].prids[0] = 0x030B00; rdr->ftab.filts[5].prids[1] = 0x023800;
++    rdr->ftab.filts[5].prids[2] = 0x021110; rdr->ftab.filts[5].prids[3] = 0x007400;  
++    rdr->ftab.filts[5].prids[4] = 0x007800; rdr->ftab.filts[5].nprids = 5; 
++    rdr->ftab.filts[6].caid = 0x1801;
++    rdr->ftab.filts[6].prids[0] = 0x000000; rdr->ftab.filts[6].nprids = 1; 
++    rdr->ftab.filts[7].caid = 0x0604; 
++    rdr->ftab.filts[7].prids[0] = 0x000000; rdr->ftab.filts[7].nprids = 1; 
++    
++    rdr->auprovid = 0x030B00;
++    rdr->cachemm = 1;
++    rdr->rewritemm = 1;
++    rdr->logemm = 2;
++    
++    rdr->grp = 0xFFFFFFFFFFFFFFFFULL;
++    rdr->disablecrccws = 1;
++  
++    cardreader_emu(&rdr->crdr);
++    
++    reader_fixups_fn(rdr);  
++    ll_append(configured_readers, rdr);  
++  }
 +}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9827)
+--- module-webif.c	(revision 9836)
 +++ module-webif.c	(working copy)
-@@ -2227,6 +2227,7 @@
+@@ -104,7 +104,8 @@
+ #define MNU_CFG_WHITELIST 25
+ #define MNU_CFG_RATELIMIT 26
+ #define MNU_CFG_FCSS 27
+-#define MNU_CFG_TOTAL_ITEMS 28 // sum of items above. Use it for "All inactive" in function calls too.
++#define MNU_CFG_KEY 28
++#define MNU_CFG_TOTAL_ITEMS 29 // sum of items above. Use it for "All inactive" in function calls too.
+ 
+ static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value) {
+ 	if (no_data)
+@@ -2227,6 +2228,7 @@
  	case R_PCSC :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGSTDHWREADERBIT"));
  		break;
@@ -2947,9 +3359,71 @@ Index: module-webif.c
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
+@@ -3794,9 +3796,30 @@
+ 
+ 					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
+ 					char tbuffer[83];
++#ifdef WITH_EMU					
++					char keyBuffer[1024];
++#endif
+ 					while((item = ll_iter_next(&itr)))
+ 					{
++#ifdef WITH_EMU						
++						if(item->isKey) {
++							tpl_addVar(vars, TPLADD, "ENTSTARTDATE", "");
++							tpl_addVar(vars, TPLADD, "ENTENDDATE", "");
++							cs_hexdump(0, item->key, item->keyLength, keyBuffer, sizeof(keyBuffer));
++							tpl_addVar(vars, TPLADD, "ENTEXPIERED", "e_valid");
++							tpl_printf(vars, TPLADD, "ENTCAID", "%04X", item->caid);
++							tpl_printf(vars, TPLADD, "ENTPROVID", "%06X", item->provid);
++							tpl_addVar(vars, TPLADD, "ENTID", item->name);
++							tpl_addVar(vars, TPLADD, "ENTCLASS", keyBuffer);
++							tpl_addVar(vars, TPLADD, "ENTTYPE", "key");
++							tpl_addVar(vars, TPLADD, "ENTRESNAME", "");
+ 
++							if((strcmp(getParam(params, "hideexpired"), "1") != 0) || (item->end > now))
++								{ tpl_addVar(vars, TPLAPPEND, "READERENTENTRY", tpl_getTpl(vars, "ENTITLEMENTITEMBIT")); }							
++						
++							continue;	
++						}
++#endif											
+ 						localtime_r(&item->start, &start_t);
+ 						localtime_r(&item->end, &end_t);
+ 
+@@ -4231,6 +4254,9 @@
+ #else
+ 						filtered = (type == cl->typ);
+ #endif
++#ifdef WITH_EMU
++                        if(type == 'e' && cl->typ == 'r' && cl->reader->typ == R_EMU) filtered = 1;
++#endif
+ 					}
+ 				}
+ 
+@@ -5539,6 +5565,9 @@
+ 		{ "oscam.conf",      MNU_CFG_FCONF,     FTYPE_CONFIG },
+ 		{ "oscam.user",      MNU_CFG_FUSER,     FTYPE_CONFIG },
+ 		{ "oscam.server",    MNU_CFG_FSERVER,   FTYPE_CONFIG },
++#ifdef WITH_EMU
++		{ "SoftCam.Key",     MNU_CFG_KEY,       FTYPE_CONFIG },
++#endif
+ 		{ "oscam.services",  MNU_CFG_FSERVICES, FTYPE_CONFIG },
+ 		{ "oscam.whitelist", MNU_CFG_WHITELIST, FTYPE_CONFIG },
+ 		{ "oscam.srvid",     MNU_CFG_FSRVID,    FTYPE_CONFIG },
+@@ -6885,8 +6914,8 @@
+ 		memcpy(*result + bufsize, buf2, n);
+ 		bufsize += n;
+ 
+-		//max request size 100kb
+-		if(bufsize > 102400)
++		//max request size 200kb
++		if(bufsize > 204800)
+ 		{
+ 			cs_log("error: too much data received from %s", cs_inet_ntoa(in));
+ 			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 9827)
+--- oscam-chk.c	(revision 9836)
 +++ oscam-chk.c	(working copy)
 @@ -674,7 +674,7 @@
  		return 0;
@@ -2962,7 +3436,7 @@ Index: oscam-chk.c
  		for(i = 0; i < (int)ARRAY_SIZE(rdr->csystem.caids); i++)
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 9827)
+--- oscam-config-reader.c	(revision 9836)
 +++ oscam-config-reader.c	(working copy)
 @@ -329,6 +329,7 @@
  			{ "newcamd",    R_NEWCAMD },
@@ -2972,7 +3446,7 @@ Index: oscam-config-reader.c
  			{ NULL        , 0 }
  		}, *p;
  		int i;
-@@ -916,7 +917,7 @@
+@@ -919,7 +920,7 @@
  }
  
  
@@ -2983,7 +3457,7 @@ Index: oscam-config-reader.c
  #ifdef WITH_LB
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 9827)
+--- oscam-config.h	(revision 9836)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -2995,7 +3469,7 @@ Index: oscam-config.h
  int32_t init_sidtab(void);
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 9827)
+--- oscam-ecm.c	(revision 9836)
 +++ oscam-ecm.c	(working copy)
 @@ -1846,12 +1846,23 @@
  	// nagra
@@ -3025,9 +3499,88 @@ Index: oscam-ecm.c
  
  	// is cryptoworks, but which caid ?
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
+Index: oscam-string.c
+===================================================================
+--- oscam-string.c	(revision 9836)
++++ oscam-string.c	(working copy)
+@@ -491,6 +491,62 @@
+ 	return crc ^ 0xffffffffL;
+ }
+ 
++static unsigned int fletcher_crc_table[256] = {
++	0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b,
++	0x1a864db2, 0x1e475005, 0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61,
++	0x350c9b64, 0x31cd86d3, 0x3c8ea00a, 0x384fbdbd, 0x4c11db70, 0x48d0c6c7,
++	0x4593e01e, 0x4152fda9, 0x5f15adac, 0x5bd4b01b, 0x569796c2, 0x52568b75,
++	0x6a1936c8, 0x6ed82b7f, 0x639b0da6, 0x675a1011, 0x791d4014, 0x7ddc5da3,
++	0x709f7b7a, 0x745e66cd, 0x9823b6e0, 0x9ce2ab57, 0x91a18d8e, 0x95609039,
++	0x8b27c03c, 0x8fe6dd8b, 0x82a5fb52, 0x8664e6e5, 0xbe2b5b58, 0xbaea46ef,
++	0xb7a96036, 0xb3687d81, 0xad2f2d84, 0xa9ee3033, 0xa4ad16ea, 0xa06c0b5d,
++	0xd4326d90, 0xd0f37027, 0xddb056fe, 0xd9714b49, 0xc7361b4c, 0xc3f706fb,
++	0xceb42022, 0xca753d95, 0xf23a8028, 0xf6fb9d9f, 0xfbb8bb46, 0xff79a6f1,
++	0xe13ef6f4, 0xe5ffeb43, 0xe8bccd9a, 0xec7dd02d, 0x34867077, 0x30476dc0,
++	0x3d044b19, 0x39c556ae, 0x278206ab, 0x23431b1c, 0x2e003dc5, 0x2ac12072,
++	0x128e9dcf, 0x164f8078, 0x1b0ca6a1, 0x1fcdbb16, 0x018aeb13, 0x054bf6a4,
++	0x0808d07d, 0x0cc9cdca, 0x7897ab07, 0x7c56b6b0, 0x71159069, 0x75d48dde,
++	0x6b93dddb, 0x6f52c06c, 0x6211e6b5, 0x66d0fb02, 0x5e9f46bf, 0x5a5e5b08,
++	0x571d7dd1, 0x53dc6066, 0x4d9b3063, 0x495a2dd4, 0x44190b0d, 0x40d816ba,
++	0xaca5c697, 0xa864db20, 0xa527fdf9, 0xa1e6e04e, 0xbfa1b04b, 0xbb60adfc,
++	0xb6238b25, 0xb2e29692, 0x8aad2b2f, 0x8e6c3698, 0x832f1041, 0x87ee0df6,
++	0x99a95df3, 0x9d684044, 0x902b669d, 0x94ea7b2a, 0xe0b41de7, 0xe4750050,
++	0xe9362689, 0xedf73b3e, 0xf3b06b3b, 0xf771768c, 0xfa325055, 0xfef34de2,
++	0xc6bcf05f, 0xc27dede8, 0xcf3ecb31, 0xcbffd686, 0xd5b88683, 0xd1799b34,
++	0xdc3abded, 0xd8fba05a, 0x690ce0ee, 0x6dcdfd59, 0x608edb80, 0x644fc637,
++	0x7a089632, 0x7ec98b85, 0x738aad5c, 0x774bb0eb, 0x4f040d56, 0x4bc510e1,
++	0x46863638, 0x42472b8f, 0x5c007b8a, 0x58c1663d, 0x558240e4, 0x51435d53,
++	0x251d3b9e, 0x21dc2629, 0x2c9f00f0, 0x285e1d47, 0x36194d42, 0x32d850f5,
++	0x3f9b762c, 0x3b5a6b9b, 0x0315d626, 0x07d4cb91, 0x0a97ed48, 0x0e56f0ff,
++	0x1011a0fa, 0x14d0bd4d, 0x19939b94, 0x1d528623, 0xf12f560e, 0xf5ee4bb9,
++	0xf8ad6d60, 0xfc6c70d7, 0xe22b20d2, 0xe6ea3d65, 0xeba91bbc, 0xef68060b,
++	0xd727bbb6, 0xd3e6a601, 0xdea580d8, 0xda649d6f, 0xc423cd6a, 0xc0e2d0dd,
++	0xcda1f604, 0xc960ebb3, 0xbd3e8d7e, 0xb9ff90c9, 0xb4bcb610, 0xb07daba7,
++	0xae3afba2, 0xaafbe615, 0xa7b8c0cc, 0xa379dd7b, 0x9b3660c6, 0x9ff77d71,
++	0x92b45ba8, 0x9675461f, 0x8832161a, 0x8cf30bad, 0x81b02d74, 0x857130c3,
++	0x5d8a9099, 0x594b8d2e, 0x5408abf7, 0x50c9b640, 0x4e8ee645, 0x4a4ffbf2,
++	0x470cdd2b, 0x43cdc09c, 0x7b827d21, 0x7f436096, 0x7200464f, 0x76c15bf8,
++	0x68860bfd, 0x6c47164a, 0x61043093, 0x65c52d24, 0x119b4be9, 0x155a565e,
++	0x18197087, 0x1cd86d30, 0x029f3d35, 0x065e2082, 0x0b1d065b, 0x0fdc1bec,
++	0x3793a651, 0x3352bbe6, 0x3e119d3f, 0x3ad08088, 0x2497d08d, 0x2056cd3a,
++	0x2d15ebe3, 0x29d4f654, 0xc5a92679, 0xc1683bce, 0xcc2b1d17, 0xc8ea00a0,
++	0xd6ad50a5, 0xd26c4d12, 0xdf2f6bcb, 0xdbee767c, 0xe3a1cbc1, 0xe760d676,
++	0xea23f0af, 0xeee2ed18, 0xf0a5bd1d, 0xf464a0aa, 0xf9278673, 0xfde69bc4,
++	0x89b8fd09, 0x8d79e0be, 0x803ac667, 0x84fbdbd0, 0x9abc8bd5, 0x9e7d9662,
++	0x933eb0bb, 0x97ffad0c, 0xafb010b1, 0xab710d06, 0xa6322bdf, 0xa2f33668,
++	0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4};
++
++unsigned int fletcher_crc32(unsigned char *data, int len)
++{
++	register int i;
++	unsigned int crc = 0xffffffff;
++
++	for (i=0; i<len; i++)
++		crc = (crc << 8) ^ fletcher_crc_table[((crc >> 24) ^ *data++) & 0xff];
++
++	return crc;
++}
++
+ // https://en.wikipedia.org/wiki/Jenkins_hash_function
+ uint32_t jhash(const char *key, size_t len)
+ {
+Index: oscam-string.h
+===================================================================
+--- oscam-string.h	(revision 9836)
++++ oscam-string.h	(working copy)
+@@ -36,6 +36,7 @@
+ void get_random_bytes(uint8_t *dst, uint32_t dst_len);
+ 
+ unsigned long crc32(unsigned long crc, const unsigned char *buf, unsigned int len);
++unsigned int fletcher_crc32(unsigned char *data, int len);
+ uint32_t jhash(const char *key, size_t len);
+ 
+ char to_hex(char code);
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9827)
+--- oscam.c	(revision 9836)
 +++ oscam.c	(working copy)
 @@ -340,6 +340,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
@@ -3080,7 +3633,7 @@ Index: oscam.c
  	init_srvid();
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 9827)
+--- reader-common.c	(revision 9836)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -3111,7 +3664,7 @@ Index: reader-common.c
  		if(reader->card_status == NO_CARD || reader->card_status == UNKNOWN)
 Index: readers.h
 ===================================================================
---- readers.h	(revision 9827)
+--- readers.h	(revision 9836)
 +++ readers.h	(working copy)
 @@ -15,5 +15,6 @@
  void reader_bulcrypt(struct s_cardsystem *);
@@ -3120,3 +3673,33 @@ Index: readers.h
 +void reader_emu(struct s_cardsystem *ph);
  
  #endif
+Index: webif/files/menu.html
+===================================================================
+--- webif/files/menu.html	(revision 9836)
++++ webif/files/menu.html	(working copy)
+@@ -5,6 +5,7 @@
+ 		<LI CLASS="##CMENUACTIVE14##"><A HREF="files.html?file=oscam.user">oscam.user</A></LI>
+ 		<LI CLASS="##CMENUACTIVE15##"><A HREF="files.html?file=oscam.server">oscam.server</A></LI>
+ 		<LI CLASS="##CMENUACTIVE17##"><A HREF="files.html?file=oscam.srvid">oscam.srvid</A></LI>
++##TPLFILEMENUKEY##
+ ##TPLFILEMENUDVBAPI##
+ ##TPLFILEMENUANTICASC##
+ 		<LI CLASS="##CMENUACTIVE20##"><A HREF="files.html?file=logfile">logfile</A></LI>
+Index: webif/files/menu_key.html
+===================================================================
+--- webif/files/menu_key.html	(revision 0)
++++ webif/files/menu_key.html	(working copy)
+@@ -0,0 +1 @@
++			<LI CLASS="##CMENUACTIVE98##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
+Index: webif/pages_index.txt
+===================================================================
+--- webif/pages_index.txt	(revision 9836)
++++ webif/pages_index.txt	(working copy)
+@@ -110,6 +110,7 @@
+ FILEMENU                      files/menu.html
+ FILEMENUDVBAPI                files/menu_dvbapi.html                                      HAVE_DVBAPI
+ FILEMENUANTICASC              files/menu_anticasc.html                                    CS_ANTICASC
++FILEMENUKEY                   files/menu_key.html                                         WITH_EMU
+ 
+ AUTOCONF                      ghttp/autoconf.html                                         MODULE_GHTTP
+ PREAUTOCONF                   ghttp/pre_autoconf.html                                     MODULE_GHTTP
