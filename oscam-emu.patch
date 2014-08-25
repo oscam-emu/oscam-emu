@@ -1271,7 +1271,7 @@ Index: module-dvbapi.c
 -				if(!rdr->caid)
 +				if(rdr->typ == R_EMU) 
  				{
-+					for(l=-1; u=0; l<0 && u<8 && rdr->csystem.caids[u]!=0; u++) 
++					for(l=-1, u=0; l<0 && u<8 && rdr->csystem.caids[u]!=0; u++) 
 +					{
 +						if(rdr->auprovid)
 +						{
@@ -1294,7 +1294,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,2027 @@
+@@ -0,0 +1,2036 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -1407,7 +1407,8 @@ Index: module-emulator.c
 +    return 1;
 +  }
 +  
-+  cs_log("[Emu] Key not found: %c %X %s", identifier, provider, keyName);
++  if(identifier != 'V' && strcmp(keyName, "D0") != 0)
++    cs_log("[Emu] Key not found: %c %X %s", identifier, provider, keyName);
 +  return 0;  
 +}
 +
@@ -2856,7 +2857,7 @@ Index: module-emulator.c
 +// Viaccess EMM EMU
 +int8_t ViaccessEMM(uint8_t *emm)
 +{
-+  uint8_t nanoCmd = 0, *oemm = emm, *tmp;
++  uint8_t nanoCmd = 0, *oemm = emm, *tmp, *newKeyD0, *newEcmKey;
 +  uint16_t i = 0, j = 0, k = 0, emmLen = (((emm[1] & 0x0f)<< 8) | emm[2])+3;
 +  uint8_t ecmKeys[6][16], keyD0[2], emmKey[16], emmXorKey[16], provName[17];
 +  uint8_t ecmKeyCount = 0, emmKeyIndex = 0; 
@@ -2906,7 +2907,7 @@ Index: module-emulator.c
 +        break;
 +      }
 +      case 0xBA:{
-+        GetViaKey(keyD0, provider, 'D', 0, 2);
++        GetViaKey(keyD0, ecmProvider, 'D', 0, 2);
 +        ui1 = (emm[i] << 8) | emm[i+1];
 +        if( (uint32_t)((keyD0[0] << 8) | keyD0[1]) < ui1 || (keyD0[0] == 0x00 && keyD0[1] == 0x00)){
 +          keyD0[0] = emm[i];
@@ -2914,7 +2915,7 @@ Index: module-emulator.c
 +          haveNewD0 = 1;
 +          break;
 +        }
-+        return 1;
++        return 0;
 +      }
 +      case 0xBC:{
 +        break;
@@ -2958,10 +2959,16 @@ Index: module-emulator.c
 +        if(fletcher_crc32(oemm + 3, emmLen - 11) != ui1) return 4;
 +
 +        if(haveNewD0) {
-+          SetKey('V', ecmProvider, "D0", keyD0, 2);
++          newKeyD0 = malloc(sizeof(uint8_t)*2);
++          if(newKeyD0 == NULL) return 7;
++          memcpy(newKeyD0, keyD0, 2);
++          if(!SetKey('V', ecmProvider, "D0", newKeyD0, 2)) free(newKeyD0);
 +          for(j=0; j<ecmKeyCount; j++) {
++          	newEcmKey = malloc(sizeof(uint8_t)*16);
++          	if(newEcmKey == NULL) return 7;
++          	memcpy(newEcmKey, ecmKeys[j], 16);
 +            snprintf(keyName, 8, "E%X", ecmKeyIndex[j]);
-+            SetKey('V', ecmProvider, keyName, ecmKeys[j], 16);
++            if(!SetKey('V', ecmProvider, keyName, newEcmKey, 16)) free(newEcmKey);
 +            cs_hexdump(0, ecmKeys[j], 16, keyValue, sizeof(keyValue));
 +            cs_log("[Emu] Key found in EMM: V %X %s %s", ecmProvider, keyName, keyValue);
 +          }
@@ -3309,9 +3316,11 @@ Index: module-emulator.c
 +    rdr->ftab.filts[5].prids[2] = 0x021110; rdr->ftab.filts[5].prids[3] = 0x007400;  
 +    rdr->ftab.filts[5].prids[4] = 0x007800; rdr->ftab.filts[5].nprids = 5; 
 +    rdr->ftab.filts[6].caid = 0x1801;
-+    rdr->ftab.filts[6].prids[0] = 0x000000;  rdr->ftab.filts[6].nprids = 1; 
++    rdr->ftab.filts[6].prids[0] = 0x000000; rdr->ftab.filts[6].nprids = 1; 
 +    rdr->ftab.filts[7].caid = 0x0604; 
-+    rdr->ftab.filts[7].prids[0] = 0x000000;  rdr->ftab.filts[7].nprids = 1; 
++    rdr->ftab.filts[7].prids[0] = 0x000000; rdr->ftab.filts[7].nprids = 1; 
++    
++    rdr->auprovid = 0x030B00;
 +    
 +    rdr->grp = 0xFFFFFFFFFFFFFFFFULL;
 +    rdr->disablecrccws = 1;
