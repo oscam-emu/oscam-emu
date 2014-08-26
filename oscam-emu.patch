@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 9836)
+--- CMakeLists.txt	(revision 9837)
 +++ CMakeLists.txt	(working copy)
 @@ -396,6 +396,13 @@
  # Manage config.h based on command line parameters
@@ -46,7 +46,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 9836)
+--- config.h	(revision 9837)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -58,7 +58,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9836)
+--- config.sh	(revision 9837)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -115,7 +115,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/des.h
 ===================================================================
---- cscrypt/des.h	(revision 9836)
+--- cscrypt/des.h	(revision 9837)
 +++ cscrypt/des.h	(working copy)
 @@ -5,6 +5,40 @@
  extern "C" {
@@ -696,7 +696,7 @@ Index: cscrypt/des_enc.c
 +#endif
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9836)
+--- cscrypt/md5.c	(revision 9837)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -741,7 +741,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9836)
+--- cscrypt/md5.h	(revision 9837)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -1177,7 +1177,7 @@ Index: cscrypt/set_key.c
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 9836)
+--- csctapi/cardreaders.h	(revision 9837)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -13,5 +13,6 @@
  void cardreader_smartreader(struct s_cardreader *crdr);
@@ -1188,7 +1188,7 @@ Index: csctapi/cardreaders.h
  #endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9836)
+--- globals.h	(revision 9837)
 +++ globals.h	(working copy)
 @@ -287,6 +287,7 @@
  /////////////////// readers that do not reed baudrate setting and timings are guarded by reader itself (large buffer built in): AFTER R_SMART
@@ -1213,7 +1213,7 @@ Index: globals.h
  struct s_client ;
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9836)
+--- Makefile	(revision 9837)
 +++ Makefile	(working copy)
 @@ -199,6 +199,8 @@
  SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/bn_word.c
@@ -1241,7 +1241,7 @@ Index: Makefile
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 9836)
+--- module-dvbapi.c	(revision 9837)
 +++ module-dvbapi.c	(working copy)
 @@ -888,6 +888,7 @@
  int32_t dvbapi_start_emm_filter(int32_t demux_index)
@@ -1294,7 +1294,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,2042 @@
+@@ -0,0 +1,2005 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -1391,7 +1391,7 @@ Index: module-emulator.c
 +  return 1;
 +}
 +
-+int32_t FindKey(char identifier, uint32_t provider, char *keyName, uint8_t *key, uint32_t maxKeyLength)
++int32_t FindKey(char identifier, uint32_t provider, char *keyName, uint8_t *key, uint32_t maxKeyLength, uint8_t isCriticalKey)
 +{
 +  uint32_t i;
 +  KeyDataContainer *KeyDB;
@@ -1407,7 +1407,7 @@ Index: module-emulator.c
 +    return 1;
 +  }
 +  
-+  if(identifier != 'V' || strcmp(keyName, "D0") != 0)
++  if(isCriticalKey)
 +    cs_log("[Emu] Key not found: %c %X %s", identifier, provider, keyName);
 +  return 0;  
 +}
@@ -1555,7 +1555,7 @@ Index: module-emulator.c
 +}
 +
 +// Cryptoworks EMU
-+int8_t GetCwKey(uint8_t *buf,uint32_t ident, uint8_t keyIndex, uint32_t keyLength) {
++int8_t GetCwKey(uint8_t *buf,uint32_t ident, uint8_t keyIndex, uint32_t keyLength, uint8_t isCriticalKey) {
 +  
 +  char keyName[8];
 +  uint32_t tmp;
@@ -1566,7 +1566,7 @@ Index: module-emulator.c
 +  
 +  tmp = keyIndex;
 +  snprintf(keyName, 8, "%.2X", tmp);
-+  if(FindKey('W', ident, keyName, buf, keyLength))
++  if(FindKey('W', ident, keyName, buf, keyLength, isCriticalKey))
 +   return 1;  
 +
 +  return 0;
@@ -1834,7 +1834,7 @@ Index: module-emulator.c
 +{
 +  int32_t i, j;
 +  uint8_t key[16], desKey[16], t[8], dat1[8], dat2[8], k0D00C000[16];
-+  if(provider != 0xA0 && !GetCwKey(k0D00C000, 0x0D00C0, 0, 16)) return 2;
++  if(provider != 0xA0 && !GetCwKey(k0D00C000, 0x0D00C0, 0, 16, 1)) return 2;
 +  memset(t, 0, 8);
 +
 +  memcpy(dat1, data, 8);
@@ -1937,8 +1937,8 @@ Index: module-emulator.c
 +  if(provider < 0) return 1;
 +
 +  ident = (caid << 8) | provider; 
-+  if(!GetCwKey(key, ident, keyIndex, 16)) return 2;
-+  if(!GetCwKey(&key[16], ident, 6, 6)) return 2;
++  if(!GetCwKey(key, ident, keyIndex, 16, 1)) return 2;
++  if(!GetCwKey(&key[16], ident, 6, 6, 1)) return 2;
 +  
 +  for(i = 8; i < ecmLen; i += ecm[i+1] + 2) {
 +    if(ecm[i] == 0x80 && (provider == 0xA0 || provider == 0xC0 || provider == 0xC4 || provider == 0xC8)) {
@@ -2016,14 +2016,14 @@ Index: module-emulator.c
 +}
 +
 +// Viaccess EMU
-+int8_t GetViaKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex, uint32_t keyLength) {
++int8_t GetViaKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex, uint32_t keyLength, uint8_t isCriticalKey) {
 +  
 +  char keyStr[8];
 +  snprintf(keyStr, 8, "%c%X", keyName, keyIndex);  
-+  if(FindKey('V', ident, keyStr, buf, keyLength))
++  if(FindKey('V', ident, keyStr, buf, keyLength, isCriticalKey))
 +    return 1; 
 +   
-+  if(ident == 0xD00040 && FindKey('V', 0x030B00, keyStr, buf, keyLength))
++  if(ident == 0xD00040 && FindKey('V', 0x030B00, keyStr, buf, keyLength, isCriticalKey))
 +    return 1;
 +  
 +  return 0;
@@ -2086,7 +2086,7 @@ Index: module-emulator.c
 +
 +    if (ident == 0) return 4;
 +    memset(work_key, 0, 16);
-+    if(!GetViaKey(work_key, ident, '0', desKeyIndex, 8)) return 2;
++    if(!GetViaKey(work_key, ident, '0', desKeyIndex, 8, 1)) return 2;
 +
 +    data = source+9;
 +    len = source[2]-6;
@@ -2168,11 +2168,11 @@ Index: module-emulator.c
 +  uint8_t pv1,pv2, i;
 +  uint8_t Tmp[8], tmpKey[16], T1Key[300], P1Key[8], KeyDes1[16], KeyDes2[16], XorKey[8];
 +  
-+  if(!GetViaKey(T1Key, ident, 'T', 1, 300)) return 2;
-+  if(!GetViaKey(P1Key, ident, 'P', 1, 8)) return 2;
-+  if(!GetViaKey(KeyDes1, ident, 'D', 1, 16)) return 2;
-+  if(!GetViaKey(KeyDes2, ident, '0', desKeyIndex, 16)) return 2;  
-+  if(!GetViaKey(XorKey, ident, 'X', 1, 8)) return 2;
++  if(!GetViaKey(T1Key, ident, 'T', 1, 300, 1)) return 2;
++  if(!GetViaKey(P1Key, ident, 'P', 1, 8, 1)) return 2;
++  if(!GetViaKey(KeyDes1, ident, 'D', 1, 16, 1)) return 2;
++  if(!GetViaKey(KeyDes2, ident, '0', desKeyIndex, 16, 1)) return 2;  
++  if(!GetViaKey(XorKey, ident, 'X', 1, 8, 1)) return 2;
 +
 +  for (i=0;i<8;i++){
 +    pv1 = indata[i];
@@ -2218,7 +2218,7 @@ Index: module-emulator.c
 +  int32_t i,j;
 +  
 +  if (ident == 0) return 4;
-+  if(!GetViaKey(C1, ident, 'C', 1, 8)) return 2;
++  if(!GetViaKey(C1, ident, 'C', 1, 8, 1)) return 2;
 +        
 +  for (i=0; i<2; i++)
 +  {
@@ -2340,10 +2340,10 @@ Index: module-emulator.c
 +  uint8_t i;
 +  uint8_t tmp[8], tmpKey[16], T1Key[300], P1Key[8], KeyDes[16], XorKey[8];
 +
-+  if(!GetViaKey(T1Key, ident, 'T', 1, 300)) return 2;
-+  if(!GetViaKey(P1Key, ident, 'P', 1, 8)) return 2;
-+  if(!GetViaKey(KeyDes, ident, '0', desKeyIndex, 16)) return 2;  
-+  if(!GetViaKey(XorKey, ident, 'X', 1, 8)) return 2;
++  if(!GetViaKey(T1Key, ident, 'T', 1, 300, 1)) return 2;
++  if(!GetViaKey(P1Key, ident, 'P', 1, 8, 1)) return 2;
++  if(!GetViaKey(KeyDes, ident, '0', desKeyIndex, 16, 1)) return 2;  
++  if(!GetViaKey(XorKey, ident, 'X', 1, 8, 1)) return 2;
 +
 +  for (i=0; i<4; i++) tmp[i] = data[i+4];
 +  Via3Fct1(tmp, ident, XorKey, T1Key);
@@ -2410,8 +2410,8 @@ Index: module-emulator.c
 +  int32_t i, j;
 +    
 +  if(ident == 0) return 4;
-+  if(!GetViaKey(C1, ident, 'C', 1, 8)) return 2;    
-+  if(needsAES && !GetViaKey((uint8_t*)aesKey, ident, 'E', aesKeyIndex, 16)) return 2;
++  if(!GetViaKey(C1, ident, 'C', 1, 8, 1)) return 2;    
++  if(needsAES && !GetViaKey((uint8_t*)aesKey, ident, 'E', aesKeyIndex, 16, 1)) return 2;
 +  if(aesMode==0x0D || aesMode==0x11 || aesMode==0x15) aesAfterCore = 1;
 +
 +  if(needsAES && !aesAfterCore) {
@@ -2539,11 +2539,11 @@ Index: module-emulator.c
 +}
 +
 +// Nagra EMU
-+int8_t GetNagraKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex)
++int8_t GetNagraKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex, uint8_t isCriticalKey)
 +{
 +  char keyStr[8];
 +  snprintf(keyStr, 8, "%c%X", keyName, keyIndex);  
-+  if(FindKey('N', ident, keyStr, buf, keyName == 'M' ? 64 : 16))
++  if(FindKey('N', ident, keyStr, buf, keyName == 'M' ? 64 : 16, isCriticalKey))
 +   return 1;    
 +
 +  return 0;
@@ -2627,9 +2627,9 @@ Index: module-emulator.c
 +  if(ident == 1283 || ident == 1285 || ident == 1297) ident = 1281;
 +  if(cmdLen <= 63 || ecmLen < cmdLen + 10) return 1;
 +  
-+  if(!GetNagraKey(ideaKey, ident, '0', ideaKeyNr)) return 2;    
-+  if(GetNagraKey(vKey, ident, 'V', 0)) { useVerifyKey = 1; }
-+  if(!GetNagraKey(m1Key, ident, 'M', 1)) return 2;    
++  if(!GetNagraKey(ideaKey, ident, '0', ideaKeyNr, 1)) return 2;    
++  if(GetNagraKey(vKey, ident, 'V', 0, 0)) { useVerifyKey = 1; }
++  if(!GetNagraKey(m1Key, ident, 'M', 1, 1)) return 2;    
 +  ReverseMem(m1Key, 64);
 +  
 +  if(!DecryptNagra2ECM(ecm+9, dec, ideaKey, cmdLen, useVerifyKey?vKey:0, m1Key)) return 1;    
@@ -2670,11 +2670,11 @@ Index: module-emulator.c
 +}
 +
 +// Irdeto EMU
-+int8_t GetIrdetoKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex)
++int8_t GetIrdetoKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex, uint8_t isCriticalKey)
 +{
 +  char keyStr[8];
 +  snprintf(keyStr, 8, "%c%X", keyName, keyIndex);  
-+  if(FindKey('I', ident, keyStr, buf, 16))
++  if(FindKey('I', ident, keyStr, buf, 16, isCriticalKey))
 +   return 1;
 +
 +  return 0;
@@ -2778,9 +2778,9 @@ Index: module-emulator.c
 +  ident = ecm[8] | caid << 8;
 +    
 +  if(ecmLen < length+12) return 1;
-+  if(!GetIrdetoKey(key, ident, '0', keyNr)) return 2;
-+  if(!GetIrdetoKey(keyM1, ident, 'M', 1)) return 2;
-+  if(!GetIrdetoKey(keyIV, ident, 'M', 2)) return 2;
++  if(!GetIrdetoKey(key, ident, '0', keyNr, 1)) return 2;
++  if(!GetIrdetoKey(keyM1, ident, 'M', 1, 1)) return 2;
++  if(!GetIrdetoKey(keyIV, ident, 'M', 2, 1)) return 2;
 +    
 +  memset(tmp, 0, 16);
 +  Irdeto2Encrypt(keyM1, tmp, key, 16);
@@ -2892,7 +2892,7 @@ Index: module-emulator.c
 +        break;
 +      }
 +      case 0x41:{   
-+        if(!GetViaKey(emmKey, provider, 'M', emmKeyIndex, 16)) return 2;
++        if(!GetViaKey(emmKey, provider, 'M', emmKeyIndex, 16, 1)) return 2;
 +        memset(provName, 0, 17);
 +        memset(emmXorKey, 0, 16);
 +        k = nanoLen < 16 ? nanoLen : 16;
@@ -2907,7 +2907,7 @@ Index: module-emulator.c
 +        break;
 +      }
 +      case 0xBA:{
-+        GetViaKey(keyD0, ecmProvider, 'D', 0, 2);
++        GetViaKey(keyD0, ecmProvider, 'D', 0, 2, 0);
 +        ui1 = (emm[i] << 8) | emm[i+1];
 +        if( (uint32_t)((keyD0[0] << 8) | keyD0[1]) < ui1 || (keyD0[0] == 0x00 && keyD0[1] == 0x00)){
 +          keyD0[0] = emm[i];
@@ -2947,7 +2947,7 @@ Index: module-emulator.c
 +        if(ecmKeyCount > 5) break;
 +        ecmKeyIndex[ecmKeyCount] = emm[i+6];
 +        memcpy(&ecmKeys[ecmKeyCount], &emm[i+7], 16);    
-+        if(!GetViaKey(emmKey, provider, 'M', emmKeyIndex, 16)) return 2;
++        if(!GetViaKey(emmKey, provider, 'M', emmKeyIndex, 16, 1)) return 2;
 +        aes_set_key(&aes, (char*)emmKey);
 +        aes_decrypt(&aes, ecmKeys[ecmKeyCount], 16);
 +        ecmKeyCount++;
@@ -3051,23 +3051,8 @@ Index: module-emulator.c
 +
 +int32_t emu_get_emm_type(struct emm_packet_t *ep, struct s_reader *rdr)
 +{
-+  uint32_t provid = 0;
-+  rdr_debug_mask(rdr, D_EMM, "Entered emu_get_emm_type ep->emm[0]=%02x", ep->emm[0]);
-+
-+  if(ep->emm[3] == 0x90 && ep->emm[4] == 0x03)
-+  {
-+    provid = ep->emm[5] << 16 | ep->emm[6] << 8 | (ep->emm[7] & 0xFE);
-+    i2b_buf(4, provid, ep->provid);
-+  }
-+
 +  switch(ep->emm[0]){
-+  case 0x88:
-+    ep->type = UNIQUE;
-+    memset(ep->hexserial, 0, 8);
-+    memcpy(ep->hexserial, ep->emm + 4, 4);
-+    rdr_debug_mask(rdr, D_EMM, "UNIQUE");
-+    return CS_OK;
-+    
++ 
 +  case 0x8A:
 +  case 0x8B:
 +    ep->type = GLOBAL;
@@ -3078,15 +3063,6 @@ Index: module-emulator.c
 +  case 0x8D:
 +    ep->type = SHARED;
 +    rdr_debug_mask(rdr, D_EMM, "SHARED (part)");
-+    // We need those packets to pass otherwise we would never
-+    // be able to complete EMM reassembly
-+    return CS_OK;
-+
-+  case 0x8E:
-+    ep->type = SHARED;
-+    memset(ep->hexserial, 0, 8);
-+    memcpy(ep->hexserial, ep->emm + 3, 3);
-+    rdr_debug_mask(rdr, D_EMM, "SHARED");
 +    return CS_OK;
 +
 +  default:
@@ -3100,7 +3076,7 @@ Index: module-emulator.c
 +{
 +  if(*emm_filters == NULL)
 +  {
-+    const unsigned int max_filter_count = 4;
++    const unsigned int max_filter_count = 2;
 +    if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +      { return CS_ERROR; }
 +
@@ -3120,19 +3096,7 @@ Index: module-emulator.c
 +    filters[idx].filter[0] = 0x8B;
 +    filters[idx].mask[0]   = 0xFF;
 +    idx++;
-+
-+    filters[idx].type = EMM_SHARED;
-+    filters[idx].enabled   = 1;
-+    filters[idx].filter[0] = 0x8C;
-+    filters[idx].mask[0]   = 0xFF;
-+    idx++;
-+
-+    filters[idx].type = EMM_SHARED;
-+    filters[idx].enabled   = 1;
-+    filters[idx].filter[0] = 0x8D;
-+    filters[idx].mask[0]   = 0xFF;
-+    idx++;
-+
++    
 +    *filter_count = idx;
 +  }  
 +  
@@ -3329,7 +3293,6 @@ Index: module-emulator.c
 +    rdr->logemm = 2;
 +    
 +    rdr->grp = 0xFFFFFFFFFFFFFFFFULL;
-+    rdr->disablecrccws = 1;
 +  
 +    cardreader_emu(&rdr->crdr);
 +    
@@ -3339,7 +3302,7 @@ Index: module-emulator.c
 +}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9836)
+--- module-webif.c	(revision 9837)
 +++ module-webif.c	(working copy)
 @@ -104,7 +104,8 @@
  #define MNU_CFG_WHITELIST 25
@@ -3423,7 +3386,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 9836)
+--- oscam-chk.c	(revision 9837)
 +++ oscam-chk.c	(working copy)
 @@ -674,7 +674,7 @@
  		return 0;
@@ -3436,7 +3399,7 @@ Index: oscam-chk.c
  		for(i = 0; i < (int)ARRAY_SIZE(rdr->csystem.caids); i++)
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 9836)
+--- oscam-config-reader.c	(revision 9837)
 +++ oscam-config-reader.c	(working copy)
 @@ -329,6 +329,7 @@
  			{ "newcamd",    R_NEWCAMD },
@@ -3457,7 +3420,7 @@ Index: oscam-config-reader.c
  #ifdef WITH_LB
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 9836)
+--- oscam-config.h	(revision 9837)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -3469,7 +3432,7 @@ Index: oscam-config.h
  int32_t init_sidtab(void);
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 9836)
+--- oscam-ecm.c	(revision 9837)
 +++ oscam-ecm.c	(working copy)
 @@ -1846,12 +1846,23 @@
  	// nagra
@@ -3501,7 +3464,7 @@ Index: oscam-ecm.c
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 9836)
+--- oscam-string.c	(revision 9837)
 +++ oscam-string.c	(working copy)
 @@ -491,6 +491,62 @@
  	return crc ^ 0xffffffffL;
@@ -3568,7 +3531,7 @@ Index: oscam-string.c
  {
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 9836)
+--- oscam-string.h	(revision 9837)
 +++ oscam-string.h	(working copy)
 @@ -36,6 +36,7 @@
  void get_random_bytes(uint8_t *dst, uint32_t dst_len);
@@ -3580,7 +3543,7 @@ Index: oscam-string.h
  char to_hex(char code);
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9836)
+--- oscam.c	(revision 9837)
 +++ oscam.c	(working copy)
 @@ -340,6 +340,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
@@ -3633,7 +3596,7 @@ Index: oscam.c
  	init_srvid();
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 9836)
+--- reader-common.c	(revision 9837)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -3664,7 +3627,7 @@ Index: reader-common.c
  		if(reader->card_status == NO_CARD || reader->card_status == UNKNOWN)
 Index: readers.h
 ===================================================================
---- readers.h	(revision 9836)
+--- readers.h	(revision 9837)
 +++ readers.h	(working copy)
 @@ -15,5 +15,6 @@
  void reader_bulcrypt(struct s_cardsystem *);
@@ -3675,7 +3638,7 @@ Index: readers.h
  #endif
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 9836)
+--- webif/files/menu.html	(revision 9837)
 +++ webif/files/menu.html	(working copy)
 @@ -5,6 +5,7 @@
  		<LI CLASS="##CMENUACTIVE14##"><A HREF="files.html?file=oscam.user">oscam.user</A></LI>
@@ -3693,7 +3656,7 @@ Index: webif/files/menu_key.html
 +			<LI CLASS="##CMENUACTIVE98##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 9836)
+--- webif/pages_index.txt	(revision 9837)
 +++ webif/pages_index.txt	(working copy)
 @@ -110,6 +110,7 @@
  FILEMENU                      files/menu.html
