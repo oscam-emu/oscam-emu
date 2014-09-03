@@ -1,7 +1,6 @@
 OSCam-emu: Open Source Conditional Access Module Emulator
 =========================================================
 
-
 OSCam-emu is an Oscam addon module to include emulator support and other functionality that collides with the goal of the original oscam developers.
 
 This patch creates a virtual card reader which is configured automatically.
@@ -48,6 +47,7 @@ Building OSCam-emu from source
     svn checkout http://www.streamboard.tv/svn/oscam/trunk oscam-svn
 
  - Save the oscam-emu.patch file
+    wget https://github.com/oscam-emu/oscam-emu/raw/master/oscam-emu.patch
 
  - Go to oscam-svn directory.
 
@@ -72,6 +72,6 @@ You may visit our issues system for filling in bug reports regarding EMU issues.
    https://github.com/oscam-emu/oscam-emu/issues
 
 Configuration wiki:
-   http://www.streamboard.tv/wiki/index.php/OSCam/
+   http://www.streamboard.tv/wiki/index.php/OSCam
 
 
