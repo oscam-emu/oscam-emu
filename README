@@ -18,7 +18,7 @@ Supported systems
 
 Currently only the following crypto systems are available:
  - Cryptoworks
- - NDS (proof off concept)
+ - SoftNDS
  - Viaccess 1/2/3
  - Nagra 2
  - Irdeto 2
@@ -41,7 +41,7 @@ OSCam-emu history is accessible through GitHub commits at:
 
 
 Building OSCam-emu from source
-==========================
+==============================
 
  - Get the lastest oscam sources from SVN:
     svn checkout http://www.streamboard.tv/svn/oscam/trunk oscam-svn
@@ -63,6 +63,13 @@ Building OSCam-emu from source
  - Run `./config.sh -g` to choose the features you want.
 
  - Run `make` to compile OSCam.
+
+
+OSCam dvpapi config
+===================
+
+If dvbapi is activated, the "delayer" option is forced to have a value of at least 70.
+This is to avoid freezes/crashes because of too fast ecm responses.
 
 
 Help and Support
