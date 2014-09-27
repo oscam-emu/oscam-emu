@@ -65,7 +65,7 @@ Building OSCam-emu from source
  - Run `make` to compile OSCam.
 
 
-OSCam dvpapi config
+OSCam dvbapi config
 ===================
 
 If dvbapi is activated, the "delayer" option is forced to have a value of at least 70.
