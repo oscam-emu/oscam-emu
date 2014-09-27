@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 9871)
+--- CMakeLists.txt	(revision 9872)
 +++ CMakeLists.txt	(working copy)
 @@ -396,6 +396,13 @@
  # Manage config.h based on command line parameters
@@ -46,7 +46,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 9871)
+--- config.h	(revision 9872)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -58,14 +58,14 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9871)
+--- config.sh	(revision 9872)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
 -addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI DVBAPI_SAMYGO IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
 +addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI DVBAPI_SAMYGO IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU"
- protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
+ protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STINGER"
 @@ -34,6 +34,7 @@
@@ -74,9 +74,9 @@ Index: config.sh
  CONFIG_MODULE_CONSTCW=y
 +CONFIG_WITH_EMU=y
  CONFIG_MODULE_PANDORA=y
+ CONFIG_MODULE_SCAM=y
  CONFIG_MODULE_GHTTP=y
- CONFIG_WITH_CARDREADER=y
-@@ -284,12 +285,13 @@
+@@ -285,12 +286,13 @@
  
  update_deps() {
  	# Calculate dependencies
@@ -92,20 +92,20 @@ Index: config.sh
  }
  
  list_config() {
-@@ -330,9 +332,9 @@
+@@ -331,9 +333,9 @@
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
--	enabled_any MODULE_NEWCAMD READER_DRE && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+-	enabled_any MODULE_NEWCAMD READER_DRE MODULE_SCAM && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 -	enabled_any MODULE_CCCAM READER_NAGRA && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 -	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
-+	enabled_any MODULE_NEWCAMD READER_DRE WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
++	enabled_any MODULE_NEWCAMD READER_DRE MODULE_SCAM WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 +	enabled_any MODULE_CCCAM READER_NAGRA WITH_EMU && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 +	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA WITH_EMU && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
  }
  
  make_config_c() {
-@@ -441,6 +443,7 @@
+@@ -442,6 +444,7 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
@@ -115,28 +115,12 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/des.c
 ===================================================================
---- cscrypt/des.c	(revision 9871)
+--- cscrypt/des.c	(revision 9872)
 +++ cscrypt/des.c	(working copy)
-@@ -594,6 +594,66 @@
- 	return len;
+@@ -658,3 +658,46 @@
+ 		xxor(data,8,data,civ[n]);
+ 	}
  }
- 
-+static inline void xxor_tmp(uint8_t *data, int32_t len, const uint8_t *v1, const uint8_t *v2)
-+{
-+	switch(len) {
-+		case 16:
-+			*((uint32_t *)data+3) = *((uint32_t *)v1+3) ^ *((uint32_t *)v2+3);
-+			*((uint32_t *)data+2) = *((uint32_t *)v1+2) ^ *((uint32_t *)v2+2);
-+		case 8:
-+			*((uint32_t *)data+1) = *((uint32_t *)v1+1) ^ *((uint32_t *)v2+1);
-+		case 4:
-+			*((uint32_t *)data+0) = *((uint32_t *)v1+0) ^ *((uint32_t *)v2+0);
-+		break;
-+		default:
-+			while(len--) *data++ = *v1++ ^ *v2++;
-+		break;
-+	}
-+}
 +
 +void des_ede2_cbc_encrypt(unsigned char *data, const unsigned char *iv, const unsigned char *okey1, const unsigned char *okey2, int len)
 +{
@@ -151,7 +135,7 @@ Index: cscrypt/des.c
 +	len&=~7;
 +
 +	for(i=0; i<len; i+=8) {
-+		xxor_tmp(&data[i],8,&data[i],civ);
++		xxor(&data[i],8,&data[i],civ);
 +		civ=&data[i];
 +		des(key1,DES_ECS2_CRYPT,&data[i]);
 +		des(key2,DES_ECS2_DECRYPT,&data[i]);
@@ -177,23 +161,12 @@ Index: cscrypt/des.c
 +		des(key1,DES_ECS2_DECRYPT,data);
 +		des(key2,DES_ECS2_CRYPT,data);
 +		des(key1,DES_ECS2_DECRYPT,data);		
-+		xxor_tmp(data,8,data,civ[n]);
++		xxor(data,8,data,civ[n]);
 +	}
 +}
-+
- unsigned char *des_login_key_get(unsigned char *key1, unsigned char *key2, int len, unsigned char *des16)
- {
- 	unsigned char des14[14];
-@@ -606,3 +666,6 @@
- 	doPC1(des16 + 8);
- 	return des16;
- }
-+
-+
-+
 Index: cscrypt/des.h
 ===================================================================
---- cscrypt/des.h	(revision 9871)
+--- cscrypt/des.h	(revision 9872)
 +++ cscrypt/des.h	(working copy)
 @@ -19,6 +19,8 @@
  	extern int des_decrypt(unsigned char *buffer, int len, unsigned char *deskey);
@@ -202,11 +175,11 @@ Index: cscrypt/des.h
 +	extern void des_ede2_cbc_encrypt(unsigned char *data, const unsigned char *iv, const unsigned char *okey1, const unsigned char *okey2, int len);
 +	extern void des_ede2_cbc_decrypt(unsigned char *data, unsigned char *iv, const unsigned char *okey1, const unsigned char *okey2, int len);
  	extern void des(unsigned char key[], unsigned char mode, unsigned char data[]);
- 
- #ifdef  __cplusplus
+ 	extern void des_cbc_encrypt(unsigned char *data, const unsigned char *iv, const unsigned char *okey, int len);
+ 	extern void des_cbc_decrypt(unsigned char *data, unsigned char *iv, const unsigned char *okey, int len);
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9871)
+--- cscrypt/md5.c	(revision 9872)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -251,7 +224,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9871)
+--- cscrypt/md5.h	(revision 9872)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -274,7 +247,7 @@ Index: cscrypt/md5.h
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 9871)
+--- csctapi/cardreaders.h	(revision 9872)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -13,5 +13,6 @@
  void cardreader_smartreader(struct s_cardreader *crdr);
@@ -285,7 +258,7 @@ Index: csctapi/cardreaders.h
  #endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9871)
+--- globals.h	(revision 9872)
 +++ globals.h	(working copy)
 @@ -287,6 +287,7 @@
  /////////////////// readers that do not reed baudrate setting and timings are guarded by reader itself (large buffer built in): AFTER R_SMART
@@ -295,7 +268,7 @@ Index: globals.h
  /////////////////// proxy readers after R_CS378X
  #define R_CAMD35    0x20  // Reader cascading camd 3.5x
  #define R_CAMD33    0x21  // Reader cascading camd 3.3x
-@@ -674,6 +675,12 @@
+@@ -676,6 +677,12 @@
  	uint32_t        class;              // the class needed for some systems
  	time_t          start;              // startdate
  	time_t          end;                // enddate
@@ -310,7 +283,7 @@ Index: globals.h
  struct s_client ;
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9871)
+--- Makefile	(revision 9872)
 +++ Makefile	(working copy)
 @@ -233,6 +233,14 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
@@ -329,7 +302,7 @@ Index: Makefile
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 9871)
+--- module-dvbapi.c	(revision 9872)
 +++ module-dvbapi.c	(working copy)
 @@ -20,6 +20,7 @@
  #include "oscam-string.h"
@@ -3044,7 +3017,7 @@ Index: module-emulator.c
 +}
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 9871)
+--- module-webif-tpl.c	(revision 9872)
 +++ module-webif-tpl.c	(working copy)
 @@ -445,6 +445,7 @@
  											check_conf(WITH_LIBCRYPTO, ptr2);
@@ -3056,9 +3029,9 @@ Index: module-webif-tpl.c
  										{
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9871)
+--- module-webif.c	(revision 9872)
 +++ module-webif.c	(working copy)
-@@ -104,7 +104,8 @@
+@@ -105,7 +105,8 @@
  #define MNU_CFG_WHITELIST 25
  #define MNU_CFG_RATELIMIT 26
  #define MNU_CFG_FCSS 27
@@ -3068,7 +3041,7 @@ Index: module-webif.c
  
  static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value) {
  	if (no_data)
-@@ -2238,6 +2239,9 @@
+@@ -2264,6 +2265,9 @@
  	case R_PCSC :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGSTDHWREADERBIT"));
  		break;
@@ -3078,7 +3051,7 @@ Index: module-webif.c
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
-@@ -3807,9 +3811,30 @@
+@@ -3836,9 +3840,30 @@
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -3109,7 +3082,7 @@ Index: module-webif.c
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -4244,6 +4269,9 @@
+@@ -4273,6 +4298,9 @@
  #else
  						filtered = (type == cl->typ);
  #endif
@@ -3119,7 +3092,7 @@ Index: module-webif.c
  					}
  				}
  
-@@ -5552,6 +5580,9 @@
+@@ -5581,6 +5609,9 @@
  		{ "oscam.conf",      MNU_CFG_FCONF,     FTYPE_CONFIG },
  		{ "oscam.user",      MNU_CFG_FUSER,     FTYPE_CONFIG },
  		{ "oscam.server",    MNU_CFG_FSERVER,   FTYPE_CONFIG },
@@ -3129,7 +3102,7 @@ Index: module-webif.c
  		{ "oscam.services",  MNU_CFG_FSERVICES, FTYPE_CONFIG },
  		{ "oscam.whitelist", MNU_CFG_WHITELIST, FTYPE_CONFIG },
  		{ "oscam.srvid",     MNU_CFG_FSRVID,    FTYPE_CONFIG },
-@@ -6898,8 +6929,8 @@
+@@ -6927,8 +6958,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -3142,7 +3115,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 9871)
+--- oscam-chk.c	(revision 9872)
 +++ oscam-chk.c	(working copy)
 @@ -674,7 +674,7 @@
  		return 0;
@@ -3155,9 +3128,9 @@ Index: oscam-chk.c
  		for(i = 0; i < (int)ARRAY_SIZE(rdr->csystem.caids); i++)
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 9871)
+--- oscam-config-reader.c	(revision 9872)
 +++ oscam-config-reader.c	(working copy)
-@@ -329,6 +329,7 @@
+@@ -330,6 +330,7 @@
  			{ "newcamd",    R_NEWCAMD },
  			{ "newcamd525", R_NEWCAMD },
  			{ "newcamd524", R_NEWCAMD },
@@ -3165,7 +3138,7 @@ Index: oscam-config-reader.c
  			{ NULL        , 0 }
  		}, *p;
  		int i;
-@@ -919,7 +920,7 @@
+@@ -920,7 +921,7 @@
  }
  
  
@@ -3176,7 +3149,7 @@ Index: oscam-config-reader.c
  #ifdef WITH_LB
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 9871)
+--- oscam-config.h	(revision 9872)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -3188,7 +3161,7 @@ Index: oscam-config.h
  int32_t init_sidtab(void);
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 9871)
+--- oscam-ecm.c	(revision 9872)
 +++ oscam-ecm.c	(working copy)
 @@ -1828,12 +1828,23 @@
  	// nagra
@@ -3220,7 +3193,7 @@ Index: oscam-ecm.c
  	if((er->ecm[3] == 0x81) && (er->ecm[4] == 0xFF) &&
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 9871)
+--- oscam-string.c	(revision 9872)
 +++ oscam-string.c	(working copy)
 @@ -491,6 +491,62 @@
  	return crc ^ 0xffffffffL;
@@ -3282,12 +3255,12 @@ Index: oscam-string.c
 +	return crc;
 +}
 +
- // https://en.wikipedia.org/wiki/Jenkins_hash_function
- uint32_t jhash(const char *key, size_t len)
+ static uint16_t ccitt_crc_table [256] =
  {
+ 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 9871)
+--- oscam-string.h	(revision 9872)
 +++ oscam-string.h	(working copy)
 @@ -35,6 +35,7 @@
  void get_random_bytes_init(void);
@@ -3295,11 +3268,11 @@ Index: oscam-string.h
  
 +unsigned int fletcher_crc32(unsigned char *data, int len);
  unsigned long crc32(unsigned long crc, const unsigned char *buf, unsigned int len);
+ uint16_t ccitt_crc(uint8_t *data, size_t length, uint16_t seed, uint16_t final);
  uint32_t jhash(const char *key, size_t len);
- 
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9871)
+--- oscam.c	(revision 9872)
 +++ oscam.c	(working copy)
 @@ -340,6 +340,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
@@ -3309,7 +3282,7 @@ Index: oscam.c
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
  		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
-@@ -1148,6 +1149,10 @@
+@@ -1149,6 +1150,10 @@
  	}
  }
  
@@ -3320,7 +3293,7 @@ Index: oscam.c
  int32_t main(int32_t argc, char *argv[])
  {
  	int32_t i, j;
-@@ -1248,6 +1253,9 @@
+@@ -1252,6 +1257,9 @@
  #ifdef READER_DGCRYPT
  		reader_dgcrypt,
  #endif
@@ -3330,7 +3303,7 @@ Index: oscam.c
  		0
  	};
  
-@@ -1287,6 +1295,9 @@
+@@ -1291,6 +1299,9 @@
  #ifdef CARDREADER_STINGER
  		cardreader_stinger,
  #endif
@@ -3340,7 +3313,7 @@ Index: oscam.c
  		0
  	};
  
-@@ -1359,6 +1370,9 @@
+@@ -1363,6 +1374,9 @@
  
  	init_sidtab();
  	init_readerdb();
@@ -3352,7 +3325,7 @@ Index: oscam.c
  	init_srvid();
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 9871)
+--- reader-common.c	(revision 9872)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -3383,7 +3356,7 @@ Index: reader-common.c
  		if(reader->card_status == NO_CARD || reader->card_status == UNKNOWN)
 Index: readers.h
 ===================================================================
---- readers.h	(revision 9871)
+--- readers.h	(revision 9872)
 +++ readers.h	(working copy)
 @@ -15,5 +15,6 @@
  void reader_bulcrypt(struct s_cardsystem *);
@@ -3394,7 +3367,7 @@ Index: readers.h
  #endif
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 9871)
+--- webif/files/menu.html	(revision 9872)
 +++ webif/files/menu.html	(working copy)
 @@ -9,7 +9,7 @@
  ##TPLFILEMENUANTICASC##
@@ -3421,9 +3394,9 @@ Index: webif/files/menu_key.html
 +			<LI CLASS="##CMENUACTIVE28##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 9871)
+--- webif/pages_index.txt	(revision 9872)
 +++ webif/pages_index.txt	(working copy)
-@@ -110,6 +110,7 @@
+@@ -112,6 +112,7 @@
  FILEMENU                      files/menu.html
  FILEMENUDVBAPI                files/menu_dvbapi.html                                      HAVE_DVBAPI
  FILEMENUANTICASC              files/menu_anticasc.html                                    CS_ANTICASC
