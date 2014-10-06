@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 9885)
+--- CMakeLists.txt	(revision 9909)
 +++ CMakeLists.txt	(working copy)
 @@ -396,6 +396,13 @@
  # Manage config.h based on command line parameters
@@ -46,7 +46,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 9885)
+--- config.h	(revision 9909)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -58,7 +58,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9885)
+--- config.sh	(revision 9909)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -115,7 +115,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/des.c
 ===================================================================
---- cscrypt/des.c	(revision 9885)
+--- cscrypt/des.c	(revision 9909)
 +++ cscrypt/des.c	(working copy)
 @@ -658,3 +658,46 @@
  		xxor(data,8,data,civ[n]);
@@ -166,7 +166,7 @@ Index: cscrypt/des.c
 +}
 Index: cscrypt/des.h
 ===================================================================
---- cscrypt/des.h	(revision 9885)
+--- cscrypt/des.h	(revision 9909)
 +++ cscrypt/des.h	(working copy)
 @@ -19,6 +19,8 @@
  	extern int des_decrypt(unsigned char *buffer, int len, unsigned char *deskey);
@@ -179,7 +179,7 @@ Index: cscrypt/des.h
  	extern void des_cbc_decrypt(unsigned char *data, unsigned char *iv, const unsigned char *okey, int len);
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9885)
+--- cscrypt/md5.c	(revision 9909)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -224,7 +224,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9885)
+--- cscrypt/md5.h	(revision 9909)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -247,7 +247,7 @@ Index: cscrypt/md5.h
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 9885)
+--- csctapi/cardreaders.h	(revision 9909)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -13,5 +13,6 @@
  void cardreader_smartreader(struct s_cardreader *crdr);
@@ -258,7 +258,7 @@ Index: csctapi/cardreaders.h
  #endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9885)
+--- globals.h	(revision 9909)
 +++ globals.h	(working copy)
 @@ -287,6 +287,7 @@
  /////////////////// readers that do not reed baudrate setting and timings are guarded by reader itself (large buffer built in): AFTER R_SMART
@@ -283,7 +283,7 @@ Index: globals.h
  struct s_client ;
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9885)
+--- Makefile	(revision 9909)
 +++ Makefile	(working copy)
 @@ -233,6 +233,14 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
@@ -300,35 +300,9 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-Index: module-dvbapi-azbox.c
-===================================================================
---- module-dvbapi-azbox.c	(revision 9885)
-+++ module-dvbapi-azbox.c	(working copy)
-@@ -234,6 +234,8 @@
- {
- 	cs_debug_mask(D_DVBAPI, LOG_PREFIX "send_dcw");
- 
-+	delayer(er);
-+
- 	FILE *ecmtxt;
- 	if((ecmtxt = fopen(ECMINFO_FILE, "w")))
- 	{
-Index: module-dvbapi-mca.c
-===================================================================
---- module-dvbapi-mca.c	(revision 9885)
-+++ module-dvbapi-mca.c	(working copy)
-@@ -455,6 +455,8 @@
- {
- 	cs_debug_mask(D_DVBAPI, LOG_PREFIX "send_dcw");
- 
-+	delayer(er);
-+
- 	FILE *ecmtxt;
- 	if((ecmtxt = fopen(ECMINFO_FILE, "w")))
- 	{
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 9885)
+--- module-dvbapi.c	(revision 9909)
 +++ module-dvbapi.c	(working copy)
 @@ -20,6 +20,7 @@
  #include "oscam-string.h"
@@ -338,7 +312,7 @@ Index: module-dvbapi.c
  
  #ifdef DVBAPI_SAMYGO
  
-@@ -942,6 +943,7 @@
+@@ -961,6 +962,7 @@
  int32_t dvbapi_start_emm_filter(int32_t demux_index)
  {
  	unsigned int j, fcount = 0, fcount_added = 0;
@@ -346,7 +320,7 @@ Index: module-dvbapi.c
  	const char *typtext[] = { "UNIQUE", "SHARED", "GLOBAL", "UNKNOWN" };
  
  	if(!demux[demux_index].EMMpidcount)
-@@ -970,7 +972,12 @@
+@@ -989,7 +991,12 @@
  
  		caid = ncaid = rdr->caid;
  
@@ -360,7 +334,7 @@ Index: module-dvbapi.c
  		if(!rdr->caid)
  			{ cs = get_cardsystem_by_caid(rdr->csystem.caids[0]); } //Bulcrypt
  		else
-@@ -1026,8 +1033,24 @@
+@@ -1045,8 +1052,24 @@
  			else
  			{
  				// provid 0 is safe since oscam sets filter with e.g. rdr->sa & doesn't add filter twice (is_emmfilter_in_list)
@@ -386,18 +360,6 @@ Index: module-dvbapi.c
  					l = dvbapi_find_emmpid(demux_index, emmtype, rdr->csystem.caids[0], 0); //Bulcrypt
  					if(l < 0)
  						{ l = dvbapi_find_emmpid(demux_index, emmtype, rdr->csystem.caids[1], 0); }
-Index: module-dvbapi.h
-===================================================================
---- module-dvbapi.h	(revision 9885)
-+++ module-dvbapi.h	(working copy)
-@@ -280,6 +280,7 @@
- void disable_unused_streampids(int16_t demux_id);
- int8_t is_ca_used(uint8_t cadevice);
- const char *dvbapi_get_client_name(void);
-+void delayer(ECM_REQUEST *er);
- 
- #ifdef DVBAPI_LOG_PREFIX
- #undef cs_log
 Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
@@ -3061,7 +3023,7 @@ Index: module-emulator.c
 +}
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 9885)
+--- module-webif-tpl.c	(revision 9909)
 +++ module-webif-tpl.c	(working copy)
 @@ -445,6 +445,7 @@
  											check_conf(WITH_LIBCRYPTO, ptr2);
@@ -3073,7 +3035,7 @@ Index: module-webif-tpl.c
  										{
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9885)
+--- module-webif.c	(revision 9909)
 +++ module-webif.c	(working copy)
 @@ -105,7 +105,8 @@
  #define MNU_CFG_WHITELIST 25
@@ -3159,7 +3121,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 9885)
+--- oscam-chk.c	(revision 9909)
 +++ oscam-chk.c	(working copy)
 @@ -674,7 +674,7 @@
  		return 0;
@@ -3172,7 +3134,7 @@ Index: oscam-chk.c
  		for(i = 0; i < (int)ARRAY_SIZE(rdr->csystem.caids); i++)
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 9885)
+--- oscam-config-reader.c	(revision 9909)
 +++ oscam-config-reader.c	(working copy)
 @@ -330,6 +330,7 @@
  			{ "newcamd",    R_NEWCAMD },
@@ -3193,7 +3155,7 @@ Index: oscam-config-reader.c
  #ifdef WITH_LB
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 9885)
+--- oscam-config.h	(revision 9909)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -3205,7 +3167,7 @@ Index: oscam-config.h
  int32_t init_sidtab(void);
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 9885)
+--- oscam-string.c	(revision 9909)
 +++ oscam-string.c	(working copy)
 @@ -491,6 +491,62 @@
  	return crc ^ 0xffffffffL;
@@ -3272,7 +3234,7 @@ Index: oscam-string.c
  	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 9885)
+--- oscam-string.h	(revision 9909)
 +++ oscam-string.h	(working copy)
 @@ -35,6 +35,7 @@
  void get_random_bytes_init(void);
@@ -3284,7 +3246,7 @@ Index: oscam-string.h
  uint32_t jhash(const char *key, size_t len);
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9885)
+--- oscam.c	(revision 9909)
 +++ oscam.c	(working copy)
 @@ -340,6 +340,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
@@ -3337,7 +3299,7 @@ Index: oscam.c
  	init_srvid();
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 9885)
+--- reader-common.c	(revision 9909)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -3368,7 +3330,7 @@ Index: reader-common.c
  		if(reader->card_status == NO_CARD || reader->card_status == UNKNOWN)
 Index: readers.h
 ===================================================================
---- readers.h	(revision 9885)
+--- readers.h	(revision 9909)
 +++ readers.h	(working copy)
 @@ -15,5 +15,6 @@
  void reader_bulcrypt(struct s_cardsystem *);
@@ -3379,7 +3341,7 @@ Index: readers.h
  #endif
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 9885)
+--- webif/files/menu.html	(revision 9909)
 +++ webif/files/menu.html	(working copy)
 @@ -9,7 +9,7 @@
  ##TPLFILEMENUANTICASC##
@@ -3406,7 +3368,7 @@ Index: webif/files/menu_key.html
 +			<LI CLASS="##CMENUACTIVE28##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 9885)
+--- webif/pages_index.txt	(revision 9909)
 +++ webif/pages_index.txt	(working copy)
 @@ -112,6 +112,7 @@
  FILEMENU                      files/menu.html
