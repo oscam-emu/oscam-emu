@@ -365,7 +365,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,2710 @@
+@@ -0,0 +1,2716 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -389,7 +389,7 @@ Index: module-emulator.c
 +{
 +	// this should be increased
 +	// after every major code change
-+	return 103;	
++	return 104;	
 +}
 +
 +// Key DB
@@ -2377,7 +2377,7 @@ Index: module-emulator.c
 +	return 1;
 +}
 +
-+int8_t BissECM(uint16_t caid, uint8_t *ecm, uint8_t *dw)
++int8_t BissECM(uint16_t UNUSED(caid), uint8_t *ecm, uint8_t *dw)
 +{
 +	uint8_t haveKey1 = 0, haveKey2 = 0;
 +	uint16_t sid = 0, pid = 0;
@@ -2396,8 +2396,7 @@ Index: module-emulator.c
 +		
 +		if(haveKey1 && haveKey2) {return 0;}
 +		else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
-+		else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}		
-+		else {return 2;}
++		else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
 +	}
 +	else {
 +		for(i=5; i+1<ecmLen; i+=2) {
@@ -2407,9 +2406,16 @@ Index: module-emulator.c
 +		
 +			if(haveKey1 && haveKey2) {return 0;}
 +			else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
-+			else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}				
++			else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
 +		}
 +	}
++	
++	haveKey1 = FindKey('F', (sid<<16)|0x1FFF, "00", dw, 8, 0);
++	haveKey2 = FindKey('F', (sid<<16)|0x1FFF, "01", &dw[8], 8, 0);
++	
++	if(haveKey1 && haveKey2) {return 0;}
++	else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
++	else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}	
 +	
 +	return 2;
 +}
@@ -2889,7 +2895,7 @@ Index: module-emulator.c
 +	}
 +}
 +
-+static const uint8_t oneByte = 0x01;
++static uint8_t oneByte = 0x01;
 +
 +static void refresh_entitlements(struct s_reader *reader)
 +{
@@ -3261,21 +3267,6 @@ Index: oscam-config.h
  
  void    chk_sidtab(char *token, char *value, struct s_sidtab *sidtab);
  int32_t init_sidtab(void);
-Index: oscam-reader.c
-===================================================================
---- oscam-reader.c	(revision 9921)
-+++ oscam-reader.c	(working copy)
-@@ -451,6 +451,10 @@
- 	{
- 		for(j = 0; j < (int)ARRAY_SIZE(cardsystems[i].caids); j++)
- 		{
-+#ifdef WITH_EMU			
-+			if(strcmp(cardsystems[i].desc, "emu") == 0)
-+				{ continue; } 	
-+#endif
- 			uint16_t cs_caid = cardsystems[i].caids[j];
- 			if(!cs_caid)
- 				{ continue; }
 Index: oscam-string.c
 ===================================================================
 --- oscam-string.c	(revision 9921)
@@ -3359,7 +3350,14 @@ Index: oscam.c
 ===================================================================
 --- oscam.c	(revision 9921)
 +++ oscam.c	(working copy)
-@@ -340,6 +340,7 @@
+@@ -1,5 +1,6 @@
+ #include "globals.h"
+ #include <getopt.h>
++#include <execinfo.h>
+ 
+ #include "csctapi/cardreaders.h"
+ #include "modules.h"
+@@ -340,6 +341,7 @@
  	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
  	write_conf(LCDSUPPORT, "LCD support");
  	write_conf(LEDSUPPORT, "LED support");
@@ -3367,7 +3365,93 @@ Index: oscam.c
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
  		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
-@@ -1149,6 +1150,10 @@
+@@ -597,9 +599,67 @@
+ 	set_signal_handler(SIGHUP  , 1, SIG_IGN);
+ }
+ 
++static void print_trace(int doLog)
++{
++	void *array[17];
++	size_t size;
++	char **strings;
++	size_t i;
++	
++	size = backtrace(array, 17);
++	strings = backtrace_symbols(array, size);
++	
++	if(doLog) { cs_log("Obtained %zd stack frames.\n", size); }
++	else { printf("Obtained %zd stack frames.\n", size); }
++	
++	for(i = 0; i < size; i++) 
++	{
++		if(doLog) { cs_log("%s\n", strings[i]); }
++		else { printf("%s\n", strings[i]); }
++	}
++	
++	free(strings);
++}
++
++static void crash_handler(int sig, siginfo_t *info, void *UNUSED(ptr))
++{
++	printf("#### CRASH ####\n");
++	printf("Faulty address is %p (crash handler is at %p)\n", info->si_addr, crash_handler);
++	printf("###############\n");
++	print_trace(0);
++	fflush(stdout);
++   	
++	cs_log("#### CRASH ####\n"); 
++	cs_log("Faulty address is %p (crash handler is at %p)\n", info->si_addr, crash_handler);
++	cs_log("###############\n");
++	print_trace(1);
++   	cs_sleepms(1000);
++   	
++	if(cs_capture_SEGV)
++	{
++		cs_exit(sig);
++	}
++	else if(cs_dump_stack)
++	{
++		cs_dumpstack(sig);
++	}
++	exit(-1);
++}
++
+ /* Sets the signal handlers.*/
+ static void init_signal(void)
+ {
++    struct sigaction s1, s2;
++    s1.sa_flags = SA_SIGINFO|SA_RESETHAND;
++    s1.sa_sigaction = crash_handler;
++    sigemptyset(&s1.sa_mask);
++    sigaction(SIGSEGV, &s1, 0);	
++	
++    s2.sa_flags = SA_SIGINFO|SA_RESETHAND;
++    s2.sa_sigaction = crash_handler;
++    sigemptyset(&s2.sa_mask);
++    sigaction(SIGBUS, &s2, 0);	
++	
+ 	set_signal_handler(SIGINT, 3, cs_exit);
+ #if defined(__APPLE__)
+ 	set_signal_handler(SIGEMT, 3, cs_exit);
+@@ -614,17 +674,6 @@
+ 	set_signal_handler(SIGUSR2, 1, cs_card_info);
+ 	set_signal_handler(OSCAM_SIGNAL_WAKEUP, 0, cs_dummy);
+ 
+-	if(cs_capture_SEGV)
+-	{
+-		set_signal_handler(SIGSEGV, 1, cs_exit);
+-		set_signal_handler(SIGBUS, 1, cs_exit);
+-	}
+-	else if(cs_dump_stack)
+-	{
+-		set_signal_handler(SIGSEGV, 1, cs_dumpstack);
+-		set_signal_handler(SIGBUS, 1, cs_dumpstack);
+-	}
+-
+ 	cs_log("signal handling initialized");
+ 	return;
+ }
+@@ -1149,6 +1198,10 @@
  	}
  }
  
@@ -3378,17 +3462,7 @@ Index: oscam.c
  int32_t main(int32_t argc, char *argv[])
  {
  	int32_t i, j;
-@@ -1252,6 +1257,9 @@
- #ifdef READER_DGCRYPT
- 		reader_dgcrypt,
- #endif
-+#ifdef WITH_EMU
-+		reader_emu,
-+#endif
- 		0
- 	};
- 
-@@ -1291,6 +1299,9 @@
+@@ -1291,6 +1344,9 @@
  #ifdef CARDREADER_STINGER
  		cardreader_stinger,
  #endif
@@ -3398,7 +3472,7 @@ Index: oscam.c
  		0
  	};
  
-@@ -1363,6 +1374,9 @@
+@@ -1363,6 +1419,9 @@
  
  	init_sidtab();
  	init_readerdb();
