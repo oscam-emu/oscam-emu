@@ -22,6 +22,7 @@ Currently only the following crypto systems are available:
  - Viaccess 1/2/3
  - Nagra 2
  - Irdeto 2
+ - Biss (Mode 1) [Note: only 1 key possible for a sid/pid combination, use the oscam constcw reader if you need more]
  
 All of these are basically working, but far from complete so anyone filling in blanks is welcome...
 
@@ -68,7 +69,7 @@ Building OSCam-emu from source
 OSCam dvbapi config
 ===================
 
-If dvbapi is activated, the "delayer" option is forced to have a value of at least 70.
+If dvbapi is activated, the "delayer" option is forced to have a value of at least 60.
 This is to avoid freezes/crashes because of too fast ecm responses.
 
 
