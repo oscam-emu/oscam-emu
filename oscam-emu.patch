@@ -3391,7 +3391,7 @@ Index: oscam.c
 +	free(strings);
 +}
 +
-+static void crash_handler(int sig, siginfo_t *info, void *ptr)
++static void crash_handler(int sig, siginfo_t *info, void *UNUSED(ptr))
 +{
 +	printf("#### CRASH ####\n");
 +	printf("Faulty address is %p (crash handler is at %p)\n", info->si_addr, crash_handler);
