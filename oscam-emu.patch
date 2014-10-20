@@ -365,7 +365,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,2709 @@
+@@ -0,0 +1,2710 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -3055,6 +3055,7 @@ Index: module-emulator.c
 +		rdr->ftab.filts[7].prids[0] = 0x000000;
 +		rdr->ftab.filts[7].nprids = 1;
 +
++		rdr->auprovid = 0x030B00;
 +		rdr->cachemm = 1;
 +		rdr->rewritemm = 1;
 +		rdr->logemm = 2;
