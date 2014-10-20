@@ -2757,7 +2757,7 @@ Index: module-emulator.c
 +{
 +	uint32_t keysAdded = 0;
 +	
-+	if(er->emmlen < 3) {
++	if(emm->emmlen < 3) {
 +		return CS_ERROR;
 +	}
 +
