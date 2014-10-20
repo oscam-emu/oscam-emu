@@ -2918,8 +2918,8 @@ Index: module-emulator.c
 +	emu_add_entitlement(reader, 0x090F, 0, viasat_const, "00", 64);
 +	emu_add_entitlement(reader, 0x093E, 0, viasat_const, "00", 64);
 +
-+	emu_add_entitlement(reader, 0x2600, 0, oneByte, "00", 1);
-+	emu_add_entitlement(reader, 0xFFFF, 0, oneByte, "00", 1);
++	emu_add_entitlement(reader, 0x2600, 0, &oneByte, "00", 1);
++	emu_add_entitlement(reader, 0xFFFF, 0, &oneByte, "00", 1);
 +}
 +
 +extern char cs_confdir[128];
