@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 9928)
+--- CMakeLists.txt	(revision 9929)
 +++ CMakeLists.txt	(working copy)
 @@ -200,6 +200,14 @@
      message(STATUS "  no pthread found. No smartreader ")
@@ -61,7 +61,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 9928)
+--- config.h	(revision 9929)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -82,7 +82,7 @@ Index: config.h
  #endif //OSCAM_CONFIG_H_
 Index: config.sh
 ===================================================================
---- config.sh	(revision 9928)
+--- config.sh	(revision 9929)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -139,7 +139,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/des.c
 ===================================================================
---- cscrypt/des.c	(revision 9928)
+--- cscrypt/des.c	(revision 9929)
 +++ cscrypt/des.c	(working copy)
 @@ -658,3 +658,46 @@
  		xxor(data,8,data,civ[n]);
@@ -190,7 +190,7 @@ Index: cscrypt/des.c
 +}
 Index: cscrypt/des.h
 ===================================================================
---- cscrypt/des.h	(revision 9928)
+--- cscrypt/des.h	(revision 9929)
 +++ cscrypt/des.h	(working copy)
 @@ -19,6 +19,8 @@
  	extern int des_decrypt(unsigned char *buffer, int len, unsigned char *deskey);
@@ -203,7 +203,7 @@ Index: cscrypt/des.h
  	extern void des_cbc_decrypt(unsigned char *data, unsigned char *iv, const unsigned char *okey, int len);
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 9928)
+--- cscrypt/md5.c	(revision 9929)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -248,7 +248,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 9928)
+--- cscrypt/md5.h	(revision 9929)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -271,7 +271,7 @@ Index: cscrypt/md5.h
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 9928)
+--- csctapi/cardreaders.h	(revision 9929)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -13,5 +13,6 @@
  void cardreader_smartreader(struct s_cardreader *crdr);
@@ -282,7 +282,7 @@ Index: csctapi/cardreaders.h
  #endif
 Index: globals.h
 ===================================================================
---- globals.h	(revision 9928)
+--- globals.h	(revision 9929)
 +++ globals.h	(working copy)
 @@ -287,6 +287,7 @@
  /////////////////// readers that do not reed baudrate setting and timings are guarded by reader itself (large buffer built in): AFTER R_SMART
@@ -308,7 +308,7 @@ Index: globals.h
  struct s_client ;
 Index: Makefile
 ===================================================================
---- Makefile	(revision 9928)
+--- Makefile	(revision 9929)
 +++ Makefile	(working copy)
 @@ -233,6 +233,14 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
@@ -327,7 +327,7 @@ Index: Makefile
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 9928)
+--- module-dvbapi.c	(revision 9929)
 +++ module-dvbapi.c	(working copy)
 @@ -20,6 +20,7 @@
  #include "oscam-string.h"
@@ -387,7 +387,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,2760 @@
+@@ -0,0 +1,2768 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -412,7 +412,7 @@ Index: module-emulator.c
 +{
 +	// this should be increased
 +	// after every major code change
-+	return 705;	
++	return 706;	
 +}
 +
 +// Key DB
@@ -1830,15 +1830,15 @@ Index: module-emulator.c
 +
 +void Via3FinalMix(uint8_t *dw)
 +{
-+	uint32_t tmp;
++	uint8_t tmp[4];
 +
-+	tmp = *(uint32_t *)dw;
-+	*(uint32_t *)dw = *(uint32_t *)(dw + 4);
-+	*(uint32_t *)(dw + 4) = tmp;
++	memcpy(tmp, dw, 4);
++	memcpy(dw, dw + 4, 4);
++	memcpy(dw + 4, tmp, 4);
 +
-+	tmp = *(uint32_t *)(dw + 8);
-+	*(uint32_t *)(dw + 8) = *(uint32_t *)(dw + 12);
-+	*(uint32_t *)(dw + 12) = tmp;
++	memcpy(tmp, dw + 8, 4);
++	memcpy(dw + 8, dw + 12, 4);
++	memcpy(dw + 12, tmp, 4);
 +}
 +
 +int8_t Via3HasValidCRC(uint8_t *dw)
@@ -2218,13 +2218,13 @@ Index: module-emulator.c
 +
 +	identMask = ident & 0xFF00;
 +	if (identMask == 0x1100 || identMask == 0x500 || identMask == 0x3100) {
-+		tmp1 = *(uint32_t*)dw;
-+		tmp2 = *(uint32_t*)(dw + 4);
-+		tmp3 = *(uint32_t*)(dw + 12);
-+		*(uint32_t*)dw = *(uint32_t*)(dw + 8);
-+		*(uint32_t*)(dw + 4) = tmp3;
-+		*(uint32_t*)(dw + 8) = tmp1;
-+		*(uint32_t*)(dw + 12) = tmp2;
++		memcpy(&tmp1, dw, 4);
++		memcpy(&tmp2, dw + 4, 4);
++		memcpy(&tmp3, dw + 12, 4);
++		memcpy(dw, dw + 8, 4);
++		memcpy(dw + 4, &tmp3, 4);
++		memcpy(dw + 8, &tmp1, 4);
++		memcpy(dw + 12, &tmp2, 4);
 +	}
 +	return 0;
 +}
@@ -2243,19 +2243,27 @@ Index: module-emulator.c
 +
 +static inline void xxor(uint8_t *data, int32_t len, const uint8_t *v1, const uint8_t *v2)
 +{
-+	switch(len) {
++	uint32_t i;
++	switch(len)
++	{
 +	case 16:
-+		*((uint32_t *)data+3) = *((uint32_t *)v1+3) ^ *((uint32_t *)v2+3);
-+		*((uint32_t *)data+2) = *((uint32_t *)v1+2) ^ *((uint32_t *)v2+2);
++		for(i = 8; i < 16; ++i)
++		{
++			data[i] = v1[i] ^ v2[i];
++		}
 +	case 8:
-+		*((uint32_t *)data+1) = *((uint32_t *)v1+1) ^ *((uint32_t *)v2+1);
++		for(i = 4; i < 8; ++i)
++		{
++			data[i] = v1[i] ^ v2[i];
++		}
 +	case 4:
-+		*((uint32_t *)data+0) = *((uint32_t *)v1+0) ^ *((uint32_t *)v2+0);
++		for(i = 0; i < 4; ++i)
++		{
++			data[i] = v1[i] ^ v2[i];
++		}
 +		break;
 +	default:
-+		while(len--) {
-+			*data++ = *v1++ ^ *v2++;
-+		}
++		while(len--) { *data++ = *v1++ ^ *v2++; }
 +		break;
 +	}
 +}
@@ -3150,7 +3158,7 @@ Index: module-emulator.c
 +}
 Index: module-stat.c
 ===================================================================
---- module-stat.c	(revision 9928)
+--- module-stat.c	(revision 9929)
 +++ module-stat.c	(working copy)
 @@ -826,7 +826,7 @@
  
@@ -3172,7 +3180,7 @@ Index: module-stat.c
  				continue; // proxy can convert or reject
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 9928)
+--- module-webif-tpl.c	(revision 9929)
 +++ module-webif-tpl.c	(working copy)
 @@ -445,6 +445,7 @@
  											check_conf(WITH_LIBCRYPTO, ptr2);
@@ -3184,7 +3192,7 @@ Index: module-webif-tpl.c
  										{
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 9928)
+--- module-webif.c	(revision 9929)
 +++ module-webif.c	(working copy)
 @@ -105,7 +105,8 @@
  #define MNU_CFG_WHITELIST 25
@@ -3280,7 +3288,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 9928)
+--- oscam-chk.c	(revision 9929)
 +++ oscam-chk.c	(working copy)
 @@ -674,7 +674,7 @@
  		return 0;
@@ -3302,7 +3310,7 @@ Index: oscam-chk.c
  	}
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 9928)
+--- oscam-config-reader.c	(revision 9929)
 +++ oscam-config-reader.c	(working copy)
 @@ -330,6 +330,7 @@
  			{ "newcamd",    R_NEWCAMD },
@@ -3323,7 +3331,7 @@ Index: oscam-config-reader.c
  #ifdef WITH_LB
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 9928)
+--- oscam-config.h	(revision 9929)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -3335,7 +3343,7 @@ Index: oscam-config.h
  int32_t init_sidtab(void);
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 9928)
+--- oscam-string.c	(revision 9929)
 +++ oscam-string.c	(working copy)
 @@ -491,6 +491,62 @@
  	return crc ^ 0xffffffffL;
@@ -3402,7 +3410,7 @@ Index: oscam-string.c
  	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 9928)
+--- oscam-string.h	(revision 9929)
 +++ oscam-string.h	(working copy)
 @@ -35,6 +35,7 @@
  void get_random_bytes_init(void);
@@ -3414,7 +3422,7 @@ Index: oscam-string.h
  uint32_t jhash(const char *key, size_t len);
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 9928)
+--- oscam.c	(revision 9929)
 +++ oscam.c	(working copy)
 @@ -1,6 +1,10 @@
  #include "globals.h"
@@ -3578,7 +3586,7 @@ Index: oscam.c
  	init_srvid();
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 9928)
+--- reader-common.c	(revision 9929)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -3610,7 +3618,7 @@ Index: reader-common.c
  		if(cardsystems[i].card_init)
 Index: readers.h
 ===================================================================
---- readers.h	(revision 9928)
+--- readers.h	(revision 9929)
 +++ readers.h	(working copy)
 @@ -15,5 +15,6 @@
  void reader_bulcrypt(struct s_cardsystem *);
@@ -3621,7 +3629,7 @@ Index: readers.h
  #endif
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 9928)
+--- webif/files/menu.html	(revision 9929)
 +++ webif/files/menu.html	(working copy)
 @@ -9,7 +9,7 @@
  ##TPLFILEMENUANTICASC##
@@ -3648,7 +3656,7 @@ Index: webif/files/menu_key.html
 +			<LI CLASS="##CMENUACTIVE28##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 9928)
+--- webif/pages_index.txt	(revision 9929)
 +++ webif/pages_index.txt	(working copy)
 @@ -112,6 +112,7 @@
  FILEMENU                      files/menu.html
