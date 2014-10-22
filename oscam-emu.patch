@@ -387,7 +387,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,2768 @@
+@@ -0,0 +1,2761 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -397,7 +397,6 @@ Index: module-emulator.c
 +#include "oscam-aes.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
-+#include "oscam-time.h"
 +
 +// from reader-viaccess.c:
 +void hdSurEncPhase1_D2_0F_11(uint8_t *CWs);
@@ -2810,8 +2809,6 @@ Index: module-emulator.c
 +
 +int32_t emu_do_ecm(struct s_reader *UNUSED(rdr), const struct ecm_request_t *er, struct s_ecm_answer *ea)
 +{
-+	cs_sleepms(5);
-+	
 +	if(er->ecmlen < 3) {
 +		return CS_ERROR;
 +	}
@@ -2832,9 +2829,7 @@ Index: module-emulator.c
 +int32_t emu_do_emm(struct s_reader *rdr, struct emm_packet_t *emm)
 +{
 +	uint32_t keysAdded = 0;
-+	
-+	cs_sleepms(5);
-+	
++
 +	if(emm->emmlen < 3) {
 +		return CS_ERROR;
 +	}
@@ -3016,25 +3011,23 @@ Index: module-emulator.c
 +
 +	refresh_entitlements(reader);
 +
-+	cs_sleepms(5); 
-+	
 +	return CR_OK;
 +}
 +
-+static int32_t EMU_GetStatus(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; cs_sleepms(5); return CR_OK; }
-+static int32_t EMU_Activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { cs_sleepms(5); return CR_OK; }
++static int32_t EMU_GetStatus(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; return CR_OK; }
++static int32_t EMU_Activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { return CR_OK; }
 +static int32_t EMU_Transmit(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
-+							uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { cs_sleepms(5); return CR_OK; }
++							uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
 +static int32_t EMU_Receive(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
-+						   uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { cs_sleepms(5); return CR_OK; }
-+static int32_t EMU_Close(struct s_reader *UNUSED(reader)) { cs_sleepms(5); return CR_OK; }
++						   uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
++static int32_t EMU_Close(struct s_reader *UNUSED(reader)) { return CR_OK; }
 +static int32_t EMU_write_settings(struct s_reader *UNUSED(reader),uint32_t UNUSED(ETU),uint32_t UNUSED(EGT),
 +								  uint8_t UNUSED(P),uint8_t UNUSED(I),uint16_t UNUSED(Fi), uint8_t UNUSED(Di),
-+								  uint8_t UNUSED(Ni)) { cs_sleepms(5); return CR_OK; }
++								  uint8_t UNUSED(Ni)) { return CR_OK; }
 +static int32_t EMU_card_write(struct s_reader *UNUSED(pcsc_reader),const uchar *UNUSED(buf) ,uint8_t *UNUSED(cta_res),
-+							  uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { cs_sleepms(5); return CR_OK; }
++							  uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
 +static int32_t EMU_set_protocol(struct s_reader *UNUSED(rdr),uint8_t *UNUSED(params),uint32_t *UNUSED(length),
-+								uint32_t UNUSED(len_request)) { cs_sleepms(5); return CR_OK; }
++								uint32_t UNUSED(len_request)) { return CR_OK; }
 +						
 +void cardreader_emu(struct s_cardreader *crdr)
 +{
