@@ -2863,7 +2863,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,378 @@
+@@ -0,0 +1,380 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -3159,13 +3159,15 @@ Index: module-emulator.c
 +		strncpy(rdr->label, emuName, strlen(emuName));
 +		strncpy(rdr->device, emuName, strlen(emuName));
 +		rdr->ctab.caid[0] = 0x0D00;
-+		rdr->ctab.mask[0] = 0x0F00;
-+		rdr->ctab.caid[1] = 0x090F;
-+		rdr->ctab.caid[2] = 0x0500;
-+		rdr->ctab.caid[3] = 0x1801;
-+		rdr->ctab.caid[4] = 0x0604;
-+		rdr->ctab.caid[5] = 0x2600;
-+		rdr->ctab.caid[6] = 0xFFFF;
++		rdr->ctab.caid[1] = 0x0D02;
++		rdr->ctab.caid[2] = 0x0D03;
++		rdr->ctab.caid[3] = 0x0D05;
++		rdr->ctab.caid[4] = 0x090F;
++		rdr->ctab.caid[5] = 0x0500;
++		rdr->ctab.caid[6] = 0x1801;
++		rdr->ctab.caid[7] = 0x0604;
++		rdr->ctab.caid[8] = 0x2600;
++		rdr->ctab.caid[9] = 0xFFFF;
 +
 +		rdr->ftab.nfilts = 10;
 +		rdr->ftab.filts[0].caid = 0x0D00;
