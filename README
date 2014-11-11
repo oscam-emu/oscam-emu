@@ -47,10 +47,11 @@ Building OSCam-emu from source
  - Get the lastest oscam sources from SVN:
     svn checkout http://www.streamboard.tv/svn/oscam/trunk oscam-svn
 
- - Save the oscam-emu.patch file
+ - Save the oscam-emu.patch file:
     wget https://github.com/oscam-emu/oscam-emu/raw/master/oscam-emu.patch
 
- - Go to oscam-svn directory.
+ - Go to oscam-svn directory:
+    cd oscam-svn
 
  - Patch the source with the EMU patch:
     patch -p0 < ../oscam-emu.patch
