@@ -2863,7 +2863,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,380 @@
+@@ -0,0 +1,389 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -3088,6 +3088,15 @@ Index: module-emulator.c
 +
 +static int32_t EMU_Init(struct s_reader *reader)
 +{
++	char cVersion[32];
++	uint32_t version = GetOSemuVersion();
++	uint8_t hversion[2];
++	
++	snprintf(cVersion, sizeof(cVersion), "%04d", version);
++	CharToBin(hversion, cVersion, 4);
++	reader->hexserial[3] = hversion[0];
++	reader->hexserial[4] = hversion[1];
++	
 +#if !defined(__APPLE__) && !defined(__ANDROID__)
 +	read_emu_keymemory();
 +#endif
@@ -3097,7 +3106,7 @@ Index: module-emulator.c
 +	}
 +
 +	refresh_entitlements(reader);
-+
++		
 +	return CR_OK;
 +}
 +
