@@ -2863,7 +2863,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,380 @@
+@@ -0,0 +1,389 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -3088,6 +3088,15 @@ Index: module-emulator.c
 +
 +static int32_t EMU_Init(struct s_reader *reader)
 +{
++	char cVersion[32];
++	uint32_t version = GetOSemuVersion();
++	uint8_t hversion[2];
++	
++	snprintf(cVersion, sizeof(cVersion), "%04d", version);
++	CharToBin(hversion, cVersion, 4);
++	reader->hexserial[3] = hversion[0];
++	reader->hexserial[4] = hversion[1];
++	
 +#if !defined(__APPLE__) && !defined(__ANDROID__)
 +	read_emu_keymemory();
 +#endif
@@ -3097,7 +3106,7 @@ Index: module-emulator.c
 +	}
 +
 +	refresh_entitlements(reader);
-+
++		
 +	return CR_OK;
 +}
 +
@@ -3311,7 +3320,7 @@ Index: module-webif.c
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
-@@ -3901,9 +3905,31 @@
+@@ -3901,9 +3905,36 @@
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -3327,7 +3336,12 @@ Index: module-webif.c
 +							cs_hexdump(0, item->key, item->keyLength, keyBuffer, sizeof(keyBuffer));
 +							tpl_addVar(vars, TPLADD, "ENTEXPIERED", "e_valid");
 +							tpl_printf(vars, TPLADD, "ENTCAID", "%04X", item->caid);
-+							tpl_printf(vars, TPLADD, "ENTPROVID", "%06X", item->provid);
++							if(item->caid == 0x2600) {
++								tpl_printf(vars, TPLADD, "ENTPROVID", "%08X", item->provid);
++							}
++							else {
++								tpl_printf(vars, TPLADD, "ENTPROVID", "%06X", item->provid);
++							}
 +							tpl_addVar(vars, TPLADD, "ENTID", item->name);
 +							tpl_addVar(vars, TPLADD, "ENTCLASS", keyBuffer);
 +							if(item->isData) { tpl_addVar(vars, TPLADD, "ENTTYPE", "data"); }
@@ -3343,7 +3357,7 @@ Index: module-webif.c
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -4338,6 +4364,9 @@
+@@ -4338,6 +4369,9 @@
  #else
  						filtered = (type == cl->typ);
  #endif
@@ -3353,7 +3367,7 @@ Index: module-webif.c
  					}
  				}
  
-@@ -5644,6 +5673,9 @@
+@@ -5644,6 +5678,9 @@
  		{ "oscam.conf",      MNU_CFG_FCONF,     FTYPE_CONFIG },
  		{ "oscam.user",      MNU_CFG_FUSER,     FTYPE_CONFIG },
  		{ "oscam.server",    MNU_CFG_FSERVER,   FTYPE_CONFIG },
@@ -3363,7 +3377,7 @@ Index: module-webif.c
  		{ "oscam.services",  MNU_CFG_FSERVICES, FTYPE_CONFIG },
  		{ "oscam.whitelist", MNU_CFG_WHITELIST, FTYPE_CONFIG },
  		{ "oscam.srvid",     MNU_CFG_FSRVID,    FTYPE_CONFIG },
-@@ -6984,8 +7016,8 @@
+@@ -6984,8 +7021,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
