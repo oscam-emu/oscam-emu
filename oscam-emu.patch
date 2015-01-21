@@ -2637,7 +2637,7 @@ Index: emu-shared.c
 +	else if((caid>>8)==0x06) {
 +		result = Irdeto2ECM(caid,ecmCopy,dw);
 +	}
-+	else if((caid>>8)==0x26 || caid == 0xFFFF) {
++	else if((caid>>8)==0x26 || caid == 0xFFFE || caid == 0xFFFF) {
 +		result = BissECM(caid,ecmCopy,dw);
 +	}
 +	
@@ -3256,11 +3256,24 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
+Index: module-dvbapi.c
+===================================================================
+--- module-dvbapi.c	(revision 10255)
++++ module-dvbapi.c	(working copy)
+@@ -1413,7 +1413,7 @@
+ 		// BISS or FAKE CAID
+ 		// ecm stream pid is fake, so send out one fake ecm request
+ 		// special treatment: if we asked the cw first without starting a filter the cw request will be killed due to no ecmfilter started
+-		if(demux[demux_id].ECMpids[pid].CAID == 0xFFFF || (demux[demux_id].ECMpids[pid].CAID >> 8) == 0x26)
++		if(demux[demux_id].ECMpids[pid].CAID == 0xFFFE || demux[demux_id].ECMpids[pid].CAID == 0xFFFF || (demux[demux_id].ECMpids[pid].CAID >> 8) == 0x26)
+ 		{
+ 			int32_t j, n;
+ 			er->ecmlen = 5;
 Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,355 @@
+@@ -0,0 +1,358 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -3589,6 +3602,9 @@ Index: module-emulator.c
 +		rdr->ftab.filts[9].caid = 0xFFFF;
 +		rdr->ftab.filts[9].prids[0] = 0x000000;
 +		rdr->ftab.filts[9].nprids = 1;
++		rdr->ftab.filts[10].caid = 0xFFFE;
++		rdr->ftab.filts[10].prids[0] = 0x000000;
++		rdr->ftab.filts[10].nprids = 1;
 +	
 +		// for tntsat (caid 0500)
 +		rdr->auprovid = 0x030B00;
