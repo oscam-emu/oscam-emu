@@ -3282,7 +3282,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,358 @@
+@@ -0,0 +1,359 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -3453,6 +3453,7 @@ Index: module-emulator.c
 +	for(i=0; i<BissKeys.keyCount; i++)
 +		emu_add_entitlement(reader, 0x2600, BissKeys.EmuKeys[i].provider, BissKeys.EmuKeys[i].key, BissKeys.EmuKeys[i].keyName, BissKeys.EmuKeys[i].keyLength, 0);
 +
++	emu_add_entitlement(reader, 0xFFFE, 0, &oneByte, "00", 1, 1);
 +	emu_add_entitlement(reader, 0xFFFF, 0, &oneByte, "00", 1, 1);
 +}
 +
