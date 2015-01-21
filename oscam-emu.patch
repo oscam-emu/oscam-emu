@@ -3233,6 +3233,15 @@ Index: globals.h
  } S_ENTITLEMENT;
  
  struct s_client ;
+@@ -1241,7 +1249,7 @@
+ 	int8_t          fallback;
+ 	FTAB            fallback_percaid;
+ 	FTAB            localcards;
+-#ifdef MODULE_CAMD35
++#if defined(MODULE_CAMD35) || defined(WITH_EMU)
+ 	int8_t			via_emm_global;					// to enable global emm viaccess on camd35
+ #endif
+ #ifdef CS_CACHEEX
 Index: Makefile
 ===================================================================
 --- Makefile	(revision 10255)
