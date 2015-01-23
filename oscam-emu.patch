@@ -3295,7 +3295,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,362 @@
+@@ -0,0 +1,364 @@
 +#include "globals.h"
 +#include <stdint.h>
 +#include "cscrypt/des.h"
@@ -3475,6 +3475,13 @@ Index: module-emulator.c
 +static int32_t EMU_Init(struct s_reader *reader)
 +{
 +	char cVersion[32];
++
++	// set ird2 providers here
++	reader->prid[0][0] = 0x00;
++	reader->prid[0][1] = 0x01;
++	reader->prid[0][2] = 0x02;
++	reader->prid[0][3] = 0x00;
++	reader->nprov = 1;
 +	
 +	// if no hexserial for irdeto2 au (caid 0604) 
 +	// is found in key file, set hexserial to osemu version
@@ -3632,11 +3639,6 @@ Index: module-emulator.c
 +		
 +		// for bulsat (caid 0604)
 +		//rdr->auprovid = 0x010200;
-+		rdr->prid[0][0] = 0x00;		
-+		rdr->prid[0][1] = 0x01;
-+		rdr->prid[0][2] = 0x02;
-+		rdr->prid[0][3] = 0x00;
-+		rdr->nprov = 1;
 +		
 +		rdr->cachemm = 1;
 +		rdr->rewritemm = 1;
