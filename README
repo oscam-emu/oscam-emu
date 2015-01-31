@@ -84,3 +84,30 @@ Configuration wiki:
    http://www.streamboard.tv/wiki/index.php/OSCam
 
 
+BISS/ConstCW config
+===================
+
+Syntax for keys in SoftCam.Key: (key number can be '00' or '01')
+F <service id><ecm pid> <key number> <key>
+
+Example:
+
+	service id: 2222
+	ecm pid: 1111
+	key: 0102030405060708
+
+	F 22221111 00 0102030405060708
+	
+Important:
+	The correct ecm pid is only available when using oscam dvbapi.
+	For example:
+			oscam (dvbapi) <-> OSEmu
+			oscam (dvbapi) <-> oscam <-> OSEmu
+			
+	When using another client like cccam, the ecm pid seen by OSEmu will always be '1FFF'
+	For example:
+			cccam <-> oscam <-> OSEmu
+			cccam <-> OSEmu
+	In this case the above example key line needs to be changed to:
+	F 22221FFF 00 0102030405060708
+	
