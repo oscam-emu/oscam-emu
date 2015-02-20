@@ -3962,10 +3962,10 @@ Index: reader-common.c
 +	{
 +		NULLFREE(reader->csystem_data);
 +		reader_emu(&reader->csystem);
-+		reader->csystem.active = 1;
++		reader->csystem_active = true;
 +		led_status_found_cardsystem();
 +		rdr_log(reader, "found card system %s", reader->csystem.desc);
-+		return (reader->csystem.active);
++		return (reader->csystem_active);
 +	}
 +#endif
 +	
