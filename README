@@ -149,8 +149,8 @@ Channel Config:
 2. Download and save the .m3u file.
 3. Open the .m3u file with a text edior and get the stream link. It looks like this:
 	http://stb:8001/1:0:19:0123:3EF:1:C00000:0:0:0:
-4. Replace the port (8001) with the relay port (default: 17999)
-	http://stb:17999/1:0:19:0123:3EF:1:C00000:0:0:0:
+4. Replace the port (8001) with the relay port (default: 17999) and the host name ("stb") with 127.0.0.1
+	http://127.0.0.1:17999/1:0:19:0123:3EF:1:C00000:0:0:0:
 5. Add the new stream link to your channel list (for example with DreamBoxEdit)
 
 Note: 
