@@ -23,7 +23,9 @@ Currently only the following crypto systems are available:
  - Nagra 2
  - Irdeto 2
  - Biss (Mode 1) [Note: only 1 key possible for a sid/pid combination, use the oscam constcw reader if you need more]
- 
+ - PowerVU (via Stream Relay)
+ - Drecrypt2 *experimental, most likely some fixes are needed*
+
 All of these are basically working, but far from complete so anyone filling in blanks is welcome...
 
 
@@ -111,3 +113,70 @@ Important:
 	In this case the above example key line needs to be changed to:
 	F 22221FFF 00 0102030405060708
 	
+PowerVU config
+==============
+
+Keys in SoftCam.Key:
+	P <srvid> <nb> <key>
+	example:
+	P 1234 01 11223344556677
+
+	AU keys:
+	P <srvid> <UA> <key>
+	example:
+	P 1234 11223344 11223344556677
+
+For PowerVU the Stream Relay must be used:
+
+IMPORTANT:
+	The stream relay needs a fast CPU. Not every STB is fast enough.
+	If you cannot fix stuttering with the following guide, likely your CPU is too slow.
+
+	For best performance, the "Include ECM in http streams" setting must be enabled.
+	If your image supports it (openpli, openatv), you can find it here:
+	OpenWebif -> Settings -> Customize
+	
+	If the setting is not available, you may need to adjust the "ECM fix delay"
+	setting in oscam webif (Config -> Stream Relay).
+	Increase/Lower it until there is no stuttering.
+
+	When using VU+ devices, make sure to use the latest drivers (June 2015), if 
+	you encounter any problems.
+
+Channel Config:
+1. Go to the OpenWebif and click on the "Stream" button for the channel you want to add.
+2. Download and save the .m3u file.
+3. Open the .m3u file with a text edior and get the stream link. It looks like this:
+	http://stb:8001/1:0:19:1234:3EF:1:C00000:0:0:0:
+4. Replace the port (8001) with the relay port (default: 17999)
+	http://stb:17999/1:0:19:1234:3EF:1:C00000:0:0:0:
+5. Add the new stream link to your channel list (for example with DreamBoxEdit)
+
+Note: 
+	When using DreamBoxEdit:
+	
+	A. Go to the list in the middle "Bouquet details".
+	B. Right click on a channel, select "IPTV and other streaming services", select "Add".
+	C. Select "DVB/TS".
+	D. Chosse a name and use the new stream link as URL.
+	E. Use the "Service ID" of the original channel. You can find it in the left list ("Services")
+	
+
+Drecrypt2 config:
+=================
+
+IMPORTANT:
+	Drecrypt2 support is experimental at the moment.
+	Most likely you will encounter problems, which need to be fixed first.
+
+Keys in SoftCam.Key:
+
+D <caid><provider> <key type><key index> <key>
+example:
+D 4AE1FF AA01 112233445566778899AABBCCDDEEFF0011223344556677889900AABBCCDDEEFF
+
+AU keys:
+D <caid><provider> MK<key type><key index> <key>
+example:
+D 4AE1FF MKAA01 112233445566778899AABBCCDDEEFF0011223344556677889900AABBCCDDEEFF
+
