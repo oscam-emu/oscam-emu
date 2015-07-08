@@ -130,7 +130,8 @@ For PowerVU the Stream Relay must be used:
 
 IMPORTANT:
 	The stream relay needs a fast CPU. Not every STB is fast enough.
-	If you cannot fix stuttering with the following guide, likely your CPU is too slow.
+	If you cannot fix stuttering with the following guide, likely your CPU is 
+	too slow.
 
 	For best performance, the "Include ECM in http streams" setting must be enabled.
 	If your image supports it (openpli, openatv), you can find it here:
@@ -147,9 +148,9 @@ Channel Config:
 1. Go to the OpenWebif and click on the "Stream" button for the channel you want to add.
 2. Download and save the .m3u file.
 3. Open the .m3u file with a text edior and get the stream link. It looks like this:
-	http://stb:8001/1:0:19:1234:3EF:1:C00000:0:0:0:
+	http://stb:8001/1:0:19:0123:3EF:1:C00000:0:0:0:
 4. Replace the port (8001) with the relay port (default: 17999)
-	http://stb:17999/1:0:19:1234:3EF:1:C00000:0:0:0:
+	http://stb:17999/1:0:19:0123:3EF:1:C00000:0:0:0:
 5. Add the new stream link to your channel list (for example with DreamBoxEdit)
 
 Note: 
