@@ -153,6 +153,11 @@ Channel Config:
 	http://127.0.0.1:17999/1:0:19:0123:3EF:1:C00000:0:0:0:
 5. Add the new stream link to your channel list (for example with DreamBoxEdit)
 
+IMPORTANT:
+	Do NOT use the correct Transponder ID/Network ID/Namespace for the stream link.
+	Use Transponder ID: "11", Network ID: "22" and Namespace: "33".
+	Set Service Type to "1", and enter the correct Service ID for the channel.
+
 Note: 
 	When using DreamBoxEdit:
 	
