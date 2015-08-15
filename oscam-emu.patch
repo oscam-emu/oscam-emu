@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 10888)
+--- CMakeLists.txt	(revision 10943)
 +++ CMakeLists.txt	(working copy)
 @@ -97,6 +97,7 @@
      ${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -83,7 +83,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 10888)
+--- config.h	(revision 10943)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -95,7 +95,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 10888)
+--- config.sh	(revision 10943)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -134,10 +134,10 @@ Index: config.sh
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
--	enabled_any READER_DRE MODULE_SCAM && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+-	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 -	enabled_any MODULE_CCCAM READER_NAGRA READER_SECA && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 -	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
-+	enabled_any READER_DRE MODULE_SCAM WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
++	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 +	enabled_any MODULE_CCCAM READER_NAGRA READER_SECA WITH_EMU && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 +	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA WITH_EMU && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
  }
@@ -153,7 +153,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 10888)
+--- cscrypt/md5.c	(revision 10943)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -198,7 +198,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 10888)
+--- cscrypt/md5.h	(revision 10943)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -221,7 +221,7 @@ Index: cscrypt/md5.h
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 10888)
+--- csctapi/cardreaders.h	(revision 10943)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -13,5 +13,6 @@
  extern const struct s_cardreader cardreader_smartreader;
@@ -598,8 +598,8 @@ Index: ffdecsa/ffdecsa.c
 ===================================================================
 --- ffdecsa/ffdecsa.c	(revision 0)
 +++ ffdecsa/ffdecsa.c	(working copy)
-@@ -0,0 +1,880 @@
-+/* ffdecsa -- fast decsa algorithm
+@@ -0,0 +1,911 @@
++/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2003-2004  fatih89r
 + *
@@ -704,13 +704,27 @@ Index: ffdecsa/ffdecsa.c
 +#define BITS_PER_GROUP GROUP_PARALLELISM
 +#define BIPG BITS_PER_GROUP
 +
++// platform specific
++
++#ifdef __arm__
++#if !defined(MEMALIGN_VAL) || MEMALIGN_VAL<4
++#undef MEMALIGN_VAL
++#define MEMALIGN_VAL 4
++#endif
++#define COPY_UNALIGNED_PKT
++#endif
++
++//
++
 +#ifndef MALLOC
 +#define MALLOC(X) malloc(X)
 +#endif
 +#ifndef FREE
 +#define FREE(X) free(X)
 +#endif
-+#ifndef MEMALIGN
++#ifdef MEMALIGN_VAL
++#define MEMALIGN __attribute__((aligned(MEMALIGN_VAL)))
++#else
 +#define MEMALIGN
 +#endif
 +
@@ -1106,13 +1120,13 @@ Index: ffdecsa/ffdecsa.c
 +  key_schedule_stream(key->ck,key->iA,key->iB);
 +  for(by=0;by<8;by++){
 +    for(bi=0;bi<8;bi++){
-+      key->ck_g[by][bi]=(key->ck[by]&(1<<bi))?FFDECSA_FF1():FFDECSA_FF0();
++      key->ck_g[by][bi]=(key->ck[by]&(1<<bi))?FF1():FF0();
 +    }
 +  }
 +  for(by=0;by<8;by++){
 +    for(bi=0;bi<4;bi++){
-+      key->iA_g[by][bi]=(key->iA[by]&(1<<bi))?FFDECSA_FF1():FFDECSA_FF0();
-+      key->iB_g[by][bi]=(key->iB[by]&(1<<bi))?FFDECSA_FF1():FFDECSA_FF0();
++      key->iA_g[by][bi]=(key->iA[by]&(1<<bi))?FF1():FF0();
++      key->iB_g[by][bi]=(key->iB[by]&(1<<bi))?FF1():FF0();
 +    }
 +  }
 +// precalculations for block
@@ -1175,6 +1189,10 @@ Index: ffdecsa/ffdecsa.c
 +  MEMALIGN unsigned char stream_out[GROUP_PARALLELISM*8];
 +  MEMALIGN unsigned char ib[GROUP_PARALLELISM*8];
 +  MEMALIGN unsigned char block_out[GROUP_PARALLELISM*8];
++#ifdef COPY_UNALIGNED_PKT
++  unsigned char *unaligned[GROUP_PARALLELISM];
++  MEMALIGN unsigned char alignedBuff[GROUP_PARALLELISM][188];
++#endif
 +  struct stream_regs regs;
 +
 +//icc craziness  i=(int)&pad1;//////////align!!! FIXME
@@ -1400,6 +1418,14 @@ Index: ffdecsa/ffdecsa.c
 +    encp[g]=g_pkt[g];
 +    DBG(fprintf(stderr,"header[%i]=%p (%02x)\n",g,encp[g],*(encp[g])));
 +    encp[g]+=g_offset[g]; // skip header
++#ifdef COPY_UNALIGNED_PKT
++    if(((int)encp[g])&0x03) {
++      memcpy(alignedBuff[g],encp[g],g_len[g]);
++      unaligned[g]=encp[g];
++      encp[g]=alignedBuff[g];
++      }
++    else unaligned[g]=0;
++#endif
 +    FFTABLEIN(stream_in,g,encp[g]);
 +  }
 +//dump_mem("stream_in",stream_in,GROUP_PARALLELISM*8,BYPG);
@@ -1475,6 +1501,11 @@ Index: ffdecsa/ffdecsa.c
 +
 +  DBG(fprintf(stderr,"returning advanced=%i\n",advanced));
 +
++#ifdef COPY_UNALIGNED_PKT
++  for(g=0;g<grouped;g++)
++    if(unaligned[g]) memcpy(unaligned[g],alignedBuff[g],g_len[g]);
++#endif
++
 +  M_EMPTY(); // restore CPU multimedia state
 +
 +  return advanced;
@@ -1484,7 +1515,7 @@ Index: ffdecsa/ffdecsa.h
 --- ffdecsa/ffdecsa.h	(revision 0)
 +++ ffdecsa/ffdecsa.h	(working copy)
 @@ -0,0 +1,62 @@
-+/* ffdecsa -- fast decsa algorithm
++/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2003-2004  fatih89r
 + *
@@ -1551,7 +1582,7 @@ Index: ffdecsa/fftable.h
 --- ffdecsa/fftable.h	(revision 0)
 +++ ffdecsa/fftable.h	(working copy)
 @@ -0,0 +1,56 @@
-+/* ffdecsa -- fast decsa algorithm
++/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2007 Dark Avenger
 + *               2003-2004  fatih89r
@@ -1612,7 +1643,7 @@ Index: ffdecsa/parallel_032_int.h
 --- ffdecsa/parallel_032_int.h	(revision 0)
 +++ ffdecsa/parallel_032_int.h	(working copy)
 @@ -0,0 +1,55 @@
-+/* ffdecsa -- fast decsa algorithm
++/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2003-2004  fatih89r
 + *
@@ -1635,22 +1666,22 @@ Index: ffdecsa/parallel_032_int.h
 +
 +typedef unsigned int group;
 +#define GROUP_PARALLELISM 32
-+#define FFDECSA_FF0()     0x0
-+#define FFDECSA_FF1()     0xffffffff
++#define FF0()      0x0
++#define FF1()      0xffffffff
 +
 +/* 64 rows of 32 bits */
 +
-+static inline void FFTABLEIN(unsigned char *tab, int g, unsigned char *data){
++inline static void FFTABLEIN(unsigned char *tab, int g, unsigned char *data){
 +  *(((int *)tab)+g)=*((int *)data);
 +  *(((int *)tab)+32+g)=*(((int *)data)+1);
 +}
 +
-+static inline void FFTABLEOUT(unsigned char *data, unsigned char *tab, int g){
++inline static void FFTABLEOUT(unsigned char *data, unsigned char *tab, int g){
 +  *((int *)data)=*(((int *)tab)+g);
 +  *(((int *)data)+1)=*(((int *)tab)+32+g);
 +}
 +
-+static inline void FFTABLEOUTXORNBY(int n, unsigned char *data, unsigned char *tab, int g){
++inline static void FFTABLEOUTXORNBY(int n, unsigned char *data, unsigned char *tab, int g){
 +  int j;
 +  for(j=0;j<n;j++){
 +    *(data+j)^=*(tab+4*(g+(j>=4?32-1:0))+j);
@@ -1672,7 +1703,7 @@ Index: ffdecsa/parallel_generic.h
 --- ffdecsa/parallel_generic.h	(revision 0)
 +++ ffdecsa/parallel_generic.h	(working copy)
 @@ -0,0 +1,102 @@
-+/* ffdecsa -- fast decsa algorithm
++/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2003-2004  fatih89r
 + *
@@ -1779,7 +1810,7 @@ Index: ffdecsa/parallel_std_def.h
 --- ffdecsa/parallel_std_def.h	(revision 0)
 +++ ffdecsa/parallel_std_def.h	(working copy)
 @@ -0,0 +1,29 @@
-+/* ffdecsa -- fast decsa algorithm
++/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2003-2004  fatih89r
 + *
@@ -1813,7 +1844,7 @@ Index: ffdecsa/stream.c
 --- ffdecsa/stream.c	(revision 0)
 +++ ffdecsa/stream.c	(working copy)
 @@ -0,0 +1,906 @@
-+/* ffdecsa -- fast decsa algorithm
++/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2003-2004  fatih89r
 + *
@@ -2329,22 +2360,22 @@ Index: ffdecsa/stream.c
 +    }
 +  }
 +  for(b=0;b<4;b++){
-+    regs->A[aboff+8][b]=FFDECSA_FF0();
-+    regs->A[aboff+9][b]=FFDECSA_FF0();
-+    regs->B[aboff+8][b]=FFDECSA_FF0();
-+    regs->B[aboff+9][b]=FFDECSA_FF0();
++    regs->A[aboff+8][b]=FF0();
++    regs->A[aboff+9][b]=FF0();
++    regs->B[aboff+8][b]=FF0();
++    regs->B[aboff+9][b]=FF0();
 +  }
 +  for(b=0;b<4;b++){
-+    regs->X[b]=FFDECSA_FF0();
-+    regs->Y[b]=FFDECSA_FF0();
-+    regs->Z[b]=FFDECSA_FF0();
-+    regs->D[b]=FFDECSA_FF0();
-+    regs->E[b]=FFDECSA_FF0();
-+    regs->F[b]=FFDECSA_FF0();
++    regs->X[b]=FF0();
++    regs->Y[b]=FF0();
++    regs->Z[b]=FF0();
++    regs->D[b]=FF0();
++    regs->E[b]=FF0();
++    regs->F[b]=FF0();
 +  }
-+  regs->p=FFDECSA_FF0();
-+  regs->q=FFDECSA_FF0();
-+  regs->r=FFDECSA_FF0();
++  regs->p=FF0();
++  regs->q=FF0();
++  regs->r=FF0();
 +#endif
 +
 +for(dbg=0;dbg<4;dbg++){
@@ -2387,8 +2418,8 @@ Index: ffdecsa/stream.c
 +/* 1110 0010  0011 0011   : lev  6: */ //tmp1=( ( fa|fb )^( ( fc&( fa|( fb^fd ) ) )^ALL_ONES ) );
 +/* 0011 0110  1000 1101   : lev  5: */ //tmp2=( fa^( ( fb&fd )^( ( fa&fd )|fc ) ) );
 +/* 0101 0101  1001 0011   : lev  5: */ //tmp3=( ( fa&fc )^( fa^( ( fa&fb )|fd ) ) );
-+/* 1000 1110  1110 0001   : lev  7: */ tmp0=FFXOR(fa,FFXOR(fb,FFXOR(FFOR(FFXOR(FFOR(fa,fb),fc),FFXOR(fc,fd)),FFDECSA_FF1())));
-+/* 1110 0010  0011 0011   : lev  6: */ tmp1=FFXOR(FFOR(fa,fb),FFXOR(FFAND(fc,FFOR(fa,FFXOR(fb,fd))),FFDECSA_FF1()));
++/* 1000 1110  1110 0001   : lev  7: */ tmp0=FFXOR(fa,FFXOR(fb,FFXOR(FFOR(FFXOR(FFOR(fa,fb),fc),FFXOR(fc,fd)),FF1())));
++/* 1110 0010  0011 0011   : lev  6: */ tmp1=FFXOR(FFOR(fa,fb),FFXOR(FFAND(fc,FFOR(fa,FFXOR(fb,fd))),FF1()));
 +/* 0011 0110  1000 1101   : lev  5: */ tmp2=FFXOR(fa,FFXOR(FFAND(fb,fd),FFOR(FFAND(fa,fd),fc)));
 +/* 0101 0101  1001 0011   : lev  5: */ tmp3=FFXOR(FFAND(fa,fc),FFXOR(fa,FFOR(FFAND(fa,fb),fd)));
 +      s1a=FFXOR(tmp0,FFAND(fe,tmp1));
@@ -2404,9 +2435,9 @@ Index: ffdecsa/stream.c
 +/* 0000 0011  0111 1011   : lev  5: */ //tmp1=( ( fa&( fb^fd ) )|( ( fa|fb )&fc ) );
 +/* 1100 0110  1101 0010   : lev  6: */ //tmp2=( ( fb&fd )^( ( fa&fd )|( fb^( fc^ALL_ONES ) ) ) );
 +/* 0001 1110  1111 0101   : lev  5: */ //tmp3=( ( fa&fd )|( fa^( fb^( fc&fd ) ) ) );
-+/* 1001 1110  0110 0001   : lev  6: */ tmp0=FFXOR(fa,FFXOR(FFAND(fb,FFOR(fc,fd)),FFXOR(fc,FFXOR(fd,FFDECSA_FF1()))));
++/* 1001 1110  0110 0001   : lev  6: */ tmp0=FFXOR(fa,FFXOR(FFAND(fb,FFOR(fc,fd)),FFXOR(fc,FFXOR(fd,FF1()))));
 +/* 0000 0011  0111 1011   : lev  5: */ tmp1=FFOR(FFAND(fa,FFXOR(fb,fd)),FFAND(FFOR(fa,fb),fc));
-+/* 1100 0110  1101 0010   : lev  6: */ tmp2=FFXOR(FFAND(fb,fd),FFOR(FFAND(fa,fd),FFXOR(fb,FFXOR(fc,FFDECSA_FF1()))));
++/* 1100 0110  1101 0010   : lev  6: */ tmp2=FFXOR(FFAND(fb,fd),FFOR(FFAND(fa,fd),FFXOR(fb,FFXOR(fc,FF1()))));
 +/* 0001 1110  1111 0101   : lev  5: */ tmp3=FFOR(FFAND(fa,fd),FFXOR(fa,FFXOR(fb,FFAND(fc,fd))));
 +      s2a=FFXOR(tmp0,FFAND(fe,tmp1));
 +      s2b=FFXOR(tmp2,FFAND(fe,tmp3));
@@ -2417,9 +2448,9 @@ Index: ffdecsa/stream.c
 +/* 0010 0111  1101 1000   : lev  4: */ //tmp2=( fa^( ( ( fb^fc )&fd )^fc ) );
 +/* 1111 1111  1111 1111   : lev  0: */ //tmp3=ALL_ONES;
 +/* 0100 1011  1001 0110   : lev  5: */ tmp0=FFXOR(fa,FFXOR(fb,FFXOR(FFAND(fc,FFOR(fa,fd)),fd)));
-+/* 1101 0101  1000 1100   : lev  7: */ tmp1=FFXOR(FFAND(fa,fc),FFOR(FFXOR(fa,fd),FFXOR(FFOR(fb,fc),FFXOR(fd,FFDECSA_FF1()))));
++/* 1101 0101  1000 1100   : lev  7: */ tmp1=FFXOR(FFAND(fa,fc),FFOR(FFXOR(fa,fd),FFXOR(FFOR(fb,fc),FFXOR(fd,FF1()))));
 +/* 0010 0111  1101 1000   : lev  4: */ tmp2=FFXOR(fa,FFXOR(FFAND(FFXOR(fb,fc),fd),fc));
-+/* 1111 1111  1111 1111   : lev  0: */ tmp3=FFDECSA_FF1();
++/* 1111 1111  1111 1111   : lev  0: */ tmp3=FF1();
 +      s3a=FFXOR(tmp0,FFAND(FFNOT(fe),tmp1));
 +      s3b=FFXOR(tmp2,FFAND(fe,tmp3));
 +
@@ -2428,10 +2459,10 @@ Index: ffdecsa/stream.c
 +/* 0010 1101  0110 0110   : lev  6: */ //tmp1=( ( fa&fb )^( fb^( ( ( fa|fc )&fd )^fc ) ) );
 +/* 0110 0111  1101 0000   : lev  7: */ //tmp2=( fa^( ( fb&fc )|( ( ( fa&( fb^fd ) )|fc )^fd ) ) );
 +/* 1111 1111  1111 1111   : lev  0: */ //tmp3=ALL_ONES;
-+/* 1011 0101  0100 1001   : lev  7: */ tmp0=FFXOR(fa,FFOR(FFAND(fc,FFXOR(fa,fd)),FFXOR(fb,FFOR(fc,FFXOR(fd,FFDECSA_FF1())))));
++/* 1011 0101  0100 1001   : lev  7: */ tmp0=FFXOR(fa,FFOR(FFAND(fc,FFXOR(fa,fd)),FFXOR(fb,FFOR(fc,FFXOR(fd,FF1())))));
 +/* 0010 1101  0110 0110   : lev  6: */ tmp1=FFXOR(FFAND(fa,fb),FFXOR(fb,FFXOR(FFAND(FFOR(fa,fc),fd),fc)));
 +/* 0110 0111  1101 0000   : lev  7: */ tmp2=FFXOR(fa,FFOR(FFAND(fb,fc),FFXOR(FFOR(FFAND(fa,FFXOR(fb,fd)),fc),fd)));
-+/* 1111 1111  1111 1111   : lev  0: */ tmp3=FFDECSA_FF1();
++/* 1111 1111  1111 1111   : lev  0: */ tmp3=FF1();
 +      s4a=FFXOR(tmp0,FFAND(fe,FFXOR(tmp1,tmp0)));
 +      s4b=FFXOR(FFXOR(s4a,tmp2),FFAND(fe,tmp3));
 +
@@ -2440,10 +2471,10 @@ Index: ffdecsa/stream.c
 +/* 0110 1011  0000 1011   : lev  6: */ //tmp1=( fb^( ( fc^fd )&( fc^( fb|( fa^fd ) ) ) ) );
 +/* 0001 1010  0111 1001   : lev  6: */ //tmp2=( ( fa&fc )^( fb^( ( fb|( fa^fc ) )&fd ) ) );
 +/* 0101 1101  1101 0101   : lev  4: */ //tmp3=( ( ( fa^fb )&( fc^ALL_ONES ) )|fd );
-+/* 1000 1111  0011 0010   : lev  7: */ tmp0=FFOR(FFXOR(FFAND(fa,FFOR(fb,fc)),fb),FFXOR(FFOR(FFXOR(fa,fc),fd),FFDECSA_FF1()));
++/* 1000 1111  0011 0010   : lev  7: */ tmp0=FFOR(FFXOR(FFAND(fa,FFOR(fb,fc)),fb),FFXOR(FFOR(FFXOR(fa,fc),fd),FF1()));
 +/* 0110 1011  0000 1011   : lev  6: */ tmp1=FFXOR(fb,FFAND(FFXOR(fc,fd),FFXOR(fc,FFOR(fb,FFXOR(fa,fd)))));
 +/* 0001 1010  0111 1001   : lev  6: */ tmp2=FFXOR(FFAND(fa,fc),FFXOR(fb,FFAND(FFOR(fb,FFXOR(fa,fc)),fd)));
-+/* 0101 1101  1101 0101   : lev  4: */ tmp3=FFOR(FFAND(FFXOR(fa,fb),FFXOR(fc,FFDECSA_FF1())),fd);
++/* 0101 1101  1101 0101   : lev  4: */ tmp3=FFOR(FFAND(FFXOR(fa,fb),FFXOR(fc,FF1())),fd);
 +      s5a=FFXOR(tmp0,FFAND(fe,tmp1));
 +      s5b=FFXOR(tmp2,FFAND(fe,tmp3));
 +
@@ -2453,7 +2484,7 @@ Index: ffdecsa/stream.c
 +/* 0101 1000  0110 0111   : lev  6: */ //tmp2=( ( fa&( fb|fc ) )^( fb^( ( fb&fc )|fd ) ) );
 +/* 0001 0011  0000 0001   : lev  5: */ //tmp3=( fc&( ( fa&( fb^fd ) )^( fb|fd ) ) );
 +/* 0011 0110  0010 1101   : lev  6: */ tmp0=FFXOR(FFAND(FFAND(fa,fc),fd),FFXOR(FFAND(fb,FFOR(fa,fd)),fc));
-+/* 1110 1110  1011 1011   : lev  3: */ tmp1=FFXOR(FFAND(FFXOR(fa,fc),fd),FFDECSA_FF1());
++/* 1110 1110  1011 1011   : lev  3: */ tmp1=FFXOR(FFAND(FFXOR(fa,fc),fd),FF1());
 +/* 0101 1000  0110 0111   : lev  6: */ tmp2=FFXOR(FFAND(fa,FFOR(fb,fc)),FFXOR(fb,FFOR(FFAND(fb,fc),fd)));
 +/* 0001 0011  0000 0001   : lev  5: */ tmp3=FFAND(fc,FFXOR(FFAND(fa,FFXOR(fb,fd)),FFOR(fb,fd)));
 +      s6a=FFXOR(tmp0,FFAND(fe,tmp1));
@@ -2467,7 +2498,7 @@ Index: ffdecsa/stream.c
 +/* 0111 1000  1001 0110   : lev  5: */ tmp0=FFXOR(fb,FFOR(FFAND(fc,fd),FFXOR(fa,FFXOR(fc,fd))));
 +/* 0100 1001  0101 1011   : lev  6: */ tmp1=FFAND(FFOR(fb,fd),FFOR(FFAND(fa,fc),FFXOR(fb,FFXOR(fc,fd))));
 +/* 0100 1001  1011 1001   : lev  5: */ tmp2=FFXOR(FFOR(fa,fb),FFXOR(FFAND(fc,FFOR(fb,fd)),fd));
-+/* 1111 1111  1101 1101   : lev  3: */ tmp3=FFOR(fd,FFXOR(FFAND(fa,fc),FFDECSA_FF1()));
++/* 1111 1111  1101 1101   : lev  3: */ tmp3=FFOR(fd,FFXOR(FFAND(fa,fc),FF1()));
 +      s7a=FFXOR(tmp0,FFAND(fe,tmp1));
 +      s7b=FFXOR(tmp2,FFAND(fe,tmp3));
 +
@@ -2721,9 +2752,9 @@ Index: ffdecsa/stream.c
 +
 Index: globals.h
 ===================================================================
---- globals.h	(revision 10888)
+--- globals.h	(revision 10943)
 +++ globals.h	(working copy)
-@@ -404,6 +404,7 @@
+@@ -421,6 +421,7 @@
  /////////////////// readers that do not reed baudrate setting and timings are guarded by reader itself (large buffer built in): AFTER R_SMART
  #define R_SMART     0x7 // Smartreader+
  #define R_PCSC      0x8 // PCSC
@@ -2731,7 +2762,7 @@ Index: globals.h
  /////////////////// proxy readers after R_CS378X
  #define R_CAMD35    0x20  // Reader cascading camd 3.5x
  #define R_CAMD33    0x21  // Reader cascading camd 3.3x
-@@ -817,6 +818,13 @@
+@@ -834,6 +835,13 @@
  	uint32_t        class;              // the class needed for some systems
  	time_t          start;              // startdate
  	time_t          end;                // enddate
@@ -2745,7 +2776,7 @@ Index: globals.h
  } S_ENTITLEMENT;
  
  struct s_client ;
-@@ -940,6 +948,7 @@
+@@ -957,6 +965,7 @@
  	void (*post_process)(struct s_reader *);
  	int32_t (*get_emm_type)(struct emm_packet_t *, struct s_reader *);
  	int32_t (*get_emm_filter)(struct s_reader *, struct s_csystem_emm_filter **, unsigned int *);
@@ -2753,7 +2784,7 @@ Index: globals.h
  	int32_t (*get_tunemm_filter)(struct s_reader *, struct s_csystem_emm_filter **, unsigned int *);
  };
  
-@@ -1591,6 +1600,7 @@
+@@ -1618,6 +1627,7 @@
  #ifdef MODULE_GHTTP
  	uint8_t         ghttp_use_ssl;
  #endif
@@ -2761,12 +2792,13 @@ Index: globals.h
  	uint8_t cnxlastecm; // == 0 - las ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST           *emmstat; //emm stats
  	CS_MUTEX_LOCK   emmstat_lock;
-@@ -2036,6 +2046,13 @@
+@@ -2075,6 +2085,14 @@
  	IN_ADDR_T   scam_srvip;
  	struct s_ip *scam_allowed;
  #endif
 +
 +#ifdef WITH_EMU
++	char        *emu_stream_source_host;
 +	int32_t     emu_stream_source_port;
 +	int32_t     emu_stream_relay_port;
 +	uint32_t    emu_stream_ecm_delay;
@@ -2775,7 +2807,7 @@ Index: globals.h
  	int32_t    max_cache_time;  //seconds ecms are stored in ecmcwcache
  	int32_t    max_hitcache_time;  //seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
  
-@@ -2199,4 +2216,6 @@
+@@ -2241,4 +2259,6 @@
  static inline bool caid_is_bulcrypt(uint16_t caid) { return caid == 0x5581 || caid == 0x4AEE; }
  const char *get_cardsystem_desc_by_caid(uint16_t caid);
  
@@ -2784,7 +2816,7 @@ Index: globals.h
  #endif
 Index: Makefile
 ===================================================================
---- Makefile	(revision 10888)
+--- Makefile	(revision 10943)
 +++ Makefile	(working copy)
 @@ -264,6 +264,23 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
@@ -2821,9 +2853,9 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 10888)
+--- module-dvbapi.c	(revision 10943)
 +++ module-dvbapi.c	(working copy)
-@@ -1153,7 +1153,15 @@
+@@ -1209,7 +1209,15 @@
  			}
  			if(match)
  			{
@@ -2840,7 +2872,7 @@ Index: module-dvbapi.c
  				if(csystem)
  				{
  					if(caid != ncaid)
-@@ -1172,7 +1180,14 @@
+@@ -1228,7 +1236,14 @@
  					}
  					else if (csystem->get_emm_filter)
  					{
@@ -2856,7 +2888,7 @@ Index: module-dvbapi.c
  					}
  				}
  				else
-@@ -3752,6 +3767,7 @@
+@@ -3810,6 +3825,7 @@
  		curpid = &demux[demux_id].ECMpids[pid];
  	}	
  	uint32_t chid = 0x10000;
@@ -2864,7 +2896,7 @@ Index: module-dvbapi.c
  	uint32_t ecmlen = SCT_LEN(buffer);
  	ECM_REQUEST *er;
  	
-@@ -3777,9 +3793,24 @@
+@@ -3835,9 +3851,24 @@
  				return;
  			}
  
@@ -2891,7 +2923,7 @@ Index: module-dvbapi.c
  				if(!(er = get_ecmtask()))
  				{ 
  					return;
-@@ -5056,6 +5087,7 @@
+@@ -5160,6 +5191,7 @@
  
  		delayer(er);
  
@@ -2901,9 +2933,9 @@ Index: module-dvbapi.c
  #if defined(WITH_STAPI) || defined(WITH_STAPI5)
 Index: module-dvbapi.h
 ===================================================================
---- module-dvbapi.h	(revision 10888)
+--- module-dvbapi.h	(revision 10943)
 +++ module-dvbapi.h	(working copy)
-@@ -97,6 +97,7 @@
+@@ -98,6 +98,7 @@
  	int8_t status;
  	uint8_t tries;
  	unsigned char table;
@@ -4387,15 +4419,15 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4001 @@
+@@ -0,0 +1,4050 @@
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
-+
-+#ifdef WITH_EMU
 +#include "cscrypt/bn.h"
 +#include "cscrypt/des.h"
 +#include "cscrypt/idea.h"
 +#include "cscrypt/md5.h"
++
++#ifdef WITH_EMU
 +#include "oscam-aes.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -4408,11 +4440,7 @@ Index: module-emulator-osemu.c
 +void hdSurEncPhase1_D2_13_15(uint8_t *cws);
 +void hdSurEncPhase2_D2_13_15(uint8_t *cws);
 +#else
-+#include "bn.h"
-+#include "des.h"
-+#include "idea.h"
-+#include "md5.h"
-+#include "viades.h"
++#include "cscrypt/viades.h"
 +#include "via3surenc.h"
 +#endif
 +
@@ -4454,14 +4482,15 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
-+KeyDataContainer CwKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
-+KeyDataContainer ViKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
-+KeyDataContainer NagraKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
-+KeyDataContainer IrdetoKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
-+KeyDataContainer NDSKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
-+KeyDataContainer BissKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
-+KeyDataContainer PowervuKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
-+KeyDataContainer DreKeys = { .EmuKeys=NULL, .keyCount=0, .keyMax=0 };
++
++KeyDataContainer CwKeys = { NULL, 0, 0 };
++KeyDataContainer ViKeys = { NULL, 0, 0 };
++KeyDataContainer NagraKeys = { NULL, 0, 0 };
++KeyDataContainer IrdetoKeys = { NULL, 0, 0 };
++KeyDataContainer NDSKeys = { NULL, 0, 0 };
++KeyDataContainer BissKeys = { NULL, 0, 0 };
++KeyDataContainer PowervuKeys = { NULL, 0, 0 };
++KeyDataContainer DreKeys = { NULL, 0, 0 };
 +
 +static KeyDataContainer *GetKeyContainer(char identifier)
 +{
@@ -7082,17 +7111,22 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_data *cdata, int8_t global_cdata)
++int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, uint16_t srvid, emu_stream_client_key_data *cdata)
 +{
++	int8_t ret = 1;
 +	uint16_t ecmLen = GetEcmLen(ecm);
 +	uint32_t ecmCrc32;
 +	uint8_t nanoCmd, nanoChecksum, keyType, fixedKey, oddKey, bid, keyIndex, csaUsed;
-+	uint16_t nanoLen, channelId;
++	uint16_t nanoLen, channelId, ecmSrvid;
 +	uint32_t i, j, k;
 +	uint8_t convolvedCw[8][8];
 +	uint8_t ecmKey[7], tmpEcmKey[7], seedBase[4], baseCw[7], seed[8][8], cw[8][8];
 +#ifdef WITH_EMU
 +	emu_stream_cw_item *cw_item;
++	int8_t update_global_key = 0;
++	int8_t update_global_keys[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++	
++	memset(update_global_keys, 0, sizeof(update_global_keys));
 +#endif
 +
 +	if(ecmLen < 7)
@@ -7178,14 +7212,20 @@ Index: module-emulator-osemu.c
 +
 +			keyIndex = (fixedKey<<3) | (bid<<2) | oddKey;
 +			channelId = b2i(2, ecm+i+23);
-+			if(!GetPowervuKey(ecmKey, channelId, '0', keyIndex, 7, 1))
++			ecmSrvid = (channelId >> 4) | ((channelId & 0xF) << 12);
++			if(!GetPowervuKey(ecmKey, ecmSrvid, '0', keyIndex, 7, 1))
 +			{
-+				break;
++				if(!GetPowervuKey(ecmKey, channelId, '0', keyIndex, 7, 1))
++				{
++					ret = 2;
++					break;
++				}
 +			}
 +
 +			PowervuDecrypt(ecm+i+8, 14, ecmKey);
 +			if((ecm[i+6] != ecm[i+6+7]) || (ecm[i+6+8] != ecm[i+6+15]))
 +			{
++				ret = 8;
 +				break;
 +			}
 +			memcpy(tmpEcmKey, ecmKey, 7);
@@ -7193,12 +7233,31 @@ Index: module-emulator-osemu.c
 +			PowervuDecrypt(ecm+i+27, 27, ecmKey);
 +			if((ecm[i+23] != ecm[i+23+29]) || (ecm[i+23+1] != ecm[i+23+30]))
 +			{
++				ret = 8;
 +				break;
 +			}
 +
 +			memcpy(seedBase, ecm+i+6+2, 4);
-+						
-+			if(cdata != NULL || global_cdata)
++	
++#ifdef WITH_EMU	
++			if(cdata == NULL)
++			{
++				SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
++				for(j=0; j<EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
++				{
++					if(!stream_server_has_ecm[j] && emu_stream_cur_srvid[j] == srvid)
++					{
++						update_global_key = 1;
++						update_global_keys[j] = 1;
++					}	
++				}
++				SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
++			}
++			
++			if(cdata != NULL || update_global_key)
++#else	
++			if(cdata != NULL)
++#endif
 +			{
 +				// Calculate all seeds
 +				for(j=0; j<8; j++)
@@ -7212,13 +7271,17 @@ Index: module-emulator-osemu.c
 +				// Calculate only video and audio1 seed
 +				memcpy(ecmKey, tmpEcmKey, 7);
 +				PowervuCalculateSeed(PVU_CW_VID, ecm+i, seedBase, ecmKey, seed[PVU_CW_VID]);
-+				memcpy(ecmKey, tmpEcmKey, 7);
-+				PowervuCalculateSeed(PVU_CW_A1, ecm+i, seedBase, ecmKey, seed[PVU_CW_A1]);	
++				//memcpy(ecmKey, tmpEcmKey, 7);
++				//PowervuCalculateSeed(PVU_CW_A1, ecm+i, seedBase, ecmKey, seed[PVU_CW_A1]);	
 +			}
 +			
 +			memcpy(baseCw, ecm+i+6+8, 7);
 +
-+			if(cdata != NULL || global_cdata)
++#ifdef WITH_EMU
++			if(cdata != NULL || update_global_key)
++#else
++			if(cdata != NULL)
++#endif
 +			{
 +				// Calculate all cws
 +				for(j=0; j<8; j++)
@@ -7234,15 +7297,23 @@ Index: module-emulator-osemu.c
 +				}
 +
 +#ifdef WITH_EMU				
-+				if(global_cdata)
++				if(update_global_key)
 +				{
-+					cw_item = (emu_stream_cw_item*)malloc(sizeof(emu_stream_cw_item));
-+					if(cw_item != NULL)
++					for(j=0; j<EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
 +					{
-+						cw_item->csa_used = csaUsed;
-+						cw_item->is_even = ecm[0] == 0x80 ? 1 : 0;
-+						memcpy(cw_item->cw, cw, sizeof(cw));
-+						ll_append(ll_emu_stream_delayed_keys, cw_item);
++						if(update_global_keys[j])
++						{
++							cw_item = (emu_stream_cw_item*)malloc(sizeof(emu_stream_cw_item));
++							if(cw_item != NULL)
++							{
++								cw_item->csa_used = csaUsed;
++								cw_item->is_even = ecm[0] == 0x80 ? 1 : 0;
++								cs_ftime(&cw_item->write_time);
++								add_ms_to_timeb(&cw_item->write_time, cfg.emu_stream_ecm_delay);
++								memcpy(cw_item->cw, cw, sizeof(cw));
++								ll_append(ll_emu_stream_delayed_keys[j], cw_item);
++							}
++						}
 +					}
 +				}
 +				else 
@@ -7274,28 +7345,42 @@ Index: module-emulator-osemu.c
 +					}
 +#ifdef WITH_EMU
 +				}
-+#endif
-+
-+				memcpy(dw, cw[PVU_CW_VID], 8);
-+				memcpy(&dw[8], cw[PVU_CW_A1], 8);			
++#endif		
 +			}
 +			else
 +			{
 +				// Calculate only video and audio1 cw
 +				PowervuCalculateCw(PVU_CW_VID, seed[PVU_CW_VID], csaUsed, convolvedCw[PVU_CW_VID], cw[PVU_CW_VID], baseCw);
-+				PowervuCalculateCw(PVU_CW_A1, seed[PVU_CW_A1], csaUsed, convolvedCw[PVU_CW_A1], cw[PVU_CW_A1], baseCw);
-+
-+				memcpy(dw, cw[PVU_CW_VID], 8);
-+				memcpy(&dw[8], cw[PVU_CW_A1], 8);
-+				
++				//PowervuCalculateCw(PVU_CW_A1, seed[PVU_CW_A1], csaUsed, convolvedCw[PVU_CW_A1], cw[PVU_CW_A1], baseCw);
++			}
++			
++			memset(dw, 0, 16);
++			
++			if(ecm[0] == 0x80)
++			{
++				memcpy(dw, cw[PVU_CW_VID], 8);		
++			
 +				if(csaUsed)
 +				{
-+					for(k = 0; k < 16; k += 4) {
++					for(k = 0; k < 8; k += 4)
++					{
 +						dw[k + 3] = ((dw[k] + dw[k + 1] + dw[k + 2]) & 0xff);
 +					}
 +				}
 +			}
-+			
++			else
++			{
++				memcpy(&dw[8], cw[PVU_CW_VID], 8);
++				
++				if(csaUsed)
++				{
++					for(k = 8; k < 16; k += 4)
++					{
++						dw[k + 3] = ((dw[k] + dw[k + 1] + dw[k + 2]) & 0xff);
++					}
++				}
++			}
++						
 +			return 0;
 +
 +		default:
@@ -7304,7 +7389,7 @@ Index: module-emulator-osemu.c
 +		i += nanoLen;
 +	}
 +
-+	return 1;
++	return ret;
 +}
 +
 +
@@ -7518,7 +7603,7 @@ Index: module-emulator-osemu.c
 +int8_t ProcessECM(int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
 +				  uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
 +{
-+	int8_t result = 1, i, use_gkey = 0;
++	int8_t result = 1, i;
 +	uint8_t ecmCopy[EMU_MAX_ECM_LEN];
 +	uint16_t ecmLen = 0;
 +
@@ -7560,11 +7645,7 @@ Index: module-emulator-osemu.c
 +		result = BissECM(caid,ecm,ecmDataLen,dw,srvid,ecmpid);
 +	}
 +	else if((caid>>8)==0x0E) {
-+#ifdef WITH_EMU
-+		if(!stream_server_has_ecm && srvid == emu_stream_cur_srvid)
-+			{ use_gkey = 1; } 
-+#endif
-+		result = PowervuECM(ecmCopy,dw,NULL,use_gkey);
++		result = PowervuECM(ecmCopy,dw,srvid,NULL);
 +	}
 +	else if(caid==0x4AE1) {
 +		result = Drecrypt2ECM(caid,provider,ecmCopy,dw);
@@ -8109,7 +8190,7 @@ Index: module-emulator-osemu.c
 +	snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "%.8X", uniqueAddress);
 +	if(!GetPowervuEmmKey(emmKey, 0, keyName, 7, 1, &channelId))
 +	{
-+		return 0;
++		return 2;
 +	}
 +
 +	for(i=19; i+27<=emmLen; i+=27) {
@@ -8286,7 +8367,7 @@ Index: module-emulator-osemu.c
 +	cs_hexdump(0, &emm[0x6D], 32, keyValue, sizeof(keyValue));
 +	cs_log("[Emu] Key found in EMM: D %.6X %s %s", keyIdent, newKeyName, keyValue); 	
 +	
-+	return 1;
++	return 0;
 +}
 +
 +int32_t GetDrecryptHexserials(uint16_t caid, uint8_t *hexserials, int32_t length, int32_t* count)
@@ -8493,7 +8574,7 @@ Index: module-emulator-osemu.h
 +#define PVU_CW_UTL 6	// UTiLity
 +#define PVU_CW_VBI 7	// Vertical Blanking Interval
 +		  
-+	int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_data *cdata, int8_t global_cdata);
++	int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, uint16_t srvid, emu_stream_client_key_data *cdata);
 +		
 +#endif
 Index: module-emulator-st20.c
@@ -9201,72 +9282,67 @@ Index: module-emulator-stream.c
 ===================================================================
 --- module-emulator-stream.c	(revision 0)
 +++ module-emulator-stream.c	(working copy)
-@@ -0,0 +1,732 @@
+@@ -0,0 +1,980 @@
 +#include "globals.h"
++#include "cscrypt/des.h"
 +
 +#ifdef WITH_EMU
-+#include "cscrypt/des.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
 +#include "oscam-time.h"
-+#else
-+#include "des.h"
++#include "oscam-net.h"
 +#endif
 +
 +#include "ffdecsa/ffdecsa.h"
 +#include "module-emulator-osemu.h"
 +#include "module-emulator-stream.h"
 +
++typedef struct
++{
++	int32_t connfd;
++	int32_t connid;	
++} emu_stream_client_conn_data;
++
 +extern int32_t exit_oscam;
 +int8_t stream_server_thread_init = 0;
 +int32_t emu_stream_source_port = 8001;
 +int32_t emu_stream_relay_port = 17999;
++char emu_stream_source_host[256] = {"127.0.0.1"};
++
++static uint8_t emu_stream_server_mutex_init = 0;
++static pthread_mutex_t emu_stream_server_mutex;
++static int32_t glistenfd, gconncount = 0, gconnfd[EMU_STREAM_SERVER_MAX_CONNECTIONS];
 +
 +#ifdef WITH_EMU
-+pthread_mutex_t emu_fixed_key_data_mutex;
-+emu_stream_client_data emu_fixed_key_data;
-+uint16_t emu_stream_cur_srvid = 0;
-+LLIST *ll_emu_stream_delayed_keys;
-+int8_t stream_server_has_ecm = 0;
++pthread_mutex_t emu_fixed_key_srvid_mutex;
++uint16_t emu_stream_cur_srvid[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++int8_t stream_server_has_ecm[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++
++pthread_mutex_t emu_fixed_key_data_mutex[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++emu_stream_client_key_data emu_fixed_key_data[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++LLIST *ll_emu_stream_delayed_keys[EMU_STREAM_SERVER_MAX_CONNECTIONS];
 +#endif
 +
-+static int32_t glistenfd, gconnfd;
-+
-+static uint32_t CheckTsPackets(uint32_t packetSize, uint8_t *buf, uint32_t bufLength, uint16_t *packetCount)
-+{
-+	uint32_t i;
-+	(*packetCount) = 0;
-+	
-+	for(i=packetSize; i<bufLength; i+=packetSize) {
-+		if(buf[i] == 0x47) {
-+			(*packetCount)++;
-+		}	
-+	}
-+	
-+	return (*packetCount);
-+}
-+
-+static void SearchTsPackets(uint8_t *buf, uint32_t bufLength, uint16_t *packetCount, uint16_t *packetSize, uint16_t *startOffset)
++static void SearchTsPackets(uint8_t *buf, uint32_t bufLength, uint16_t *packetSize, uint16_t *startOffset)
 +{
 +	uint32_t i;
 +	
-+	(*packetCount) = 0;
 +	(*packetSize) = 0;
 +	(*startOffset) = 0;
 +
 +	for(i=0; i<bufLength; i++) {	
 +		if(buf[i] == 0x47) {
-+			if(CheckTsPackets(188, buf+i, bufLength-i, packetCount)) {
++			if((buf[i+188] == 0x47) & (buf[i+376] == 0x47)) {
 +				(*packetSize) = 188;
 +				(*startOffset) = i;
 +				return;
 +			}
-+			else if(CheckTsPackets(204, buf+i, bufLength-i, packetCount)) {
++			else if((buf[i+204] == 0x47) & (buf[i+408] == 0x47)) {
 +				(*packetSize) = 204;
 +				(*startOffset) = i;
 +				return;
 +			}
-+			else if(CheckTsPackets(208, buf+i, bufLength-i, packetCount)) {
++			else if((buf[i+208] == 0x47) & (buf[i+416] == 0x47)) {
 +				(*packetSize) = 208;
 +				(*startOffset) = i;
 +				return;
@@ -9274,8 +9350,6 @@ Index: module-emulator-stream.c
 +		}	
 +		
 +	}
-+	
-+	(*packetCount) = 0;
 +}
 +
 +typedef void (*ts_data_callback)(emu_stream_client_data *cdata);
@@ -9412,7 +9486,7 @@ Index: module-emulator-stream.c
 +	if(12+program_info_length >= section_length)
 +		{ return; }
 +	
-+	for(i=12; i+1 < 12+program_info_length; i+=descriptor_length)
++	for(i=12; i+1 < 12+program_info_length; i+=descriptor_length+2)
 +	{
 +		descriptor_tag = data[i];
 +		descriptor_length = data[i+1];
@@ -9475,32 +9549,40 @@ Index: module-emulator-stream.c
 +		|| ((cdata->ecm_nb - data[0xb]) > 5))
 +	{
 +		cdata->ecm_nb = data[0xb];
-+		PowervuECM(data, dcw, cdata, 0);
++		PowervuECM(data, dcw, cdata->srvid, &cdata->key);
 +	}
 +}
 +
-+static void ParseTSPackets(emu_stream_client_data *data, uint8_t *stream_buf, uint16_t packetCount, uint16_t packetSize)
++static void ParseTSPackets(emu_stream_client_conn_data *conndata, emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
 +{
-+	uint32_t i, j;
++	uint32_t i, j, k;
 +	uint32_t tsHeader;
 +	uint16_t pid, offset;
-+	uint8_t scramblingControl, payloadStart;
++	uint8_t scramblingControl, payloadStart, oddeven;
 +	int8_t oddKeyUsed;
 +	uint32_t *deskey;
 +	uint8_t *pdata;
-+	uint8_t *packetCluster[3];
-+	void *csakey;
-+	emu_stream_client_data *keydata;
++	uint8_t *packetClusterA[4][128];
++	uint8_t *packetClusterV[512];
++	void *csakeyA[4];
++	void *csakeyV;
++	emu_stream_client_key_data *keydata;
++	uint32_t scrambled_packets;
++	packetClusterV[0] = NULL;
++	scrambled_packets = 0;
++	uint32_t cs =0;  //video cluster start
++	uint32_t ce =1;  //video cluster end
++	uint32_t csa[4];  //cluster index for audio tracks
 +	
-+	for(i=0; i<packetCount; i++)
++	for(i=0; (i+packetSize-1)<bufLength; i+=packetSize)
 +	{		
-+		tsHeader = b2i(4, stream_buf+(i*packetSize));
++		tsHeader = b2i(4, stream_buf+i);
 +		pid = (tsHeader & 0x1fff00) >> 8;
 +		scramblingControl = tsHeader & 0xc0;
 +		payloadStart = (tsHeader & 0x400000) >> 22;
 +
 +		if(tsHeader & 0x20)
-+			{ offset = 4 + stream_buf[(i*packetSize)+4] + 1; }
++			{ offset = 4 + stream_buf[i+4] + 1; }
 +		else
 +			{ offset = 4; }
 +		
@@ -9512,7 +9594,7 @@ Index: module-emulator-stream.c
 +			if(pid == 0)
 +			{ 
 +				ParseTSData(0x00, 0xFF, 16, &data->have_pat_data, data->data, sizeof(data->data), &data->data_pos, payloadStart, 
-+								stream_buf+(i*packetSize)+offset, packetSize-offset, ParsePATData, data);
++								stream_buf+i+offset, packetSize-offset, ParsePATData, data);
 +			}
 +		
 +			continue;
@@ -9529,7 +9611,7 @@ Index: module-emulator-stream.c
 +			if(pid == data->pmt_pid)
 +			{
 +				ParseTSData(0x02, 0xFF, 21, &data->have_pmt_data, data->data, sizeof(data->data), &data->data_pos, payloadStart, 
-+								stream_buf+(i*packetSize)+offset, packetSize-offset, ParsePMTData, data);
++								stream_buf+i+offset, packetSize-offset, ParsePMTData, data);
 +			}
 +		
 +			continue;
@@ -9538,59 +9620,147 @@ Index: module-emulator-stream.c
 +		if(data->ecm_pid && pid == data->ecm_pid)
 +		{
 +#ifdef WITH_EMU
-+			stream_server_has_ecm = 1;
++			stream_server_has_ecm[conndata->connid] = 1;
 +#endif
 +			
 +			ParseTSData(0x80, 0xFE, 10, &data->have_ecm_data, data->data, sizeof(data->data), &data->data_pos, payloadStart, 
-+							stream_buf+(i*packetSize)+offset, packetSize-offset, ParseECMData, data);
++							stream_buf+i+offset, packetSize-offset, ParseECMData, data);
 +			continue;
 +		}
 +		
 +		if(scramblingControl == 0)
 +			{ continue; }
 +		
-+		if(!(stream_buf[(i*packetSize)+3] & 0x10))
++		if(!(stream_buf[i+3] & 0x10))
 +		{
-+			stream_buf[(i*packetSize)+3] &= 0x3F;
++			stream_buf[i+3] &= 0x3F;
 +			continue;
 +		}
 +
 +		oddKeyUsed = scramblingControl == 0xC0 ? 1 : 0;
 +
 +#ifdef WITH_EMU	
-+		if(!stream_server_has_ecm)
++		if(!stream_server_has_ecm[conndata->connid])
 +		{
-+			keydata = &emu_fixed_key_data;
-+			SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex); 
++			keydata = &emu_fixed_key_data[conndata->connid];
++			SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[conndata->connid]); 
 +		}
 +		else
 +		{
 +#endif
-+			keydata = data;
++			keydata = &data->key;
 +#ifdef WITH_EMU
 +		}
 +#endif
 +		
 +		if(keydata->pvu_csa_used)
 +		{
-+			csakey = NULL;
++			oddeven = scramblingControl;  // for detecting odd/even switch
++			csakeyV = NULL;
++			csakeyA[0] = NULL;
++			csakeyA[1] = NULL;
++			csakeyA[2] = NULL;
++			csakeyA[3] = NULL;
 +			
 +			if(pid == data->video_pid)
-+				{ csakey = keydata->pvu_csa_ks[PVU_CW_VID]; }
++			{
++				csakeyV = keydata->pvu_csa_ks[PVU_CW_VID];
++						
++				if(csakeyV !=NULL) 
++				{
++					for(k=0; k<data->audio_pid_count; k++)
++					{
++						csakeyA[k] = keydata->pvu_csa_ks[PVU_CW_A1+k];
++						csa[k]=0;
++					}
++					
++					scrambled_packets=0;
++					cs=0;
++					ce=1;
++					packetClusterV[cs] = stream_buf+i;  // set first cluster start
++					scrambled_packets++;
++					
++					for(j=i+packetSize; j<bufLength; j+=packetSize)   // Now iterate through the rest of the packets and create clusters for batch decryption
++					{
++						tsHeader = b2i(4, stream_buf+j);
++						pid = (tsHeader & 0x1fff00) >> 8;
++						if(pid == data->video_pid) 
++						{
++							if(oddeven != (tsHeader & 0xc0)) // changed key so stop adding clusters
++							{
++								break;
++							}
++							if(cs > ce) // First video packet for each cluster
++							{
++								packetClusterV[cs] = stream_buf+j;
++								ce = cs +1;
++							}
++
++							scrambled_packets++;
++						}
++						else
++						{
++							if(cs < ce) // First non-video packet - need to set end of video cluster  
++							{
++								packetClusterV[ce] = stream_buf+j -1;
++								cs = ce +1;
++							}
++							
++							for(k=0; k<data->audio_pid_count; k++)  // Check for audio tracks and create single packet clusters
++							{
++								if(pid == data->audio_pids[k])
++								{					
++									packetClusterA[k][csa[k]] = stream_buf+j;
++									csa[k]++;
++									packetClusterA[k][csa[k]] = stream_buf+j+packetSize -1;
++									csa[k]++;
++								}			
++							}
++						}
++					}
++
++					if( cs > ce )  // last packet was not a video packet, so set null for end of all clusteers
++						{ packetClusterV[cs] = NULL; }
++					else 
++					{
++						if(scrambled_packets==1) // Just in case only one video packet was found
++						{
++							packetClusterV[ce] = stream_buf+i+packetSize -1;
++						}
++						else  // last packet was a video packet, so set end of cluster to end of last packet
++						{
++							packetClusterV[ce] = stream_buf+j -1;
++						}
++						packetClusterV[ce+1] = NULL;  // add null to end of cluster list
++					}
++					if(scrambled_packets>1)
++						{ j = decrypt_packets(csakeyV, packetClusterV); }
++					
++					scrambled_packets = scrambled_packets - j;  // for debugging
++
++					for(k=0; k<data->audio_pid_count; k++)
++					{
++						if(csakeyA[k] != NULL)  // if audio track has key, set null to mark end and decrypt
++						{
++							packetClusterA[k][csa[k]] = NULL;
++							decrypt_packets(csakeyA[k], packetClusterA[k]);
++						}
++					}
++				}			
++			}
 +			else
 +			{
 +				for(j=0; j<data->audio_pid_count; j++)
 +					if(pid == data->audio_pids[j])
-+						{ csakey = keydata->pvu_csa_ks[PVU_CW_A1+j]; }
-+			}
++						{ csakeyA[0] = keydata->pvu_csa_ks[PVU_CW_A1+j]; }
 +			
-+			if(csakey != NULL)
-+			{					
-+				packetCluster[0] = stream_buf+(i*packetSize);
-+				packetCluster[1] = stream_buf+((i+1)*packetSize);
-+				packetCluster[2] = NULL;
-+
-+				decrypt_packets(csakey, packetCluster);
++				if(csakeyA[0] != NULL)
++				{					
++					packetClusterA[0][0] = stream_buf+i;
++					packetClusterA[0][1] = stream_buf+i+packetSize -1;
++					packetClusterA[0][2] = NULL;
++					decrypt_packets(csakeyA[0], packetClusterA[0]);
++				}			
 +			}			
 +		}
 +		else
@@ -9610,18 +9780,18 @@ Index: module-emulator-stream.c
 +			{					
 +				for(j=offset; j+7<188; j+=8)
 +				{
-+					pdata = stream_buf+(i*packetSize)+j;
++					pdata = stream_buf+i+j;
 +					des(pdata, deskey, 0);
 +				}
 +				
-+				stream_buf[(i*packetSize)+3] &= 0x3F;
++				stream_buf[i+3] &= 0x3F;
 +			}
 +		}
 +
 +#ifdef WITH_EMU	
-+		if(!stream_server_has_ecm)
++		if(!stream_server_has_ecm[conndata->connid])
 +		{
-+			SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex); 
++			SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[conndata->connid]); 
 +		}
 +#endif
 +	}
@@ -9630,24 +9800,35 @@ Index: module-emulator-stream.c
 +static int32_t connect_to_stream(char *http_buf, int32_t http_buf_len, char *stream_path)
 +{
 +	struct sockaddr_in cservaddr;
-+		
++	IN_ADDR_T in_addr;
++	
 +	int32_t streamfd = socket(AF_INET, SOCK_STREAM, 0);
 +	if(streamfd == -1)
 +		{ return -1; }
-+	
++
++	struct timeval tv; 
++	tv.tv_sec = 2; 
++	tv.tv_usec = 0; 
++	if (setsockopt(streamfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv)) 
++	{ 
++		cs_log("setsockopt() failed for SO_RCVTIMEO"); 
++		return -1; 
++	}
++
 +	bzero(&cservaddr, sizeof(cservaddr));
 +	cservaddr.sin_family = AF_INET;
-+	cservaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
++	cs_resolve(emu_stream_source_host, &in_addr, NULL, NULL);
++	SIN_GET_ADDR(cservaddr) = in_addr;
 +	cservaddr.sin_port = htons(emu_stream_source_port);
 +	
 +	if(connect(streamfd, (struct sockaddr *)&cservaddr, sizeof(cservaddr)) == -1)
 +		{ return -1; }
 +			
-+	snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: localhost:%u\n"
++	snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
 +				"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0\n"
 +				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n"
 +				"Accept-Language: en-US\n"
-+				"Connection: keep-alive\n\n", stream_path, emu_stream_source_port);
++				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port);
 +
 +	if(send(streamfd, http_buf, strlen(http_buf), 0) == -1)
 +		{ return -1; }
@@ -9655,12 +9836,43 @@ Index: module-emulator-stream.c
 +	return streamfd;	
 +}
 +
-+static void handle_stream_client(int32_t connfd)
++static void stream_client_disconnect(emu_stream_client_conn_data *conndata)
 +{
-+#define EMU_DVB_MAX_TS_PACKETS 32
-+#define EMU_DVB_BUFFER_SIZE 1+188*EMU_DVB_MAX_TS_PACKETS
-+#define EMU_DVB_BUFFER_WAIT 1+188*(EMU_DVB_MAX_TS_PACKETS-3)
++	int32_t i;
++	
++#ifdef WITH_EMU
++	SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
++	emu_stream_cur_srvid[conndata->connid] = NO_SRVID_VALUE;
++	stream_server_has_ecm[conndata->connid] = 0;
++	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
++#endif
++	
++	SAFE_MUTEX_LOCK(&emu_stream_server_mutex);
++	for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
++	{
++		if(gconnfd[i] == conndata->connfd)
++		{
++			gconnfd[i] = -1;
++			gconncount--;
++		}
++	}
++	SAFE_MUTEX_UNLOCK(&emu_stream_server_mutex);
++	
++	shutdown(conndata->connfd, 2);
++	close(conndata->connfd);
++	
++	NULLFREE(conndata);
++	
++	cs_log("[Emu] stream client disconnected");
++}
 +
++static void *stream_client_handler(void *arg)
++{
++#define EMU_DVB_MAX_TS_PACKETS 256
++#define EMU_DVB_BUFFER_SIZE 188*EMU_DVB_MAX_TS_PACKETS
++#define EMU_DVB_BUFFER_WAIT 188*(EMU_DVB_MAX_TS_PACKETS-128) 
++
++	emu_stream_client_conn_data *conndata = (emu_stream_client_conn_data *)arg;
 +	char *http_buf, stream_path[255], stream_path_copy[255];
 +	int32_t streamfd;
 +	int32_t clientStatus, streamStatus;
@@ -9669,49 +9881,54 @@ Index: module-emulator-stream.c
 +	uint32_t remainingDataPos, remainingDataLength;
 +	int32_t bytesRead = 0;
 +	emu_stream_client_data *data;
-+	int8_t streamErrorCount = 0;
++	int8_t streamConnectErrorCount = 0;
++	int8_t streamDataErrorCount = 0;
 +	int32_t i, srvidtmp;
 +	char *saveptr, *token;
++	char http_version[4];
++	int32_t http_status_code = 0;	
++	
++	cs_log("[Emu] stream client connected");
 +	
 +	if(!cs_malloc(&http_buf, 1024))
 +	{
-+		close(connfd);
-+		return;
++		stream_client_disconnect(conndata);
++		return NULL;
 +	}
 +	
 +	if(!cs_malloc(&stream_buf, EMU_DVB_BUFFER_SIZE))
 +	{
-+		close(connfd);
 +		NULLFREE(http_buf);
-+		return;
++		stream_client_disconnect(conndata);
++		return NULL;
 +	}
 +	
 +	if(!cs_malloc(&data, sizeof(emu_stream_client_data)))
 +	{
-+		close(connfd);
 +		NULLFREE(http_buf);
 +		NULLFREE(stream_buf);
-+		return;
++		stream_client_disconnect(conndata);
++		return NULL;
 +	}
 +	
-+	clientStatus = recv(connfd, http_buf, 1024, 0);
++	clientStatus = recv(conndata->connfd, http_buf, 1024, 0);
 +	if(clientStatus < 1)
 +	{
-+		close(connfd);
 +		NULLFREE(http_buf);
 +		NULLFREE(stream_buf);
 +		NULLFREE(data);
-+		return;		
++		stream_client_disconnect(conndata);
++		return NULL;		
 +	}
 +	
 +	http_buf[1023] = '\0';
 +	if(sscanf(http_buf, "GET %254s ", stream_path) < 1)
 +	{
-+		close(connfd);
 +		NULLFREE(http_buf);
 +		NULLFREE(stream_buf);
 +		NULLFREE(data);
-+		return;
++		stream_client_disconnect(conndata);
++		return NULL;
 +	}
 +	
 +	cs_strncpy(stream_path_copy, stream_path, sizeof(stream_path));
@@ -9738,58 +9955,87 @@ Index: module-emulator-stream.c
 +
 +	if(token == NULL)
 +	{
-+		close(connfd);
 +		NULLFREE(http_buf);
 +		NULLFREE(stream_buf);
 +		NULLFREE(data);
-+		return;
++		stream_client_disconnect(conndata);
++		return NULL;
 +	}
 +
 +#ifdef WITH_EMU
-+	emu_stream_cur_srvid = data->srvid;
-+	stream_server_has_ecm = 0;
++	SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
++	emu_stream_cur_srvid[conndata->connid] = data->srvid;
++	stream_server_has_ecm[conndata->connid] = 0;
++	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
 +#endif
 +
-+	cs_log("[Emu] stream client connected with request %s", stream_path);
++	cs_log("[Emu] stream client request %s", stream_path);
 +
 +	snprintf(http_buf, 1024, "HTTP/1.0 200 OK\nConnection: Close\nContent-Type: video/mpeg\nServer: stream_enigma2\n\n");
-+	clientStatus = send(connfd, http_buf, strlen(http_buf), 0);
++	clientStatus = send(conndata->connfd, http_buf, strlen(http_buf), 0);
 +
-+	while(!exit_oscam && clientStatus != -1 && streamErrorCount < 3)
++	while(!exit_oscam && clientStatus != -1 && streamConnectErrorCount < 3  && streamDataErrorCount < 15)
 +	{		
 +		streamfd = connect_to_stream(http_buf, 1024, stream_path);
 +		if(streamfd == -1)
 +		{
 +			cs_log("[Emu] warning: cannot connect to stream source");
-+			streamErrorCount++;
-+			cs_sleepms(100);
++			streamConnectErrorCount++;
++			cs_sleepms(500);
 +			continue;	
 +		}
 +
-+		streamErrorCount = 0;
 +		streamStatus = 0;
-+
-+		while(!exit_oscam && clientStatus != -1 && streamStatus != -1)
++		bytesRead = 0;
++		
++		while(!exit_oscam && clientStatus != -1 && streamStatus != -1 && streamConnectErrorCount < 3  && streamDataErrorCount < 15)
 +		{
-+			streamStatus = recv(streamfd, stream_buf+bytesRead, EMU_DVB_BUFFER_SIZE-bytesRead, 0);
++			streamStatus = recv(streamfd, stream_buf+bytesRead, EMU_DVB_BUFFER_SIZE-bytesRead, MSG_WAITALL);
 +			if(streamStatus == -1)
 +				{ break; }
 +		
++			if(streamStatus == 0)
++			{
++				cs_log("[Emu] warning: no data from stream source");
++				streamDataErrorCount++; // 2 sec timeout * 15 = 30 seconds no data -> close
++				cs_sleepms(100);
++				continue;	
++			}
++			
++			if(streamStatus < EMU_DVB_BUFFER_SIZE-bytesRead) // probably just received header but no stream
++			{
++				if(!bytesRead && streamStatus > 13 &&
++					sscanf((const char*)stream_buf, "HTTP/%3s %d ", http_version , &http_status_code) == 2 &&
++					http_status_code != 200)
++				{
++					cs_log("[Emu] error: got %d response from stream source", http_status_code);
++					streamConnectErrorCount++;  
++					cs_sleepms(100);
++					break;
++				}
++			}
++
++			streamConnectErrorCount = 0;	
 +			bytesRead += streamStatus;
 +			
 +			if(bytesRead >= EMU_DVB_BUFFER_WAIT)
 +			{	
-+				SearchTsPackets(stream_buf, bytesRead, &packetCount, &packetSize, &startOffset);
-+				
-+				if(packetCount <= 0)
++				startOffset = 0;
++				if(stream_buf[0] != 0x47 || packetSize == 0)
++				{
++					SearchTsPackets(stream_buf, bytesRead, &packetSize, &startOffset);
++				}
++				if(packetSize == 0)
 +				{
 +					bytesRead = 0;
 +				}
 +				else
 +				{
-+					ParseTSPackets(data, stream_buf+startOffset, packetCount, packetSize);
++					packetCount = ((bytesRead-startOffset) / packetSize);
++
++					ParseTSPackets(conndata, data, stream_buf+startOffset, bytesRead-startOffset, packetSize);
 +					
-+					clientStatus = send(connfd, stream_buf+startOffset, packetCount*packetSize, 0);
++					clientStatus = send(conndata->connfd, stream_buf+startOffset, packetCount*packetSize, 0);
 +						 
 +					remainingDataPos = startOffset+(packetCount*packetSize);
 +					remainingDataLength = bytesRead-remainingDataPos;
@@ -9807,22 +10053,47 @@ Index: module-emulator-stream.c
 +		close(streamfd);
 +	}
 +	
-+	close(connfd);
 +	NULLFREE(http_buf);
 +	NULLFREE(stream_buf);
 +	for(i=0; i<8; i++)
 +	{
-+		if(data->pvu_csa_ks[i])
-+			{ free_key_struct(data->pvu_csa_ks[i]); }	
++		if(data->key.pvu_csa_ks[i])
++			{ free_key_struct(data->key.pvu_csa_ks[i]); }	
 +	}
 +	NULLFREE(data);
++
++	stream_client_disconnect(conndata);
++	return NULL;
 +}
 +
 +void *stream_server(void *UNUSED(a))
 +{
 +	struct sockaddr_in servaddr, cliaddr;
 +	socklen_t clilen;
-+	int32_t reuse = 1;
++	int32_t connfd, reuse = 1, i;
++	int8_t connaccepted;
++	emu_stream_client_conn_data *conndata;
++	
++	if(!emu_stream_server_mutex_init)
++	{
++		SAFE_MUTEX_INIT(&emu_stream_server_mutex, NULL);
++		emu_stream_server_mutex_init = 1;
++	}
++	
++#ifdef WITH_EMU
++	SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
++	for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
++	{
++		emu_stream_cur_srvid[i] = NO_SRVID_VALUE;
++		stream_server_has_ecm[i] = 0;
++	}
++	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
++	
++	for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
++	{
++		gconnfd[i] = -1;
++	}
++#endif
 +	
 +	glistenfd = socket(AF_INET, SOCK_STREAM, 0);
 +	if(glistenfd == -1)
@@ -9854,16 +10125,51 @@ Index: module-emulator-stream.c
 +	while(!exit_oscam)
 +  	{
 +		clilen = sizeof(cliaddr);
-+		gconnfd = accept(glistenfd,(struct sockaddr *)&cliaddr, &clilen);
++		connfd = accept(glistenfd,(struct sockaddr *)&cliaddr, &clilen);
 +
-+		if(gconnfd == -1)
++		if(connfd == -1)
 +		{
 +			cs_log("[Emu] error: accept() failed");
 +			break;
 +		}
 +		
-+		handle_stream_client(gconnfd);
-+		cs_log("[Emu] stream client disconnected");
++		connaccepted = 0;
++		
++		if(cs_malloc(&conndata, sizeof(emu_stream_client_conn_data)))
++		{		
++			SAFE_MUTEX_LOCK(&emu_stream_server_mutex);
++			if(gconncount < EMU_STREAM_SERVER_MAX_CONNECTIONS)
++			{
++				for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
++				{
++					if(gconnfd[i] == -1)
++					{
++						gconnfd[i] = connfd;
++						gconncount++;
++						connaccepted = 1;
++						
++						conndata->connfd = connfd;
++						conndata->connid = i;
++						
++						break;
++					}
++				}
++			}
++			SAFE_MUTEX_UNLOCK(&emu_stream_server_mutex);
++		}
++	
++		if(connaccepted)
++		{
++			start_thread("emu stream client", stream_client_handler, (void*)conndata, NULL, 1, 0);		
++		}
++		else
++		{
++			shutdown(connfd, 2);
++			close(connfd);
++			cs_log("[Emu] error: stream server client dropped because of too much connections");
++		}
++		
++		cs_sleepms(100);
 +	} 
 +	
 +	close(glistenfd);
@@ -9872,55 +10178,64 @@ Index: module-emulator-stream.c
 +}
 +
 +#ifdef WITH_EMU
-+void *stream_key_delayer(void *UNUSED(a))
++void *stream_key_delayer(void *UNUSED(arg))
 +{
-+	int32_t j;
-+	emu_stream_client_data* cdata = &emu_fixed_key_data;
++	int32_t i, j;
++	emu_stream_client_key_data* cdata;
++	LL_ITER it;
 +	emu_stream_cw_item *item;
++	struct timeb t_now;
 +	
 +	while(!exit_oscam)
 +	{
-+		item = ll_remove_first(ll_emu_stream_delayed_keys);
++		cs_ftime(&t_now);
 +		
-+		if(item)
++		for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
 +		{
-+			cs_sleepms(cfg.emu_stream_ecm_delay);
-+	    	
-+			SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex);
-+	    	
-+			for(j=0; j<8; j++)
-+			{
-+				if(item->csa_used)
-+				{	
-+					if(cdata->pvu_csa_ks[j] == NULL)
-+						{  cdata->pvu_csa_ks[j] = get_key_struct(); }
-+						
-+					if(item->is_even)
-+						{ set_even_control_word(cdata->pvu_csa_ks[j], item->cw[j]); }
-+					else
-+						{ set_odd_control_word(cdata->pvu_csa_ks[j], item->cw[j]); }
-+					
-+					cdata->pvu_csa_used = 1;
-+				}
-+				else
-+				{					
-+					if(item->is_even)
-+						{ des_set_key(item->cw[j], cdata->pvu_des_ks[j][0]); }
-+					else
-+						{ des_set_key(item->cw[j], cdata->pvu_des_ks[j][1]); }
-+						
-+					cdata->pvu_csa_used = 0;
-+				}
-+			}
++			it = ll_iter_create(ll_emu_stream_delayed_keys[i]);
++			while((item = ll_iter_next(&it)))
++			{   		
++	    		if(comp_timeb(&t_now, &item->write_time) < 0)
++				{
++	    			break;
++	    		}
++
++				SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[i]);
++	    		
++	    		cdata = &emu_fixed_key_data[i];
++	    		
++				for(j=0; j<8; j++)
++				{
++					if(item->csa_used)
++					{	
++						if(cdata->pvu_csa_ks[j] == NULL)
++							{  cdata->pvu_csa_ks[j] = get_key_struct(); }
 +							
-+			SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex);
-+			
-+			free(item);
++						if(item->is_even)
++							{ set_even_control_word(cdata->pvu_csa_ks[j], item->cw[j]); }
++						else
++							{ set_odd_control_word(cdata->pvu_csa_ks[j], item->cw[j]); }
++						
++						cdata->pvu_csa_used = 1;
++					}
++					else
++					{					
++						if(item->is_even)
++							{ des_set_key(item->cw[j], cdata->pvu_des_ks[j][0]); }
++						else
++							{ des_set_key(item->cw[j], cdata->pvu_des_ks[j][1]); }
++							
++						cdata->pvu_csa_used = 0;
++					}
++				}
++								
++				SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[i]);
++				
++				ll_iter_remove_data(&it);
++			}
 +		}
-+		else
-+		{
-+			cs_sleepms(50);	
-+		}
++		
++		cs_sleepms(25);
 +	}
 +	
 +	return NULL;
@@ -9929,18 +10244,41 @@ Index: module-emulator-stream.c
 +
 +void stop_stream_server(void)
 +{
-+	shutdown(gconnfd, 2);
++	int32_t i;
++	
++	SAFE_MUTEX_LOCK(&emu_stream_server_mutex);
++	for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
++	{
++		if(gconnfd[i] != -1)
++		{
++			shutdown(gconnfd[i], 2);
++			close(gconnfd[i]);
++			gconnfd[i] = -1;
++		}
++	}
++	
++	gconncount = 0;
++	SAFE_MUTEX_UNLOCK(&emu_stream_server_mutex);
++	
 +	shutdown(glistenfd, 2);
-+	close(gconnfd);
 +	close(glistenfd);	
 +}
 Index: module-emulator-stream.h
 ===================================================================
 --- module-emulator-stream.h	(revision 0)
 +++ module-emulator-stream.h	(working copy)
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,59 @@
 +#ifndef EMU_STREAM_SERVER_H_
 +#define EMU_STREAM_SERVER_H_
++
++#define EMU_STREAM_SERVER_MAX_CONNECTIONS 8
++
++	typedef struct 
++	{
++		uint32_t pvu_des_ks[8][2][32];
++		int8_t pvu_csa_used;
++		void* pvu_csa_ks[8];
++	} emu_stream_client_key_data;
 +
 +	typedef struct 
 +	{
@@ -9956,11 +10294,10 @@ Index: module-emulator-stream.h
 +		uint16_t audio_pids[4];
 +		uint8_t audio_pid_count;
 +		int16_t ecm_nb;
-+		uint32_t pvu_des_ks[8][2][32];
-+		int8_t pvu_csa_used;
-+		void* pvu_csa_ks[8];
++		emu_stream_client_key_data key;
 +	} emu_stream_client_data;
 +
++	extern char emu_stream_source_host[256];
 +	extern int32_t emu_stream_source_port;
 +	extern int32_t emu_stream_relay_port;
 +	
@@ -9972,18 +10309,21 @@ Index: module-emulator-stream.h
 +#ifdef WITH_EMU
 +	typedef struct
 +	{
++		struct timeb write_time;
 +		int8_t csa_used;
 +		int8_t is_even;
 +		uint8_t cw[8][8];
-+	} emu_stream_cw_item;
++	} emu_stream_cw_item;	
 +	
-+	extern LLIST *ll_emu_stream_delayed_keys;
-+	extern pthread_mutex_t emu_fixed_key_data_mutex;
-+	extern emu_stream_client_data emu_fixed_key_data;
-+	extern uint16_t emu_stream_cur_srvid;
-+	extern int8_t stream_server_has_ecm;
-+		
-+	void *stream_key_delayer(void *a);
++	extern pthread_mutex_t emu_fixed_key_srvid_mutex;
++	extern uint16_t emu_stream_cur_srvid[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++	extern int8_t stream_server_has_ecm[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++	
++	extern pthread_mutex_t emu_fixed_key_data_mutex[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++	extern emu_stream_client_key_data emu_fixed_key_data[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++	extern LLIST *ll_emu_stream_delayed_keys[EMU_STREAM_SERVER_MAX_CONNECTIONS];	
++	
++	void *stream_key_delayer(void *arg);
 +#endif
 +
 +#endif
@@ -9991,7 +10331,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,718 @@
+@@ -0,0 +1,725 @@
 +#include "globals.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -10574,21 +10914,28 @@ Index: module-emulator.c
 +
 +static int32_t EMU_Init(struct s_reader *reader)
 +{
++	int32_t i;
++	
 +	if(stream_server_thread_init == 0)
 +	{
 +		stream_server_thread_init = 1;
++
++		SAFE_MUTEX_INIT(&emu_fixed_key_srvid_mutex, NULL);
++
++		for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
++		{
++			SAFE_MUTEX_INIT(&emu_fixed_key_data_mutex[i], NULL);
++			ll_emu_stream_delayed_keys[i] = ll_create("ll_emu_stream_delayed_keys");
++			memset(&emu_fixed_key_data[i], 0, sizeof(emu_stream_client_key_data));
++		}
 +		
-+		SAFE_MUTEX_INIT(&emu_fixed_key_data_mutex, NULL);
-+		
-+		memset(&emu_fixed_key_data, 0, sizeof(emu_stream_client_data));
-+		
-+		ll_emu_stream_delayed_keys = ll_create("ll_emu_stream_delayed_keys");
-+		
++		start_thread("stream_key_delayer", stream_key_delayer, NULL, NULL, 1, 1);
++			
++		cs_strncpy(emu_stream_source_host, cfg.emu_stream_source_host, sizeof(emu_stream_source_host));
 +		emu_stream_source_port = cfg.emu_stream_source_port;
 +		emu_stream_relay_port = cfg.emu_stream_relay_port;
 +
 +		start_thread("stream_server", stream_server, NULL, NULL, 1, 1);
-+		start_thread("stream_key_delayer", stream_key_delayer, NULL, NULL, 1, 1);
 +	}
 +	
 +	set_hexserial_to_version(reader);
@@ -10712,7 +11059,7 @@ Index: module-emulator.c
 +}
 Index: module-newcamd-des.c
 ===================================================================
---- module-newcamd-des.c	(revision 10888)
+--- module-newcamd-des.c	(revision 10943)
 +++ module-newcamd-des.c	(working copy)
 @@ -5,10 +5,7 @@
  #define DES_IP              1
@@ -10736,7 +11083,7 @@ Index: module-newcamd-des.c
  	unsigned char left[8];
 Index: module-newcamd-des.h
 ===================================================================
---- module-newcamd-des.h	(revision 10888)
+--- module-newcamd-des.h	(revision 10943)
 +++ module-newcamd-des.h	(working copy)
 @@ -1,8 +1,15 @@
  #ifndef MODULE_NEWCAMD_DES_H_
@@ -10756,7 +11103,7 @@ Index: module-newcamd-des.h
  #endif
 Index: module-stat.c
 ===================================================================
---- module-stat.c	(revision 10888)
+--- module-stat.c	(revision 10943)
 +++ module-stat.c	(working copy)
 @@ -886,7 +886,7 @@
  
@@ -10778,7 +11125,7 @@ Index: module-stat.c
  				continue; // proxy can convert or reject
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 10888)
+--- module-webif-tpl.c	(revision 10943)
 +++ module-webif-tpl.c	(working copy)
 @@ -456,6 +456,7 @@
  											check_conf(WITH_SSL, ptr2);
@@ -10790,27 +11137,30 @@ Index: module-webif-tpl.c
  										{
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 10888)
+--- module-webif.c	(revision 10943)
 +++ module-webif.c	(working copy)
-@@ -101,6 +101,7 @@
- #define MNU_CFG_LCD 13
- #define MNU_CFG_GBOX 14
- #define MNU_CFG_SCAM 15
+@@ -102,7 +102,8 @@
+ #define MNU_CFG_DVBAPI		13
+ #define MNU_CFG_LCD			14
+ #define MNU_CFG_MONITOR		15
+-#define MNU_CFG_WEBIF		16
 +#define MNU_CFG_STREAMRELAY 16
++#define MNU_CFG_WEBIF		17
  
- #define MNU_CFG_FVERSION 12
- #define MNU_CFG_FCONF 13
-@@ -119,7 +120,8 @@
- #define MNU_CFG_RATELIMIT 26
- #define MNU_CFG_FCSS 27
- #define MNU_CFG_FSRVID2 28
--#define MNU_CFG_TOTAL_ITEMS 29 // sum of items above. Use it for "All inactive" in function calls too.
-+#define MNU_CFG_KEY 29
-+#define MNU_CFG_TOTAL_ITEMS 30 // sum of items above. Use it for "All inactive" in function calls too.
+ /* constants for files.html submenuactivating */
+ #define MNU_CFG_FVERSION	0
+@@ -122,8 +123,9 @@
+ #define MNU_CFG_FSRVID2		14
+ #define MNU_CFG_FFAKECWS	15
+ #define MNU_CFG_FCSS		16
++#define MNU_CFG_FSOFTCAMKEY	17
+ 
+-#define MNU_CFG_TOTAL_ITEMS 17 // sum of config or files submenuactivating above. Use it for "All inactive" in function calls too.
++#define MNU_CFG_TOTAL_ITEMS 18 // sum of config or files submenuactivating above. Use it for "All inactive" in function calls too.
  
  static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value) {
  	if (no_data)
-@@ -936,6 +938,23 @@
+@@ -941,6 +943,24 @@
  }
  #endif
  
@@ -10823,6 +11173,7 @@ Index: module-webif.c
 +
 +	webif_save_config("streamrelay", vars, params);
 +
++	tpl_printf(vars, TPLADD, "STREAM_SOURCE_HOST", "%s", cfg.emu_stream_source_host);
 +	tpl_printf(vars, TPLADD, "STREAM_SOURCE_PORT", "%d", cfg.emu_stream_source_port);
 +	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.emu_stream_relay_port);
 +	tpl_printf(vars, TPLADD, "STREAM_ECM_DELAY", "%d", cfg.emu_stream_ecm_delay);
@@ -10834,7 +11185,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams *params)
  {
-@@ -1345,6 +1364,9 @@
+@@ -1350,6 +1370,9 @@
  #ifdef MODULE_SCAM
  	else if(!strcmp(part, "scam")) { return send_oscam_config_scam(vars, params); }
  #endif
@@ -10844,7 +11195,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  	else if(!strcmp(part, "cccam")) { return send_oscam_config_cccam(vars, params); }
  #endif
-@@ -1783,7 +1805,7 @@
+@@ -1788,7 +1811,7 @@
  		chk_reader("services", servicelabels, rdr);
  		chk_reader("lb_whitelist_services", servicelabelslb, rdr);
  
@@ -10853,7 +11204,7 @@ Index: module-webif.c
  		{
  			restart_cardreader(rdr, 1);
  		}
-@@ -2336,6 +2358,13 @@
+@@ -2345,6 +2368,13 @@
  	tpl_printf(vars, TPLADD, "GBOXRESHARE",   "%d", rdr->gbox_reshare);
  #endif
  
@@ -10867,7 +11218,7 @@ Index: module-webif.c
  	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
  
  	// Show only parameters which needed for the reader
-@@ -2356,6 +2385,9 @@
+@@ -2365,6 +2395,9 @@
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
@@ -10877,7 +11228,7 @@ Index: module-webif.c
  	case R_CS378X :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
  		break;
-@@ -4029,9 +4061,38 @@
+@@ -4042,9 +4075,38 @@
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -10916,7 +11267,7 @@ Index: module-webif.c
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -4520,6 +4581,9 @@
+@@ -4533,6 +4595,9 @@
  #else
  						filtered = (type == cl->typ);
  #endif
@@ -10926,17 +11277,17 @@ Index: module-webif.c
  					}
  				}
  
-@@ -5922,6 +5986,9 @@
- 		{ "oscam.conf",      MNU_CFG_FCONF,     FTYPE_CONFIG },
- 		{ "oscam.user",      MNU_CFG_FUSER,     FTYPE_CONFIG },
- 		{ "oscam.server",    MNU_CFG_FSERVER,   FTYPE_CONFIG },
+@@ -5957,6 +6022,9 @@
+ #ifdef CS_ANTICASC
+ 		{ "anticasc",        MNU_CFG_FACLOG,    FTYPE_ANTICASC },
+ #endif
 +#ifdef WITH_EMU
-+		{ "SoftCam.Key",     MNU_CFG_KEY,       FTYPE_CONFIG },
++		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },
 +#endif
- 		{ "oscam.services",  MNU_CFG_FSERVICES, FTYPE_CONFIG },
- 		{ "oscam.whitelist", MNU_CFG_WHITELIST, FTYPE_CONFIG },
- 		{ "oscam.srvid",     MNU_CFG_FSRVID,    FTYPE_CONFIG },
-@@ -7400,8 +7467,8 @@
+ 		{ NULL, 0, 0 },
+ 	};
+ 
+@@ -7427,8 +7495,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -10949,9 +11300,9 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 10888)
+--- oscam-chk.c	(revision 10943)
 +++ oscam-chk.c	(working copy)
-@@ -705,7 +705,7 @@
+@@ -706,7 +706,7 @@
  		return 0;
  	}
  
@@ -10960,7 +11311,7 @@ Index: oscam-chk.c
  	{
  		if (!rdr->csystem)
  			return 0;
-@@ -741,7 +741,7 @@
+@@ -742,7 +742,7 @@
  	}
  
  	//Checking ident:
@@ -10969,7 +11320,7 @@ Index: oscam-chk.c
  	{
  		cs_log_dbg(D_TRACE, "r-filter reader %s", rdr->label);
  		return (0);
-@@ -974,7 +974,7 @@
+@@ -975,7 +975,7 @@
  
  int32_t chk_caid_rdr(struct s_reader *rdr, uint16_t caid)
  {
@@ -10980,9 +11331,9 @@ Index: oscam-chk.c
  	}
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 10888)
+--- oscam-config-global.c	(revision 10943)
 +++ oscam-config-global.c	(working copy)
-@@ -801,6 +801,27 @@
+@@ -802,6 +802,26 @@
  #else
  static const struct config_list scam_opts[] = { DEF_LAST_OPT };
  #endif
@@ -10990,16 +11341,15 @@ Index: oscam-config-global.c
 +#ifdef WITH_EMU
 +static bool streamrelay_should_save_fn(void *UNUSED(var))
 +{
-+	return cfg.emu_stream_source_port != 8001 || 
-+			cfg.emu_stream_relay_port != 17999 ||
-+			cfg.emu_stream_ecm_delay != 700;
++	return 1;
 +}
 +static const struct config_list streamrelay_opts[] =
 +{
 +	DEF_OPT_SAVE_FUNC(streamrelay_should_save_fn),
-+	DEF_OPT_INT32("stream_source_port"    , OFS(emu_stream_source_port),    8001),
-+	DEF_OPT_INT32("stream_relay_port"    , OFS(emu_stream_relay_port),    17999),
-+	DEF_OPT_UINT32("stream_ecm_delay"    , OFS(emu_stream_ecm_delay),    700),
++	DEF_OPT_STR("stream_source_host"	 , OFS(emu_stream_source_host),  "127.0.0.1"),
++	DEF_OPT_INT32("stream_source_port"   , OFS(emu_stream_source_port),  8001),
++	DEF_OPT_INT32("stream_relay_port"    , OFS(emu_stream_relay_port),   17999),
++	DEF_OPT_UINT32("stream_ecm_delay"    , OFS(emu_stream_ecm_delay),    600),
 +	DEF_LAST_OPT
 +};
 +#else
@@ -11010,7 +11360,7 @@ Index: oscam-config-global.c
  #ifdef MODULE_RADEGAST
  static bool radegast_should_save_fn(void *UNUSED(var))
  {
-@@ -1059,6 +1080,7 @@
+@@ -1060,6 +1080,7 @@
  	{ "cccam",	cccam_opts },
  	{ "pandora",	pandora_opts },
  	{ "scam",	scam_opts },
@@ -11020,7 +11370,7 @@ Index: oscam-config-global.c
  	{ "webif",	webif_opts },
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 10888)
+--- oscam-config-reader.c	(revision 10943)
 +++ oscam-config-reader.c	(working copy)
 @@ -107,6 +107,7 @@
  			{ "newcamd",    R_NEWCAMD },
@@ -11030,7 +11380,7 @@ Index: oscam-config-reader.c
  			{ NULL        , 0 }
  		}, *p;
  		int i;
-@@ -401,6 +402,7 @@
+@@ -445,6 +446,7 @@
  		if(ftab_type & FTAB_CHID)       { rdr = container_of(setting, struct s_reader, fchid); }
  		if(ftab_type & FTAB_FBPCAID)    { rdr = container_of(setting, struct s_reader, fallback_percaid); }
  		if(ftab_type & FTAB_LOCALCARDS) { rdr = container_of(setting, struct s_reader, localcards); }
@@ -11038,7 +11388,7 @@ Index: oscam-config-reader.c
  		if(rdr)
  			{ rdr->changes_since_shareupdate = 1; }
  	}
-@@ -708,7 +710,7 @@
+@@ -752,7 +754,7 @@
  }
  
  
@@ -11047,7 +11397,7 @@ Index: oscam-config-reader.c
  {
  	struct s_reader *rdr = var;
  #ifdef WITH_LB
-@@ -841,6 +843,9 @@
+@@ -887,6 +889,9 @@
  #ifdef MODULE_GHTTP
  	DEF_OPT_UINT8("use_ssl"             , OFS(ghttp_use_ssl),           0),
  #endif
@@ -11059,7 +11409,7 @@ Index: oscam-config-reader.c
  	DEF_OPT_FUNC("auprovid"             , 0,                            auprovid_fn),
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 10888)
+--- oscam-config.h	(revision 10943)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -11069,7 +11419,7 @@ Index: oscam-config.h
  
  void    chk_sidtab(char *token, char *value, struct s_sidtab *sidtab);
  int32_t init_sidtab(void);
-@@ -54,7 +55,8 @@
+@@ -55,7 +56,8 @@
  	FTAB_PROVID  = 0x04,
  	FTAB_CHID    = 0x08,
  	FTAB_FBPCAID = 0x10,
@@ -11079,9 +11429,22 @@ Index: oscam-config.h
  };
  
  void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE *f);
+Index: oscam-ecm.c
+===================================================================
+--- oscam-ecm.c	(revision 10943)
++++ oscam-ecm.c	(working copy)
+@@ -1577,7 +1577,7 @@
+ 
+ 	if(reader && cw && rc < E_NOTFOUND)
+ 	{
+-		if(reader->disablecrccws == 0)
++		if(reader->disablecrccws == 0 && ((er->caid>>8)!=0x0E))
+ 		{
+ 			for(i = 0; i < 16; i += 4)
+ 			{
 Index: oscam-emm.c
 ===================================================================
---- oscam-emm.c	(revision 10888)
+--- oscam-emm.c	(revision 10943)
 +++ oscam-emm.c	(working copy)
 @@ -49,7 +49,14 @@
  	unsigned int j, filter_count = 0;
@@ -11126,9 +11489,9 @@ Index: oscam-emm.c
  		rdr_log_dbg(reader, D_EMM, "reader auprovid = %06X matching with emm provid = %06X -> SEND!", prid, provid);
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 10888)
+--- oscam-string.c	(revision 10943)
 +++ oscam-string.c	(working copy)
-@@ -491,6 +491,62 @@
+@@ -494,6 +494,62 @@
  	return crc ^ 0xffffffffL;
  }
  
@@ -11193,7 +11556,7 @@ Index: oscam-string.c
  	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 10888)
+--- oscam-string.h	(revision 10943)
 +++ oscam-string.h	(working copy)
 @@ -35,6 +35,7 @@
  void get_random_bytes_init(void);
@@ -11205,7 +11568,7 @@ Index: oscam-string.h
  uint32_t jhash(const char *key, size_t len);
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 10888)
+--- oscam.c	(revision 10943)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11227,7 +11590,7 @@ Index: oscam.c
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
  		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
-@@ -1578,6 +1584,9 @@
+@@ -1579,6 +1585,9 @@
  #ifdef CARDREADER_STINGER
  	&cardreader_stinger,
  #endif
@@ -11237,7 +11600,7 @@ Index: oscam.c
  	NULL
  };
  
-@@ -1749,6 +1758,9 @@
+@@ -1750,6 +1759,9 @@
  
  	init_sidtab();
  	init_readerdb();
@@ -11247,7 +11610,7 @@ Index: oscam.c
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
-@@ -1827,6 +1839,9 @@
+@@ -1829,6 +1841,9 @@
  	SAFE_COND_SIGNAL(&reader_check_sleep_cond); // Stop reader_check thread
  
  	// Cleanup
@@ -11259,7 +11622,7 @@ Index: oscam.c
  #endif
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 10888)
+--- reader-common.c	(revision 10943)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -11291,7 +11654,7 @@ Index: reader-common.c
  		NULLFREE(reader->csystem_data);
 Index: readers.h
 ===================================================================
---- readers.h	(revision 10888)
+--- readers.h	(revision 10943)
 +++ readers.h	(working copy)
 @@ -15,5 +15,6 @@
  extern const struct s_cardsystem reader_bulcrypt;
@@ -11302,14 +11665,15 @@ Index: readers.h
  #endif
 Index: webif/config/menu.html
 ===================================================================
---- webif/config/menu.html	(revision 10888)
+--- webif/config/menu.html	(revision 10943)
 +++ webif/config/menu.html	(working copy)
 @@ -16,6 +16,7 @@
- ##TPLCONFIGMENUDVBAPI##
- ##TPLCONFIGMENULCD##
- ##TPLCONFIGMENUMONITOR##
-+##TPLCONFIGMENUSTREAMRELAY##
- 			<LI CLASS="##CMENUACTIVE12##"><A HREF="config.html?part=webif">WebIf</A></LI>
+ ##TPLCONFIGMENUDVBAPI##		<!-- CMENUACTIVE13 -->
+ ##TPLCONFIGMENULCD##		<!-- CMENUACTIVE14 -->
+ ##TPLCONFIGMENUMONITOR##	<!-- CMENUACTIVE15 -->
+-			<LI CLASS="##CMENUACTIVE16##"><A HREF="config.html?part=webif">WebIf</A></LI>
++##TPLCONFIGMENUSTREAMRELAY##<!-- CMENUACTIVE16 -->
++			<LI CLASS="##CMENUACTIVE17##"><A HREF="config.html?part=webif">WebIf</A></LI>
  	</UL>
  </DIV>
 \ No newline at end of file
@@ -11323,45 +11687,46 @@ Index: webif/config/streamrelay.html
 ===================================================================
 --- webif/config/streamrelay.html	(revision 0)
 +++ webif/config/streamrelay.html	(working copy)
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +		<input name="part" type="hidden" value="streamrelay">
 +		<TABLE CLASS="config">
 +			<TR><TH COLSPAN="2">Edit Stream Relay Config</TH></TR>
-+			<TR><TD><A>Source Stream Port:</A></TD><TD><input name="strean_source_port" class="short" type="text" maxlength="5" value="##STREAM_SOURCE_PORT##"></TD></TR>
++			<TR><TD><A>Source Stream Host:</A></TD><TD><input name="stream_source_host" type="text" maxlength="15" value="##STREAM_SOURCE_HOST##"></TD></TR>
++			<TR><TD><A>Source Stream Port:</A></TD><TD><input name="stream_source_port" class="short" type="text" maxlength="5" value="##STREAM_SOURCE_PORT##"></TD></TR>
 +			<TR><TD><A>Relay Port:</A></TD><TD><input name="stream_relay_port" class="short" type="text" maxlength="5" value="##STREAM_RELAY_PORT##"></TD></TR>
 +			<TR><TD><A>ECM fix delay:</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"></TD></TR>
 +			
 \ No newline at end of file
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 10888)
+--- webif/files/menu.html	(revision 10943)
 +++ webif/files/menu.html	(working copy)
-@@ -10,7 +10,7 @@
- ##TPLFILEMENUANTICASC##
- 		<LI CLASS="##CMENUACTIVE20##"><A HREF="files.html?file=logfile">logfile</A></LI>
- 		<LI CLASS="##CMENUACTIVE21##"><A HREF="files.html?file=userfile">userfile</A></LI>
--		<LI CLASS="##CMENUACTIVE16## ##CMENUACTIVE28## ##CMENUACTIVE19## ##CMENUACTIVE25## ##CMENUACTIVE26## ##CMENUACTIVE27##"><A HREF="#"  class="drop">other file<b class="subcaret"></b></A>
-+		<LI CLASS="##CMENUACTIVE16## ##CMENUACTIVE28## ##CMENUACTIVE19## ##CMENUACTIVE25## ##CMENUACTIVE26## ##CMENUACTIVE27##  ##CMENUACTIVE29##"><A HREF="#"  class="drop">other file<b class="subcaret"></b></A>
+@@ -9,7 +9,7 @@
+ ##TPLFILEMENUANTICASC##	<!-- CMENUACTIVE6 -->
+ 		<LI CLASS="##CMENUACTIVE7##"><A HREF="files.html?file=logfile">logfile</A></LI>
+ 		<LI CLASS="##CMENUACTIVE8##"><A HREF="files.html?file=userfile">userfile</A></LI>
+-		<LI CLASS="##CMENUACTIVE9## ##CMENUACTIVE10## ##CMENUACTIVE11## ##CMENUACTIVE12## ##CMENUACTIVE13## ##CMENUACTIVE14## ##CMENUACTIVE15## ##CMENUACTIVE16##"><A HREF="#"  class="drop">other file<b class="subcaret"></b></A>
++		<LI CLASS="##CMENUACTIVE9## ##CMENUACTIVE10## ##CMENUACTIVE11## ##CMENUACTIVE12## ##CMENUACTIVE13## ##CMENUACTIVE14## ##CMENUACTIVE15## ##CMENUACTIVE16## ##CMENUACTIVE17##"><A HREF="#"  class="drop">other file<b class="subcaret"></b></A>
  			<UL CLASS="dropdown_nav">
- 				<LI CLASS="##CMENUACTIVE16##"><A HREF="files.html?file=oscam.services">oscam.services</A></LI>
- 				<LI CLASS="##CMENUACTIVE19##"><A HREF="files.html?file=oscam.tiers">oscam.tiers</A></LI>
-@@ -18,6 +18,7 @@
- 				<LI CLASS="##CMENUACTIVE26##"><A HREF="files.html?file=oscam.ratelimit">oscam.ratelimit</A></LI>
- 				<LI CLASS="##CMENUACTIVE28##"><A HREF="files.html?file=##SRVIDSUB##">##SRVIDSUB##</A></LI>
-                 ##FILEEDITCSS_SHOW##
-+                ##TPLFILEMENUKEY##
+ 				<LI CLASS="##CMENUACTIVE9##"><A HREF="files.html?file=oscam.services">oscam.services</A></LI>
+ 				<LI CLASS="##CMENUACTIVE10##"><A HREF="files.html?file=oscam.provid">oscam.provid</A></LI>
+@@ -19,6 +19,7 @@
+ 				<LI CLASS="##CMENUACTIVE14##"><A HREF="files.html?file=##SRVIDSUB##">##SRVIDSUB##</A></LI>
+ ##TPLFILEMENUFAKECWS##	<!-- CMENUACTIVE15 -->
+ ##VIEW_FILEMENUCSS##	<!-- CMENUACTIVE16 -->
++##TPLFILEMENUSOFTCAMKEY## <!-- CMENUACTIVE17 -->
  			</UL>
  		</LI>
  	</UL>
-Index: webif/files/menu_key.html
+Index: webif/files/menu_softcamkey.html
 ===================================================================
---- webif/files/menu_key.html	(revision 0)
-+++ webif/files/menu_key.html	(working copy)
+--- webif/files/menu_softcamkey.html	(revision 0)
++++ webif/files/menu_softcamkey.html	(working copy)
 @@ -0,0 +1 @@
-+			<LI CLASS="##CMENUACTIVE29##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
++			<LI CLASS="##CMENUACTIVE17##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 10888)
+--- webif/pages_index.txt	(revision 10943)
 +++ webif/pages_index.txt	(working copy)
 @@ -79,11 +79,13 @@
  CONFIGMENUNEWCAMD             config/menu_newcamd.html                                    MODULE_NEWCAMD
@@ -11377,15 +11742,15 @@ Index: webif/pages_index.txt
  CONFIGSERIAL                  config/serial.html                                          MODULE_SERIAL
  CONFIGSERIALDEVICEBIT         config/serial_devices.html                                  MODULE_SERIAL
  CONFIGWEBIF                   config/webif.html
-@@ -113,6 +115,7 @@
- FILEMENU                      files/menu.html
- FILEMENUDVBAPI                files/menu_dvbapi.html                                      HAVE_DVBAPI
+@@ -114,6 +116,7 @@
  FILEMENUANTICASC              files/menu_anticasc.html                                    CS_ANTICASC
-+FILEMENUKEY                   files/menu_key.html                                         WITH_EMU
+ FILEMENUDVBAPI                files/menu_dvbapi.html                                      HAVE_DVBAPI
+ FILEMENUFAKECWS               files/menu_fakecws.html                                     CS_CACHEEX
++FILEMENUSOFTCAMKEY            files/menu_softcamkey.html                                  WITH_EMU
  
  AUTOCONF                      ghttp/autoconf.html                                         MODULE_GHTTP
  PREAUTOCONF                   ghttp/pre_autoconf.html                                     MODULE_GHTTP
-@@ -174,6 +177,7 @@
+@@ -177,6 +180,7 @@
  READEREDITCACHEEXBIT          readerconfig/readerconfig_cacheexbit.html                   CS_CACHEEX
  READERCONFIGCAMD35BIT         readerconfig/readerconfig_camd35bit.html                    MODULE_CAMD35
  READERCONFIGCCCAMBIT          readerconfig/readerconfig_cccambit.html                     MODULE_CCCAM
