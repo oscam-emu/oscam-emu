@@ -49,7 +49,19 @@ Index: CMakeLists.txt
  if(HAVE_LIBRT AND HAVE_LIBUSB)
     if (LIBUSBDIR)
  	set (libusb_link "imp_libusb")
-@@ -718,6 +728,22 @@
+@@ -634,6 +644,11 @@
+ execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine COMMAND tr -d '\n' OUTPUT_VARIABLE CS_TARGET)
+ add_definitions ("-D'CS_TARGET=\"${CS_TARGET}\"'")
+ #----------------------- global compile and link options ------------------------------
++#enable sse2 on x86
++if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
++    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse -msse2 -msse3")
++endif (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
++
+ # disable warning about unused but set variables in gcc 4.6+
+ if (CMAKE_COMPILER_IS_GNUCC)
+     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+@@ -718,6 +733,22 @@
  
  #--------------------------------------------------------------------------------
  
@@ -72,7 +84,7 @@ Index: CMakeLists.txt
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
-@@ -806,4 +832,8 @@
+@@ -806,4 +837,8 @@
   endif(STATICLIBUSB AND NOT LIBUSBDIR)
  endif (HAVE_LIBUSB)
  
@@ -598,7 +610,7 @@ Index: ffdecsa/ffdecsa.c
 ===================================================================
 --- ffdecsa/ffdecsa.c	(revision 0)
 +++ ffdecsa/ffdecsa.c	(working copy)
-@@ -0,0 +1,911 @@
+@@ -0,0 +1,926 @@
 +/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2003-2004  fatih89r
@@ -657,7 +669,22 @@ Index: ffdecsa/ffdecsa.c
 +
 +//////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
 +#ifndef PARALLEL_MODE
++
++#if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
++#define PARALLEL_MODE PARALLEL_128_SSE2
++
++#elif defined(__mips__) || defined(__mips) || defined(__MIPS__)
++#define PARALLEL_MODE PARALLEL_64_LONG
++
++#elif defined(__sh__) || defined(__SH4__)
 +#define PARALLEL_MODE PARALLEL_32_INT
++#define COPY_UNALIGNED_PKT
++#define MEMALIGN_VAL 4
++
++#else
++#define PARALLEL_MODE PARALLEL_32_INT
++#endif
++
 +#endif
 +//////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
 +
@@ -1605,7 +1632,7 @@ Index: ffdecsa/fftable.h
 +#ifndef FFTABLE_H
 +#define FFTABLE_H
 +
-+void static inline FFTABLEIN(unsigned char *tab, int g, unsigned char *data)
++inline static void FFTABLEIN(unsigned char *tab, int g, unsigned char *data)
 +{
 +#if 0
 +  *(((int *)tab)+2*g)=*((int *)data);
@@ -1615,7 +1642,7 @@ Index: ffdecsa/fftable.h
 +#endif
 +}
 +
-+void static inline FFTABLEOUT(unsigned char *data, unsigned char *tab, int g)
++inline static void FFTABLEOUT(unsigned char *data, unsigned char *tab, int g)
 +{
 +#if 1
 +  *((int *)data)=*(((int *)tab)+2*g);
@@ -1625,14 +1652,14 @@ Index: ffdecsa/fftable.h
 +#endif
 +}
 +
-+void static inline FFTABLEOUTXORNBY(int n, unsigned char *data, unsigned char *tab, int g)
++inline static void FFTABLEOUTXORNBY(int n, unsigned char *data, unsigned char *tab, int g)
 +{
 +  int j;
 +  for(j=0;j<n;j++) *(data+j)^=*(tab+8*g+j);
 +}
 +
 +#undef XOREQ_BEST_BY
-+static inline void XOREQ_BEST_BY(unsigned char *d, unsigned char *s)
++inline static void XOREQ_BEST_BY(unsigned char *d, unsigned char *s)
 +{
 +	XOR_BEST_BY(d, d, s);
 +}
@@ -1698,6 +1725,137 @@ Index: ffdecsa/parallel_032_int.h
 +#define B_FFN_ALL_80() 0x80808080
 +
 +#define M_EMPTY()
+Index: ffdecsa/parallel_064_long.h
+===================================================================
+--- ffdecsa/parallel_064_long.h	(revision 0)
++++ ffdecsa/parallel_064_long.h	(working copy)
+@@ -0,0 +1,39 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2007 Dark Avenger
++ *               2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include "parallel_std_def.h"
++
++typedef unsigned long long group;
++#define GROUP_PARALLELISM 64
++#define FF0() 0x0ULL
++#define FF1() 0xffffffffffffffffULL
++
++typedef unsigned long long batch;
++#define BYTES_PER_BATCH 8
++#define B_FFN_ALL_29() 0x2929292929292929ULL
++#define B_FFN_ALL_02() 0x0202020202020202ULL
++#define B_FFN_ALL_04() 0x0404040404040404ULL
++#define B_FFN_ALL_10() 0x1010101010101010ULL
++#define B_FFN_ALL_40() 0x4040404040404040ULL
++#define B_FFN_ALL_80() 0x8080808080808080ULL
++
++#define M_EMPTY()
++
++#include "fftable.h"
+Index: ffdecsa/parallel_128_sse2.h
+===================================================================
+--- ffdecsa/parallel_128_sse2.h	(revision 0)
++++ ffdecsa/parallel_128_sse2.h	(working copy)
+@@ -0,0 +1,82 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2007 Dark Avenger
++ *               2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include <emmintrin.h>
++
++#define MEMALIGN_VAL 16
++
++union __u128i {
++	unsigned int u[4];
++	__m128i v;
++};
++
++static const union __u128i ff0 = {{0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U}};
++static const union __u128i ff1 = {{0xffffffffU, 0xffffffffU, 0xffffffffU, 0xffffffffU}};
++
++typedef __m128i group;
++#define GROUP_PARALLELISM 128
++#define FF0() ff0.v
++#define FF1() ff1.v
++#define FFAND(a,b) _mm_and_si128((a),(b))
++#define FFOR(a,b)  _mm_or_si128((a),(b))
++#define FFXOR(a,b) _mm_xor_si128((a),(b))
++#define FFNOT(a)   _mm_xor_si128((a),FF1())
++#define MALLOC(X)  _mm_malloc(X,16)
++#define FREE(X)    _mm_free(X)
++
++/* BATCH */
++
++static const union __u128i ff29 = {{0x29292929U, 0x29292929U, 0x29292929U, 0x29292929U}};
++static const union __u128i ff02 = {{0x02020202U, 0x02020202U, 0x02020202U, 0x02020202U}};
++static const union __u128i ff04 = {{0x04040404U, 0x04040404U, 0x04040404U, 0x04040404U}};
++static const union __u128i ff10 = {{0x10101010U, 0x10101010U, 0x10101010U, 0x10101010U}};
++static const union __u128i ff40 = {{0x40404040U, 0x40404040U, 0x40404040U, 0x40404040U}};
++static const union __u128i ff80 = {{0x80808080U, 0x80808080U, 0x80808080U, 0x80808080U}};
++
++typedef __m128i batch;
++#define BYTES_PER_BATCH 16
++#define B_FFN_ALL_29() ff29.v
++#define B_FFN_ALL_02() ff02.v
++#define B_FFN_ALL_04() ff04.v
++#define B_FFN_ALL_10() ff10.v
++#define B_FFN_ALL_40() ff40.v
++#define B_FFN_ALL_80() ff80.v
++
++#define B_FFAND(a,b) FFAND(a,b)
++#define B_FFOR(a,b)  FFOR(a,b)
++#define B_FFXOR(a,b) FFXOR(a,b)
++#define B_FFSH8L(a,n) _mm_slli_epi64((a),(n))
++#define B_FFSH8R(a,n) _mm_srli_epi64((a),(n))
++
++#define M_EMPTY()
++
++#undef BEST_SPAN
++#define BEST_SPAN            16
++
++#undef XOR_BEST_BY
++inline static void XOR_BEST_BY(unsigned char *d, unsigned char *s1, unsigned char *s2)
++{
++	__m128i vs1 = _mm_load_si128((__m128i*)s1);
++	__m128i vs2 = _mm_load_si128((__m128i*)s2);
++	vs1 = _mm_xor_si128(vs1, vs2);
++	_mm_store_si128((__m128i*)d, vs1);
++}
++
++#include "fftable.h"
 Index: ffdecsa/parallel_generic.h
 ===================================================================
 --- ffdecsa/parallel_generic.h	(revision 0)
@@ -2792,7 +2950,7 @@ Index: globals.h
  	uint8_t cnxlastecm; // == 0 - las ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST           *emmstat; //emm stats
  	CS_MUTEX_LOCK   emmstat_lock;
-@@ -2075,6 +2085,14 @@
+@@ -2075,6 +2085,16 @@
  	IN_ADDR_T   scam_srvip;
  	struct s_ip *scam_allowed;
  #endif
@@ -2800,6 +2958,8 @@ Index: globals.h
 +#ifdef WITH_EMU
 +	char        *emu_stream_source_host;
 +	int32_t     emu_stream_source_port;
++	char        *emu_stream_source_auth_user;
++	char        *emu_stream_source_auth_password;	
 +	int32_t     emu_stream_relay_port;
 +	uint32_t    emu_stream_ecm_delay;
 +#endif
@@ -2807,7 +2967,7 @@ Index: globals.h
  	int32_t    max_cache_time;  //seconds ecms are stored in ecmcwcache
  	int32_t    max_hitcache_time;  //seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
  
-@@ -2241,4 +2259,6 @@
+@@ -2241,4 +2261,6 @@
  static inline bool caid_is_bulcrypt(uint16_t caid) { return caid == 0x5581 || caid == 0x4AEE; }
  const char *get_cardsystem_desc_by_caid(uint16_t caid);
  
@@ -2818,7 +2978,21 @@ Index: Makefile
 ===================================================================
 --- Makefile	(revision 10943)
 +++ Makefile	(working copy)
-@@ -264,6 +264,23 @@
+@@ -65,6 +65,13 @@
+ 
+ LDFLAGS = -Wl,--gc-sections
+ 
++TARGETHELP := $(shell $(CC) --target-help)
++ifneq (,$(findstring sse2,$(TARGETHELP)))
++override CFLAGS += -fexpensive-optimizations -funroll-loops -mmmx -msse -msse2 -msse3
++else
++override CFLAGS += -fexpensive-optimizations -funroll-loops
++endif
++
+ # The linker for powerpc have bug that prevents --gc-sections from working
+ # Check for the linker version and if it matches disable --gc-sections
+ # For more information about the bug see:
+@@ -264,6 +271,23 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -2842,7 +3016,7 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -355,7 +372,7 @@
+@@ -355,7 +379,7 @@
  # starts the compilation.
  all:
  	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
@@ -4419,7 +4593,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4050 @@
+@@ -0,0 +1,4058 @@
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "cscrypt/bn.h"
@@ -4451,7 +4625,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 716 $"+10);
++	return atoi("$Version: 718 $"+10);
 +}
 +
 +// Key DB
@@ -7111,7 +7285,11 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
++#ifdef WITH_EMU
 +int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, uint16_t srvid, emu_stream_client_key_data *cdata)
++#else
++int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
++#endif
 +{
 +	int8_t ret = 1;
 +	uint16_t ecmLen = GetEcmLen(ecm);
@@ -7645,7 +7823,11 @@ Index: module-emulator-osemu.c
 +		result = BissECM(caid,ecm,ecmDataLen,dw,srvid,ecmpid);
 +	}
 +	else if((caid>>8)==0x0E) {
++#ifdef WITH_EMU
 +		result = PowervuECM(ecmCopy,dw,srvid,NULL);
++#else
++		result = PowervuECM(ecmCopy,dw,NULL);
++#endif
 +	}
 +	else if(caid==0x4AE1) {
 +		result = Drecrypt2ECM(caid,provider,ecmCopy,dw);
@@ -8474,7 +8656,7 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(revision 0)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,106 @@
 +#include "module-emulator-stream.h"
 +
 +#ifndef EMULATOR_H_
@@ -8573,8 +8755,12 @@ Index: module-emulator-osemu.h
 +#define PVU_CW_A4 5		// Audio 4
 +#define PVU_CW_UTL 6	// UTiLity
 +#define PVU_CW_VBI 7	// Vertical Blanking Interval
-+		  
++
++#ifdef WITH_EMU
 +	int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, uint16_t srvid, emu_stream_client_key_data *cdata);
++#else
++	int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata);
++#endif
 +		
 +#endif
 Index: module-emulator-st20.c
@@ -9282,7 +9468,7 @@ Index: module-emulator-stream.c
 ===================================================================
 --- module-emulator-stream.c	(revision 0)
 +++ module-emulator-stream.c	(working copy)
-@@ -0,0 +1,980 @@
+@@ -0,0 +1,1025 @@
 +#include "globals.h"
 +#include "cscrypt/des.h"
 +
@@ -9291,6 +9477,8 @@ Index: module-emulator-stream.c
 +#include "oscam-config.h"
 +#include "oscam-time.h"
 +#include "oscam-net.h"
++
++extern int32_t exit_oscam;
 +#endif
 +
 +#include "ffdecsa/ffdecsa.h"
@@ -9303,11 +9491,12 @@ Index: module-emulator-stream.c
 +	int32_t connid;	
 +} emu_stream_client_conn_data;
 +
-+extern int32_t exit_oscam;
 +int8_t stream_server_thread_init = 0;
-+int32_t emu_stream_source_port = 8001;
-+int32_t emu_stream_relay_port = 17999;
 +char emu_stream_source_host[256] = {"127.0.0.1"};
++int32_t emu_stream_source_port = 8001;
++char *emu_stream_source_auth = NULL;
++int32_t emu_stream_relay_port = 17999;
++
 +
 +static uint8_t emu_stream_server_mutex_init = 0;
 +static pthread_mutex_t emu_stream_server_mutex;
@@ -9549,11 +9738,19 @@ Index: module-emulator-stream.c
 +		|| ((cdata->ecm_nb - data[0xb]) > 5))
 +	{
 +		cdata->ecm_nb = data[0xb];
++#ifdef WITH_EMU
 +		PowervuECM(data, dcw, cdata->srvid, &cdata->key);
++#else
++		PowervuECM(data, dcw, &cdata->key);
++#endif
 +	}
 +}
 +
++#ifdef WITH_EMU
 +static void ParseTSPackets(emu_stream_client_conn_data *conndata, emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
++#else
++static void ParseTSPackets(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
++#endif
 +{
 +	uint32_t i, j, k;
 +	uint32_t tsHeader;
@@ -9574,7 +9771,7 @@ Index: module-emulator-stream.c
 +	uint32_t ce =1;  //video cluster end
 +	uint32_t csa[4];  //cluster index for audio tracks
 +	
-+	for(i=0; (i+packetSize-1)<bufLength; i+=packetSize)
++	for(i=0; i<bufLength; i+=packetSize)
 +	{		
 +		tsHeader = b2i(4, stream_buf+i);
 +		pid = (tsHeader & 0x1fff00) >> 8;
@@ -9643,7 +9840,8 @@ Index: module-emulator-stream.c
 +		if(!stream_server_has_ecm[conndata->connid])
 +		{
 +			keydata = &emu_fixed_key_data[conndata->connid];
-+			SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[conndata->connid]); 
++			SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[conndata->connid]);
++			data->key.pvu_csa_used = keydata->pvu_csa_used;
 +		}
 +		else
 +		{
@@ -9823,12 +10021,23 @@ Index: module-emulator-stream.c
 +	
 +	if(connect(streamfd, (struct sockaddr *)&cservaddr, sizeof(cservaddr)) == -1)
 +		{ return -1; }
-+			
-+	snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
++	if(emu_stream_source_auth)
++	{
++		snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
++				"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0\n"
++				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n"
++				"Accept-Language: en-US\n"
++				"Authorization: Basic %s\n"
++				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port, emu_stream_source_auth);		
++	}
++	else			
++	{
++		snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
 +				"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0\n"
 +				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n"
 +				"Accept-Language: en-US\n"
 +				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port);
++	}
 +
 +	if(send(streamfd, http_buf, strlen(http_buf), 0) == -1)
 +		{ return -1; }
@@ -9869,8 +10078,11 @@ Index: module-emulator-stream.c
 +static void *stream_client_handler(void *arg)
 +{
 +#define EMU_DVB_MAX_TS_PACKETS 256
-+#define EMU_DVB_BUFFER_SIZE 188*EMU_DVB_MAX_TS_PACKETS
-+#define EMU_DVB_BUFFER_WAIT 188*(EMU_DVB_MAX_TS_PACKETS-128) 
++#define EMU_DVB_BUFFER_SIZE_CSA 188*EMU_DVB_MAX_TS_PACKETS
++#define EMU_DVB_BUFFER_WAIT_CSA 188*(EMU_DVB_MAX_TS_PACKETS-128) 
++#define EMU_DVB_BUFFER_SIZE_DES 188*32
++#define EMU_DVB_BUFFER_WAIT_DES 188*29
++#define EMU_DVB_BUFFER_SIZE EMU_DVB_BUFFER_SIZE_CSA
 +
 +	emu_stream_client_conn_data *conndata = (emu_stream_client_conn_data *)arg;
 +	char *http_buf, stream_path[255], stream_path_copy[255];
@@ -9879,6 +10091,7 @@ Index: module-emulator-stream.c
 +	uint8_t *stream_buf;
 +	uint16_t packetCount = 0, packetSize = 0, startOffset = 0;
 +	uint32_t remainingDataPos, remainingDataLength;
++	int32_t cur_dvb_buffer_size, cur_dvb_buffer_wait;
 +	int32_t bytesRead = 0;
 +	emu_stream_client_data *data;
 +	int8_t streamConnectErrorCount = 0;
@@ -9990,7 +10203,18 @@ Index: module-emulator-stream.c
 +		
 +		while(!exit_oscam && clientStatus != -1 && streamStatus != -1 && streamConnectErrorCount < 3  && streamDataErrorCount < 15)
 +		{
-+			streamStatus = recv(streamfd, stream_buf+bytesRead, EMU_DVB_BUFFER_SIZE-bytesRead, MSG_WAITALL);
++			if(data->key.pvu_csa_used)
++			{
++				cur_dvb_buffer_size = EMU_DVB_BUFFER_SIZE_CSA;
++				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_CSA;
++			}
++			else
++			{
++				cur_dvb_buffer_size = EMU_DVB_BUFFER_SIZE_DES;
++				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_DES;				
++			}
++			
++			streamStatus = recv(streamfd, stream_buf+bytesRead, cur_dvb_buffer_size-bytesRead, MSG_WAITALL);
 +			if(streamStatus == -1)
 +				{ break; }
 +		
@@ -10002,7 +10226,7 @@ Index: module-emulator-stream.c
 +				continue;	
 +			}
 +			
-+			if(streamStatus < EMU_DVB_BUFFER_SIZE-bytesRead) // probably just received header but no stream
++			if(streamStatus < cur_dvb_buffer_size-bytesRead) // probably just received header but no stream
 +			{
 +				if(!bytesRead && streamStatus > 13 &&
 +					sscanf((const char*)stream_buf, "HTTP/%3s %d ", http_version , &http_status_code) == 2 &&
@@ -10013,12 +10237,16 @@ Index: module-emulator-stream.c
 +					cs_sleepms(100);
 +					break;
 +				}
++				else
++				{
++					cs_log_dbg(0, "[Emu] warning: non-full buffer from stream source");
++				}
 +			}
 +
 +			streamConnectErrorCount = 0;	
 +			bytesRead += streamStatus;
 +			
-+			if(bytesRead >= EMU_DVB_BUFFER_WAIT)
++			if(bytesRead >= cur_dvb_buffer_wait)
 +			{	
 +				startOffset = 0;
 +				if(stream_buf[0] != 0x47 || packetSize == 0)
@@ -10033,8 +10261,11 @@ Index: module-emulator-stream.c
 +				{
 +					packetCount = ((bytesRead-startOffset) / packetSize);
 +
-+					ParseTSPackets(conndata, data, stream_buf+startOffset, bytesRead-startOffset, packetSize);
-+					
++#ifdef WITH_EMU
++					ParseTSPackets(conndata, data, stream_buf+startOffset, packetCount*packetSize, packetSize);
++#else
++					ParseTSPackets(data, stream_buf+startOffset, packetCount*packetSize, packetSize);
++#endif					
 +					clientStatus = send(conndata->connfd, stream_buf+startOffset, packetCount*packetSize, 0);
 +						 
 +					remainingDataPos = startOffset+(packetCount*packetSize);
@@ -10088,12 +10319,12 @@ Index: module-emulator-stream.c
 +		stream_server_has_ecm[i] = 0;
 +	}
 +	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
++#endif
 +	
 +	for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
 +	{
 +		gconnfd[i] = -1;
 +	}
-+#endif
 +	
 +	glistenfd = socket(AF_INET, SOCK_STREAM, 0);
 +	if(glistenfd == -1)
@@ -10169,7 +10400,7 @@ Index: module-emulator-stream.c
 +			cs_log("[Emu] error: stream server client dropped because of too much connections");
 +		}
 +		
-+		cs_sleepms(100);
++		cs_sleepms(20);
 +	} 
 +	
 +	close(glistenfd);
@@ -10267,7 +10498,7 @@ Index: module-emulator-stream.h
 ===================================================================
 --- module-emulator-stream.h	(revision 0)
 +++ module-emulator-stream.h	(working copy)
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,60 @@
 +#ifndef EMU_STREAM_SERVER_H_
 +#define EMU_STREAM_SERVER_H_
 +
@@ -10299,6 +10530,7 @@ Index: module-emulator-stream.h
 +
 +	extern char emu_stream_source_host[256];
 +	extern int32_t emu_stream_source_port;
++	extern char *emu_stream_source_auth;
 +	extern int32_t emu_stream_relay_port;
 +	
 +	extern int8_t stream_server_thread_init;
@@ -10331,7 +10563,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,725 @@
+@@ -0,0 +1,736 @@
 +#include "globals.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -10915,6 +11147,7 @@ Index: module-emulator.c
 +static int32_t EMU_Init(struct s_reader *reader)
 +{
 +	int32_t i;
++	char authtmp[128];
 +	
 +	if(stream_server_thread_init == 0)
 +	{
@@ -10934,6 +11167,16 @@ Index: module-emulator.c
 +		cs_strncpy(emu_stream_source_host, cfg.emu_stream_source_host, sizeof(emu_stream_source_host));
 +		emu_stream_source_port = cfg.emu_stream_source_port;
 +		emu_stream_relay_port = cfg.emu_stream_relay_port;
++		
++		if(cfg.emu_stream_source_auth_user && cfg.emu_stream_source_auth_password)
++		{
++			snprintf(authtmp, sizeof(authtmp), "%s:%s", cfg.emu_stream_source_auth_user, cfg.emu_stream_source_auth_password);
++			b64encode(authtmp, strlen(authtmp), &emu_stream_source_auth);
++		}
++		else
++		{
++			NULLFREE(emu_stream_source_auth);
++		}
 +
 +		start_thread("stream_server", stream_server, NULL, NULL, 1, 1);
 +	}
@@ -11160,7 +11403,7 @@ Index: module-webif.c
  
  static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value) {
  	if (no_data)
-@@ -941,6 +943,24 @@
+@@ -941,6 +943,28 @@
  }
  #endif
  
@@ -11175,6 +11418,10 @@ Index: module-webif.c
 +
 +	tpl_printf(vars, TPLADD, "STREAM_SOURCE_HOST", "%s", cfg.emu_stream_source_host);
 +	tpl_printf(vars, TPLADD, "STREAM_SOURCE_PORT", "%d", cfg.emu_stream_source_port);
++	if(cfg.emu_stream_source_auth_user)
++		{ tpl_printf(vars, TPLADD, "STREAM_SOURCE_AUTH_USER", "%s", cfg.emu_stream_source_auth_user); }
++	if(cfg.emu_stream_source_auth_password)
++		{ tpl_printf(vars, TPLADD, "STREAM_SOURCE_AUTH_PASSWORD", "%s", cfg.emu_stream_source_auth_password); }
 +	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.emu_stream_relay_port);
 +	tpl_printf(vars, TPLADD, "STREAM_ECM_DELAY", "%d", cfg.emu_stream_ecm_delay);
 +	
@@ -11185,7 +11432,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams *params)
  {
-@@ -1350,6 +1370,9 @@
+@@ -1350,6 +1374,9 @@
  #ifdef MODULE_SCAM
  	else if(!strcmp(part, "scam")) { return send_oscam_config_scam(vars, params); }
  #endif
@@ -11195,7 +11442,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  	else if(!strcmp(part, "cccam")) { return send_oscam_config_cccam(vars, params); }
  #endif
-@@ -1788,7 +1811,7 @@
+@@ -1788,7 +1815,7 @@
  		chk_reader("services", servicelabels, rdr);
  		chk_reader("lb_whitelist_services", servicelabelslb, rdr);
  
@@ -11204,7 +11451,7 @@ Index: module-webif.c
  		{
  			restart_cardreader(rdr, 1);
  		}
-@@ -2345,6 +2368,13 @@
+@@ -2345,6 +2372,13 @@
  	tpl_printf(vars, TPLADD, "GBOXRESHARE",   "%d", rdr->gbox_reshare);
  #endif
  
@@ -11218,7 +11465,7 @@ Index: module-webif.c
  	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
  
  	// Show only parameters which needed for the reader
-@@ -2365,6 +2395,9 @@
+@@ -2365,6 +2399,9 @@
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
@@ -11228,7 +11475,7 @@ Index: module-webif.c
  	case R_CS378X :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
  		break;
-@@ -4042,9 +4075,38 @@
+@@ -4042,9 +4079,38 @@
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -11267,7 +11514,7 @@ Index: module-webif.c
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -4533,6 +4595,9 @@
+@@ -4533,6 +4599,9 @@
  #else
  						filtered = (type == cl->typ);
  #endif
@@ -11277,7 +11524,7 @@ Index: module-webif.c
  					}
  				}
  
-@@ -5957,6 +6022,9 @@
+@@ -5957,6 +6026,9 @@
  #ifdef CS_ANTICASC
  		{ "anticasc",        MNU_CFG_FACLOG,    FTYPE_ANTICASC },
  #endif
@@ -11287,7 +11534,7 @@ Index: module-webif.c
  		{ NULL, 0, 0 },
  	};
  
-@@ -7427,8 +7495,8 @@
+@@ -7427,8 +7499,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -11333,7 +11580,7 @@ Index: oscam-config-global.c
 ===================================================================
 --- oscam-config-global.c	(revision 10943)
 +++ oscam-config-global.c	(working copy)
-@@ -802,6 +802,26 @@
+@@ -802,6 +802,28 @@
  #else
  static const struct config_list scam_opts[] = { DEF_LAST_OPT };
  #endif
@@ -11346,10 +11593,12 @@ Index: oscam-config-global.c
 +static const struct config_list streamrelay_opts[] =
 +{
 +	DEF_OPT_SAVE_FUNC(streamrelay_should_save_fn),
-+	DEF_OPT_STR("stream_source_host"	 , OFS(emu_stream_source_host),  "127.0.0.1"),
-+	DEF_OPT_INT32("stream_source_port"   , OFS(emu_stream_source_port),  8001),
-+	DEF_OPT_INT32("stream_relay_port"    , OFS(emu_stream_relay_port),   17999),
-+	DEF_OPT_UINT32("stream_ecm_delay"    , OFS(emu_stream_ecm_delay),    600),
++	DEF_OPT_STR("stream_source_host"	      , OFS(emu_stream_source_host),          "127.0.0.1"),
++	DEF_OPT_INT32("stream_source_port"        , OFS(emu_stream_source_port),          8001),
++	DEF_OPT_STR("stream_source_auth_user"     , OFS(emu_stream_source_auth_user),     NULL),
++	DEF_OPT_STR("stream_source_auth_password" , OFS(emu_stream_source_auth_password), NULL),
++	DEF_OPT_INT32("stream_relay_port"         , OFS(emu_stream_relay_port),           17999),
++	DEF_OPT_UINT32("stream_ecm_delay"         , OFS(emu_stream_ecm_delay),            600),
 +	DEF_LAST_OPT
 +};
 +#else
@@ -11360,7 +11609,7 @@ Index: oscam-config-global.c
  #ifdef MODULE_RADEGAST
  static bool radegast_should_save_fn(void *UNUSED(var))
  {
-@@ -1060,6 +1080,7 @@
+@@ -1060,6 +1082,7 @@
  	{ "cccam",	cccam_opts },
  	{ "pandora",	pandora_opts },
  	{ "scam",	scam_opts },
@@ -11687,12 +11936,14 @@ Index: webif/config/streamrelay.html
 ===================================================================
 --- webif/config/streamrelay.html	(revision 0)
 +++ webif/config/streamrelay.html	(working copy)
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,10 @@
 +		<input name="part" type="hidden" value="streamrelay">
 +		<TABLE CLASS="config">
 +			<TR><TH COLSPAN="2">Edit Stream Relay Config</TH></TR>
 +			<TR><TD><A>Source Stream Host:</A></TD><TD><input name="stream_source_host" type="text" maxlength="15" value="##STREAM_SOURCE_HOST##"></TD></TR>
 +			<TR><TD><A>Source Stream Port:</A></TD><TD><input name="stream_source_port" class="short" type="text" maxlength="5" value="##STREAM_SOURCE_PORT##"></TD></TR>
++			<TR><TD><A>Source Stream User:</A></TD><TD><input name="stream_source_auth_user" type="text" value="##STREAM_SOURCE_AUTH_USER##"></TD></TR>
++			<TR><TD><A>Source Stream Password:</A></TD><TD><input name="stream_source_auth_password" type="text" value="##STREAM_SOURCE_AUTH_PASSWORD##"></TD></TR>
 +			<TR><TD><A>Relay Port:</A></TD><TD><input name="stream_relay_port" class="short" type="text" maxlength="5" value="##STREAM_RELAY_PORT##"></TD></TR>
 +			<TR><TD><A>ECM fix delay:</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"></TD></TR>
 +			
