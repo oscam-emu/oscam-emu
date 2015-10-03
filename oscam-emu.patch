@@ -11593,7 +11593,7 @@ Index: oscam-chk.c
  	}
  
 -	if(!is_network_reader(rdr) && ((rdr->caid >> 8) != ((er->caid >> 8) & 0xFF) && (rdr->caid >> 8) != ((er->ocaid >> 8) & 0xFF)))
-+	if(!rdr->typ == R_EMU && !is_network_reader(rdr) && ((rdr->caid >> 8) != ((er->caid >> 8) & 0xFF) && (rdr->caid >> 8) != ((er->ocaid >> 8) & 0xFF)))
++	if(!(rdr->typ == R_EMU) && !is_network_reader(rdr) && ((rdr->caid >> 8) != ((er->caid >> 8) & 0xFF) && (rdr->caid >> 8) != ((er->ocaid >> 8) & 0xFF)))
  	{
  		if (!rdr->csystem)
  			return 0;
