@@ -4629,7 +4629,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 720 $"+10);
++	return atoi("$Version: 721 $"+10);
 +}
 +
 +// Key DB
@@ -12012,7 +12012,7 @@ Index: webif/files/menu_softcamkey.html
 --- webif/files/menu_softcamkey.html	(revision 0)
 +++ webif/files/menu_softcamkey.html	(working copy)
 @@ -0,0 +1 @@
-+			<LI CLASS="##CMENUACTIVE17##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
++			<LI CLASS="##CMENUACTIVE19##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
 --- webif/pages_index.txt	(revision 11034)
