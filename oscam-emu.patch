@@ -4597,7 +4597,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4094 @@
+@@ -0,0 +1,4095 @@
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "cscrypt/bn.h"
@@ -4629,7 +4629,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 722 $"+10);
++	return atoi("$Version: 723 $"+10);
 +}
 +
 +// Key DB
@@ -8402,8 +8402,9 @@ Index: module-emulator-osemu.c
 +	uniqueAddress = b2i(4, emm+12);
 +
 +	snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "%.8X", uniqueAddress);
-+	if(!GetPowervuEmmKey(emmKey, 0, keyName, 7, 1, &channelId))
++	if(!GetPowervuEmmKey(emmKey, 0, keyName, 7, 0, &channelId))
 +	{
++		cs_log("[Emu] EMM eror: AU key for UA %s is missing", keyName);
 +		return 2;
 +	}
 +
@@ -11583,6 +11584,15 @@ Index: module-webif.c
  		{ NULL, 0, 0 },
  	};
  
+@@ -6433,7 +6505,7 @@
+ 		else if(!proxy && rdr->csystem_active)     // local active reader
+ 		{
+ 			csystem = rdr->csystem;
+-			caid = rdr->caid;
++			if(rdr->typ != R_EMU) caid = rdr->caid;
+ 		}
+ 
+ 		if(csystem)
 @@ -7438,8 +7510,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
