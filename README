@@ -24,7 +24,7 @@ Currently only the following crypto systems are available:
  - Irdeto 2
  - Biss (Mode 1) [Note: only 1 key possible for a sid/pid combination, use the oscam constcw reader if you need more]
  - PowerVU (via Stream Relay)
- - Drecrypt2 *experimental, most likely some fixes are needed*
+ - Drecrypt2
 
 All of these are basically working, but far from complete so anyone filling in blanks is welcome...
 
@@ -121,10 +121,10 @@ Keys in SoftCam.Key:
 	example:
 	P 1234 01 11223344556677
 
-	For channels with same srvid:
-	Channel #1: P  1234 01 11223344556677
-	Channel #2: P 11234 01 11223344556677
-	Channel #3: P 21234 01 11223344556677
+	For channels with same srvid: (UPDATED!!!)
+	Channel #1: P 1234 01 11223344556677
+	Channel #2: P 1234 01 11223344556677
+	Channel #3: P 1234 01 11223344556677
 	
 	AU keys:
 	P <srvid> <UA> <key>
@@ -176,15 +176,18 @@ Note:
 Drecrypt2 config:
 =================
 
-IMPORTANT:
-	Drecrypt2 support is experimental at the moment.
-	Most likely you will encounter problems, which need to be fixed first.
-
 Keys in SoftCam.Key:
 
 D <caid><provider> <key type><key index> <key>
 example:
 D 4AE1FF AA01 112233445566778899AABBCCDDEEFF0011223344556677889900AABBCCDDEEFF
+
+Overcrypt keys (16 keys):
+D 0 <number> <key>
+example:
+D 0 0 1122334455667788
+...
+D 0 F 1122334455667788
 
 AU keys:
 D <caid><provider> MK<key type><key index> <key>
