@@ -10100,7 +10100,7 @@ Index: module-emulator.c
 +		tmpKeyData = &IrdetoKeys.EmuKeys[i];
 +		do {
 +			emu_add_entitlement(reader, tmpKeyData->provider>>8, tmpKeyData->provider&0xFF, tmpKeyData->key, tmpKeyData->keyName, tmpKeyData->keyLength, 0);
-+			tmpKeyData = (KeyData*)tmpKeyData->nextKey;
++			tmpKeyData = tmpKeyData->nextKey;
 +		}
 +		while(tmpKeyData!= NULL);
 +	}
