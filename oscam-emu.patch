@@ -3791,7 +3791,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4163 @@
+@@ -0,0 +1,4167 @@
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "cscrypt/bn.h"
@@ -3823,7 +3823,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 724 $"+10);
++	return atoi("$Version: 725 $"+10);
 +}
 +
 +// Key DB
@@ -4042,7 +4042,7 @@ Index: module-emulator-osemu.c
 +					}
 +					return 0;
 +				}
-+				tmpKeyData = (KeyData*)tmpKeyData->nextKey;
++				tmpKeyData = tmpKeyData->nextKey;
 +			}
 +			while(tmpKeyData != NULL);
 +
@@ -4074,8 +4074,12 @@ Index: module-emulator-osemu.c
 +				{
 +					break;
 +				}
-+				tmpKeyData = (KeyData*)tmpKeyData->nextKey;
++				tmpKeyData = tmpKeyData->nextKey;
 +				j++;
++			}
++			if(tmpKeyData)
++			{
++				NULLFREE(tmpKeyData->nextKey->key);
 +			}
 +			NULLFREE(tmpKeyData->nextKey);
 +			tmpKeyData->nextKey = newKeyData;
@@ -4182,7 +4186,7 @@ Index: module-emulator-osemu.c
 +		j = 0;
 +		while(j<keyRef && tmpKeyData->nextKey != NULL) {
 +			j++;
-+			tmpKeyData = (KeyData*)tmpKeyData->nextKey;
++			tmpKeyData = tmpKeyData->nextKey;
 +		}
 +
 +		if(j == keyRef) {
@@ -7959,7 +7963,7 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(revision 0)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,109 @@
 +#include "globals.h"
 +#include "module-emulator-stream.h"
 +
@@ -7972,14 +7976,16 @@ Index: module-emulator-osemu.h
 +#define EMU_MAX_ECM_LEN MAX_ECM_SIZE
 +#define EMU_MAX_EMM_LEN MAX_EMM_SIZE
 +
-+	typedef struct {
++	typedef struct KeyData KeyData;
++	
++	struct KeyData {
 +		char identifier;
 +		uint32_t provider;
 +		char keyName[EMU_MAX_CHAR_KEYNAME];
 +		uint8_t *key;
 +		uint32_t keyLength;
-+		void *nextKey;
-+	} KeyData;
++		KeyData *nextKey;
++	};
 +
 +	typedef struct {
 +		KeyData *EmuKeys;
