@@ -121,10 +121,10 @@ Keys in SoftCam.Key:
 	example:
 	P 1234 01 11223344556677
 
-	For channels with same srvid:
-	Channel #1: P  1234 01 11223344556677
-	Channel #2: P 11234 01 11223344556677
-	Channel #3: P 21234 01 11223344556677
+	For channels with same srvid: (UPDATED!!!)
+	Channel #1: P 1234 01 11223344556677
+	Channel #2: P 1234 01 11223344556677
+	Channel #3: P 1234 01 11223344556677
 	
 	AU keys:
 	P <srvid> <UA> <key>
