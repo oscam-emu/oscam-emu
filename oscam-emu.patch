@@ -10698,7 +10698,7 @@ Index: oscam-config-global.c
 +	DEF_OPT_STR("stream_source_auth_password" , OFS(emu_stream_source_auth_password), NULL),
 +	DEF_OPT_INT32("stream_relay_port"         , OFS(emu_stream_relay_port),           17999),
 +	DEF_OPT_UINT32("stream_ecm_delay"         , OFS(emu_stream_ecm_delay),            600),
-+	DEF_OPT_UINT32("stream_relay_enabled"     , OFS(emu_stream_relay_enabled),        0),
++	DEF_OPT_UINT32("stream_relay_enabled"     , OFS(emu_stream_relay_enabled),        1),
 +	DEF_LAST_OPT
 +};
 +#else
