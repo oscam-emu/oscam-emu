@@ -131,7 +131,29 @@ Keys in SoftCam.Key:
 	example:
 	P 1234 11223344 11223344556677
 
-For PowerVU the Stream Relay must be used:
+On compatible Dreambox STBs:
+
+	1) Disable the Stream Relay (on by default):
+		Webif -> Config -> Stream Relay -> Mode
+			0 - disabled
+		
+		or in oscam.conf:	
+			
+		[streamrelay]
+		stream_relay_enabled = 0
+		
+	2) Select the correct DVB-Api extended CW API:
+		Webif -> Config -> DVB-Api -> API for extended CWs
+			1 - OE 2.2
+			2 - OE 2.0
+			
+		or in oscam.conf:
+		
+		[dvbapi]
+		extended_cw_api = 2
+
+
+On other devices the Stream Relay must be used:
 
 IMPORTANT:
 	The stream relay needs a fast CPU. Not every STB is fast enough.
