@@ -25,6 +25,7 @@ Currently only the following crypto systems are available:
  - Biss (Mode 1) [Note: only 1 key possible for a sid/pid combination, use the oscam constcw reader if you need more]
  - PowerVU (via Stream Relay)
  - Drecrypt2
+ - Tandberg
 
 All of these are basically working, but far from complete so anyone filling in blanks is welcome...
 
@@ -117,19 +118,49 @@ PowerVU config
 ==============
 
 Keys in SoftCam.Key:
-	P <srvid> <nb> <key>
-	example:
-	P 1234 01 11223344556677
-
-	For channels with same srvid the correct key will be detected automatically:
-	P 1234 01 11223344556677
-	P 1234 01 11223344556677
-	P 1234 01 11223344556677
 	
+	P <groupid><srvid> <nb> <key>
+	Where:	
+		groupid = any 4 hex digits of your choice for this group (leading zeros are optional)
+		srvid = SID (Service ID) of channel in hex with leading zeros to make 4 hex digits.
+		nb = key number (00/01)
+		key = ecm key
+
+	Example groupid=0x1, sid=0x1234, keys 00 and 01:
+	P 00011234 00 11223344556677
+	P 011234 01 22334455667788
+
+	Example groupid=0x2, sid=0x34, keys 00 and 01:
+	P 00020034 00 00112233445566
+	P 0020034 01 00223344556677
+
+	For channels with the same srvid the correct key will be detected automatically, but each key needs a unique groupid.
+	P 009E0234 01 11223344556677
+	P 00040234 01 22334455667788
+	P 013E0234 01 33445566778899
+	
+	WARNING - duplicate <groupid><srvid> are not allowed anymore - only the last instance will be used!
+
 	AU keys:
-	P <srvid> <UA> <key>
+	P <groupid> <UA> <key>
 	example:
-	P 1234 11223344 11223344556677
+	P 009E 11223344 11223344556677
+	P 009E 44332211 22334455667788
+	P 0004 22334455 33445566778899
+	P 013E 00112233 00112233445566
+
+	Multiple UA keys are allowed for each group and each UA will update ALL ecm keys in the group.
+
+	NOTE: in order to work, the ecm keys must be "seeded" in the file for each SID you want to update since the UA has no information about sids. 
+	So to add a key that is unknown, enter a dummy key to get updated, for example:
+
+	P 00010004 00 00000000000000000
+	P 00010004 01 00000000000000000
+
+	Also note: Duplicate powervu keys are no longer allowed (unnecessary since duplicate SIDs should now have a unique group ID.) 
+	So, if there are any duplicates, only the last key in the file will be used. 
+	This also means that as new keys are found and appended to the file, they will automatically replace earlier keys.
+
 
 On compatible Dreambox STBs:
 
@@ -195,14 +226,15 @@ Note:
 	E. Use the "Service ID" of the original channel. You can find it in the left list ("Services")
 	
 
-Drecrypt2 config:
+Drecrypt config:
 =================
 
-Keys in SoftCam.Key:
+Keys from ee.bin files:
 
-D <caid><provider> <key type><key index> <key>
-example:
-D 4AE1FF AA01 112233445566778899AABBCCDDEEFF0011223344556677889900AABBCCDDEEFF
+Put "ee36.bin" and "ee56.bin" into the config folder (where SoftCam.Key is).
+Or: set a custom path for these files with the "extee36" and "extee56" reader settings.
+
+Keys in SoftCam.Key:
 
 Overcrypt keys (16 keys):
 D 0 <number> <key>
@@ -216,3 +248,26 @@ D <caid><provider> MK<key type><key index> <key>
 example:
 D 4AE1FF MKAA01 112233445566778899AABBCCDDEEFF0011223344556677889900AABBCCDDEEFF
 
+
+Tandberg config:
+===============
+
+Keys in SoftCam.Key:
+
+T <entitlement> 01 <key>
+
+for example (entitlement = 1234):
+T 00001234 01 1122334455667788
+
+leading zeros maybe be skipped. same key as above:
+T 1234 01 1122334455667788
+
+AU keys:
+T <key index (hex)> MK <key>
+
+64 keys are needed:
+
+T 40 MK 1122334455667788
+T 41 MK 1122334455667788
+...
+T 7F MK 1122334455667788
