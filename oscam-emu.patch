@@ -3022,13 +3022,15 @@ Index: globals.h
  	int32_t    max_cache_time;  //seconds ecms are stored in ecmcwcache
  	int32_t    max_hitcache_time;  //seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
  
-@@ -2344,4 +2381,6 @@
+@@ -2344,4 +2381,8 @@
  static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710;}
  const char *get_cardsystem_desc_by_caid(uint16_t caid);
  
++#ifdef WITH_EMU
 +FILTER* get_emu_prids_for_caid(struct s_reader *rdr, uint16_t caid);
-+
  #endif
++
++#endif
 Index: Makefile
 ===================================================================
 --- Makefile	(revision 11248)
@@ -3150,11 +3152,13 @@ Index: module-dvbapi.c
  				if(!(er = get_ecmtask()))
  				{ 
  					return;
-@@ -6127,6 +6158,7 @@
+@@ -6127,6 +6158,9 @@
  
  		delayer(er, delay);
  
++#ifdef WITH_EMU
 +		if(er->caid>>8 != 0x0E || !cfg.emu_stream_relay_enabled)
++#endif
  		switch(selected_api)
  		{
  #if defined(WITH_STAPI) || defined(WITH_STAPI5)
@@ -3174,7 +3178,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4710 @@
+@@ -0,0 +1,4707 @@
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "cscrypt/bn.h"
@@ -3207,7 +3211,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 728 $"+10);
++	return atoi("$Version: 729 $"+10);
 +}
 +
 +// Key DB
@@ -3308,7 +3312,7 @@ Index: module-emulator-osemu.c
 +
 +	pDir = opendir(path);
 +	if (pDir == NULL) {
-+		cs_log("cannot open key file path: %s", path);
++		cs_log("[Emu] cannot open key file path: %s", path);
 +		free(path);
 +		return;
 +	}
@@ -3334,7 +3338,7 @@ Index: module-emulator-osemu.c
 +	snprintf(filepath, pathLength, "%s/%s", path, filename);
 +	free(path);
 +
-+	cs_log("writing key file: %s", filepath);
++	cs_log("[Emu] writing key file: %s", filepath);
 +
 +	file = fopen(filepath, "a");
 +	free(filepath);
@@ -3697,7 +3701,7 @@ Index: module-emulator-osemu.c
 +
 +	pDir = opendir(path);
 +	if (pDir == NULL) {
-+		cs_log("cannot open key file path: %s", path);
++		cs_log("[Emu] cannot open key file path: %s", path);
 +		free(path);
 +		return 0;
 +	}
@@ -3711,7 +3715,7 @@ Index: module-emulator-osemu.c
 +	closedir(pDir);
 +
 +	if(pDirent == NULL) {
-+		cs_log("key file not found in: %s", path);
++		cs_log("[Emu] key file not found in: %s", path);
 +		free(path);
 +		return 0;
 +	}
@@ -3725,7 +3729,7 @@ Index: module-emulator-osemu.c
 +	snprintf(filepath, pathLength, "%s/%s", path, filename);
 +	free(path);
 +
-+	cs_log("reading key file: %s", filepath);
++	cs_log("[Emu] reading key file: %s", filepath);
 +
 +	file = fopen(filepath, "r");
 +	free(filepath);
@@ -6391,7 +6395,7 @@ Index: module-emulator-osemu.c
 +		}
 +		fclose(file);
 +	}
-+	else cs_log("cannot open key file path: %s", idata->extee36);
++	//else cs_log("[Emu] cannot open key file: %s", idata->extee36);
 +	
 +	if((file = fopen(idata->extee56,"rb")) != NULL)
 +	{
@@ -6401,7 +6405,7 @@ Index: module-emulator-osemu.c
 +		}
 +		fclose(file);
 +	}
-+	else cs_log("cannot open key file path: %s", idata->extee56);
++	//else cs_log("[Emu] cannot open key file: %s", idata->extee56);
 +}
 +
 +static void DREover(const uint8_t *ECMdata, uint8_t *DW)
@@ -6550,6 +6554,7 @@ Index: module-emulator-osemu.c
 +	if(memcmp(dummy[0], key, 32) == 0 || memcmp(dummy[1], key, 32) == 0) 
 +	{
 +		DrecryptSetEmuExtee(idata);
++		cs_log("[Emu] error: ee%s.bin keys missing", ((provId & 0xFF) == 0x11) ? "36" : "56");
 +		return 2;
 +	}
 +	
@@ -7677,7 +7682,7 @@ Index: module-emulator-osemu.c
 +		{	
 +			if(tagLength != 0x82)
 +			{
-+				cs_log("warning: EMM_TAG_SECURITY_TABLE_DESCRIPTOR length (%d) != %d", tagLength, 0x82);
++				cs_log("[Emu] warning: EMM_TAG_SECURITY_TABLE_DESCRIPTOR length (%d) != %d", tagLength, 0x82);
 +				break;
 +			}
 +			
@@ -7700,7 +7705,6 @@ Index: module-emulator-osemu.c
 +				SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL);
 +			}
 +			
-+			cs_log("got nano E4 keys (blockIndex %X)", blockIndex);
 +			break;
 +		}
 +		
@@ -7708,7 +7712,7 @@ Index: module-emulator-osemu.c
 +		{
 +			if(tagLength != 0x12)
 +			{
-+				cs_log("warning: EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR length (%d) != %d", tagLength, 0x12);
++				cs_log("[Emu] warning: EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR length (%d) != %d", tagLength, 0x12);
 +				break;
 +			}
 +			
@@ -7726,7 +7730,7 @@ Index: module-emulator-osemu.c
 +			{
 +				(*keysAdded)++;
 +				cs_hexdump(0, tagData + 4 + 5, 8, keyValue, sizeof(keyValue));
-+				cs_log("[Emu] Key found in EMM: T %08X 01 %s", entitlementId, keyValue);
++				cs_log("[Emu] Key found in EMM: T %.8X 01 %s", entitlementId, keyValue);
 +			}
 +			
 +			break;
@@ -7754,20 +7758,17 @@ Index: module-emulator-osemu.c
 +		return 1;
 +	}
 +	
-+	while (pos < maxLength && !ret)
-+	{
-+		sectionLength = ((data[pos]<<8) | data[pos+1]) & 0x0FFF;
++	sectionLength = ((data[pos]<<8) | data[pos+1]) & 0x0FFF;
 +	
-+		if(pos + 2 + sectionLength > maxLength)
-+		{
-+			(*nanoLength) = pos;
-+			return 1;
-+		}
-+		
-+		ret = TandbergParseEMMNanoTags(data + pos + 2, sectionLength, keyIndex, keysAdded);
-+		
-+		pos += 2 + sectionLength;	
++	if(pos + 2 + sectionLength > maxLength)
++	{
++		(*nanoLength) = pos;
++		return 1;
 +	}
++		
++	ret = TandbergParseEMMNanoTags(data + pos + 2, sectionLength, keyIndex, keysAdded);
++		
++	pos += 2 + sectionLength;	
 +	
 +	(*nanoLength) = pos;
 +	return ret;
@@ -9220,7 +9221,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,838 @@
+@@ -0,0 +1,839 @@
 +#include "globals.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -9828,8 +9829,8 @@ Index: module-emulator.c
 +							DreKeys.EmuKeys[i].keyLength, 0);
 +
 +	for(i=0; i<TandbergKeys.keyCount; i++)
-+		emu_add_entitlement(reader, 0x1010, DreKeys.EmuKeys[i].provider, DreKeys.EmuKeys[i].key, DreKeys.EmuKeys[i].keyName,
-+							DreKeys.EmuKeys[i].keyLength, 0);
++		emu_add_entitlement(reader, 0x1010, TandbergKeys.EmuKeys[i].provider, TandbergKeys.EmuKeys[i].key, TandbergKeys.EmuKeys[i].keyName,
++							TandbergKeys.EmuKeys[i].keyLength, 0);
 +}
 +
 +extern char cs_confdir[128];
@@ -9922,13 +9923,14 @@ Index: module-emulator.c
 +	read_emu_keymemory();
 +#endif
 +
-+	if(read_emu_keyfile(cs_confdir))
++	set_emu_keyfile_path(cs_confdir);
++
++	if(!read_emu_keyfile(cs_confdir))
 +	{
-+		set_emu_keyfile_path(cs_confdir);
-+	}
-+	else if(read_emu_keyfile("/var/keys/"))
-+	{
-+		set_emu_keyfile_path("/var/keys/");
++		if(read_emu_keyfile("/var/keys/"))
++		{
++			set_emu_keyfile_path("/var/keys/");
++		}
 +	}
 +	
 +	if(reader->des_key_length >= 128)
@@ -10141,31 +10143,35 @@ Index: module-newcamd.c
 ===================================================================
 --- module-newcamd.c	(revision 11248)
 +++ module-newcamd.c	(working copy)
-@@ -919,6 +919,11 @@
+@@ -919,6 +919,13 @@
  			// set userfilter for au enabled clients
  			if(aureader)
  			{
++#ifdef WITH_EMU
 +				if(aureader->typ == R_EMU)
 +				{
 +					usr_filter = * get_emu_prids_for_caid(aureader, cfg.ncd_ptab.ports[cl->port_idx].ncd->ncd_ftab.filts[0].caid);
 +				}
 +				else
++#endif
  				mk_user_au_ftab(aureader, &usr_filter);
  			}
  			
-@@ -948,6 +953,11 @@
+@@ -948,6 +955,13 @@
  			else
  				{ memset(&mbuf[8], 0, 6); } //mbuf[8] - mbuf[13]
  
++#ifdef WITH_EMU
 +			if(aureader && aureader->typ == R_EMU && caid_is_dre(pufilt->caid))
 +			{
 +				mbuf[10] = aureader->dre36_force_group;
 +			}
++#endif
 +
  			mbuf[14] = pufilt->nprids;
  			for(j = 0; j < pufilt->nprids; j++)
  			{
-@@ -973,7 +983,7 @@
+@@ -973,7 +987,7 @@
  					int32_t k, found;
  					uint32_t rprid;
  					found = 0;
@@ -10174,10 +10180,11 @@ Index: module-newcamd.c
  					{
  						for(k = 0; (k < aureader->nprov); k++)
  						{
-@@ -999,6 +1009,30 @@
+@@ -999,6 +1013,32 @@
  							}
  						}
  					}
++#ifdef WITH_EMU
 +					else if(aureader->typ == R_EMU)
 +					{
 +						if(caid_is_dre(pufilt->caid))
@@ -10201,6 +10208,7 @@ Index: module-newcamd.c
 +							}
 +						}
 +					}
++#endif
 +					
  					if(!found)
  					{
@@ -10463,7 +10471,7 @@ Index: oscam-chk.c
  
  	//Checking entitlements:
 -	if(ll_count(rdr->ll_entitlements) > 0)
-+	if(ll_count(rdr->ll_entitlements) > 0 && !(rdr->typ == R_EMU && caid_is_dre(er->caid)))
++	if(ll_count(rdr->ll_entitlements) > 0 && !(rdr->typ == R_EMU))
  	{
  		LL_ITER itr = ll_iter_create(rdr->ll_entitlements);
  		S_ENTITLEMENT *item;
@@ -10575,15 +10583,17 @@ Index: oscam-config-reader.c
  			{ NULL        , 0 }
  		}, *p;
  		int i;
-@@ -447,6 +448,7 @@
+@@ -447,6 +448,9 @@
  		if(ftab_type & FTAB_CHID)       { rdr = container_of(setting, struct s_reader, fchid); }
  		if(ftab_type & FTAB_FBPCAID)    { rdr = container_of(setting, struct s_reader, fallback_percaid); }
  		if(ftab_type & FTAB_LOCALCARDS) { rdr = container_of(setting, struct s_reader, localcards); }
-+		if(ftab_type & FTAB_EMUAU)      { rdr = container_of(setting, struct s_reader, emu_auproviders); }		
++#ifdef WITH_EMU
++		if(ftab_type & FTAB_EMUAU)      { rdr = container_of(setting, struct s_reader, emu_auproviders); }
++#endif
  		if(rdr)
  			{ rdr->changes_since_shareupdate = 1; }
  	}
-@@ -754,7 +756,7 @@
+@@ -754,7 +758,7 @@
  }
  
  
@@ -10592,7 +10602,7 @@ Index: oscam-config-reader.c
  {
  	struct s_reader *rdr = var;
  #ifdef WITH_LB
-@@ -896,6 +898,13 @@
+@@ -896,6 +900,13 @@
  #ifdef READER_DRECAS
  	DEF_OPT_STR("stmkeys"               , OFS(stmkeys),                 NULL),
  #endif
