@@ -9588,6 +9588,15 @@ Index: module-emulator.c
 +	read_emu_keymemory();
 +#endif
 +
++	if(read_emu_keyfile(cs_confdir))
++	{
++		set_emu_keyfile_path(cs_confdir);
++	}
++	else if(read_emu_keyfile("/var/keys/"))
++	{
++		set_emu_keyfile_path("/var/keys/");
++	}
++
 +	ReaderInstanceData idata;
 +	idata.extee36 = reader->extee36;
 +	idata.extee56 = reader->extee56;
@@ -9597,15 +9606,6 @@ Index: module-emulator.c
 +	idata.dre56_force_group = reader->dre56_force_group;
 +	
 +	DrecryptSetEmuExtee(&idata);
-+
-+	if(read_emu_keyfile(cs_confdir))
-+	{
-+		set_emu_keyfile_path(cs_confdir);
-+	}
-+	else if(read_emu_keyfile("/var/keys/"))
-+	{
-+		set_emu_keyfile_path("/var/keys/");
-+	}
 +
 +	refresh_entitlements(reader);
 +
