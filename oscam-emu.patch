@@ -8943,7 +8943,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,770 @@
+@@ -0,0 +1,769 @@
 +#include "globals.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -9671,15 +9671,14 @@ Index: module-emulator.c
 +		strncpy(rdr->label, emuName, strlen(emuName));
 +		strncpy(rdr->device, emuName, strlen(emuName));
 +
-+		ctab = strdup("0D00,0D02,090F,0500,1801,0604,2600,FFFF,0E00,4AE1");
++		ctab = strdup("090F,0500,1801,0604,2600,FFFF,0E00,4AE1");
 +		chk_caidtab(ctab, &rdr->ctab);
 +		NULLFREE(ctab);
-+
-+		ftab = strdup(	"0D00:000000,000004,000010,000014,000020,0000C0,0000C4,0000C8,0000CC;"
-+						"0D02:000000,00008C,0000A0,0000A4,0000A8;"
++		
++		ftab = strdup(
 +						"090F:000000;"
-+						"0500:000000,030B00,023800,021110,007400,007800;"
-+						"1801:000000,007301,001101;"
++						"0500:000000,023800,021110,007400,007800;"
++						"1801:000000,007301,001101,002111;"
 +						"0604:000000;"
 +						"2600:000000;"
 +						"FFFF:000000;"
@@ -9689,7 +9688,7 @@ Index: module-emulator.c
 +		chk_ftab(ftab, &rdr->ftab);
 +		NULLFREE(ftab);
 +
-+		emu_auproviders = strdup("0500:030B00;0604:010200;0E00:000000;4AE1:000011,000014,0000FE;");
++		emu_auproviders = strdup("0604:010200;0E00:000000;4AE1:000011,000014,0000FE;");
 +		chk_ftab(emu_auproviders, &rdr->emu_auproviders);
 +		NULLFREE(emu_auproviders);
 +
