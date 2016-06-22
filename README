@@ -247,3 +247,27 @@ AU keys:
 D <caid><provider> MK<key type><key index> <key>
 example:
 D 4AE1FF MKAA01 112233445566778899AABBCCDDEEFF0011223344556677889900AABBCCDDEEFF
+
+
+Tandberg config:
+===============
+
+Keys in SoftCam.Key:
+
+T <entitlement> 01 <key>
+
+for example (entitlement = 1234):
+T 00001234 01 1122334455667788
+
+leading zeros maybe be skipped. same key as above:
+T 1234 01 1122334455667788
+
+AU keys:
+T <key index (hex)> MK <key>
+
+64 keys are needed:
+
+T 40 MK 1122334455667788
+T 41 MK 1122334455667788
+...
+T 7F MK 1122334455667788

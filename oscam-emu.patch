@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11247)
+--- CMakeLists.txt	(revision 11248)
 +++ CMakeLists.txt	(working copy)
 @@ -99,6 +99,7 @@
      ${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -95,7 +95,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 11247)
+--- config.h	(revision 11248)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -107,7 +107,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11247)
+--- config.sh	(revision 11248)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -165,7 +165,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 11247)
+--- cscrypt/md5.c	(revision 11248)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -210,7 +210,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 11247)
+--- cscrypt/md5.h	(revision 11248)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -233,7 +233,7 @@ Index: cscrypt/md5.h
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 11247)
+--- csctapi/cardreaders.h	(revision 11248)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -10,9 +10,10 @@
  extern const struct s_cardreader cardreader_pcsc;
@@ -2919,7 +2919,7 @@ Index: ffdecsa/stream.c
 +
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11247)
+--- globals.h	(revision 11248)
 +++ globals.h	(working copy)
 @@ -387,17 +387,17 @@
  #define CS_ECM_RINGBUFFER_MAX 0x10 // max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -3031,7 +3031,7 @@ Index: globals.h
  #endif
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11247)
+--- Makefile	(revision 11248)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -3080,7 +3080,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11247)
+--- module-dvbapi.c	(revision 11248)
 +++ module-dvbapi.c	(working copy)
 @@ -1439,7 +1439,15 @@
  			}
@@ -3160,7 +3160,7 @@ Index: module-dvbapi.c
  #if defined(WITH_STAPI) || defined(WITH_STAPI5)
 Index: module-dvbapi.h
 ===================================================================
---- module-dvbapi.h	(revision 11247)
+--- module-dvbapi.h	(revision 11248)
 +++ module-dvbapi.h	(working copy)
 @@ -136,6 +136,7 @@
  	int8_t useMultipleIndices;
@@ -3174,7 +3174,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4438 @@
+@@ -0,0 +1,4710 @@
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "cscrypt/bn.h"
@@ -3247,6 +3247,7 @@ Index: module-emulator-osemu.c
 +KeyDataContainer BissKeys = { NULL, 0, 0 };
 +KeyDataContainer PowervuKeys = { NULL, 0, 0 };
 +KeyDataContainer DreKeys = { NULL, 0, 0 };
++KeyDataContainer TandbergKeys = { NULL, 0, 0 };
 +
 +static KeyDataContainer *GetKeyContainer(char identifier)
 +{
@@ -3267,6 +3268,8 @@ Index: module-emulator-osemu.c
 +		return &PowervuKeys;
 +	case 'D':
 +		return &DreKeys;
++	case 'T':
++		return &TandbergKeys;
 +	default:
 +		return NULL;
 +	}
@@ -3367,7 +3370,7 @@ Index: module-emulator-osemu.c
 +	fclose(file);
 +}
 +
-+static int32_t SetKey(char identifier, uint32_t provider, const char *keyName, uint8_t *orgKey,
++int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey,
 +					  uint32_t keyLength, uint8_t writeKey, char *comment)
 +{
 +	uint32_t i, j;
@@ -3380,6 +3383,8 @@ Index: module-emulator-osemu.c
 +	if(KeyDB == NULL) {
 +		return 0;
 +	}
++
++	keyName = strtoupper(keyName);
 +
 +	// fix checksum for biss keys with a length of 6
 +	if(identifier == 'F' && keyLength == 6) {
@@ -3604,30 +3609,29 @@ Index: module-emulator-osemu.c
 +	return 0;
 +}
 +
-+//static int32_t UpdateKey(char identifier, uint32_t provider, char *keyName, uint8_t *key, uint32_t keyLength, char *comment)
-+//{
-+//	uint32_t keyRef = 0;
-+//	uint8_t *tmpKey = (uint8_t*)malloc(sizeof(uint8_t)*keyLength);
-+//	if(tmpKey == NULL)
-+//	{
-+//		return 0;
-+//	}
-+//		
-+//	while(FindKey(identifier, provider, 0, keyName, tmpKey, keyLength, 0, keyRef, 0, NULL))
-+//	{
-+//		if(memcmp(tmpKey, key, keyLength) == 0)
-+//		{		
-+//			free(tmpKey);
-+//			return 0;
-+//		}
-+//		
-+//		keyRef++;
-+//	}
-+//
-+//	free(tmpKey);
-+//
-+//	return SetKey(identifier, provider, keyName, key, keyLength, 1, comment);
-+//}
++static int32_t UpdateKey(char identifier, uint32_t provider, char *keyName, uint8_t *key, uint32_t keyLength, uint8_t writeKey, char *comment)
++{
++	uint32_t keyRef = 0;
++	uint8_t *tmpKey = (uint8_t*)malloc(sizeof(uint8_t)*keyLength);
++	if(tmpKey == NULL)
++	{
++		return 0;
++	}
++		
++	while(FindKey(identifier, provider, 0, keyName, tmpKey, keyLength, 0, keyRef, 0, NULL))
++	{
++		if(memcmp(tmpKey, key, keyLength) == 0)
++		{		
++			free(tmpKey);
++			return 0;
++		}
++		
++		keyRef++;
++	}
++
++	free(tmpKey);
++	return SetKey(identifier, provider, keyName, key, keyLength, writeKey, comment);
++}
 +
 +static int32_t UpdateKeysByProviderMask(char identifier, uint32_t provider, uint32_t providerIgnoreMask, char *keyName, uint8_t *key, 
 +													uint32_t keyLength, char *comment)
@@ -6582,6 +6586,88 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
++//Tandberg EMU
++static int8_t GetTandbergKey(uint8_t *buf, uint32_t entitlementId)
++{
++	if(FindKey('T', entitlementId, 0, "00", buf, 8, 0, 0, 0, NULL))
++	{
++		return 1;
++	}
++	
++	if(FindKey('T', entitlementId, 0, "01", buf, 8, 1, 0, 0, NULL))
++	{
++		return 1;
++	}
++	
++	return 0;
++}
++
++static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
++{
++	uint8_t nanoType, nanoLength;
++	uint8_t* nanoData;
++	uint32_t pos = 3;
++	uint32_t entitlementId;
++	uint32_t ks[32];
++	uint8_t ecmKey[8];
++	uint16_t ecmLen = GetEcmLen(ecm);
++	
++	if(ecmLen < 5)
++	{
++		return 1;
++	}
++	
++	do 
++	{
++		nanoType = ecm[pos];
++		nanoLength = ecm[pos+1];
++		
++		if(pos + 2 + nanoLength > ecmLen)
++		{
++			break;
++		}
++		
++		nanoData = ecm + pos + 2;
++		
++		switch(nanoType)
++		{
++			case 0xEE: // ECM_TAG_CW_DESCRIPTOR
++			{
++				if(nanoLength != 0x16)
++				{
++					cs_log("[Emu] warning: ECM_TAG_CW_DESCRIPTOR length (%d) != %d", nanoLength, 0x16);
++					break;
++				}
++				
++				entitlementId = b2i(4, nanoData);
++				
++				if(!GetTandbergKey(ecmKey, entitlementId))
++				{
++					return 2;
++				}
++				
++				memcpy(dw, nanoData + 4 + 8, 8); // even
++				memcpy(dw + 8, nanoData + 4, 8); // odd
++				
++				des_set_key(ecmKey, ks);
++				
++				des(dw, ks, 0);
++				des(dw + 8, ks, 0);
++					
++				return 0;
++			}
++			
++			default:
++				break;
++		}
++		
++		pos += 2 + nanoLength;
++
++	} while (pos < ecmLen);
++	
++	return 1;
++}
++
 +const char* GetProcessECMErrorReason(int8_t result)
 +{
 +	switch(result) {
@@ -6652,33 +6738,36 @@ Index: module-emulator-osemu.c
 +	memcpy(ecmCopy, ecm, ecmLen);
 +
 +	if((caid>>8)==0x0D) {
-+		result = CryptoworksECM(caid,ecmCopy,dw);
++		result = CryptoworksECM(caid, ecmCopy, dw);
 +	}
 +	else if((caid>>8)==0x09) {
-+		result = SoftNDSECM(caid,ecmCopy,dw);
++		result = SoftNDSECM(caid, ecmCopy, dw);
 +	}
 +	else if(caid==0x0500) {
-+		result = ViaccessECM(ecmCopy,dw);
++		result = ViaccessECM(ecmCopy, dw);
 +	}
 +	else if((caid>>8)==0x18) {
-+		result = Nagra2ECM(ecmCopy,dw);
++		result = Nagra2ECM(ecmCopy, dw);
 +	}
 +	else if((caid>>8)==0x06) {
-+		result = Irdeto2ECM(caid,ecmCopy,dw);
++		result = Irdeto2ECM(caid, ecmCopy, dw);
 +	}
 +	else if((caid>>8)==0x26 || caid == 0xFFFF) {
-+		result = BissECM(caid,ecm,ecmDataLen,dw,srvid,ecmpid);
++		result = BissECM(caid, ecm, ecmDataLen, dw, srvid, ecmpid);
 +	}
 +	else if((caid>>8)==0x0E) {
 +#ifdef WITH_EMU
-+		result = PowervuECM(ecmCopy,dw,srvid,NULL,cw_ex);
++		result = PowervuECM(ecmCopy, dw, srvid, NULL, cw_ex);
 +#else
-+		result = PowervuECM(ecmCopy,dw,NULL);
++		result = PowervuECM(ecmCopy, dw, NULL);
 +#endif
 +	}
 +	else if(caid==0x4AE1 && idata) {
-+		result = Drecrypt2ECM(idata,caid,provider,ecmCopy,dw);
-+	}	
++		result = Drecrypt2ECM(idata, caid, provider, ecmCopy, dw);
++	}
++	else if((caid>>8)==0x10) {
++		result = TandbergECM(ecmCopy, dw);
++	}
 +
 +	// fix dcw checksum
 +	if(result == 0 && !((caid>>8)==0x0E)) {
@@ -7329,7 +7418,6 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
-+
 +// Drecrypt EMM EMU
 +static int8_t GetDrecryptEMMKey(uint8_t *buf, uint32_t keyIdent, uint16_t keyName, uint8_t isCriticalKey)
 +{
@@ -7550,6 +7638,190 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
++// Tandberg EMM EMU
++static int8_t GetTandbergEMMKey(uint8_t *buf, uint16_t keyIndex, uint8_t isCriticalKey)
++{
++	return FindKey('T', keyIndex, 0, "MK", buf, 8, isCriticalKey, 0, 0, NULL);
++}
++
++static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t keyIndex, uint32_t *keysAdded)
++{
++	uint8_t tagType, tagLength, blockIndex;
++	uint32_t pos = 0, entitlementId;
++	int32_t i;
++	uint32_t ks[32];
++	uint8_t* tagData;
++	uint8_t emmKey[8];
++	char keyValue[17];
++	
++	if(length < 2)
++	{
++		return 1;
++	}
++	
++	while (pos < length)
++	{
++		tagType = data[pos];
++		tagLength = data[pos+1]; 
++	 	
++		if(pos + 2 + tagLength > length)
++		{
++			return 1;
++		}
++			
++		tagData = data + pos + 2;
++	
++		switch(tagType)
++		{
++		case 0xE4: // EMM_TAG_SECURITY_TABLE_DESCRIPTOR
++		{	
++			if(tagLength != 0x82)
++			{
++				cs_log("warning: EMM_TAG_SECURITY_TABLE_DESCRIPTOR length (%d) != %d", tagLength, 0x82);
++				break;
++			}
++			
++			blockIndex = tagData[1] & 0x03;
++
++  		if(!GetTandbergEMMKey(emmKey, keyIndex, 1))
++  		{
++  			break;
++  		}
++
++			des_set_key(emmKey, ks);
++			
++			for(i = 0; i < 0x10; i++)
++			{
++				des(tagData + 2 + (i*8), ks, 0);
++			}
++			
++			for(i = 0; i < 0x10; i++)
++			{
++				SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL);
++			}
++			
++			cs_log("got nano E4 keys (blockIndex %X)", blockIndex);
++			break;
++		}
++		
++		case 0xE1: // EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR
++		{
++			if(tagLength != 0x12)
++			{
++				cs_log("warning: EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR length (%d) != %d", tagLength, 0x12);
++				break;
++			}
++			
++			entitlementId = b2i(4, tagData);
++			
++  		if(!GetTandbergEMMKey(emmKey, keyIndex, 1))
++  		{
++  			break;
++  		}
++			
++			des_set_key(emmKey, ks);
++			des(tagData + 4 + 5, ks, 0);
++			
++			if(UpdateKey('T', entitlementId, "01", tagData + 4 + 5, 8, 1, NULL))
++			{
++				(*keysAdded)++;
++				cs_hexdump(0, tagData + 4 + 5, 8, keyValue, sizeof(keyValue));
++				cs_log("[Emu] Key found in EMM: T %08X 01 %s", entitlementId, keyValue);
++			}
++			
++			break;
++		}
++		
++		default:
++			break;
++		}
++		
++		pos += 2 + tagLength;   
++	}
++	
++	return 0;
++}
++
++static int8_t TandbergParseEMMNanoData(uint8_t* data, uint32_t* nanoLength, uint32_t maxLength, uint8_t keyIndex, uint32_t *keysAdded)
++{
++	uint32_t pos = 0;
++	uint16_t sectionLength;
++	int8_t ret = 0;
++	
++	if(maxLength < 2)
++	{
++		(*nanoLength) = 0;
++		return 1;
++	}
++	
++	while (pos < maxLength && !ret)
++	{
++		sectionLength = ((data[pos]<<8) | data[pos+1]) & 0x0FFF;
++	
++		if(pos + 2 + sectionLength > maxLength)
++		{
++			(*nanoLength) = pos;
++			return 1;
++		}
++		
++		ret = TandbergParseEMMNanoTags(data + pos + 2, sectionLength, keyIndex, keysAdded);
++		
++		pos += 2 + sectionLength;	
++	}
++	
++	(*nanoLength) = pos;
++	return ret;
++}
++
++static int8_t TandbergEMM(uint8_t *emm, uint32_t *keysAdded)
++{
++	uint8_t keyIndex, ret = 0;
++	uint16_t emmLen = GetEcmLen(emm);
++	uint32_t pos = 3;
++	uint32_t permissionDataType;
++	uint32_t nanoLength = 0;
++	
++	while (pos < emmLen && !ret)
++	{
++		permissionDataType = emm[pos];
++	
++		switch(permissionDataType)
++		{
++			case 0x00:
++			{
++				break;
++			}
++			
++			case 0x01:
++			{
++				pos += 0x0A;
++				break;
++			}
++			
++			case 0x02:
++			{
++				pos += 0x26;
++				break;
++			}
++			
++			default:
++				cs_log("[Emu] error: unknown permissionDataType %X (pos: %d)", permissionDataType, pos);
++				return 1;
++		}
++		
++		if(pos+6 >= emmLen)
++		{
++			break;
++		}
++		
++		keyIndex = emm[pos+1];
++		pos += 0x04;
++		ret = TandbergParseEMMNanoData(emm + pos, &nanoLength, emmLen - pos, keyIndex, keysAdded);
++		pos += nanoLength;
++	}
++	
++	return ret;
++}
 +
 +const char* GetProcessEMMErrorReason(int8_t result)
 +{
@@ -7599,14 +7871,14 @@ Index: module-emulator-osemu.c
 +	}
 +	else if((caid>>8)==0x0E) {
 +		result = PowervuEMM(emmCopy, keysAdded);
-+		if(result == 2) { // missing key already logged
-+			return 2;
-+		}
 +	}
 +	else if(caid==0x4AE1 && idata) {
 +		result = Drecrypt2EMM(caid, provider, emmCopy, idata, keysAdded);
 +	}
-+
++	else if((caid>>8)==0x10) {
++		result = TandbergEMM(emmCopy, keysAdded);
++	}
++	
 +	if(result != 0) {
 +		cs_log_dbg(D_EMM,"[Emu] EMM failed: %s", GetProcessEMMErrorReason(result));
 +	}
@@ -7617,7 +7889,7 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(nonexistent)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,133 @@
+@@ -0,0 +1,138 @@
 +#include "globals.h"
 +#include "module-emulator-stream.h"
 +
@@ -7655,6 +7927,7 @@ Index: module-emulator-osemu.h
 +	extern KeyDataContainer BissKeys;
 +	extern KeyDataContainer PowervuKeys;
 +	extern KeyDataContainer DreKeys;
++	extern KeyDataContainer TandbergKeys;
 +	extern uint8_t viasat_const[];
 +
 +	uint32_t GetOSemuVersion(void);
@@ -7749,7 +8022,11 @@ Index: module-emulator-osemu.h
 +#else
 +	int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata);
 +#endif
-+		
++
++#ifdef WITH_EMU
++	int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey, uint32_t keyLength, uint8_t writeKey, char *comment);
++#endif
++  
 +#endif
 Index: module-emulator-stream.c
 ===================================================================
@@ -8943,7 +9220,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,769 @@
+@@ -0,0 +1,838 @@
 +#include "globals.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -9162,6 +9439,20 @@ Index: module-emulator.c
 +	}
 +}
 +
++int32_t emu_get_tan_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
++{
++	if(ep->emm[0] == 0x82 || ep->emm[0] == 0x83)
++	{
++		ep->type = GLOBAL;
++	}
++	else
++	{
++		ep->type = UNKNOWN;
++		rdr_log_dbg(rdr, D_EMM, "UNKNOWN");
++	}
++	return 1;	
++}
++
 +static int32_t emu_get_emm_type(struct emm_packet_t *ep, struct s_reader *rdr)
 +{
 +	switch(b2i(2, ep->caid)>>8)
@@ -9177,7 +9468,10 @@ Index: module-emulator.c
 +	
 +		case 0x4A:
 +			return emu_get_dre2_emm_type(ep, rdr);
-+												
++	
++		case 0x10:
++			return emu_get_tan_emm_type(ep, rdr);
++				
 +		default:
 +			break;
 +	}
@@ -9381,6 +9675,38 @@ Index: module-emulator.c
 +	return CS_OK;
 +}
 +
++static int32_t emu_get_tan_emm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **emm_filters, unsigned int *filter_count, uint16_t UNUSED(caid), uint32_t UNUSED(provid))
++{
++	if(*emm_filters == NULL)
++	{
++		const unsigned int max_filter_count = 2;
++		
++		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
++			{ return CS_ERROR; }
++
++		struct s_csystem_emm_filter *filters = *emm_filters;
++		*filter_count = 0;
++
++		int32_t idx = 0;
++
++		filters[idx].type = EMM_GLOBAL;
++		filters[idx].enabled   = 1;
++		filters[idx].filter[0] = 0x82;
++		filters[idx].mask[0]   = 0xFF;
++		idx++;
++
++		filters[idx].type = EMM_GLOBAL;
++		filters[idx].enabled   = 1;
++		filters[idx].filter[0] = 0x83;
++		filters[idx].mask[0]   = 0xFF;
++		idx++;
++
++		*filter_count = idx;
++	}	
++	
++	return CS_OK;
++}
++
 +static int32_t emu_get_emm_filter_adv(struct s_reader *rdr, struct s_csystem_emm_filter **emm_filters, unsigned int *filter_count, uint16_t caid, uint32_t provid, uint16_t srvid)
 +{
 +	switch(caid>>8)
@@ -9396,7 +9722,10 @@ Index: module-emulator.c
 +			
 +		case 0x4A:
 +			return emu_get_dre2_emm_filter(rdr, emm_filters, filter_count, caid, provid);
-+												
++	
++		case 0x10:
++			return emu_get_tan_emm_filter(rdr, emm_filters, filter_count, caid, provid);
++		
 +		default:
 +			break;
 +	}
@@ -9407,7 +9736,7 @@ Index: module-emulator.c
 +const struct s_cardsystem reader_emu =
 +{
 +	.desc = "emu",
-+	.caids = (uint16_t[]){ 0x0D, 0x09, 0x0500, 0x18, 0x06, 0x26, 0xFFFF, 0x0E, 0x4A, 0 },
++	.caids = (uint16_t[]){ 0x0D, 0x09, 0x0500, 0x18, 0x06, 0x26, 0xFFFF, 0x0E, 0x4A, 0x10, 0 },
 +	.do_ecm = emu_do_ecm,
 +	.do_emm = emu_do_emm,
 +	.card_info = emu_card_info,
@@ -9493,9 +9822,13 @@ Index: module-emulator.c
 +	for(i=0; i<PowervuKeys.keyCount; i++)
 +		emu_add_entitlement(reader, 0x0E00, PowervuKeys.EmuKeys[i].provider, PowervuKeys.EmuKeys[i].key, PowervuKeys.EmuKeys[i].keyName,
 +							PowervuKeys.EmuKeys[i].keyLength, 0);
-+							
++	
 +	for(i=0; i<DreKeys.keyCount; i++)
 +		emu_add_entitlement(reader, 0x4AE1, DreKeys.EmuKeys[i].provider, DreKeys.EmuKeys[i].key, DreKeys.EmuKeys[i].keyName,
++							DreKeys.EmuKeys[i].keyLength, 0);
++
++	for(i=0; i<TandbergKeys.keyCount; i++)
++		emu_add_entitlement(reader, 0x1010, DreKeys.EmuKeys[i].provider, DreKeys.EmuKeys[i].key, DreKeys.EmuKeys[i].keyName,
 +							DreKeys.EmuKeys[i].keyLength, 0);
 +}
 +
@@ -9549,6 +9882,7 @@ Index: module-emulator.c
 +{
 +	int32_t i;
 +	char authtmp[128];
++	char keyStr[EMU_MAX_CHAR_KEYNAME];
 +	
 +	if(stream_server_thread_init == 0)
 +	{
@@ -9595,6 +9929,16 @@ Index: module-emulator.c
 +	else if(read_emu_keyfile("/var/keys/"))
 +	{
 +		set_emu_keyfile_path("/var/keys/");
++	}
++	
++	if(reader->des_key_length >= 128)
++	{
++		for(i=0; i<16; i++)
++		{
++			snprintf(keyStr, EMU_MAX_CHAR_KEYNAME, "%X", i);
++			
++			SetKey('D', 0, keyStr, reader->des_key + (i*8), 8, 0, NULL);
++		}
 +	}
 +
 +	ReaderInstanceData idata;
@@ -9671,7 +10015,7 @@ Index: module-emulator.c
 +		strncpy(rdr->label, emuName, strlen(emuName));
 +		strncpy(rdr->device, emuName, strlen(emuName));
 +
-+		ctab = strdup("090F,0500,1801,0604,2600,FFFF,0E00,4AE1");
++		ctab = strdup("090F,0500,1801,0604,2600,FFFF,0E00,4AE1,1010");
 +		chk_caidtab(ctab, &rdr->ctab);
 +		NULLFREE(ctab);
 +		
@@ -9683,12 +10027,14 @@ Index: module-emulator.c
 +						"2600:000000;"
 +						"FFFF:000000;"
 +						"0E00:000000;"
-+						"4AE1:000011,000014,0000FE;"	);
++						"4AE1:000011,000014,0000FE;"
++						"1010:000000;"
++						);
 +		
 +		chk_ftab(ftab, &rdr->ftab);
 +		NULLFREE(ftab);
 +
-+		emu_auproviders = strdup("0604:010200;0E00:000000;4AE1:000011,000014,0000FE;");
++		emu_auproviders = strdup("0604:010200;0E00:000000;4AE1:000011,000014,0000FE;1010:000000;");
 +		chk_ftab(emu_auproviders, &rdr->emu_auproviders);
 +		NULLFREE(emu_auproviders);
 +
@@ -9715,7 +10061,7 @@ Index: module-emulator.c
 +}
 Index: module-newcamd-des.c
 ===================================================================
---- module-newcamd-des.c	(revision 11247)
+--- module-newcamd-des.c	(revision 11248)
 +++ module-newcamd-des.c	(working copy)
 @@ -2,17 +2,14 @@
  #include "module-newcamd-des.h"
@@ -9765,7 +10111,7 @@ Index: module-newcamd-des.c
  
 Index: module-newcamd-des.h
 ===================================================================
---- module-newcamd-des.h	(revision 11247)
+--- module-newcamd-des.h	(revision 11248)
 +++ module-newcamd-des.h	(working copy)
 @@ -1,8 +1,15 @@
 -#ifndef MODULE_NEWCAMD_DES_H_
@@ -9793,7 +10139,7 @@ Index: module-newcamd-des.h
 +#endif
 Index: module-newcamd.c
 ===================================================================
---- module-newcamd.c	(revision 11247)
+--- module-newcamd.c	(revision 11248)
 +++ module-newcamd.c	(working copy)
 @@ -919,6 +919,11 @@
  			// set userfilter for au enabled clients
@@ -9861,7 +10207,7 @@ Index: module-newcamd.c
  						mbuf[22 + 11 * j] = 0x00;
 Index: module-stat.c
 ===================================================================
---- module-stat.c	(revision 11247)
+--- module-stat.c	(revision 11248)
 +++ module-stat.c	(working copy)
 @@ -903,7 +903,7 @@
  
@@ -9883,7 +10229,7 @@ Index: module-stat.c
  				continue; // proxy can convert or reject
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 11247)
+--- module-webif-tpl.c	(revision 11248)
 +++ module-webif-tpl.c	(working copy)
 @@ -454,12 +454,13 @@
  											check_conf(WITH_DEBUG, ptr2);
@@ -9907,7 +10253,7 @@ Index: module-webif-tpl.c
  										}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 11247)
+--- module-webif.c	(revision 11248)
 +++ module-webif.c	(working copy)
 @@ -98,6 +98,7 @@
  #define MNU_CFG_LCD			14
@@ -10092,7 +10438,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 11247)
+--- oscam-chk.c	(revision 11248)
 +++ oscam-chk.c	(working copy)
 @@ -736,7 +736,7 @@
  		return 0;
@@ -10132,7 +10478,7 @@ Index: oscam-chk.c
  	}
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 11247)
+--- oscam-config-global.c	(revision 11248)
 +++ oscam-config-global.c	(working copy)
 @@ -801,12 +801,35 @@
  	DEF_OPT_FUNC("allowed"  , OFS(scam_allowed), iprange_fn, .free_value = iprange_free_fn),
@@ -10219,7 +10565,7 @@ Index: oscam-config-global.c
  
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 11247)
+--- oscam-config-reader.c	(revision 11248)
 +++ oscam-config-reader.c	(working copy)
 @@ -109,6 +109,7 @@
  			{ "newcamd525", R_NEWCAMD },
@@ -10262,7 +10608,7 @@ Index: oscam-config-reader.c
  	DEF_OPT_FUNC("auprovid"             , 0,                            auprovid_fn),
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 11247)
+--- oscam-config.h	(revision 11248)
 +++ oscam-config.h	(working copy)
 @@ -19,12 +19,13 @@
  void    reader_set_defaults(struct s_reader *rdr);
@@ -10307,7 +10653,7 @@ Index: oscam-config.h
  #endif
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 11247)
+--- oscam-ecm.c	(revision 11248)
 +++ oscam-ecm.c	(working copy)
 @@ -1575,13 +1575,13 @@
  		rc = E_NOTFOUND;
@@ -10332,7 +10678,7 @@ Index: oscam-ecm.c
  				{
 Index: oscam-emm.c
 ===================================================================
---- oscam-emm.c	(revision 11247)
+--- oscam-emm.c	(revision 11248)
 +++ oscam-emm.c	(working copy)
 @@ -47,13 +47,20 @@
  	int32_t i, k, match;
@@ -10401,7 +10747,7 @@ Index: oscam-emm.c
  
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 11247)
+--- oscam-string.c	(revision 11248)
 +++ oscam-string.c	(working copy)
 @@ -507,12 +507,68 @@
  		}
@@ -10480,7 +10826,7 @@ Index: oscam-string.c
  	0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 11247)
+--- oscam-string.h	(revision 11248)
 +++ oscam-string.h	(working copy)
 @@ -37,6 +37,7 @@
  void get_random_bytes(uint8_t *dst, uint32_t dst_len);
@@ -10492,7 +10838,7 @@ Index: oscam-string.h
  
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11247)
+--- oscam.c	(revision 11248)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -10546,7 +10892,7 @@ Index: oscam.c
  #endif
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 11247)
+--- reader-common.c	(revision 11248)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -10578,7 +10924,7 @@ Index: reader-common.c
  		NULLFREE(reader->csystem_data);
 Index: readers.h
 ===================================================================
---- readers.h	(revision 11247)
+--- readers.h	(revision 11248)
 +++ readers.h	(working copy)
 @@ -13,8 +13,9 @@
  extern const struct s_cardsystem reader_dre;
@@ -10597,7 +10943,7 @@ Index: readers.h
 +#endif
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11247)
+--- webif/config/dvbapi.html	(revision 11248)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -50,15 +50,15 @@
  					<option value="1" ##READSDTSELECTED1##>1 - on (do not save FTA)</option>
@@ -10630,7 +10976,7 @@ Index: webif/config/dvbapi.html
 \ No newline at end of file
 Index: webif/config/menu.html
 ===================================================================
---- webif/config/menu.html	(revision 11247)
+--- webif/config/menu.html	(revision 11248)
 +++ webif/config/menu.html	(working copy)
 @@ -13,9 +13,10 @@
  ##TPLCONFIGMENURADEGAST##	<!-- CMENUACTIVE10 -->
@@ -10681,7 +11027,7 @@ Index: webif/config/streamrelay.html
 \ No newline at end of file
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 11247)
+--- webif/files/menu.html	(revision 11248)
 +++ webif/files/menu.html	(working copy)
 @@ -6,22 +6,23 @@
  		<LI CLASS="##CMENUACTIVE3##"><A HREF="files.html?file=oscam.server">oscam.server</A></LI>
@@ -10728,7 +11074,7 @@ Index: webif/files/menu_softcamkey.html
 +			<LI CLASS="##CMENUACTIVE19##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 11247)
+--- webif/pages_index.txt	(revision 11248)
 +++ webif/pages_index.txt	(working copy)
 @@ -80,11 +80,13 @@
  CONFIGMENUNEWCAMD             config/menu_newcamd.html                                    MODULE_NEWCAMD
