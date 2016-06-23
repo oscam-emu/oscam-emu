@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11248)
+--- CMakeLists.txt	(revision 11250)
 +++ CMakeLists.txt	(working copy)
 @@ -99,6 +99,7 @@
      ${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -95,7 +95,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 11248)
+--- config.h	(revision 11250)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -107,7 +107,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11248)
+--- config.sh	(revision 11250)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -165,7 +165,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 11248)
+--- cscrypt/md5.c	(revision 11250)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -210,7 +210,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 11248)
+--- cscrypt/md5.h	(revision 11250)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -233,7 +233,7 @@ Index: cscrypt/md5.h
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 11248)
+--- csctapi/cardreaders.h	(revision 11250)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -10,9 +10,10 @@
  extern const struct s_cardreader cardreader_pcsc;
@@ -2919,7 +2919,7 @@ Index: ffdecsa/stream.c
 +
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11248)
+--- globals.h	(revision 11250)
 +++ globals.h	(working copy)
 @@ -387,17 +387,17 @@
  #define CS_ECM_RINGBUFFER_MAX 0x10 // max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -3022,7 +3022,7 @@ Index: globals.h
  	int32_t    max_cache_time;  //seconds ecms are stored in ecmcwcache
  	int32_t    max_hitcache_time;  //seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
  
-@@ -2344,4 +2381,8 @@
+@@ -2353,4 +2390,8 @@
  static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710;}
  const char *get_cardsystem_desc_by_caid(uint16_t caid);
  
@@ -3033,7 +3033,7 @@ Index: globals.h
 +#endif
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11248)
+--- Makefile	(revision 11250)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -3082,7 +3082,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11248)
+--- module-dvbapi.c	(revision 11250)
 +++ module-dvbapi.c	(working copy)
 @@ -1439,7 +1439,15 @@
  			}
@@ -3152,7 +3152,7 @@ Index: module-dvbapi.c
  				if(!(er = get_ecmtask()))
  				{ 
  					return;
-@@ -6127,6 +6158,9 @@
+@@ -6128,6 +6159,9 @@
  
  		delayer(er, delay);
  
@@ -3164,7 +3164,7 @@ Index: module-dvbapi.c
  #if defined(WITH_STAPI) || defined(WITH_STAPI5)
 Index: module-dvbapi.h
 ===================================================================
---- module-dvbapi.h	(revision 11248)
+--- module-dvbapi.h	(revision 11250)
 +++ module-dvbapi.h	(working copy)
 @@ -136,6 +136,7 @@
  	int8_t useMultipleIndices;
@@ -10063,7 +10063,7 @@ Index: module-emulator.c
 +}
 Index: module-newcamd-des.c
 ===================================================================
---- module-newcamd-des.c	(revision 11248)
+--- module-newcamd-des.c	(revision 11250)
 +++ module-newcamd-des.c	(working copy)
 @@ -2,17 +2,14 @@
  #include "module-newcamd-des.h"
@@ -10113,7 +10113,7 @@ Index: module-newcamd-des.c
  
 Index: module-newcamd-des.h
 ===================================================================
---- module-newcamd-des.h	(revision 11248)
+--- module-newcamd-des.h	(revision 11250)
 +++ module-newcamd-des.h	(working copy)
 @@ -1,8 +1,15 @@
 -#ifndef MODULE_NEWCAMD_DES_H_
@@ -10141,7 +10141,7 @@ Index: module-newcamd-des.h
 +#endif
 Index: module-newcamd.c
 ===================================================================
---- module-newcamd.c	(revision 11248)
+--- module-newcamd.c	(revision 11250)
 +++ module-newcamd.c	(working copy)
 @@ -919,6 +919,13 @@
  			// set userfilter for au enabled clients
@@ -10215,7 +10215,7 @@ Index: module-newcamd.c
  						mbuf[22 + 11 * j] = 0x00;
 Index: module-stat.c
 ===================================================================
---- module-stat.c	(revision 11248)
+--- module-stat.c	(revision 11250)
 +++ module-stat.c	(working copy)
 @@ -903,7 +903,7 @@
  
@@ -10237,7 +10237,7 @@ Index: module-stat.c
  				continue; // proxy can convert or reject
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 11248)
+--- module-webif-tpl.c	(revision 11250)
 +++ module-webif-tpl.c	(working copy)
 @@ -454,12 +454,13 @@
  											check_conf(WITH_DEBUG, ptr2);
@@ -10261,7 +10261,7 @@ Index: module-webif-tpl.c
  										}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 11248)
+--- module-webif.c	(revision 11250)
 +++ module-webif.c	(working copy)
 @@ -98,6 +98,7 @@
  #define MNU_CFG_LCD			14
@@ -10282,7 +10282,7 @@ Index: module-webif.c
  
  static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value) {
  	if (no_data)
-@@ -1051,6 +1053,31 @@
+@@ -1059,6 +1061,31 @@
  }
  #endif
  
@@ -10314,7 +10314,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams *params)
  {
-@@ -1465,6 +1492,9 @@
+@@ -1473,6 +1500,9 @@
  #ifdef MODULE_SCAM
  	else if(!strcmp(part, "scam")) { return send_oscam_config_scam(vars, params); }
  #endif
@@ -10324,7 +10324,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  	else if(!strcmp(part, "cccam")) { return send_oscam_config_cccam(vars, params); }
  #endif
-@@ -1927,7 +1957,7 @@
+@@ -1935,7 +1965,7 @@
  		chk_reader("services", servicelabels, rdr);
  		chk_reader("lb_whitelist_services", servicelabelslb, rdr);
  
@@ -10333,7 +10333,7 @@ Index: module-webif.c
  		{
  			restart_cardreader(rdr, 1);
  		}
-@@ -2496,6 +2526,21 @@
+@@ -2504,6 +2534,21 @@
  	tpl_addVar(vars, TPLADD, "USERSCRIPT", rdr->userscript);
  #endif
  
@@ -10355,7 +10355,7 @@ Index: module-webif.c
  	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
  
  	// Show only parameters which needed for the reader
-@@ -2517,6 +2562,9 @@
+@@ -2525,6 +2570,9 @@
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
@@ -10365,7 +10365,7 @@ Index: module-webif.c
  	case R_CS378X :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
  		break;
-@@ -4238,9 +4286,38 @@
+@@ -4246,9 +4294,38 @@
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -10404,7 +10404,7 @@ Index: module-webif.c
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -4716,6 +4793,9 @@
+@@ -4724,6 +4801,9 @@
  #else
  						filtered = (type == cl->typ);
  #endif
@@ -10414,7 +10414,7 @@ Index: module-webif.c
  					}
  				}
  
-@@ -6147,6 +6227,9 @@
+@@ -6155,6 +6235,9 @@
  #ifdef MODULE_CONSTCW
  		{ "constant.cw",     MNU_CFG_FKEYCW,    FTYPE_CONFIG },     // id 18
  #endif
@@ -10424,7 +10424,7 @@ Index: module-webif.c
  		{ NULL, 0, 0 },
  	};
  
-@@ -6612,7 +6695,7 @@
+@@ -6620,7 +6703,7 @@
  		else if(!proxy && rdr->csystem_active)     // local active reader
  		{
  			csystem = rdr->csystem;
@@ -10433,7 +10433,7 @@ Index: module-webif.c
  		}
  
  		if(csystem)
-@@ -7617,8 +7700,8 @@
+@@ -7625,8 +7708,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -10446,7 +10446,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 11248)
+--- oscam-chk.c	(revision 11250)
 +++ oscam-chk.c	(working copy)
 @@ -736,7 +736,7 @@
  		return 0;
@@ -10486,21 +10486,12 @@ Index: oscam-chk.c
  	}
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 11248)
+--- oscam-config-global.c	(revision 11250)
 +++ oscam-config-global.c	(working copy)
-@@ -801,12 +801,35 @@
- 	DEF_OPT_FUNC("allowed"  , OFS(scam_allowed), iprange_fn, .free_value = iprange_free_fn),
- 	DEF_LAST_OPT
- };
--#else
--static const struct config_list scam_opts[] = { DEF_LAST_OPT };
--#endif
--#ifdef MODULE_RADEGAST
--static bool radegast_should_save_fn(void *UNUSED(var))
--{
-+#else
-+static const struct config_list scam_opts[] = { DEF_LAST_OPT };
-+#endif
+@@ -812,6 +812,29 @@
+ #else
+ static const struct config_list scam_opts[] = { DEF_LAST_OPT };
+ #endif
 +
 +#ifdef WITH_EMU
 +static bool streamrelay_should_save_fn(void *UNUSED(var))
@@ -10524,56 +10515,20 @@ Index: oscam-config-global.c
 +#endif
 +
 +
-+#ifdef MODULE_RADEGAST
-+static bool radegast_should_save_fn(void *UNUSED(var))
-+{
- 	return cfg.rad_port;
- }
- 
-@@ -1008,13 +1031,13 @@
- 	DEF_OPT_INT32("listen_port"	, OFS(dvbapi_listenport),	0),
- 	DEF_OPT_INT32("delayer"		, OFS(dvbapi_delayer),		0),
- 	DEF_OPT_INT8("ecminfo_type"		, OFS(dvbapi_ecminfo_type),	0),
--	DEF_OPT_STR("user"		, OFS(dvbapi_usr),		NULL),
--	DEF_OPT_INT8("read_sdt"		, OFS(dvbapi_read_sdt),	0),
--	DEF_OPT_INT8("write_sdt_prov", OFS(dvbapi_write_sdt_prov),	0),
--	DEF_OPT_INT8("extended_cw_api", OFS(dvbapi_extended_cw_api),	0),
--	DEF_OPT_FUNC("boxtype"		, OFS(dvbapi_boxtype),		dvbapi_boxtype_fn),
--	DEF_OPT_FUNC("services"		, OFS(dvbapi_sidtabs.ok),	dvbapi_services_fn),
--	// OBSOLETE OPTIONS
-+	DEF_OPT_STR("user"		, OFS(dvbapi_usr),		NULL),
-+	DEF_OPT_INT8("read_sdt"		, OFS(dvbapi_read_sdt),	0),
-+	DEF_OPT_INT8("write_sdt_prov", OFS(dvbapi_write_sdt_prov),	0),
-+	DEF_OPT_INT8("extended_cw_api", OFS(dvbapi_extended_cw_api),	1),
-+	DEF_OPT_FUNC("boxtype"		, OFS(dvbapi_boxtype),		dvbapi_boxtype_fn),
-+	DEF_OPT_FUNC("services"		, OFS(dvbapi_sidtabs.ok),	dvbapi_services_fn),
-+	// OBSOLETE OPTIONS
- 	DEF_OPT_FUNC_X("priority"	, 0, dvbapi_caidtab_fn,		'p'),
- 	DEF_OPT_FUNC_X("ignore"		, 0, dvbapi_caidtab_fn,		'i'),
- 	DEF_OPT_FUNC_X("cw_delay"	, 0, dvbapi_caidtab_fn,		'd'),
-@@ -1062,12 +1085,13 @@
- 	{ "radegast",	radegast_opts },
- 	{ "serial",	serial_opts },
- 	{ "gbox",	gbox_opts },
--	{ "cccam",	cccam_opts },
--	{ "pandora",	pandora_opts },
--	{ "scam",	scam_opts },
--	{ "dvbapi",	dvbapi_opts },
--	{ "monitor",	monitor_opts },
--	{ "webif",	webif_opts },
-+	{ "cccam",	cccam_opts },
-+	{ "pandora",	pandora_opts },
-+	{ "scam",	scam_opts },
+ #ifdef MODULE_RADEGAST
+ static bool radegast_should_save_fn(void *UNUSED(var))
+ {
+@@ -1073,6 +1096,7 @@
+ 	{ "cccam",	cccam_opts },
+ 	{ "pandora",	pandora_opts },
+ 	{ "scam",	scam_opts },
 +	{ "streamrelay",	streamrelay_opts },
-+	{ "dvbapi",	dvbapi_opts },
-+	{ "monitor",	monitor_opts },
-+	{ "webif",	webif_opts },
- 	{ NULL, NULL }
- };
- 
+ 	{ "dvbapi",	dvbapi_opts },
+ 	{ "monitor",	monitor_opts },
+ 	{ "webif",	webif_opts },
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 11248)
+--- oscam-config-reader.c	(revision 11250)
 +++ oscam-config-reader.c	(working copy)
 @@ -109,6 +109,7 @@
  			{ "newcamd525", R_NEWCAMD },
@@ -10618,7 +10573,7 @@ Index: oscam-config-reader.c
  	DEF_OPT_FUNC("auprovid"             , 0,                            auprovid_fn),
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 11248)
+--- oscam-config.h	(revision 11250)
 +++ oscam-config.h	(working copy)
 @@ -19,12 +19,13 @@
  void    reader_set_defaults(struct s_reader *rdr);
@@ -10663,7 +10618,7 @@ Index: oscam-config.h
  #endif
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 11248)
+--- oscam-ecm.c	(revision 11250)
 +++ oscam-ecm.c	(working copy)
 @@ -1575,13 +1575,13 @@
  		rc = E_NOTFOUND;
@@ -10688,7 +10643,7 @@ Index: oscam-ecm.c
  				{
 Index: oscam-emm.c
 ===================================================================
---- oscam-emm.c	(revision 11248)
+--- oscam-emm.c	(revision 11250)
 +++ oscam-emm.c	(working copy)
 @@ -47,13 +47,20 @@
  	int32_t i, k, match;
@@ -10757,7 +10712,7 @@ Index: oscam-emm.c
  
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 11248)
+--- oscam-string.c	(revision 11250)
 +++ oscam-string.c	(working copy)
 @@ -507,12 +507,68 @@
  		}
@@ -10836,7 +10791,7 @@ Index: oscam-string.c
  	0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 11248)
+--- oscam-string.h	(revision 11250)
 +++ oscam-string.h	(working copy)
 @@ -37,6 +37,7 @@
  void get_random_bytes(uint8_t *dst, uint32_t dst_len);
@@ -10848,7 +10803,7 @@ Index: oscam-string.h
  
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11248)
+--- oscam.c	(revision 11250)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -10870,7 +10825,7 @@ Index: oscam.c
  	switch (cs_getclocktype()) {
  		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
  		case CLOCK_TYPE_REALTIME : write_conf(CLOCKFIX, "Clockfix with realtime clock"); break;
-@@ -1595,6 +1601,9 @@
+@@ -1626,6 +1632,9 @@
  #ifdef CARDREADER_STINGER
  	&cardreader_stinger,
  #endif
@@ -10880,7 +10835,7 @@ Index: oscam.c
  	NULL
  };
  
-@@ -1766,6 +1775,9 @@
+@@ -1797,6 +1806,9 @@
  
  	init_sidtab();
  	init_readerdb();
@@ -10890,7 +10845,7 @@ Index: oscam.c
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
-@@ -1849,6 +1861,9 @@
+@@ -1880,6 +1892,9 @@
  	SAFE_COND_SIGNAL(&reader_check_sleep_cond); // Stop reader_check thread
  
  	// Cleanup
@@ -10902,7 +10857,7 @@ Index: oscam.c
  #endif
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 11248)
+--- reader-common.c	(revision 11250)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -10934,7 +10889,7 @@ Index: reader-common.c
  		NULLFREE(reader->csystem_data);
 Index: readers.h
 ===================================================================
---- readers.h	(revision 11248)
+--- readers.h	(revision 11250)
 +++ readers.h	(working copy)
 @@ -13,8 +13,9 @@
  extern const struct s_cardsystem reader_dre;
@@ -10953,7 +10908,7 @@ Index: readers.h
 +#endif
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11248)
+--- webif/config/dvbapi.html	(revision 11250)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -50,15 +50,15 @@
  					<option value="1" ##READSDTSELECTED1##>1 - on (do not save FTA)</option>
@@ -10986,7 +10941,7 @@ Index: webif/config/dvbapi.html
 \ No newline at end of file
 Index: webif/config/menu.html
 ===================================================================
---- webif/config/menu.html	(revision 11248)
+--- webif/config/menu.html	(revision 11250)
 +++ webif/config/menu.html	(working copy)
 @@ -13,9 +13,10 @@
  ##TPLCONFIGMENURADEGAST##	<!-- CMENUACTIVE10 -->
@@ -11037,7 +10992,7 @@ Index: webif/config/streamrelay.html
 \ No newline at end of file
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 11248)
+--- webif/files/menu.html	(revision 11250)
 +++ webif/files/menu.html	(working copy)
 @@ -6,22 +6,23 @@
  		<LI CLASS="##CMENUACTIVE3##"><A HREF="files.html?file=oscam.server">oscam.server</A></LI>
@@ -11084,7 +11039,7 @@ Index: webif/files/menu_softcamkey.html
 +			<LI CLASS="##CMENUACTIVE19##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 11248)
+--- webif/pages_index.txt	(revision 11250)
 +++ webif/pages_index.txt	(working copy)
 @@ -80,11 +80,13 @@
  CONFIGMENUNEWCAMD             config/menu_newcamd.html                                    MODULE_NEWCAMD
