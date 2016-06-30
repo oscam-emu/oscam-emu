@@ -3154,7 +3154,48 @@ Index: module-dvbapi.c
  				if(!(er = get_ecmtask()))
  				{ 
  					return;
-@@ -6126,6 +6157,9 @@
+@@ -4632,6 +4663,40 @@
+ 			dvbapi_stop_filternum(demux_id, filter_num);
+ 			return;
+ 		}
++		
++#ifdef WITH_EMU
++		if((demux[demux_id].demux_fd[filter_num].caid>>8)==0x10)
++		{
++			uint32_t i;
++			uint32_t emmhash;
++			
++			if(sctlen < 4)
++			{
++				return;
++			}
++			
++			for(i=0; i+2<sctlen; i++)
++			{
++				if(buffer[i]==0xF0 && (buffer[i+2]==0xE1 || buffer[i+2]==0xE4))
++				{
++					emmhash = (buffer[3]<<8) | buffer[sctlen-2];
++					
++					if(demux[demux_id].demux_fd[filter_num].cadata == emmhash)
++					{
++						return;
++					}
++					
++					demux[demux_id].demux_fd[filter_num].cadata = emmhash;
++					
++					dvbapi_process_emm(demux_id, filter_num, buffer, sctlen);
++					return;
++				}
++			}
++			
++			return;
++		}
++#endif
++		
+ 		dvbapi_process_emm(demux_id, filter_num, buffer, sctlen);
+ 	}
+ 	
+@@ -6126,6 +6191,9 @@
  
  		delayer(er, delay);
  
@@ -3176,6 +3217,16 @@ Index: module-dvbapi.h
  };
  
  typedef struct filter_s
+@@ -158,6 +159,9 @@
+ 	uint32_t    SlotHandle[10];
+ 	uint32_t    BufferHandle[10];
+ #endif
++#ifdef WITH_EMU
++	uint32_t cadata;
++#endif
+ } FILTERTYPE;
+ 
+ struct s_emmpids
 Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
@@ -3213,7 +3264,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 731 $"+10);
++	return atoi("$Version: 732 $"+10);
 +}
 +
 +// Key DB
@@ -3545,7 +3596,7 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
-+static int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
++int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
 +										uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider)
 +{
 +	uint32_t i;
@@ -7892,7 +7943,7 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(nonexistent)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,138 @@
+@@ -0,0 +1,141 @@
 +#include "globals.h"
 +#include "module-emulator-stream.h"
 +
@@ -8028,6 +8079,9 @@ Index: module-emulator-osemu.h
 +
 +#ifdef WITH_EMU
 +	int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey, uint32_t keyLength, uint8_t writeKey, char *comment);
++	
++	int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
++										uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider);
 +#endif
 +  
 +#endif
@@ -9223,7 +9277,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,840 @@
+@@ -0,0 +1,844 @@
 +#include "globals.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -9683,6 +9737,10 @@ Index: module-emulator.c
 +	if(*emm_filters == NULL)
 +	{
 +		const unsigned int max_filter_count = 2;
++		uint8_t buf[8];
++		
++		if(!FindKey('T', 0x40, 0, "MK", buf, 8, 0, 0, 0, NULL))
++			{ return CS_ERROR; }
 +		
 +		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +			{ return CS_ERROR; }
