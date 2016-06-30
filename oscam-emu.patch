@@ -3596,7 +3596,7 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
-+static int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
++int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
 +										uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider)
 +{
 +	uint32_t i;
@@ -7943,7 +7943,7 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(nonexistent)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,138 @@
+@@ -0,0 +1,141 @@
 +#include "globals.h"
 +#include "module-emulator-stream.h"
 +
@@ -8079,6 +8079,9 @@ Index: module-emulator-osemu.h
 +
 +#ifdef WITH_EMU
 +	int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey, uint32_t keyLength, uint8_t writeKey, char *comment);
++	
++	int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
++										uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider);
 +#endif
 +  
 +#endif
@@ -9274,7 +9277,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,840 @@
+@@ -0,0 +1,844 @@
 +#include "globals.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -9734,6 +9737,10 @@ Index: module-emulator.c
 +	if(*emm_filters == NULL)
 +	{
 +		const unsigned int max_filter_count = 2;
++		uint8_t buf[8];
++		
++		if(!FindKey('T', 0x40, 0, "MK", buf, 8, 0, 0, 0, NULL))
++			{ return CS_ERROR; }
 +		
 +		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +			{ return CS_ERROR; }
