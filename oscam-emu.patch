@@ -3231,7 +3231,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4707 @@
+@@ -0,0 +1,4744 @@
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "cscrypt/bn.h"
@@ -6689,6 +6689,43 @@ Index: module-emulator-osemu.c
 +		
 +		switch(nanoType)
 +		{
++			case 0xED: // ECM_TAG_CW_DESCRIPTOR
++			{
++				if(nanoLength != 0x26)
++				{
++					cs_log("[Emu] warning: ECM_TAG_DESCRIPTOR length (%d) != %d", nanoLength, 0x26);
++					break;
++				}
++				
++				entitlementId = b2i(4, nanoData);
++				
++				if(!GetTandbergKey(ecmKey, entitlementId))
++				{
++					return 2;
++				}
++				
++				uint8_t encryptedData[32] = { 0 };
++				memcpy(encryptedData, nanoData + 4, 32);
++				
++				uint8_t iv[8] = { 0 };
++				des_cbc_decrypt(encryptedData, iv, ecmKey, 32);
++				
++				dw[0] = encryptedData[0x05];
++				dw[1] = encryptedData[0x19];
++				dw[2] = encryptedData[0x1D];
++				dw[4] = encryptedData[0x0B];
++				dw[5] = encryptedData[0x12];
++				dw[6] = encryptedData[0x1A];
++				dw[8] = encryptedData[0x16];
++				dw[9] = encryptedData[0x03];
++				dw[10] = encryptedData[0x11];
++				dw[12] = encryptedData[0x18];
++				dw[13] = encryptedData[0x10];
++				dw[14] = encryptedData[0x0E];
++				
++				return 0;
++			}
++			
 +			case 0xEE: // ECM_TAG_CW_DESCRIPTOR
 +			{
 +				if(nanoLength != 0x16)
