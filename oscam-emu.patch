@@ -7823,9 +7823,9 @@ Index: module-emulator-osemu.c
 +		{
 +			case 0xE4: // EMM_TAG_SECURITY_TABLE_DESCRIPTOR (ram emm keys)
 +			{
-+				uint8_t mode = data[pos + 2];
++				uint8_t tagMode = data[pos + 2];
 +						
-+				switch(mode)
++				switch(tagMode)
 +				{
 +					case 0x01: // keySet 01 new
 +					{
@@ -7891,7 +7891,7 @@ Index: module-emulator-osemu.c
 +					break;
 +					
 +					default:
-+						cs_log("[Emu] warning: E4 mode %.2X not supported", mode);
++						cs_log("[Emu] warning: E4 mode %.2X not supported", tagMode);
 +					break;
 +				}
 +				break;
@@ -7899,9 +7899,9 @@ Index: module-emulator-osemu.c
 +		
 +			case 0xE1: // EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR (ecm keys)
 +			{
-+				uint8_t mode = data[pos + 2 + 4];
++				uint8_t tagMode = data[pos + 2 + 4];
 +				
-+				switch(mode)
++				switch(tagMode)
 +				{
 +					case 0x00: // ecm keys from mode FF (00) - keySet 00
 +					{
@@ -7958,7 +7958,7 @@ Index: module-emulator-osemu.c
 +					break;
 +					
 +					default:
-+						cs_log("[Emu] warning: E1 mode %.2X not supported", mode);
++						cs_log("[Emu] warning: E1 mode %.2X not supported", tagMode);
 +					break;
 +				}
 +				break;
