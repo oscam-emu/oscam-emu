@@ -7831,7 +7831,7 @@ Index: module-emulator-osemu.c
 +					{
 +						if(tagLength != 0x8A)
 +						{
-+							cs_log("[Emu] warning: EMM_TAG_SECURITY_TABLE_DESCRIPTOR length (%d) != %d", tagLength, 0x8A);
++							cs_log("[Emu] warning: nanoTag E4 length (%d) != %d", tagLength, 0x8A);
 +							break;
 +						}
 +						
@@ -7865,7 +7865,7 @@ Index: module-emulator-osemu.c
 +					{
 +						if(tagLength != 0x82)
 +						{
-+							cs_log("[Emu] warning: EMM_TAG_SECURITY_TABLE_DESCRIPTOR length (%d) != %d", tagLength, 0x82);
++							cs_log("[Emu] warning: nanoTag E4 length (%d) != %d", tagLength, 0x82);
 +							break;
 +						}
 +					
@@ -7891,7 +7891,7 @@ Index: module-emulator-osemu.c
 +					break;
 +					
 +					default:
-+						cs_log("[Emu] warning: E4 mode %.2X not supported", tagMode);
++						cs_log("[Emu] warning: nanoTag E4 mode %.2X not supported", tagMode);
 +					break;
 +				}
 +				break;
@@ -7907,7 +7907,7 @@ Index: module-emulator-osemu.c
 +					{
 +						if(tagLength != 0x12)
 +						{
-+							cs_log("[Emu] warning: EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR length (%d) != %d", tagLength, 0x12);
++							cs_log("[Emu] warning: nanoTag E1 length (%d) != %d", tagLength, 0x12);
 +							break;
 +						}
 +						
@@ -7934,7 +7934,7 @@ Index: module-emulator-osemu.c
 +					{
 +						if(tagLength != 0x1A)
 +						{
-+							cs_log("[Emu] warning: EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR length (%d) != %d", tagLength, 0x1A);
++							cs_log("[Emu] warning: nanoTag E1 length (%d) != %d", tagLength, 0x1A);
 +							break;
 +						}
 +						
@@ -7958,14 +7958,14 @@ Index: module-emulator-osemu.c
 +					break;
 +					
 +					default:
-+						cs_log("[Emu] warning: E1 mode %.2X not supported", tagMode);
++						cs_log("[Emu] warning: nanoTag E1 mode %.2X not supported", tagMode);
 +					break;
 +				}
 +				break;
 +			}
 +
 +			default:
-+				cs_log("[Emu] warning: Tag %.2X not supported", tagType);
++				cs_log("[Emu] warning: nanoTag %.2X not supported", tagType);
 +			break;
 +		}
 +		
