@@ -263,11 +263,22 @@ leading zeros maybe be skipped. same key as above:
 T 1234 01 1122334455667788
 
 AU keys:
-T <key index (hex)> MK <key>
+for old key set:
+	T <key index (hex)> MK <key>
 
-64 keys are needed:
+	64 keys are needed:
 
-T 40 MK 1122334455667788
-T 41 MK 1122334455667788
-...
-T 7F MK 1122334455667788
+	T 40 MK 1122334455667788
+	T 41 MK 1122334455667788
+	...
+	T 7F MK 1122334455667788
+	
+for new key set:
+	T <key index (hex)> MK01 <key>
+
+	64 keys are needed:
+
+	T 40 MK01 1122334455667788
+	T 41 MK01 1122334455667788
+	...
+	T 7F MK01 1122334455667788
