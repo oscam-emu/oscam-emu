@@ -3231,7 +3231,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4894 @@
+@@ -0,0 +1,4898 @@
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "cscrypt/bn.h"
@@ -6704,6 +6704,8 @@ Index: module-emulator-osemu.c
 +					return 2;
 +				}
 +				
++				cs_log("[Emu] Active entitlement %.4X", entitlementId);
++				
 +				uint8_t encryptedData[32] = { 0 };
 +				memcpy(encryptedData, nanoData + 4, 32);
 +				
@@ -6740,6 +6742,8 @@ Index: module-emulator-osemu.c
 +				{
 +					return 2;
 +				}
++				
++				cs_log("[Emu] Active entitlement %.4X", entitlementId);
 +				
 +				memcpy(dw, nanoData + 4 + 8, 8); // even
 +				memcpy(dw + 8, nanoData + 4, 8); // odd
