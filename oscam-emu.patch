@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11313)
+--- CMakeLists.txt	(revision 11325)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
      ${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -95,7 +95,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: config.h
 ===================================================================
---- config.h	(revision 11313)
+--- config.h	(revision 11325)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -107,7 +107,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11313)
+--- config.sh	(revision 11325)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -166,7 +166,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 11313)
+--- cscrypt/md5.c	(revision 11325)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -211,7 +211,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 11313)
+--- cscrypt/md5.h	(revision 11325)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -234,7 +234,7 @@ Index: cscrypt/md5.h
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 11313)
+--- csctapi/cardreaders.h	(revision 11325)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -10,9 +10,10 @@
  extern const struct s_cardreader cardreader_pcsc;
@@ -2920,7 +2920,7 @@ Index: ffdecsa/stream.c
 +
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11313)
+--- globals.h	(revision 11325)
 +++ globals.h	(working copy)
 @@ -387,17 +387,17 @@
  #define CS_ECM_RINGBUFFER_MAX 0x10 // max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -3035,7 +3035,7 @@ Index: globals.h
 +#endif
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11313)
+--- Makefile	(revision 11325)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -3084,7 +3084,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11313)
+--- module-dvbapi.c	(revision 11325)
 +++ module-dvbapi.c	(working copy)
 @@ -1458,7 +1458,15 @@
  			}
@@ -3207,7 +3207,7 @@ Index: module-dvbapi.c
  #if defined(WITH_STAPI) || defined(WITH_STAPI5)
 Index: module-dvbapi.h
 ===================================================================
---- module-dvbapi.h	(revision 11313)
+--- module-dvbapi.h	(revision 11325)
 +++ module-dvbapi.h	(working copy)
 @@ -136,6 +136,7 @@
  	int8_t useMultipleIndices;
@@ -3231,7 +3231,9 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,4898 @@
+@@ -0,0 +1,4900 @@
++#define MODULE_LOG_PREFIX "emu"
++
 +#include "globals.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "cscrypt/bn.h"
@@ -3365,7 +3367,7 @@ Index: module-emulator-osemu.c
 +
 +	pDir = opendir(path);
 +	if (pDir == NULL) {
-+		cs_log("[Emu] cannot open key file path: %s", path);
++		cs_log("Cannot open key file path: %s", path);
 +		free(path);
 +		return;
 +	}
@@ -3391,7 +3393,7 @@ Index: module-emulator-osemu.c
 +	snprintf(filepath, pathLength, "%s/%s", path, filename);
 +	free(path);
 +
-+	cs_log("[Emu] writing key file: %s", filepath);
++	cs_log("Writing key file: %s", filepath);
 +
 +	file = fopen(filepath, "a");
 +	free(filepath);
@@ -3419,7 +3421,7 @@ Index: module-emulator-osemu.c
 +		snprintf(line, sizeof(line), "\n%c %.4X %s %s ; added by OSEmu %s\n", identifier, provider, keyName, keyValue, dateText);
 +	}
 +	
-+	cs_log("[Emu] Key written: %c %.4X %s %s", identifier, provider, keyName, keyValue);
++	cs_log("Key written: %c %.4X %s %s", identifier, provider, keyName, keyValue);
 +	
 +	free(keyValue);
 +
@@ -3661,7 +3663,7 @@ Index: module-emulator-osemu.c
 +	}
 +
 +	if(isCriticalKey) {
-+		cs_log("[Emu] Key not found: %c %X %s", identifier, provider, keyName);
++		cs_log("Key not found: %c %X %s", identifier, provider, keyName);
 +	}
 +	return 0;
 +}
@@ -3754,7 +3756,7 @@ Index: module-emulator-osemu.c
 +
 +	pDir = opendir(path);
 +	if (pDir == NULL) {
-+		cs_log("[Emu] cannot open key file path: %s", path);
++		cs_log("Cannot open key file path: %s", path);
 +		free(path);
 +		return 0;
 +	}
@@ -3768,7 +3770,7 @@ Index: module-emulator-osemu.c
 +	closedir(pDir);
 +
 +	if(pDirent == NULL) {
-+		cs_log("[Emu] key file not found in: %s", path);
++		cs_log("Key file not found in: %s", path);
 +		free(path);
 +		return 0;
 +	}
@@ -3782,7 +3784,7 @@ Index: module-emulator-osemu.c
 +	snprintf(filepath, pathLength, "%s/%s", path, filename);
 +	free(path);
 +
-+	cs_log("[Emu] reading key file: %s", filepath);
++	cs_log("Reading key file: %s", filepath);
 +
 +	file = fopen(filepath, "r");
 +	free(filepath);
@@ -6127,7 +6129,7 @@ Index: module-emulator-osemu.c
 +				{
 +					if(!GetPowervuKey(ecmKey, channelId, '0', keyIndex, 7, 0, keyRef2++))
 +					{
-+						cs_log("[Emu] Key not found: P %04X 0%X", ecmSrvid, keyIndex);
++						cs_log("Key not found: P %04X 0%X", ecmSrvid, keyIndex);
 +						return 2;
 +					}
 +				}
@@ -6448,7 +6450,7 @@ Index: module-emulator-osemu.c
 +		}
 +		fclose(file);
 +	}
-+	//else cs_log("[Emu] cannot open key file: %s", idata->extee36);
++	//else cs_log("Cannot open key file: %s", idata->extee36);
 +	
 +	if((file = fopen(idata->extee56,"rb")) != NULL)
 +	{
@@ -6458,7 +6460,7 @@ Index: module-emulator-osemu.c
 +		}
 +		fclose(file);
 +	}
-+	//else cs_log("[Emu] cannot open key file: %s", idata->extee56);
++	//else cs_log("Cannot open key file: %s", idata->extee56);
 +}
 +
 +static void DREover(const uint8_t *ECMdata, uint8_t *DW)
@@ -6581,7 +6583,7 @@ Index: module-emulator-osemu.c
 +	
 +	uint16_t ecmLen = GetEcmLen(ecm);
 +	
-+	cs_log_dbg(D_READER, "[EMU] CAID %04X IDENT %06X", caid, provId);
++	cs_log_dbg(D_READER, "CAID %04X IDENT %06X", caid, provId);
 +	
 +	if(ecmLen < 30 || caid != 0x4AE1)
 +	{
@@ -6607,7 +6609,7 @@ Index: module-emulator-osemu.c
 +	if(memcmp(dummy[0], key, 32) == 0 || memcmp(dummy[1], key, 32) == 0) 
 +	{
 +		DrecryptSetEmuExtee(idata);
-+		cs_log("[Emu] error: ee%s.bin keys missing", ((provId & 0xFF) == 0x11) ? "36" : "56");
++		cs_log("ERROR: ee%s.bin keys missing", ((provId & 0xFF) == 0x11) ? "36" : "56");
 +		return 2;
 +	}
 +	
@@ -6693,7 +6695,7 @@ Index: module-emulator-osemu.c
 +			{
 +				if(nanoLength != 0x26)
 +				{
-+					cs_log("[Emu] warning: nanoType ED length (%d) != %d", nanoLength, 0x26);
++					cs_log("WARNING: nanoType ED length (%d) != %d", nanoLength, 0x26);
 +					break;
 +				}
 +				
@@ -6704,7 +6706,7 @@ Index: module-emulator-osemu.c
 +					return 2;
 +				}
 +				
-+				cs_log("[Emu] Active entitlement %.4X", entitlementId);
++				cs_log("Active entitlement %.4X", entitlementId);
 +				
 +				uint8_t encryptedData[32] = { 0 };
 +				memcpy(encryptedData, nanoData + 4, 32);
@@ -6732,7 +6734,7 @@ Index: module-emulator-osemu.c
 +			{
 +				if(nanoLength != 0x16)
 +				{
-+					cs_log("[Emu] warning: nanoType EE length (%d) != %d", nanoLength, 0x16);
++					cs_log("WARNING: nanoType EE length (%d) != %d", nanoLength, 0x16);
 +					break;
 +				}
 +				
@@ -6743,7 +6745,7 @@ Index: module-emulator-osemu.c
 +					return 2;
 +				}
 +				
-+				cs_log("[Emu] Active entitlement %.4X", entitlementId);
++				cs_log("Active entitlement %.4X", entitlementId);
 +				
 +				memcpy(dw, nanoData + 4 + 8, 8); // even
 +				memcpy(dw + 8, nanoData + 4, 8); // odd
@@ -6877,7 +6879,7 @@ Index: module-emulator-osemu.c
 +	}
 +
 +	if(result != 0) {
-+		cs_log("[Emu] ECM failed: %s", GetProcessECMErrorReason(result));
++		cs_log("ECM failed: %s", GetProcessECMErrorReason(result));
 +	}
 +
 +	return result;
@@ -7078,7 +7080,7 @@ Index: module-emulator-osemu.c
 +					
 +					(*keysAdded)++;
 +					cs_hexdump(0, ecmKeys[j], 16, keyValue, sizeof(keyValue));
-+					cs_log("[Emu] Key found in EMM: V %06X %s %s", ecmProvider, keyName, keyValue);
++					cs_log("Key found in EMM: V %06X %s %s", ecmProvider, keyName, keyValue);
 +				}
 +			}
 +			break;
@@ -7142,7 +7144,7 @@ Index: module-emulator-osemu.c
 +					
 +					(*keysAdded)++;
 +					cs_hexdump(0, &emm[i+3], 16, keyValue, sizeof(keyValue));
-+					cs_log("[Emu] Key found in EMM: I %06X %s %s", ident, keyName, keyValue);
++					cs_log("Key found in EMM: I %06X %s %s", ident, keyName, keyValue);
 +				}
 +			}
 +			i+=l;
@@ -7208,7 +7210,7 @@ Index: module-emulator-osemu.c
 +						
 +						(*keysAdded)++;
 +						cs_hexdump(0, &emm[i+3+j*16], 16, keyValue, sizeof(keyValue));
-+						cs_log("[Emu] Key found in EMM: I %06X %s %s", ident, keyName, keyValue);
++						cs_log("Key found in EMM: I %06X %s %s", ident, keyName, keyValue);
 +					}
 +				}
 +			}
@@ -7392,7 +7394,7 @@ Index: module-emulator-osemu.c
 +	{
 +		if(!GetPowervuEmmKey(emmKey, 0, keyName, 7, 0, keyRef++, &groupId))
 +		{
-+			cs_log_dbg(D_EMM,"[Emu] EMM error: AU key for UA %s is missing", keyName);
++			cs_log_dbg(D_EMM, "EMM error: AU key for UA %s is missing", keyName);
 +			return 2;
 +		}
 +
@@ -7435,7 +7437,7 @@ Index: module-emulator-osemu.c
 +			if(emm[i+3] == 0 && emm[i+4] == 0)
 +			{
 +				cs_hexdump(0, &emm[i+3], 7, keyValue, sizeof(keyValue));
-+				cs_log("[Emu] Key found in EMM: P %08X %s %s -> REJECTED (looks invalid) UA: %X", groupId, keyName, keyValue, uniqueAddress);
++				cs_log("Key found in EMM: P %08X %s %s -> REJECTED (looks invalid) UA: %X", groupId, keyName, keyValue, uniqueAddress);
 +				continue;	
 +			}
 +			
@@ -7446,7 +7448,7 @@ Index: module-emulator-osemu.c
 +			
 +			(*keysAdded)++;
 +			cs_hexdump(0, &emm[i+3], 7, keyValue, sizeof(keyValue));
-+			cs_log("[Emu] Key found in EMM: P %08X %s %s ; UA: %X", groupId, keyName, keyValue, uniqueAddress);
++			cs_log("Key found in EMM: P %08X %s %s ; UA: %X", groupId, keyName, keyValue, uniqueAddress);
 +		}
 +		
 +	} while(!decryptOk);
@@ -7636,11 +7638,11 @@ Index: module-emulator-osemu.c
 +		memcpy(emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, &emm[key1offset], 32);
 +		(*keysAdded)++;
 +		cs_hexdump(0, &emm[key1offset], 32, keyValue, sizeof(keyValue));
-+		cs_log("[Emu] Key found in EMM: D %.6X %s %s class %02X", keyIdent, newKeyName, keyValue, emm[keyclass]);
++		cs_log("Key found in EMM: D %.6X %s %s class %02X", keyIdent, newKeyName, keyValue, emm[keyclass]);
 +	}
 +	else
 +	{
-+		cs_log("[Emu] Key %.6X %s alredy exist", keyIdent, newKeyName);
++		cs_log("Key %.6X %s already exists", keyIdent, newKeyName);
 +	}
 +
 +	//key #2
@@ -7651,11 +7653,11 @@ Index: module-emulator-osemu.c
 +		memcpy(emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, &emm[key2offset], 32);
 +		(*keysAdded)++;
 +		cs_hexdump(0, &emm[key2offset], 32, keyValue, sizeof(keyValue));
-+		cs_log("[Emu] Key found in EMM: D %.6X %s %s class %02X", keyIdent, newKeyName, keyValue, emm[keyclass]);
++		cs_log("Key found in EMM: D %.6X %s %s class %02X", keyIdent, newKeyName, keyValue, emm[keyclass]);
 +	}
 +	else
 +	{
-+		cs_log("[Emu] Key %.6X %s alredy exist", keyIdent, newKeyName);
++		cs_log("Key %.6X %s already exists", keyIdent, newKeyName);
 +	}
 +	
 +	if(*keysAdded > 0) DrecryptWriteEEToFile(idata, (provId & 0xFF));
@@ -7832,15 +7834,15 @@ Index: module-emulator-osemu.c
 +						
 +				switch(tagMode)
 +				{
-+					case 0x01: // keySet 01 new
++					case 0x01: // keySet 01 (MK01)
 +					{
 +						if(tagLength != 0x8A)
 +						{
-+							cs_log("[Emu] warning: nanoTag E4 length (%d) != %d", tagLength, 0x8A);
++							cs_log("WARNING: nanoTag E4 length (%d) != %d", tagLength, 0x8A);
 +							break;
 +						}
 +						
-+						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK01")) // read rom MK Set 01
++						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK01"))
 +						{
 +							break;
 +						}
@@ -7849,9 +7851,9 @@ Index: module-emulator-osemu.c
 +						uint8_t* tagPayload = tagData + 2;
 +						des_cbc_decrypt(tagPayload, iv, emmKey, 136);
 +					
-+						for (k = 0; k < 0x10; k++)  //loop 0x10 keys
++						for (k = 0; k < 0x10; k++)  // loop 0x10 keys
 +						{
-+							for (i = 0; i < 8; i++)  //loop 8 bytes of key
++							for (i = 0; i < 8; i++)  // loop 8 bytes of key
 +							{
 +								tagDataDecrypted[k][i] = tagPayload[MixTable[8*k + i]];
 +							}
@@ -7861,22 +7863,22 @@ Index: module-emulator-osemu.c
 +						
 +						for(i = 0; i < 0x10; i++)
 +						{
-+							SetKey('T', (blockIndex << 4) + i, "MK01", tagDataDecrypted[i], 8, 0, NULL); // write ram MK Set 01
++							SetKey('T', (blockIndex << 4) + i, "MK01", tagDataDecrypted[i], 8, 0, NULL);
 +						}
 +					}
 +					break;
 +					
-+					case 0xFF: // keySet FF (00) old
++					case 0xFF: // keySet FF (MK)
 +					{
 +						if(tagLength != 0x82)
 +						{
-+							cs_log("[Emu] warning: nanoTag E4 length (%d) != %d", tagLength, 0x82);
++							cs_log("WARNING: nanoTag E4 length (%d) != %d", tagLength, 0x82);
 +							break;
 +						}
 +					
 +						blockIndex = tagData[1] & 0x03;
 +						
-+  						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK")) // read rom MK Set 00
++  						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
 +  						{
 +  							break;
 +  						}
@@ -7890,13 +7892,13 @@ Index: module-emulator-osemu.c
 +						
 +						for(i = 0; i < 0x10; i++)
 +						{
-+							SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL); // write ram MK Set 00
++							SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL);
 +						}
 +					}
 +					break;
 +					
 +					default:
-+						cs_log("[Emu] warning: nanoTag E4 mode %.2X not supported", tagMode);
++						cs_log("WARNING: nanoTag E4 mode %.2X not supported", tagMode);
 +					break;
 +				}
 +				break;
@@ -7908,11 +7910,11 @@ Index: module-emulator-osemu.c
 +				
 +				switch(tagMode)
 +				{
-+					case 0x00: // ecm keys from mode FF (00) - keySet 00
++					case 0x00: // ecm keys from mode FF
 +					{
 +						if(tagLength != 0x12)
 +						{
-+							cs_log("[Emu] warning: nanoTag E1 length (%d) != %d", tagLength, 0x12);
++							cs_log("WARNING: nanoTag E1 length (%d) != %d", tagLength, 0x12);
 +							break;
 +						}
 +						
@@ -7935,16 +7937,16 @@ Index: module-emulator-osemu.c
 +						{
 +							(*keysAdded)++;
 +							cs_hexdump(0, tagData + 4 + 5, 8, keyValue, sizeof(keyValue));
-+							cs_log("[Emu] Key found in EMM: T %.8X 01 %s", entitlementId, keyValue);
++							cs_log("Key found in EMM: T %.8X 01 %s", entitlementId, keyValue);
 +						}
 +					}
 +					break;
 +
-+					case 0x01: // ecm keys from mode 01 - keySet 01
++					case 0x01: // ecm keys from mode 01
 +					{
 +						if(tagLength != 0x1A)
 +						{
-+							cs_log("[Emu] warning: nanoTag E1 length (%d) != %d", tagLength, 0x1A);
++							cs_log("WARNING: nanoTag E1 length (%d) != %d", tagLength, 0x1A);
 +							break;
 +						}
 +						
@@ -7967,20 +7969,20 @@ Index: module-emulator-osemu.c
 +						{
 +							(*keysAdded)++;
 +							cs_hexdump(0, ecmKey, 8, keyValue, sizeof(keyValue));
-+							cs_log("[Emu] Key found in EMM: T %.8X 01 %s", entitlementId, keyValue);
++							cs_log("Key found in EMM: T %.8X 01 %s", entitlementId, keyValue);
 +						}
 +					}
 +					break;
 +					
 +					default:
-+						cs_log("[Emu] warning: nanoTag E1 mode %.2X not supported", tagMode);
++						cs_log("WARNING: nanoTag E1 mode %.2X not supported", tagMode);
 +					break;
 +				}
 +				break;
 +			}
 +
 +			default:
-+				cs_log("[Emu] warning: nanoTag %.2X not supported", tagType);
++				cs_log("WARNING: nanoTag %.2X not supported", tagType);
 +			break;
 +		}
 +		
@@ -8050,7 +8052,7 @@ Index: module-emulator-osemu.c
 +			}
 +			
 +			default:
-+				cs_log("[Emu] error: unknown permissionDataType %X (pos: %d)", permissionDataType, pos);
++				cs_log("ERROR: unknown permissionDataType %.2X (pos: %d)", permissionDataType, pos);
 +				return 1;
 +		}
 +		
@@ -8125,7 +8127,7 @@ Index: module-emulator-osemu.c
 +	}
 +	
 +	if(result != 0) {
-+		cs_log_dbg(D_EMM,"[Emu] EMM failed: %s", GetProcessEMMErrorReason(result));
++		cs_log_dbg(D_EMM,"EMM failed: %s", GetProcessEMMErrorReason(result));
 +	}
 +
 +	return result;
@@ -8280,7 +8282,9 @@ Index: module-emulator-stream.c
 ===================================================================
 --- module-emulator-stream.c	(nonexistent)
 +++ module-emulator-stream.c	(working copy)
-@@ -0,0 +1,1103 @@
+@@ -0,0 +1,1105 @@
++#define MODULE_LOG_PREFIX "emu"
++
 +#include "globals.h"
 +#include "cscrypt/des.h"
 +
@@ -8465,7 +8469,7 @@ Index: module-emulator-stream.c
 +		if(cdata->srvid == srvid)
 +		{
 +			cdata->pmt_pid = b2i(2, data+i+2) & 0x1FFF;
-+			cs_log_dbg(D_READER, "[Emu] stream %i found pmt pid : 0x%04X (%i)",cdata->connid, cdata->pmt_pid, cdata->pmt_pid);
++			cs_log_dbg(D_READER, "Stream %i found pmt pid: 0x%04X (%i)",cdata->connid, cdata->pmt_pid, cdata->pmt_pid);
 +			break;
 +		}
 +	}
@@ -8485,7 +8489,7 @@ Index: module-emulator-stream.c
 +	cdata->pcr_pid = b2i(2, data+8) &0x1FFF;
 +	if(cdata->pcr_pid != 0x1FFF)
 +	{
-+		cs_log_dbg(D_READER, "[Emu] stream %i found pcr pid : 0x%04X (%i)",cdata->connid, cdata->pcr_pid, cdata->pcr_pid);
++		cs_log_dbg(D_READER, "Stream %i found pcr pid: 0x%04X (%i)",cdata->connid, cdata->pcr_pid, cdata->pcr_pid);
 +	}
 +	
 +	program_info_length = b2i(2, data+10) &0xFFF;
@@ -8511,7 +8515,7 @@ Index: module-emulator-stream.c
 +			if(caid>>8 == 0x0E)
 +			{
 +		    	cdata->ecm_pid = b2i(2, data+i+4) &0x1FFF;
-+		    	cs_log_dbg(D_READER, "[Emu] stream %i found ecm  pid : 0x%04X (%i)", cdata->connid, cdata->ecm_pid, cdata->ecm_pid);
++		    	cs_log_dbg(D_READER, "Stream %i found ecm pid: 0x%04X (%i)", cdata->connid, cdata->ecm_pid, cdata->ecm_pid);
 +		    	break;
 +		    }
 +		}
@@ -8528,7 +8532,7 @@ Index: module-emulator-stream.c
 +			|| stream_type == 0xEA)
 +		{ 
 +			cdata->video_pid = stream_pid;
-+			cs_log_dbg(D_READER, "[Emu] stream %i found video pid: 0x%04X (%i)",cdata->connid, stream_pid, stream_pid);
++			cs_log_dbg(D_READER, "Stream %i found video pid: 0x%04X (%i)",cdata->connid, stream_pid, stream_pid);
 +		}
 +		
 +		else if(stream_type == 0x03 || stream_type == 0x04 || stream_type == 0x05 || stream_type == 0x06 ||
@@ -8539,7 +8543,7 @@ Index: module-emulator-stream.c
 +			
 +			cdata->audio_pids[cdata->audio_pid_count] = stream_pid;
 +			cdata->audio_pid_count++;
-+			cs_log_dbg(D_READER, "[Emu] stream %i found audio pid: 0x%04X (%i)", cdata->connid, stream_pid, stream_pid);
++			cs_log_dbg(D_READER, "Stream %i found audio pid: 0x%04X (%i)", cdata->connid, stream_pid, stream_pid);
 +		}
 +	}
 +}
@@ -8559,7 +8563,7 @@ Index: module-emulator-stream.c
 +		if(caid>>8 == 0x0E)
 +		{
 +		   cdata->emm_pid = emm_pid;
-+		   cs_log_dbg(D_READER, "[Emu] stream %i found audio pid: 0x%04X (%i)", cdata->connid, emm_pid, emm_pid);
++		   cs_log_dbg(D_READER, "Stream %i found audio pid: 0x%04X (%i)", cdata->connid, emm_pid, emm_pid);
 +		   break;
 +		}
 +	}
@@ -8574,7 +8578,7 @@ Index: module-emulator-stream.c
 +	
 +	if(keysAdded) 
 +	{
-+		cs_log("[Emu] stream %i found %i keys.", cdata->connid, keysAdded);
++		cs_log("Stream %i found %i keys", cdata->connid, keysAdded);
 +	}
 +}
 +
@@ -8873,7 +8877,7 @@ Index: module-emulator-stream.c
 +	tv.tv_usec = 0; 
 +	if (setsockopt(streamfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv)) 
 +	{ 
-+		cs_log("[Emu] error: setsockopt() failed for SO_RCVTIMEO"); 
++		cs_log("ERROR: setsockopt() failed for SO_RCVTIMEO"); 
 +		return -1; 
 +	}
 +
@@ -8934,7 +8938,7 @@ Index: module-emulator-stream.c
 +	shutdown(conndata->connfd, 2);
 +	close(conndata->connfd);
 +	
-+	cs_log("[Emu] stream client %i disconnected",conndata->connid);
++	cs_log("Stream client %i disconnected",conndata->connid);
 +	
 +	NULLFREE(conndata);
 +}
@@ -8965,7 +8969,7 @@ Index: module-emulator-stream.c
 +	char http_version[4];
 +	int32_t http_status_code = 0;	
 +
-+	cs_log("[Emu] stream client %i connected", conndata->connid);
++	cs_log("Stream client %i connected", conndata->connid);
 +	
 +	if(!cs_malloc(&http_buf, 1024))
 +	{
@@ -9046,7 +9050,7 @@ Index: module-emulator-stream.c
 +	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
 +#endif
 +
-+	cs_log("[Emu] stream client %i request %s", conndata->connid, stream_path);
++	cs_log("Stream client %i request %s", conndata->connid, stream_path);
 +
 +	snprintf(http_buf, 1024, "HTTP/1.0 200 OK\nConnection: Close\nContent-Type: video/mpeg\nServer: stream_enigma2\n\n");
 +	clientStatus = send(conndata->connfd, http_buf, strlen(http_buf), 0);
@@ -9058,7 +9062,7 @@ Index: module-emulator-stream.c
 +		streamfd = connect_to_stream(http_buf, 1024, stream_path);
 +		if(streamfd == -1)
 +		{
-+			cs_log("[Emu] warning: stream client %i cannot connect to stream source", conndata->connid);
++			cs_log("WARNING: stream client %i cannot connect to stream source", conndata->connid);
 +			streamConnectErrorCount++;
 +			cs_sleepms(500);
 +			continue;	
@@ -9083,7 +9087,7 @@ Index: module-emulator-stream.c
 +			streamStatus = recv(streamfd, stream_buf+bytesRead, cur_dvb_buffer_size-bytesRead, MSG_WAITALL);
 +			if(streamStatus == 0) // socket closed
 +			{
-+				cs_log("[Emu] warning: stream client %i - stream source closed connection", conndata->connid);
++				cs_log("WARNING: stream client %i - stream source closed connection", conndata->connid);
 +				streamConnectErrorCount++;
 +				cs_sleepms(100);
 +				break;
@@ -9092,13 +9096,13 @@ Index: module-emulator-stream.c
 +			if(streamStatus < 0) // error
 +			{
 +				if ((errno == EWOULDBLOCK) | (errno == EAGAIN)) {
-+					cs_log("[Emu] warning: stream client %i no data from stream source", conndata->connid);
++					cs_log("WARNING: stream client %i no data from stream source", conndata->connid);
 +					streamDataErrorCount++; // 2 sec timeout * 15 = 30 seconds no data -> close
 +					cs_sleepms(100);
 +					continue;
 +				}
 +				
-+				cs_log("[Emu] warning: stream client %i error receiving data from stream source", conndata->connid);
++				cs_log("WARNING: stream client %i error receiving data from stream source", conndata->connid);
 +				streamConnectErrorCount++;
 +				cs_sleepms(100);
 +				break;
@@ -9110,14 +9114,14 @@ Index: module-emulator-stream.c
 +					sscanf((const char*)stream_buf, "HTTP/%3s %d ", http_version , &http_status_code) == 2 &&
 +					http_status_code != 200)
 +				{
-+					cs_log("[Emu] error: stream client %i got %d response from stream source", conndata->connid, http_status_code);
++					cs_log("ERROR: stream client %i got %d response from stream source", conndata->connid, http_status_code);
 +					streamConnectErrorCount++;  
 +					cs_sleepms(100);
 +					break;
 +				}
 +				else
 +				{
-+					cs_log_dbg(0, "[Emu] warning: stream client %i non-full buffer from stream source", conndata->connid);
++					cs_log_dbg(0, "WARNING: stream client %i non-full buffer from stream source", conndata->connid);
 +					streamDataErrorCount++;
 +					cs_sleepms(100);
 +				}
@@ -9187,7 +9191,7 @@ Index: module-emulator-stream.c
 +	emu_stream_client_conn_data *conndata;
 +
 +	cluster_size = get_internal_parallelism();
-+	cs_log("[Emu] info: FFDecsa parallel mode = %d", cluster_size);
++	cs_log("INFO: FFDecsa parallel mode = %d", cluster_size);
 +
 +	if(!emu_stream_server_mutex_init)
 +	{
@@ -9213,7 +9217,7 @@ Index: module-emulator-stream.c
 +	glistenfd = socket(AF_INET, SOCK_STREAM, 0);
 +	if(glistenfd == -1)
 +	{
-+		cs_log("[Emu] error: cannot create stream server socket");
++		cs_log("ERROR: cannot create stream server socket");
 +		return NULL;
 +	}
 +
@@ -9225,14 +9229,14 @@ Index: module-emulator-stream.c
 +	
 +	if(bind(glistenfd,(struct sockaddr *)&servaddr, sizeof(servaddr)) == -1)
 +	{
-+		cs_log("[Emu] error: cannot bind to stream server socket");
++		cs_log("ERROR: cannot bind to stream server socket");
 +		close(glistenfd);
 +		return NULL;
 +	}
 +	
 +	if(listen(glistenfd, 3) == -1)
 +	{
-+		cs_log("[Emu] error: cannot listen to stream server socket");
++		cs_log("ERROR: cannot listen to stream server socket");
 +		close(glistenfd);
 +		return NULL;
 +	}
@@ -9244,7 +9248,7 @@ Index: module-emulator-stream.c
 +
 +		if(connfd == -1)
 +		{
-+			cs_log("[Emu] error: accept() failed");
++			cs_log("ERROR: accept() failed");
 +			break;
 +		}
 +		
@@ -9278,7 +9282,7 @@ Index: module-emulator-stream.c
 +			int on = 1;
 +			if (setsockopt(connfd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on))<0) 
 +			{ 
-+				cs_log("[Emu] error: stream client %i setsockopt() failed for TCP_NODELAY", conndata->connid); 
++				cs_log("ERROR: stream client %i setsockopt() failed for TCP_NODELAY", conndata->connid); 
 +			}
 +
 +			start_thread("emu stream client", stream_client_handler, (void*)conndata, NULL, 1, 0);		
@@ -9287,7 +9291,7 @@ Index: module-emulator-stream.c
 +		{
 +			shutdown(connfd, 2);
 +			close(connfd);
-+			cs_log("[Emu] error: stream server client dropped because of too many connections (%i)", EMU_STREAM_SERVER_MAX_CONNECTIONS);
++			cs_log("ERROR: stream server client dropped because of too many connections (%i)", EMU_STREAM_SERVER_MAX_CONNECTIONS);
 +		}
 +		
 +		cs_sleepms(20);
@@ -9468,7 +9472,9 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,844 @@
+@@ -0,0 +1,846 @@
++#define MODULE_LOG_PREFIX "emu"
++
 +#include "globals.h"
 +#include "oscam-string.h"
 +#include "oscam-config.h"
@@ -10311,11 +10317,11 @@ Index: module-emulator.c
 +	}
 +#endif
 +
-+	cs_log("[Emu] oscam-emu version %d", GetOSemuVersion());
++	cs_log("OSCam-Emu version %d", GetOSemuVersion());
 +}
 Index: module-newcamd-des.c
 ===================================================================
---- module-newcamd-des.c	(revision 11313)
+--- module-newcamd-des.c	(revision 11325)
 +++ module-newcamd-des.c	(working copy)
 @@ -2,17 +2,14 @@
  #include "module-newcamd-des.h"
@@ -10365,7 +10371,7 @@ Index: module-newcamd-des.c
  
 Index: module-newcamd-des.h
 ===================================================================
---- module-newcamd-des.h	(revision 11313)
+--- module-newcamd-des.h	(revision 11325)
 +++ module-newcamd-des.h	(working copy)
 @@ -1,8 +1,15 @@
 -#ifndef MODULE_NEWCAMD_DES_H_
@@ -10393,7 +10399,7 @@ Index: module-newcamd-des.h
 +#endif
 Index: module-newcamd.c
 ===================================================================
---- module-newcamd.c	(revision 11313)
+--- module-newcamd.c	(revision 11325)
 +++ module-newcamd.c	(working copy)
 @@ -919,6 +919,13 @@
  			// set userfilter for au enabled clients
@@ -10467,7 +10473,7 @@ Index: module-newcamd.c
  						mbuf[22 + 11 * j] = 0x00;
 Index: module-stat.c
 ===================================================================
---- module-stat.c	(revision 11313)
+--- module-stat.c	(revision 11325)
 +++ module-stat.c	(working copy)
 @@ -903,7 +903,7 @@
  
@@ -10489,7 +10495,7 @@ Index: module-stat.c
  				continue; // proxy can convert or reject
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 11313)
+--- module-webif-tpl.c	(revision 11325)
 +++ module-webif-tpl.c	(working copy)
 @@ -454,12 +454,13 @@
  											check_conf(WITH_DEBUG, ptr2);
@@ -10513,7 +10519,7 @@ Index: module-webif-tpl.c
  										}
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 11313)
+--- module-webif.c	(revision 11325)
 +++ module-webif.c	(working copy)
 @@ -98,6 +98,7 @@
  #define MNU_CFG_LCD		14
@@ -10688,7 +10694,7 @@ Index: module-webif.c
  		}
  
  		if(csystem)
-@@ -7685,8 +7771,8 @@
+@@ -7687,8 +7773,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -10701,7 +10707,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 11313)
+--- oscam-chk.c	(revision 11325)
 +++ oscam-chk.c	(working copy)
 @@ -763,7 +763,7 @@
  		return 0;
@@ -10741,9 +10747,9 @@ Index: oscam-chk.c
  	}
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 11313)
+--- oscam-config-global.c	(revision 11325)
 +++ oscam-config-global.c	(working copy)
-@@ -831,6 +831,30 @@
+@@ -853,6 +853,30 @@
  #else
  static const struct config_list scam_opts[] = { DEF_LAST_OPT };
  #endif
@@ -10774,7 +10780,7 @@ Index: oscam-config-global.c
  #ifdef MODULE_RADEGAST
  static bool radegast_should_save_fn(void *UNUSED(var))
  {
-@@ -1220,6 +1244,7 @@
+@@ -1242,6 +1266,7 @@
  	{ "cccam",	cccam_opts },
  	{ "pandora",	pandora_opts },
  	{ "scam",	scam_opts },
@@ -10784,7 +10790,7 @@ Index: oscam-config-global.c
  	{ "webif",	webif_opts },
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 11313)
+--- oscam-config-reader.c	(revision 11325)
 +++ oscam-config-reader.c	(working copy)
 @@ -109,6 +109,7 @@
  			{ "newcamd525", R_NEWCAMD },
@@ -10829,7 +10835,7 @@ Index: oscam-config-reader.c
  	DEF_OPT_FUNC("auprovid"             , 0,                            auprovid_fn),
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 11313)
+--- oscam-config.h	(revision 11325)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -10851,7 +10857,7 @@ Index: oscam-config.h
  void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE *f);
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 11313)
+--- oscam-ecm.c	(revision 11325)
 +++ oscam-ecm.c	(working copy)
 @@ -1578,7 +1578,7 @@
  
@@ -10864,7 +10870,7 @@ Index: oscam-ecm.c
  					+ chk_if_ignore_checksum(er, reader->disablecrccws, &reader->disablecrccws_only_for);
 Index: oscam-emm.c
 ===================================================================
---- oscam-emm.c	(revision 11313)
+--- oscam-emm.c	(revision 11325)
 +++ oscam-emm.c	(working copy)
 @@ -47,13 +47,20 @@
  	int32_t i, k, match;
@@ -10933,7 +10939,7 @@ Index: oscam-emm.c
  
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 11313)
+--- oscam-string.c	(revision 11325)
 +++ oscam-string.c	(working copy)
 @@ -507,12 +507,68 @@
  		}
@@ -11012,7 +11018,7 @@ Index: oscam-string.c
  	0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 11313)
+--- oscam-string.h	(revision 11325)
 +++ oscam-string.h	(working copy)
 @@ -37,6 +37,7 @@
  void get_random_bytes(uint8_t *dst, uint32_t dst_len);
@@ -11024,7 +11030,7 @@ Index: oscam-string.h
  
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11313)
+--- oscam.c	(revision 11325)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11078,7 +11084,7 @@ Index: oscam.c
  #endif
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 11313)
+--- reader-common.c	(revision 11325)
 +++ reader-common.c	(working copy)
 @@ -14,6 +14,7 @@
  #include "reader-common.h"
@@ -11110,7 +11116,7 @@ Index: reader-common.c
  		NULLFREE(reader->csystem_data);
 Index: readers.h
 ===================================================================
---- readers.h	(revision 11313)
+--- readers.h	(revision 11325)
 +++ readers.h	(working copy)
 @@ -13,8 +13,9 @@
  extern const struct s_cardsystem reader_dre;
@@ -11129,7 +11135,7 @@ Index: readers.h
 +#endif
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11313)
+--- webif/config/dvbapi.html	(revision 11325)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -50,15 +50,15 @@
  					<option value="1" ##READSDTSELECTED1##>1 - on (do not save FTA)</option>
@@ -11162,7 +11168,7 @@ Index: webif/config/dvbapi.html
 \ No newline at end of file
 Index: webif/config/menu.html
 ===================================================================
---- webif/config/menu.html	(revision 11313)
+--- webif/config/menu.html	(revision 11325)
 +++ webif/config/menu.html	(working copy)
 @@ -16,6 +16,7 @@
  ##TPLCONFIGMENUDVBAPI##		<!-- CMENUACTIVE13 -->
@@ -11211,7 +11217,7 @@ Index: webif/config/streamrelay.html
 \ No newline at end of file
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 11313)
+--- webif/files/menu.html	(revision 11325)
 +++ webif/files/menu.html	(working copy)
 @@ -10,7 +10,7 @@
  		<LI CLASS="##CMENUACTIVE7##"><A HREF="files.html?file=logfile">logfile</A></LI>
@@ -11238,7 +11244,7 @@ Index: webif/files/menu_softcamkey.html
 +			<LI CLASS="##CMENUACTIVE19##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 11313)
+--- webif/pages_index.txt	(revision 11325)
 +++ webif/pages_index.txt	(working copy)
 @@ -80,11 +80,13 @@
  CONFIGMENUNEWCAMD             config/menu_newcamd.html                                    MODULE_NEWCAMD
