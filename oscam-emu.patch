@@ -2939,7 +2939,7 @@ Index: globals.h
  #define R_SMART     0x7 // Smartreader+
  #define R_PCSC      0x8 // PCSC
  #define R_DRECAS    0x9 // Reader DRECAS
-+#define R_EMU       0x17  // Reader emu
++#define R_EMU       0x17 // Reader EMU
  /////////////////// proxy readers after R_CS378X
  #define R_CAMD35    0x20  // Reader cascading camd 3.5x
  #define R_CAMD33    0x21  // Reader cascading camd 3.3x
@@ -3150,7 +3150,7 @@ Index: module-dvbapi.c
  		}
 +		
 +#ifdef WITH_EMU
-+		if((demux[demux_id].demux_fd[filter_num].caid>>8)==0x10)
++		if((demux[demux_id].demux_fd[filter_num].caid>>8) == 0x10)
 +		{
 +			uint32_t i;
 +			uint32_t emmhash;
@@ -3162,7 +3162,7 @@ Index: module-dvbapi.c
 +			
 +			for(i=0; i+2<sctlen; i++)
 +			{
-+				if(buffer[i]==0xF0 && (buffer[i+2]==0xE1 || buffer[i+2]==0xE4))
++				if(buffer[i] == 0xF0 && (buffer[i+2] == 0xE1 || buffer[i+2] == 0xE4))
 +				{
 +					emmhash = (buffer[3]<<8) | buffer[sctlen-2];
 +					
@@ -4024,14 +4024,14 @@ Index: module-emulator-osemu.c
 +	char keyName[EMU_MAX_CHAR_KEYNAME];
 +	uint32_t tmp;
 +
-+	if((ident>>4)== 0xD02A) {
-+		keyIndex &=0xFE;    // map to even number key indexes
++	if((ident >> 4) == 0xD02A) {
++		keyIndex &=0xFE; // map to even number key indexes
 +	}
-+	if((ident>>4)== 0xD00C) {
-+		ident = 0x0D00C0;    // map provider C? to C0
++	if((ident >> 4) == 0xD00C) {
++		ident = 0x0D00C0; // map provider C? to C0
 +	}
-+	else if(keyIndex==6 && ((ident>>8) == 0x0D05)) {
-+		ident = 0x0D0504;    // always use provider 04 system key
++	else if(keyIndex == 6 && ((ident >> 8) == 0x0D05)) {
++		ident = 0x0D0504; // always use provider 04 system key
 +	}
 +
 +	tmp = keyIndex;
@@ -4530,7 +4530,7 @@ Index: module-emulator-osemu.c
 +	for(i = 8; i+1 < ecmLen; i += ecm[i+1]+2) {
 +		switch(ecm[i]) {
 +		case 0xDB:
-+			if(i+2+ecm[i+1] <= ecmLen && ecm[i+1]==16) {
++			if(i+2+ecm[i+1] <= ecmLen && ecm[i+1] == 16) {
 +				memcpy(cw, &ecm[i+2], 16);
 +				return 0;
 +			}
@@ -4595,7 +4595,7 @@ Index: module-emulator-osemu.c
 +	}
 +
 +	memset(dw,0,16);
-+	tDW = &dw[ecm[0]==0x81 ? 8 : 0];
++	tDW = &dw[ecm[0] == 0x81 ? 8 : 0];
 +
 +	MD5_Init(&mdContext);
 +	MD5_Update(&mdContext, ecm+7, 10);
@@ -4872,8 +4872,8 @@ Index: module-emulator-osemu.c
 +		Tmp[pv2] = pv1;
 +	}
 +	for (i=0; i<8; i++) {
-+		pv1 =  Tmp[i];
-+		pv2 =  T1Key[pv1];
++		pv1 = Tmp[i];
++		pv2 = T1Key[pv1];
 +		indata[i] = pv2;
 +	}
 +	return 0;
@@ -5111,7 +5111,7 @@ Index: module-emulator-osemu.c
 +	if(needsAES && !GetViaKey((uint8_t*)aesKey, ident, 'E', aesKeyIndex, 16, 1)) {
 +		return 2;
 +	}
-+	if(aesMode==0x0D || aesMode==0x11 || aesMode==0x15) {
++	if(aesMode == 0x0D || aesMode == 0x11 || aesMode == 0x15) {
 +		aesAfterCore = 1;
 +	}
 +
@@ -5199,13 +5199,13 @@ Index: module-emulator-osemu.c
 +			}
 +			version = ecm[i];
 +			if (nanoLen == 3) {
-+				currentIdent=((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
-+				desKeyIndex = ecm[i+2]&0x0F;
++				currentIdent = ((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
++				desKeyIndex  = ecm[i+2]&0x0F;
 +				keySelectPos = i+3;
 +			}
 +			else {
-+				currentIdent =(ecm[i]<<16)|(ecm[i+1]<<8)|((ecm[i+2]>>4)&0x0F);
-+				desKeyIndex = ecm[i+3];
++				currentIdent = (ecm[i]<<16)|(ecm[i+1]<<8)|((ecm[i+2]>>4)&0x0F);
++				desKeyIndex  = ecm[i+3];
 +				keySelectPos = i+4;
 +			}
 +			providerKeyLen = nanoLen;
@@ -5215,8 +5215,8 @@ Index: module-emulator-osemu.c
 +				break;
 +			}
 +			version = ecm[i];
-+			currentIdent= ((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
-+			desKeyIndex = ecm[i+2]&0x0F;
++			currentIdent = ((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
++			desKeyIndex  = ecm[i+2]&0x0F;
 +			keySelectPos = i+4;
 +			if((version == 3) && (nanoLen > 3)) {
 +				desKeyIndex = ecm[i+(nanoLen-4)]&0x0F;
@@ -5253,8 +5253,8 @@ Index: module-emulator-osemu.c
 +					if(keySelectPos+2 >= ecmLen) {
 +						break;
 +					}
-+					if (ecm[keySelectPos]==0x05 && ecm[keySelectPos+1]==0x67 && (ecm[keySelectPos+2]==0x00 || ecm[keySelectPos+2]==0x01)) {
-+						if(ecm[keySelectPos+2]==0x01) {
++					if (ecm[keySelectPos] == 0x05 && ecm[keySelectPos+1] == 0x67 && (ecm[keySelectPos+2] == 0x00 || ecm[keySelectPos+2] == 0x01)) {
++						if(ecm[keySelectPos+2] == 0x01) {
 +							doFinalMix = 1;
 +						}
 +					}
@@ -5303,7 +5303,7 @@ Index: module-emulator-osemu.c
 +		}
 +	}
 +	buff[8]&=0x7F;
-+	return (memcmp(sig,buff+8,8)==0);
++	return (memcmp(sig, buff+8, 8) == 0);
 +}
 +
 +static int8_t DecryptNagra2ECM(uint8_t *in, uint8_t *out, const uint8_t *key, int32_t len, const uint8_t *vkey, uint8_t *keyM)
@@ -5410,10 +5410,10 @@ Index: module-emulator-osemu.c
 +		switch(dec[i]) {
 +		case 0x10:
 +		case 0x11:
-+			if(i+10 < cmdLen && dec[i+1]==0x09) {
++			if(i+10 < cmdLen && dec[i+1] == 0x09) {
 +				s = (~dec[i])&1;
 +				mecmAlgo = dec[i+2]&0x60;
-+				memcpy(dw+(s<<3),&dec[i+3],8);
++				memcpy(dw+(s<<3), &dec[i+3], 8);
 +				i+=11;
 +				l|=(s+1);
 +			}
@@ -5521,8 +5521,8 @@ Index: module-emulator-osemu.c
 +	for(i=0; i+7<len; i+=8,data+=8,n^=1) {
 +		memcpy(buf[1-n],data,8);
 +		des(data, ks1, 0);
-+		des(data, ks2, 1);	
-+		des(data, ks1, 0);	
++		des(data, ks2, 1);
++		des(data, ks1, 0);
 +		xxor(data,8,data,buf[n]);
 +	}
 +}
@@ -5554,7 +5554,7 @@ Index: module-emulator-osemu.c
 +		des(cbuff, ks1, 1);
 +	}
 +
-+	return memcmp(cbuff,&data[len],8)==0;
++	return memcmp(cbuff, &data[len], 8) == 0;
 +}
 +
 +static int8_t Irdeto2ECM(uint16_t caid, uint8_t *oecm, uint8_t *dw)
@@ -5583,43 +5583,43 @@ Index: module-emulator-osemu.c
 +		while(GetIrdetoKey(okeySeed, ident, 'M', 1, 1, &keySeedRef)) {
 +			keyIVRef = 0;
 +			while(GetIrdetoKey(keyIV, ident, 'M', 2, 1, &keyIVRef)) {
-+
++				
 +				memcpy(keySeed, okeySeed, 16);
 +				memcpy(ecmCopy, oecm, ecmLen);
 +				ecm = ecmCopy;
-+
++				
 +				memset(tmp, 0, 16);
 +				Irdeto2Encrypt(keySeed, tmp, key, 16);
 +				ecm+=12;
 +				Irdeto2Decrypt(ecm, keyIV, keySeed, length);
 +				i=(ecm[0]&7)+1;
 +				end = length-8 < 0 ? 0 : length-8;
-+
++				
 +				while(i<end) {
 +					l = ecm[i+1] ? (ecm[i+1]&0x3F)+2 : 1;
 +					switch(ecm[i]) {
 +					case 0x10:
 +					case 0x50:
-+						if(l==0x13 && i<=length-8-l) {
++						if(l == 0x13 && i <= length-8-l) {
 +							Irdeto2Decrypt(&ecm[i+3], keyIV, key, 16);
 +						}
 +						break;
 +					case 0x78:
-+						if(l==0x14 && i<=length-8-l) {
++						if(l == 0x14 && i <= length-8-l) {
 +							Irdeto2Decrypt(&ecm[i+4], keyIV, key, 16);
 +						}
 +						break;
 +					}
 +					i+=l;
 +				}
-+
++				
 +				i=(ecm[0]&7)+1;
 +				if(Irdeto2CalculateHash(keySeed, keyIV, ecm-6, length+6)) {
 +					while(i<end) {
 +						l = ecm[i+1] ? (ecm[i+1]&0x3F)+2 : 1;
 +						switch(ecm[i]) {
 +						case 0x78:
-+							if(l==0x14 && i<=length-8-l) {
++							if(l == 0x14 && i <= length-8-l) {
 +								memcpy(dw, &ecm[i+4], 16);
 +								return 0;
 +							}
@@ -5650,27 +5650,27 @@ Index: module-emulator-osemu.c
 +	uint8_t haveKey1 = 0, haveKey2 = 0;
 +	uint16_t ecmLen = 0, pid = 0;
 +	uint32_t i;
-+
++	
 +	//try using ecmpid if it seems to be valid
 +	if(ecmpid != 0) {
 +		haveKey1 = FindKey('F', (srvid<<16)|ecmpid, 0, "00", dw, 8, 1, 0, 0, NULL);
 +		haveKey2 = FindKey('F', (srvid<<16)|ecmpid, 0, "01", &dw[8], 8, 1, 0, 0, NULL);
-+
++		
 +		if(haveKey1 && haveKey2) {return 0;}
 +		else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
 +		else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
 +	}
-+
++	
 +	//try to get the pid from oscam's fake ecm ([sid] ([pid1] [pid2] ... [pidx])
 +	if(ecmDataLen >= 3) {
 +		ecmLen = GetEcmLen(ecm);
-+
++		
 +		if(ecmLen > 7 && ecmLen <= ecmDataLen) {
 +			for(i=5; i+1<ecmLen; i+=2) {
 +				pid = b2i(2, ecm+i);
 +				haveKey1 = FindKey('F', (srvid<<16)|pid, 0, "00", dw, 8, 1, 0, 0, NULL);
 +				haveKey2 = FindKey('F', (srvid<<16)|pid, 0, "01", &dw[8], 8, 1, 0, 0, NULL);
-+
++				
 +				if(haveKey1 && haveKey2) {return 0;}
 +				else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
 +				else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
@@ -5681,11 +5681,11 @@ Index: module-emulator-osemu.c
 +	//fallback to default pid
 +	haveKey1 = FindKey('F', (srvid<<16)|0x1FFF, 0, "00", dw, 8, 1, 0, 0, NULL);
 +	haveKey2 = FindKey('F', (srvid<<16)|0x1FFF, 0, "01", &dw[8], 8, 1, 0, 0, NULL);
-+
++	
 +	if(haveKey1 && haveKey2) {return 0;}
 +	else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
 +	else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
-+
++	
 +	return 2;
 +}
 +
@@ -5698,7 +5698,7 @@ Index: module-emulator-osemu.c
 +	if(FindKey('P', ident, 0xFFFF0000, keyStr, buf, keyLength, isCriticalKey, keyRef, 0, NULL)) {
 +		return 1;
 +	}
-+
++	
 +	return 0;
 +}
 +
@@ -5739,7 +5739,7 @@ Index: module-emulator-osemu.c
 +{
 +	uint8_t s_index, bit, last_index, last_bit;
 +	uint8_t const *Sbox1, *Sbox2, *Sbox3, *Sbox4, *Sbox5, *Sbox6, *Sbox7, *Sbox8, *Sbox9;
-+
++	
 +	if(mode)
 +	{
 +		Sbox1 = PowerVu_A0_S_1;
@@ -5764,39 +5764,39 @@ Index: module-emulator-osemu.c
 +		Sbox8 = PowerVu_00_S_8;
 +		Sbox9 = PowerVu_00_S_9;
 +	}
-+
++	
 +	bit = (GetBit(input[2],0)<<2) | (GetBit(input[3],4)<<1) | (GetBit(input[5],3));
 +	s_index = (GetBit(input[0],0)<<3) | (GetBit(input[2],6)<<2) | (GetBit(input[2],4)<<1) | (GetBit(input[5],7));
 +	last_bit = GetBit(Sbox1[s_index],7-bit);
-+
++	
 +	bit = (GetBit(input[5],0)<<2) | (GetBit(input[4],0)<<1) | (GetBit(input[6],2));
 +	s_index = (GetBit(input[2],1)<<3) | (GetBit(input[2],2)<<2) | (GetBit(input[5],5)<<1) | (GetBit(input[5],1));
 +	last_bit = last_bit | (GetBit(Sbox2[s_index],7-bit)<<1);
-+
++	
 +	bit = (GetBit(input[6],0)<<2) | (GetBit(input[1],7)<<1) | (GetBit(input[6],7));
 +	s_index = (GetBit(input[1],3)<<3) | (GetBit(input[3],7)<<2) | (GetBit(input[1],5)<<1) | (GetBit(input[5],2));
 +	last_bit = last_bit | (GetBit(Sbox3[s_index], 7-bit)<<2);
-+
++	
 +	bit = (GetBit(input[1],0)<<2) | (GetBit(input[2],7)<<1) | (GetBit(input[2],5));
 +	s_index = (GetBit(input[6],3)<<3) | (GetBit(input[6],4)<<2) | (GetBit(input[6],6)<<1) | (GetBit(input[3],5));
 +	last_index = GetBit(Sbox4[s_index], 7-bit);
-+
++	
 +	bit = (GetBit(input[3],3)<<2) | (GetBit(input[4],6)<<1) | (GetBit(input[3],2));
 +	s_index = (GetBit(input[3],1)<<3) | (GetBit(input[4],5)<<2) | (GetBit(input[3],0)<<1) | (GetBit(input[4],7));
 +	last_index = last_index | (GetBit(Sbox5[s_index], 7-bit)<<1);
-+
++	
 +	bit = (GetBit(input[5],4)<<2) | (GetBit(input[4],4)<<1) | (GetBit(input[1],2));
 +	s_index = (GetBit(input[2],3)<<3) | (GetBit(input[6],5)<<2) | (GetBit(input[1],4)<<1) | (GetBit(input[4],1));
 +	last_index = last_index | (GetBit(Sbox6[s_index], 7-bit)<<2);
-+
++	
 +	bit = (GetBit(input[0],6)<<2) | (GetBit(input[0],7)<<1) | (GetBit(input[0],4));
 +	s_index = (GetBit(input[0],5)<<3) | (GetBit(input[0],3)<<2) | (GetBit(input[0],1)<<1) | (GetBit(input[0],2));
 +	last_index = last_index | (GetBit(Sbox7[s_index], 7-bit)<<3);
-+
++	
 +	bit = (GetBit(input[4],2)<<2) | (GetBit(input[4],3)<<1) | (GetBit(input[1],1));
 +	s_index = (GetBit(input[1],6)<<3) | (GetBit(input[6],1)<<2) | (GetBit(input[5],6)<<1) | (GetBit(input[3],6));
 +	last_index = last_index | (GetBit(Sbox8[s_index], 7-bit)<<4);
-+
++	
 +	return (GetBit(Sbox9[last_index&0x1f],7-last_bit)&1) ? 1: 0;
 +}
 +
@@ -5805,27 +5805,27 @@ Index: module-emulator-osemu.c
 +	uint32_t i;
 +	int32_t j, k;
 +	uint8_t curByte, tmpBit;
-+
-+	for(i=0; i<length; i++)
++	
++	for(i = 0; i < length; i++)
 +	{
 +		curByte = data[i];
-+
-+		for(j=7; j>=0; j--)
++		
++		for(j = 7; j >= 0; j--)
 +		{
-+			data[i] = SetBit(data[i], j,(GetBit(curByte,j)^PowervuSbox(key, sbox))^GetBit(key[0],7));
-+
-+			tmpBit = GetBit(data[i],j)^(GetBit(key[6],0));
++			data[i] = SetBit(data[i], j, (GetBit(curByte, j)^PowervuSbox(key, sbox))^GetBit(key[0], 7));
++			
++			tmpBit = GetBit(data[i], j)^(GetBit(key[6], 0));
 +			if (tmpBit)
 +			{
 +				key[3] ^= 0x10;
 +			}
-+
++			
 +			for (k = 6; k > 0; k--)
 +			{
 +				key[k] = (key[k]>>1) | (key[k-1]<<7);
 +			}
 +			key[0] = (key[0]>>1);
-+
++			
 +			key[0] = SetBit(key[0], 7, tmpBit);
 +		}
 +	}
@@ -5833,15 +5833,15 @@ Index: module-emulator-osemu.c
 +
 +#define PVU_CW_VID 0	// VIDeo
 +#define PVU_CW_HSD 1	// High Speed Data
-+#define PVU_CW_A1 2		// Audio 1
-+#define PVU_CW_A2 3		// Audio 2
-+#define PVU_CW_A3 4		// Audio 3
-+#define PVU_CW_A4 5		// Audio 4
++#define PVU_CW_A1 2	// Audio 1
++#define PVU_CW_A2 3	// Audio 2
++#define PVU_CW_A3 4	// Audio 3
++#define PVU_CW_A4 5	// Audio 4
 +#define PVU_CW_UTL 6	// UTiLity
 +#define PVU_CW_VBI 7	// Vertical Blanking Interval
 +
 +#define PVU_CONVCW_VID_ECM 0x80	// VIDeo
-+#define PVU_CONVCW_HSD_ECM 0x40 // High Speed Data
++#define PVU_CONVCW_HSD_ECM 0x40	// High Speed Data
 +#define PVU_CONVCW_A1_ECM 0x20	// Audio 1
 +#define PVU_CONVCW_A2_ECM 0x10	// Audio 2
 +#define PVU_CONVCW_A3_ECM 0x08	// Audio 3
@@ -5855,28 +5855,28 @@ Index: module-emulator-osemu.c
 +	{
 +	case PVU_CONVCW_VID_ECM:
 +		return PVU_CW_VID;
-+
++	
 +	case PVU_CONVCW_HSD_ECM:
 +		return PVU_CW_HSD;
-+
++	
 +	case PVU_CONVCW_A1_ECM:
 +		return PVU_CW_A1;
-+
++	
 +	case PVU_CONVCW_A2_ECM:
 +		return PVU_CW_A2;
-+
++	
 +	case PVU_CONVCW_A3_ECM:
 +		return PVU_CW_A3;
-+
++	
 +	case PVU_CONVCW_A4_ECM:
 +		return PVU_CW_A4;
-+
++	
 +	case PVU_CONVCW_UTL_ECM:
 +		return PVU_CW_UTL;
-+
++	
 +	case PVU_CONVCW_VBI_ECM:
 +		return PVU_CW_VBI;
-+
++	
 +	default:
 +		return PVU_CW_VBI;
 +	}
@@ -5910,7 +5910,7 @@ Index: module-emulator-osemu.c
 +static void PowervuExpandSeed(uint8_t seedType, uint8_t *seed)
 +{
 +	uint8_t seedLength, i;
-+
++	
 +	switch(seedType)
 +	{
 +	case PVU_CW_VID:
@@ -5930,7 +5930,7 @@ Index: module-emulator-osemu.c
 +	default:
 +		return;
 +	}
-+
++	
 +	for(i=seedLength; i<7; i++)
 +	{
 +		seed[i] = seed[i%seedLength];
@@ -5942,19 +5942,19 @@ Index: module-emulator-osemu.c
 +	uint16_t tmpSeed;
 +
 +	tmpSeed = PowervuGetSeedIV(seedType, ecm+23);
-+	seed[0] = (tmpSeed>>2) & 0xFF;
-+	seed[1] = ((tmpSeed&0x3)<<6) | (seedBase[0]>>2);
-+	seed[2] = (seedBase[0]<<6) | (seedBase[1]>>2);
-+	seed[3] = (seedBase[1]<<6) | (seedBase[2]>>2);
-+	seed[4] = (seedBase[2]<<6) | (seedBase[3]>>2);
-+	seed[5] = (seedBase[3]<<6);
++	seed[0] = (tmpSeed >> 2) & 0xFF;
++	seed[1] = ((tmpSeed & 0x3) << 6) | (seedBase[0] >> 2);
++	seed[2] = (    seedBase[0] << 6) | (seedBase[1] >> 2);
++	seed[3] = (    seedBase[1] << 6) | (seedBase[2] >> 2);
++	seed[4] = (    seedBase[2] << 6) | (seedBase[3] >> 2);
++	seed[5] = (    seedBase[3] << 6);
 +
 +	PowervuDecrypt(seed, 6, key, sbox);
 +
-+	seed[0] = (seed[1]<<2) | (seed[2]>>6);
-+	seed[1] = (seed[2]<<2) | (seed[3]>>6);
-+	seed[2] = (seed[3]<<2) | (seed[4]>>6);
-+	seed[3] = (seed[4]<<2) | (seed[5]>>6);
++	seed[0] = (seed[1] << 2) | (seed[2] >> 6);
++	seed[1] = (seed[2] << 2) | (seed[3] >> 6);
++	seed[2] = (seed[3] << 2) | (seed[4] >> 6);
++	seed[3] = (seed[4] << 2) | (seed[5] >> 6);
 +}
 +
 +static void PowervuCalculateCw(uint8_t seedType, uint8_t *seed, uint8_t csaUsed,
@@ -5966,7 +5966,7 @@ Index: module-emulator-osemu.c
 +
 +	if(csaUsed)
 +	{
-+		for(k=0; k<7; k++)
++		for(k = 0; k < 7; k++)
 +		{
 +			seed[k] ^= baseCw[k];
 +		}
@@ -5982,7 +5982,7 @@ Index: module-emulator-osemu.c
 +	}
 +	else
 +	{
-+		for(k=0; k<7; k++)
++		for(k = 0; k < 7; k++)
 +		{
 +			cw[k] = seed[k] ^ baseCw[k];
 +		}
@@ -6018,27 +6018,27 @@ Index: module-emulator-osemu.c
 +	
 +	memset(update_global_keys, 0, sizeof(update_global_keys));
 +#endif
-+
++	
 +	if(ecmLen < 7)
 +	{
 +		return 1;
 +	}
-+
++	
 +	ecmCrc32 = b2i(4, ecm+ecmLen-4);
-+
++	
 +	if(fletcher_crc32(ecm, ecmLen-4) != ecmCrc32)
 +	{
 +		return 8;
 +	}
 +	ecmLen -= 4;
-+
-+	for(i=0; i<8; i++) {
++	
++	for(i = 0; i < 8; i++) {
 +		memset(convolvedCw[i], 0, 8);
 +	}
 +	
-+	for(i=3; i+3<ecmLen; ) {
-+		nanoLen = (((ecm[i] & 0x0f)<< 8) | ecm[i+1]);
-+		i +=2;
++	for(i = 3; i+3 < ecmLen; ) {
++		nanoLen = (((ecm[i] & 0x0f) << 8) | ecm[i+1]);
++		i += 2;
 +		if(nanoLen > 0)
 +		{
 +			nanoLen--;
@@ -6047,38 +6047,38 @@ Index: module-emulator-osemu.c
 +		if(i+nanoLen > ecmLen) {
 +			return 1;
 +		}
-+
++		
 +		switch (nanoCmd) {
 +		case 0x27:
 +			if(nanoLen < 15)
 +			{
 +				break;
 +			}
-+
++			
 +			nanoChecksum = 0;
-+			for(j=4; j<15; j++)
++			for(j = 4; j < 15; j++)
 +			{
 +				nanoChecksum += ecm[i+j];
 +			}
-+
++			
 +			if(nanoChecksum != 0)
 +			{
 +				break;
 +			}
-+
++			
 +			keyType = PowervuGetConvcwIndex(ecm[i+4]);
 +			memcpy(convolvedCw[keyType], &ecm[i+6], 8);
 +			break;
-+
++		
 +		default:
 +			break;
 +		}
 +		i += nanoLen;
 +	}
-+
-+	for(i=3; i+3<ecmLen; ) {
-+		nanoLen = (((ecm[i] & 0x0f)<< 8) | ecm[i+1]);
-+		i +=2;
++	
++	for(i = 3; i+3 < ecmLen; ) {
++		nanoLen = (((ecm[i] & 0x0f) << 8) | ecm[i+1]);
++		i += 2;
 +		if(nanoLen > 0)
 +		{
 +			nanoLen--;
@@ -6087,21 +6087,21 @@ Index: module-emulator-osemu.c
 +		if(i+nanoLen > ecmLen) {
 +			return 1;
 +		}
-+
++		
 +		switch (nanoCmd) {
 +		case 0x20:
 +			if(nanoLen < 54)
 +			{
 +				break;
 +			}
-+
++			
 +			csaUsed = GetBit(ecm[i+7], 7);
 +			fixedKey = !GetBit(ecm[i+6], 5);
 +			oddKey = GetBit(ecm[i+6], 4);
-+			bid = (GetBit(ecm[i+7], 1)<<1) | GetBit(ecm[i+7], 0);
++			bid = (GetBit(ecm[i+7], 1) << 1) | GetBit(ecm[i+7], 0);
 +			sbox = GetBit(ecm[i+6], 3);
 +			
-+			keyIndex = (fixedKey<<3) | (bid<<2) | oddKey;
++			keyIndex = (fixedKey << 3) | (bid << 2) | oddKey;
 +			channelId = b2i(2, ecm+i+23);
 +			ecmSrvid = (channelId >> 4) | ((channelId & 0xF) << 12);
 +			
@@ -6123,7 +6123,7 @@ Index: module-emulator-osemu.c
 +						return 2;
 +					}
 +				}
-+
++				
 +				PowervuDecrypt(ecm+i+8, 14, ecmKey, sbox);
 +				if((ecm[i+6] != ecm[i+6+7]) || (ecm[i+6+8] != ecm[i+6+15]))
 +				{
@@ -6132,7 +6132,7 @@ Index: module-emulator-osemu.c
 +				}
 +				
 +				memcpy(tmpEcmKey, ecmKey, 7);
-+
++				
 +				PowervuDecrypt(ecm+i+27, 27, ecmKey, sbox);
 +				if((ecm[i+23] != ecm[i+23+29]) || (ecm[i+23+1] != ecm[i+23+30]))
 +				{
@@ -6146,12 +6146,12 @@ Index: module-emulator-osemu.c
 +			while(!decrypt_ok);
 +			
 +			memcpy(seedBase, ecm+i+6+2, 4);
-+	
++			
 +#ifdef WITH_EMU	
 +			if(cdata == NULL)
 +			{
 +				SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
-+				for(j=0; j<EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
++				for(j = 0; j < EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
 +				{
 +					if(!stream_server_has_ecm[j] && emu_stream_cur_srvid[j] == srvid)
 +					{
@@ -6168,11 +6168,11 @@ Index: module-emulator-osemu.c
 +#endif
 +			{
 +				// Calculate all seeds
-+				for(j=0; j<8; j++)
++				for(j = 0; j < 8; j++)
 +				{
 +					memcpy(ecmKey, tmpEcmKey, 7);
 +					PowervuCalculateSeed(j, ecm+i, seedBase, ecmKey, seed[j], sbox);
-+				}				
++				}
 +			}
 +			else
 +			{
@@ -6191,9 +6191,9 @@ Index: module-emulator-osemu.c
 +			if(calculateAllCws)
 +			{
 +				// Calculate all cws
-+				for(j=0; j<8; j++)
++				for(j = 0; j < 8; j++)
 +				{
-+					PowervuCalculateCw(j,  seed[j], csaUsed, convolvedCw[j], cw[j], baseCw);
++					PowervuCalculateCw(j, seed[j], csaUsed, convolvedCw[j], cw[j], baseCw);
 +					
 +					if(csaUsed)
 +					{
@@ -6202,11 +6202,11 @@ Index: module-emulator-osemu.c
 +						}
 +					}
 +				}
-+
-+#ifdef WITH_EMU				
++				
++#ifdef WITH_EMU
 +				if(update_global_key)
 +				{
-+					for(j=0; j<EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
++					for(j = 0; j < EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
 +					{
 +						if(update_global_keys[j])
 +						{
@@ -6227,12 +6227,12 @@ Index: module-emulator-osemu.c
 +				if(cdata != NULL) 
 +				{
 +#endif
-+					for(j=0; j<8; j++)
++					for(j = 0; j < 8; j++)
 +					{
 +						if(csaUsed)
 +						{	
 +							if(cdata->pvu_csa_ks[j] == NULL)
-+								{  cdata->pvu_csa_ks[j] = get_key_struct(); }
++								{ cdata->pvu_csa_ks[j] = get_key_struct(); }
 +								
 +							if(ecm[0] == 0x80)
 +								{ set_even_control_word(cdata->pvu_csa_ks[j], cw[j]); }
@@ -6242,12 +6242,12 @@ Index: module-emulator-osemu.c
 +							cdata->pvu_csa_used = 1;
 +						}
 +						else
-+						{					
++						{
 +							if(ecm[0] == 0x80)
 +								{ des_set_key(cw[j], cdata->pvu_des_ks[j][0]); }
 +							else
 +								{ des_set_key(cw[j], cdata->pvu_des_ks[j][1]); }
-+								
++							
 +							cdata->pvu_csa_used = 0;
 +						}
 +					}
@@ -6269,8 +6269,8 @@ Index: module-emulator-osemu.c
 +						cw_ex->algo_mode = CW_ALGO_MODE_ECB;
 +					}
 +					
-+					for(j=0; j<4; j++)
-+					{	
++					for(j = 0; j < 4; j++)
++					{
 +						dwp = cw_ex->audio[j];
 +						
 +						memset(dwp, 0, 16);
@@ -6278,7 +6278,7 @@ Index: module-emulator-osemu.c
 +						if(ecm[0] == 0x80)
 +						{
 +							memcpy(dwp, cw[PVU_CW_A1+j], 8);
-+						
++							
 +							if(csaUsed)
 +							{
 +								for(k = 0; k < 8; k += 4)
@@ -6308,7 +6308,7 @@ Index: module-emulator-osemu.c
 +					if(ecm[0] == 0x80)
 +					{
 +						memcpy(dwp, cw[PVU_CW_HSD], 8);
-+					
++						
 +						if(csaUsed)
 +						{
 +							for(k = 0; k < 8; k += 4)
@@ -6343,7 +6343,7 @@ Index: module-emulator-osemu.c
 +			if(ecm[0] == 0x80)
 +			{
 +				memcpy(dw, cw[PVU_CW_VID], 8);
-+			
++				
 +				if(csaUsed)
 +				{
 +					for(k = 0; k < 8; k += 4)
@@ -6364,9 +6364,9 @@ Index: module-emulator-osemu.c
 +					}
 +				}
 +			}
-+						
++			
 +			return 0;
-+
++		
 +		default:
 +			break;
 +		}
@@ -6399,18 +6399,18 @@ Index: module-emulator-osemu.c
 +	
 +	if(idata->ee36 == NULL || idata->ee56 == NULL) return;
 +	
-+	memset(idata->ee36,0,sizeof(opkeys_t));
-+	memset(idata->ee56,0,sizeof(opkeys_t));
++	memset(idata->ee36, 0, sizeof(opkeys_t));
++	memset(idata->ee56, 0, sizeof(opkeys_t));
 +	
 +	if(idata->extee36 == NULL)
 +	{
 +		idata->extee36 = malloc(256);
-+		snprintf(idata->extee36,256,"%see36.bin",emu_keyfile_path);
++		snprintf(idata->extee36, 256, "%see36.bin", emu_keyfile_path);
 +	}
 +	else if(strchr(idata->extee36, '/') == NULL)
 +	{
 +		char *temp = malloc(256);
-+		snprintf(temp,256,"%s%s",emu_keyfile_path, idata->extee36);
++		snprintf(temp, 256, "%s%s" ,emu_keyfile_path, idata->extee36);
 +		free(idata->extee36);
 +		idata->extee36 = malloc(strlen(temp)+1);
 +		strncpy(idata->extee36, temp, strlen(temp));
@@ -6420,12 +6420,12 @@ Index: module-emulator-osemu.c
 +	if(idata->extee56 == NULL)
 +	{
 +		idata->extee56 = malloc(256);
-+		snprintf(idata->extee56,256,"%see56.bin",emu_keyfile_path);
++		snprintf(idata->extee56, 256, "%see56.bin", emu_keyfile_path);
 +	}
 +	else if(strchr(idata->extee56, '/') == NULL)
 +	{
 +		char *temp = malloc(256);
-+		snprintf(temp,256,"%s%s",emu_keyfile_path, idata->extee56);
++		snprintf(temp, 256, "%s%s", emu_keyfile_path, idata->extee56);
 +		free(idata->extee56);
 +		idata->extee56 = malloc(strlen(temp)+1);
 +		strncpy(idata->extee56, temp, strlen(temp));
@@ -6434,19 +6434,19 @@ Index: module-emulator-osemu.c
 +	
 +	if((file = fopen(idata->extee36,"rb")) != NULL)
 +	{
-+		if(fread(idata->ee36,1,sizeof(opkeys_t),file) != sizeof(opkeys_t))
++		if(fread(idata->ee36, 1, sizeof(opkeys_t), file) != sizeof(opkeys_t))
 +		{
-+			memset(idata->ee36,0,sizeof(opkeys_t));
++			memset(idata->ee36, 0, sizeof(opkeys_t));
 +		}
 +		fclose(file);
 +	}
 +	//else cs_log("Cannot open key file: %s", idata->extee36);
 +	
-+	if((file = fopen(idata->extee56,"rb")) != NULL)
++	if((file = fopen(idata->extee56, "rb")) != NULL)
 +	{
-+		if(fread(idata->ee56,1,sizeof(opkeys_t),file) != sizeof(opkeys_t))
++		if(fread(idata->ee56, 1, sizeof(opkeys_t),file) != sizeof(opkeys_t))
 +		{
-+			memset(idata->ee56,0,sizeof(opkeys_t));
++			memset(idata->ee56, 0, sizeof(opkeys_t));
 +		}
 +		fclose(file);
 +	}
@@ -6469,9 +6469,9 @@ Index: module-emulator-osemu.c
 +		}
 +		
 +		des_set_key(key, key_schedule);
-+
++		
 +		des(DW, key_schedule, 0); // even DW post-process
-+		des(DW + 8, key_schedule, 0);  // odd DW post-process
++		des(DW + 8, key_schedule, 0); // odd DW post-process
 +	};
 +};
 +
@@ -6492,7 +6492,7 @@ Index: module-emulator-osemu.c
 +	
 +	for(i = 0; i < 8; i++)
 +	{
-+		j = (inData  >> 28) & 0x0F;
++		j = (inData >> 28) & 0x0F;
 +		inData = (inData << 4) | (Sbox[i * 16 + j] & 0x0F);
 +	}
 +	
@@ -6501,7 +6501,7 @@ Index: module-emulator-osemu.c
 +	return (inData);
 +}
 +
-+static void DrecryptDecrypt(uint8_t *Data, uint8_t *Key)	// DRE GOST 28147-89 CORE
++static void DrecryptDecrypt(uint8_t *Data, uint8_t *Key) // DRE GOST 28147-89 CORE
 +{
 +	int i, j;
 +	uint32_t L_part = 0, R_part = 0, temp = 0;
@@ -6537,17 +6537,16 @@ Index: module-emulator-osemu.c
 +	
 +	for(i = 0; i < 4; i++)
 +	{
-+	
 +		for(j = 0; j < 4; j++)
 +		{
 +			tmp[j] = ccw[3 - j];
 +		}
-+     
++		
 +		for(j = 0; j < 4; j++)
 +		{
 +			ccw[j] = tmp[j];
 +		}
-+	
++		
 +		ccw += 4;
 +	}
 +}
@@ -6596,7 +6595,7 @@ Index: module-emulator-osemu.c
 +	memset(dummy[0], 0x00, 32);
 +	memset(dummy[1], 0xFF, 32);
 +
-+	if(memcmp(dummy[0], key, 32) == 0 || memcmp(dummy[1], key, 32) == 0) 
++	if(memcmp(dummy[0], key, 32) == 0 || memcmp(dummy[1], key, 32) == 0)
 +	{
 +		DrecryptSetEmuExtee(idata);
 +		cs_log("ERROR: ee%s.bin keys missing", ((provId & 0xFF) == 0x11) ? "36" : "56");
@@ -6609,7 +6608,7 @@ Index: module-emulator-osemu.c
 +	DrecryptDecrypt(ccw, key); DrecryptDecrypt(ccw+8, key);
 +		
 +	if(ecmLen >= 46 && ecm[43] == 1 && provId == 0x11)
-+	{    
++	{
 +		DrecryptSwap(ccw);
 +		overcryptId = b2i(2, &ecm[44]);
 +		if(Drecrypt2OverCW(overcryptId, ccw) == 2) DrecryptSetEmuExtee(idata);
@@ -6667,7 +6666,7 @@ Index: module-emulator-osemu.c
 +		return 1;
 +	}
 +	
-+	do 
++	do
 +	{
 +		nanoType = ecm[pos];
 +		nanoLength = ecm[pos+1];
@@ -6744,7 +6743,7 @@ Index: module-emulator-osemu.c
 +				
 +				des(dw, ks, 0);
 +				des(dw + 8, ks, 0);
-+					
++				
 +				return 0;
 +			}
 +			
@@ -6754,7 +6753,7 @@ Index: module-emulator-osemu.c
 +		}
 +		
 +		pos += 2 + nanoLength;
-+
++		
 +	} while (pos < ecmLen);
 +	
 +	return 1;
@@ -6829,40 +6828,40 @@ Index: module-emulator-osemu.c
 +	}
 +	memcpy(ecmCopy, ecm, ecmLen);
 +
-+	if((caid>>8)==0x0D) {
++	if((caid >> 8) == 0x0D) {
 +		result = CryptoworksECM(caid, ecmCopy, dw);
 +	}
-+	else if((caid>>8)==0x09) {
++	else if((caid >> 8) == 0x09) {
 +		result = SoftNDSECM(caid, ecmCopy, dw);
 +	}
-+	else if(caid==0x0500) {
++	else if(caid == 0x0500) {
 +		result = ViaccessECM(ecmCopy, dw);
 +	}
-+	else if((caid>>8)==0x18) {
++	else if((caid >> 8) == 0x18) {
 +		result = Nagra2ECM(ecmCopy, dw);
 +	}
-+	else if((caid>>8)==0x06) {
++	else if((caid >> 8) == 0x06) {
 +		result = Irdeto2ECM(caid, ecmCopy, dw);
 +	}
-+	else if((caid>>8)==0x26 || caid == 0xFFFF) {
++	else if((caid >> 8) == 0x26 || caid == 0xFFFF) {
 +		result = BissECM(caid, ecm, ecmDataLen, dw, srvid, ecmpid);
 +	}
-+	else if((caid>>8)==0x0E) {
++	else if((caid >> 8) == 0x0E) {
 +#ifdef WITH_EMU
 +		result = PowervuECM(ecmCopy, dw, srvid, NULL, cw_ex);
 +#else
 +		result = PowervuECM(ecmCopy, dw, NULL);
 +#endif
 +	}
-+	else if(caid==0x4AE1 && idata) {
++	else if(caid == 0x4AE1 && idata) {
 +		result = Drecrypt2ECM(idata, caid, provider, ecmCopy, dw);
 +	}
-+	else if((caid>>8)==0x10) {
++	else if((caid >> 8) == 0x10) {
 +		result = TandbergECM(ecmCopy, dw);
 +	}
 +
 +	// fix dcw checksum
-+	if(result == 0 && !((caid>>8)==0x0E)) {
++	if(result == 0 && !((caid >> 8) == 0x0E)) {
 +		for(i = 0; i < 16; i += 4) {
 +			dw[i + 3] = ((dw[i] + dw[i + 1] + dw[i + 2]) & 0xff);
 +		}
@@ -7387,27 +7386,27 @@ Index: module-emulator-osemu.c
 +			cs_log_dbg(D_EMM, "EMM error: AU key for UA %s is missing", keyName);
 +			return 2;
 +		}
-+
++		
 +		for(i=19; i+27<=emmLen; i+=27) {
 +			emmInfo = emm[i];
-+  	
++			
 +			if(!GetBit(emmInfo, 7))
 +			{
 +				continue;
 +			}
-+  	
++			
 +			//keyNb = emm[i] & 0x0F;
-+  	
++			
 +			memcpy(tmp, emm+i+1, 26);
 +			memcpy(tmpEmmKey, emmKey, 7);
 +			PowervuDecrypt(emm+i+1, 26, tmpEmmKey, 0);
-+  	
++			
 +			if((emm[13] != emm[i+24]) || (emm[14] != emm[i+25]) || (emm[15] != emm[i+26]))
 +			{
 +				memcpy(emm+i+1, tmp, 26);
 +				memcpy(tmpEmmKey, emmKey, 7);
 +				PowervuDecrypt(emm+i+1, 26, tmpEmmKey, 1);
-+  	
++				
 +				if((emm[13] != emm[i+24]) || (emm[14] != emm[i+25]) || (emm[15] != emm[i+26]))
 +				{
 +					memcpy(emm+i+1, tmp, 26);
@@ -7415,9 +7414,9 @@ Index: module-emulator-osemu.c
 +					continue;
 +				}
 +			}
-+  		
-+  		decryptOk = 1;
-+  	
++			
++			decryptOk = 1;
++			
 +			emmType = emm[i+2] & 0x7F;
 +			if(emmType > 1)
 +			{
@@ -7485,7 +7484,7 @@ Index: module-emulator-osemu.c
 +			
 +			if(len > 8)
 +				{ len = 8; }
-+
++			
 +			memset(tmp, 0, 4);
 +			CharToBin(tmp+(4-(len/2)), KeyDB->EmuKeys[j].keyName, len);
 +			
@@ -7807,8 +7806,8 @@ Index: module-emulator-osemu.c
 +	while(pos < length)
 +	{
 +		tagType = data[pos];
-+		tagLength = data[pos+1]; 
-+	 	
++		tagLength = data[pos+1];
++		
 +		if(pos + 2 + tagLength > length)
 +		{
 +			return 1;
@@ -7821,7 +7820,7 @@ Index: module-emulator-osemu.c
 +			case 0xE4: // EMM_TAG_SECURITY_TABLE_DESCRIPTOR (ram emm keys)
 +			{
 +				uint8_t tagMode = data[pos + 2];
-+						
++				
 +				switch(tagMode)
 +				{
 +					case 0x01: // keySet 01 (MK01)
@@ -7841,9 +7840,9 @@ Index: module-emulator-osemu.c
 +						uint8_t* tagPayload = tagData + 2;
 +						des_cbc_decrypt(tagPayload, iv, emmKey, 136);
 +					
-+						for (k = 0; k < 0x10; k++)  // loop 0x10 keys
++						for (k = 0; k < 0x10; k++) // loop 0x10 keys
 +						{
-+							for (i = 0; i < 8; i++)  // loop 8 bytes of key
++							for (i = 0; i < 8; i++) // loop 8 bytes of key
 +							{
 +								tagDataDecrypted[k][i] = tagPayload[MixTable[8*k + i]];
 +							}
@@ -7865,13 +7864,13 @@ Index: module-emulator-osemu.c
 +							cs_log("WARNING: nanoTag E4 length (%d) != %d", tagLength, 0x82);
 +							break;
 +						}
-+					
++						
 +						blockIndex = tagData[1] & 0x03;
 +						
-+  						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
-+  						{
-+  							break;
-+  						}
++						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
++						{
++							break;
++						}
 +						
 +						des_set_key(emmKey, ks);
 +						
@@ -7893,7 +7892,7 @@ Index: module-emulator-osemu.c
 +				}
 +				break;
 +			}
-+		
++			
 +			case 0xE1: // EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR (ecm keys)
 +			{
 +				uint8_t tagMode = data[pos + 2 + 4];
@@ -7909,11 +7908,11 @@ Index: module-emulator-osemu.c
 +						}
 +						
 +						entitlementId = b2i(4, tagData);
-+			
-+  						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
-+  						{
-+  							break;
-+  						}
++						
++						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
++						{
++							break;
++						}
 +						
 +						des_set_key(emmKey, ks);
 +						des(tagData + 4 + 5, ks, 0);
@@ -7922,7 +7921,7 @@ Index: module-emulator-osemu.c
 +						{
 +							break;
 +						}
-+  						
++						
 +						if(UpdateKey('T', entitlementId, "01", tagData + 4 + 5, 8, 1, NULL))
 +						{
 +							(*keysAdded)++;
@@ -7931,7 +7930,7 @@ Index: module-emulator-osemu.c
 +						}
 +					}
 +					break;
-+
++					
 +					case 0x01: // ecm keys from mode 01
 +					{
 +						if(tagLength != 0x1A)
@@ -7942,19 +7941,19 @@ Index: module-emulator-osemu.c
 +						
 +						entitlementId = b2i(4, tagData);
 +						
-+  						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK01"))
-+  						{
-+  							break;
-+  						}
-+  						
-+  						uint8_t ecmKey[8] = { 0 };
-+  						TandbergECMKeyDecrypt(emmKey, tagData, ecmKey);
-+  						
++						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK01"))
++						{
++							break;
++						}
++						
++						uint8_t ecmKey[8] = { 0 };
++						TandbergECMKeyDecrypt(emmKey, tagData, ecmKey);
++						
 +						if(ecmKey[7] != 0x00) // check if key looks valid (last byte 0x00)
 +						{
 +							break;
 +						}
-+  						
++						
 +						if(UpdateKey('T', entitlementId, "01", ecmKey, 8, 1, NULL))
 +						{
 +							(*keysAdded)++;
@@ -7970,13 +7969,13 @@ Index: module-emulator-osemu.c
 +				}
 +				break;
 +			}
-+
++			
 +			default:
 +				cs_log("WARNING: nanoTag %.2X not supported", tagType);
 +			break;
 +		}
 +		
-+		pos += 2 + tagLength;   
++		pos += 2 + tagLength;
 +	}
 +	
 +	return 0;
@@ -8181,14 +8180,14 @@ Index: module-emulator-osemu.h
 +#ifndef WITH_EMU
 +	typedef struct opkeys
 +	{
-+		uint8_t key3b[32][32]; 
-+		uint8_t key56[32][32]; 
++		uint8_t key3b[32][32];
++		uint8_t key56[32][32];
 +	} opkeys_t;
 +#endif	
 +	
 +	typedef struct {
 +		char *extee36;
-+		char  *extee56;
++		char *extee56;
 +		opkeys_t *ee36;
 +		opkeys_t *ee56;
 +		uint8_t dre36_force_group;
@@ -8225,10 +8224,10 @@ Index: module-emulator-osemu.h
 +	5
 +	6  Checksum error
 +	7  Out of memory
-+	*/	
++	*/
 +	int8_t ProcessEMM(uint16_t caid, uint32_t provider, const uint8_t *emm, ReaderInstanceData* idata, uint32_t *keysAdded);
 +	
-+	const char* GetProcessEMMErrorReason(int8_t result);			  
++	const char* GetProcessEMMErrorReason(int8_t result);
 +
 +	//hexserial must be of type "uint8_t hexserial[3]"
 +	//returns 0 on error, 1 on success
@@ -8247,10 +8246,10 @@ Index: module-emulator-osemu.h
 +
 +#define PVU_CW_VID 0	// VIDeo
 +#define PVU_CW_HSD 1	// High Speed Data
-+#define PVU_CW_A1 2		// Audio 1
-+#define PVU_CW_A2 3		// Audio 2
-+#define PVU_CW_A3 4		// Audio 3
-+#define PVU_CW_A4 5		// Audio 4
++#define PVU_CW_A1  2	// Audio 1
++#define PVU_CW_A2  3	// Audio 2
++#define PVU_CW_A3  4	// Audio 3
++#define PVU_CW_A4  5	// Audio 4
 +#define PVU_CW_UTL 6	// UTiLity
 +#define PVU_CW_VBI 7	// Vertical Blanking Interval
 +
@@ -8263,10 +8262,10 @@ Index: module-emulator-osemu.h
 +#ifdef WITH_EMU
 +	int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey, uint32_t keyLength, uint8_t writeKey, char *comment);
 +	
-+	int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
++	int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key,
 +										uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider);
 +#endif
-+  
++
 +#endif
 Index: module-emulator-stream.c
 ===================================================================
@@ -8326,9 +8325,9 @@ Index: module-emulator-stream.c
 +	(*packetSize) = 0;
 +	(*startOffset) = 0;
 +
-+	for(i=0; i<bufLength; i++) {	
++	for(i=0; i<bufLength; i++) {
 +		if(buf[i] == 0x47) {
-+			if((buf[i+188] == 0x47) & (buf[i+376] == 0x47)) {  //if three packets align, probably safe to assume correct size.
++			if((buf[i+188] == 0x47) & (buf[i+376] == 0x47)) { // if three packets align, probably safe to assume correct size.
 +				(*packetSize) = 188;
 +				(*startOffset) = i;
 +				return;
@@ -8342,8 +8341,8 @@ Index: module-emulator-stream.c
 +				(*packetSize) = 208;
 +				(*startOffset) = i;
 +				return;
-+			}					
-+		}	
++			}
++		}
 +	}
 +}
 +
@@ -8367,13 +8366,13 @@ Index: module-emulator-stream.c
 +		{ return; }
 +
 +	if(*flag == 0)
-+	{ 
++	{
 +		*data_pos = 0;
 +		 offset = 1 + buf[0];
 +	}
 +	else if(payloadStart)
-+	{ 
-+		offset = 1; 
++	{
++		offset = 1;
 +	}
 +	
 +	if(len-offset < 1)
@@ -8382,7 +8381,7 @@ Index: module-emulator-stream.c
 +	free_data_length = data_length - *data_pos;
 +	copySize = (len-offset) > free_data_length ? free_data_length : (len-offset);
 +	
-+	memcpy(data+(*data_pos), buf+offset, copySize);	
++	memcpy(data+(*data_pos), buf+offset, copySize);
 +	(*data_pos) += copySize;
 +
 +	found_start = 0;
@@ -8396,12 +8395,12 @@ Index: module-emulator-stream.c
 +					{ memmove(data, &data[i], (*data_pos)-i); }
 +				else
 +					{ memcpy(data, &data[i], (*data_pos)-i); }
-+			
++				
 +				*data_pos -= i;
 +			}
 +			found_start = 1;
 +			break;
-+		}	
++		}
 +	}
 +	if(!found_start)
 +		{ *flag = 0; return; }
@@ -8504,13 +8503,13 @@ Index: module-emulator-stream.c
 +			
 +			if(caid>>8 == 0x0E)
 +			{
-+		    	cdata->ecm_pid = b2i(2, data+i+4) &0x1FFF;
-+		    	cs_log_dbg(D_READER, "Stream %i found ecm pid: 0x%04X (%i)", cdata->connid, cdata->ecm_pid, cdata->ecm_pid);
-+		    	break;
-+		    }
++				cdata->ecm_pid = b2i(2, data+i+4) &0x1FFF;
++				cs_log_dbg(D_READER, "Stream %i found ecm pid: 0x%04X (%i)", cdata->connid, cdata->ecm_pid, cdata->ecm_pid);
++				break;
++			}
 +		}
 +	}
-+		
++	
 +	for(i=12+program_info_length; i+4<section_length; i+=5+es_info_length)
 +	{
 +		stream_type = data[i];
@@ -8520,7 +8519,7 @@ Index: module-emulator-stream.c
 +		if(stream_type == 0x01 || stream_type == 0x02 || stream_type == 0x10 || stream_type == 0x1B 
 +			|| stream_type == 0x24 || stream_type == 0x42 || stream_type == 0x80 || stream_type == 0xD1 
 +			|| stream_type == 0xEA)
-+		{ 
++		{
 +			cdata->video_pid = stream_pid;
 +			cs_log_dbg(D_READER, "Stream %i found video pid: 0x%04X (%i)",cdata->connid, stream_pid, stream_pid);
 +		}
@@ -8546,15 +8545,15 @@ Index: module-emulator-stream.c
 +	for(i = 8; i < (b2i(2, data + 1)&0xFFF) - 1; i += data[i + 1] + 2)
 +	{
 +		if(data[i] != 0x09) { continue; }
-+
++		
 +		uint16_t caid = b2i(2, data + i + 2);
 +		uint16_t emm_pid = b2i(2, data + i +4)&0x1FFF;
-+
++		
 +		if(caid>>8 == 0x0E)
 +		{
-+		   cdata->emm_pid = emm_pid;
-+		   cs_log_dbg(D_READER, "Stream %i found audio pid: 0x%04X (%i)", cdata->connid, emm_pid, emm_pid);
-+		   break;
++			cdata->emm_pid = emm_pid;
++			cs_log_dbg(D_READER, "Stream %i found audio pid: 0x%04X (%i)", cdata->connid, emm_pid, emm_pid);
++			break;
 +		}
 +	}
 +}
@@ -8563,10 +8562,10 @@ Index: module-emulator-stream.c
 +{
 +	uint8_t* data = cdata->emm_data;
 +	uint32_t keysAdded = 0;
-+		
++	
 +	ProcessEMM(0x0E00, 0, data, NULL, &keysAdded);
 +	
-+	if(keysAdded) 
++	if(keysAdded)
 +	{
 +		cs_log("Stream %i found %i keys", cdata->connid, keysAdded);
 +	}
@@ -8602,25 +8601,25 @@ Index: module-emulator-stream.c
 +	int8_t oddKeyUsed;
 +	uint32_t *deskey;
 +	uint8_t *pdata;
-+	uint8_t *packetClusterA[EMU_STREAM_MAX_AUDIO_SUB_TRACKS][64];  //separate cluster arrays for video and each audio track
++	uint8_t *packetClusterA[EMU_STREAM_MAX_AUDIO_SUB_TRACKS][64]; // separate cluster arrays for video and each audio track
 +	uint8_t *packetClusterV[256];
 +	void *csakeyA[EMU_STREAM_MAX_AUDIO_SUB_TRACKS] = {0};
 +	void *csakeyV = 0;
 +	emu_stream_client_key_data *keydata;
 +	uint32_t scrambled_packets = 0;
-+	uint32_t scrambled_packetsA[EMU_STREAM_MAX_AUDIO_SUB_TRACKS]  = {0};
++	uint32_t scrambled_packetsA[EMU_STREAM_MAX_AUDIO_SUB_TRACKS] = {0};
 +	packetClusterV[0] = NULL;
-+	uint32_t cs =0;  //video cluster start
-+	uint32_t ce =1;  //video cluster end
-+	uint32_t csa[EMU_STREAM_MAX_AUDIO_SUB_TRACKS] = {0};  //cluster index for audio tracks
++	uint32_t cs =0; // video cluster start
++	uint32_t ce =1; // video cluster end
++	uint32_t csa[EMU_STREAM_MAX_AUDIO_SUB_TRACKS] = {0}; // cluster index for audio tracks
 +	
 +	for(i=0; i<bufLength; i+=packetSize)
-+	{		
++	{
 +		tsHeader = b2i(4, stream_buf+i);
 +		pid = (tsHeader & 0x1fff00) >> 8;
 +		scramblingControl = tsHeader & 0xc0;
 +		payloadStart = (tsHeader & 0x400000) >> 22;
-+
++		
 +		if(tsHeader & 0x20)
 +			{ offset = 4 + stream_buf[i+4] + 1; }
 +		else
@@ -8628,13 +8627,13 @@ Index: module-emulator-stream.c
 +		
 +		if(packetSize-offset < 1)
 +			{ continue; }
-+	
++		
 +		if(pid == 1)
 +		{
 +			// set to null pid
-+			stream_buf[i+1] |= 0x1f; 
++			stream_buf[i+1] |= 0x1f;
 +			stream_buf[i+2]  = 0xff;
-+				
++			
 +			if(emu_stream_emm_enabled && !data->emm_pid)
 +			{
 +				ParseTSData(0x01, 0xFF, 8, &data->have_cat_data, data->cat_data, sizeof(data->cat_data), &data->cat_data_pos, payloadStart, 
@@ -8646,14 +8645,14 @@ Index: module-emulator-stream.c
 +		if(emu_stream_emm_enabled && data->emm_pid && pid == data->emm_pid)
 +		{	
 +			// set to null pid
-+			stream_buf[i+1] |= 0x1f; 
++			stream_buf[i+1] |= 0x1f;
 +			stream_buf[i+2]  = 0xff;
-+					
++			
 +			ParseTSData(0x80, 0xF0, 3, &data->have_emm_data, data->emm_data, sizeof(data->emm_data), &data->emm_data_pos, payloadStart, 
 +										stream_buf+i+offset, packetSize-offset, ParseEMMData, data);
 +			continue;
 +		}
-+
++		
 +		if(pid == 0 && !data->pmt_pid)
 +		{
 +			ParseTSData(0x00, 0xFF, 16, &data->have_pat_data, data->pat_data, sizeof(data->pat_data), &data->pat_data_pos, payloadStart, 
@@ -8667,7 +8666,7 @@ Index: module-emulator-stream.c
 +										stream_buf+i+offset, packetSize-offset, ParsePMTData, data);	
 +			continue;
 +		}
-+
++		
 +		if(data->ecm_pid && pid == data->ecm_pid)
 +		{
 +#ifdef WITH_EMU
@@ -8682,7 +8681,7 @@ Index: module-emulator-stream.c
 +										stream_buf+i+offset, packetSize-offset, ParseECMData, data);
 +			continue;
 +		}
-+	
++		
 +		if(scramblingControl == 0)
 +			{ continue; }
 +		
@@ -8691,10 +8690,10 @@ Index: module-emulator-stream.c
 +			stream_buf[i+3] &= 0x3F;
 +			continue;
 +		}
-+
++		
 +		oddKeyUsed = scramblingControl == 0xC0 ? 1 : 0;
-+
-+#ifdef WITH_EMU	
++		
++#ifdef WITH_EMU
 +		if(!stream_server_has_ecm[data->connid])
 +		{
 +			keydata = &emu_fixed_key_data[data->connid];
@@ -8711,25 +8710,25 @@ Index: module-emulator-stream.c
 +		
 +		if(keydata->pvu_csa_used)
 +		{
-+			oddeven = scramblingControl;  // for detecting odd/even switch
++			oddeven = scramblingControl; // for detecting odd/even switch
 +			
-+			if(pid == data->video_pid)   // start with video pid, since it is most dominant
++			if(pid == data->video_pid) // start with video pid, since it is most dominant
 +			{
 +				csakeyV = keydata->pvu_csa_ks[PVU_CW_VID];
-+						
-+				if(csakeyV !=NULL) 
++				
++				if(csakeyV !=NULL)
 +				{
 +					cs=0;
 +					ce=1;
-+					packetClusterV[cs] = stream_buf+i;  // set first cluster start
-+					packetClusterV[ce] = stream_buf+i+packetSize -1;
++					packetClusterV[cs] = stream_buf+i; // set first cluster start
++					packetClusterV[ce] = stream_buf+i+packetSize-1;
 +					scrambled_packets=1;
-+
-+					for(j=i+packetSize; j<bufLength; j+=packetSize)   // Now iterate through the rest of the packets and create clusters for batch decryption
++					
++					for(j = i+packetSize; j < bufLength; j += packetSize) // Now iterate through the rest of the packets and create clusters for batch decryption
 +					{
 +						tsHeader = b2i(4, stream_buf+j);
 +						pid = (tsHeader & 0x1fff00) >> 8;
-+						if(pid == data->video_pid) 
++						if(pid == data->video_pid)
 +						{
 +							if(oddeven != (tsHeader & 0xc0)) // changed key so stop adding clusters
 +							{
@@ -8738,60 +8737,60 @@ Index: module-emulator-stream.c
 +							if(cs > ce) // First video packet for each cluster
 +							{
 +								packetClusterV[cs] = stream_buf+j;
-+								ce = cs +1;
++								ce = cs+1;
 +							}
-+
++							
 +							scrambled_packets++;
 +						}
 +						else
 +						{
-+							if(cs < ce) // First non-video packet - need to set end of video cluster  
++							if(cs < ce) // First non-video packet - need to set end of video cluster
 +							{
-+								packetClusterV[ce] = stream_buf+j -1;
-+								cs = ce +1;
++								packetClusterV[ce] = stream_buf+j-1;
++								cs = ce+1;
 +							}
 +							
-+							if((tsHeader & 0xc0) ==0) {
++							if((tsHeader & 0xc0) == 0) {
 +								continue;
 +							}
-+
++							
 +							if(oddeven != (tsHeader & 0xc0)) // changed key so stop adding clusters
 +							{
-+								j=bufLength; // to break out of outer loop also
++								j = bufLength; // to break out of outer loop also
 +								break;
 +							}
-+
-+							for(k=0; k<data->audio_pid_count; k++)  // Check for audio tracks and create single packet clusters
++							
++							for(k = 0; k < data->audio_pid_count; k++) // Check for audio tracks and create single packet clusters
 +							{
 +								if(pid == data->audio_pids[k])
 +								{
 +									packetClusterA[k][csa[k]] = stream_buf+j;
 +									csa[k]++;
-+									packetClusterA[k][csa[k]] = stream_buf+j+packetSize -1;
++									packetClusterA[k][csa[k]] = stream_buf+j+packetSize-1;
 +									csa[k]++;
 +									scrambled_packetsA[k]++;
 +								}
 +							}
 +						}
 +					}
-+
-+					if( cs > ce )  // last packet was not a video packet, so set null for end of all clusters
++					
++					if( cs > ce ) // last packet was not a video packet, so set null for end of all clusters
 +						{ packetClusterV[cs] = NULL; }
 +					else 
 +					{
-+						if(scrambled_packets>1)  // last packet was a video packet, so set end of cluster to end of last packet
++						if(scrambled_packets > 1) // last packet was a video packet, so set end of cluster to end of last packet
 +						{
-+							packetClusterV[ce] = stream_buf+j -1;
++							packetClusterV[ce] = stream_buf+j-1;
 +						}
-+						packetClusterV[ce+1] = NULL;  // add null to end of cluster list
++						packetClusterV[ce+1] = NULL; // add null to end of cluster list
 +					}
-+
++					
 +					while( j >= cluster_size )
 +						{ j = decrypt_packets(csakeyV, packetClusterV); }
-+
-+					for(k=0; k<data->audio_pid_count; k++)
++					
++					for(k = 0; k < data->audio_pid_count; k++)
 +					{
-+						if(scrambled_packetsA[k])  // if audio track has scrambled packets, set null to mark end and decrypt
++						if(scrambled_packetsA[k]) // if audio track has scrambled packets, set null to mark end and decrypt
 +						{
 +							csakeyA[k] = keydata->pvu_csa_ks[PVU_CW_A1+k];
 +							packetClusterA[k][csa[k]] = NULL;
@@ -8804,18 +8803,18 @@ Index: module-emulator-stream.c
 +			}
 +			else
 +			{
-+				for(j=0; j<data->audio_pid_count; j++)
++				for(j = 0; j < data->audio_pid_count; j++)
 +					if(pid == data->audio_pids[j])
 +						{ csakeyA[0] = keydata->pvu_csa_ks[PVU_CW_A1+j]; }
-+			
++				
 +				if(csakeyA[0] != NULL)
-+				{					
++				{
 +					packetClusterA[0][0] = stream_buf+i;
 +					packetClusterA[0][1] = stream_buf+i+packetSize -1;
 +					packetClusterA[0][2] = NULL;
 +					decrypt_packets(csakeyA[0], packetClusterA[0]);
-+				}			
-+			}			
++				}
++			}
 +		}
 +		else
 +		{
@@ -8825,7 +8824,7 @@ Index: module-emulator-stream.c
 +				{ deskey = keydata->pvu_des_ks[PVU_CW_VID][oddKeyUsed]; }
 +			else
 +			{
-+				for(j=0; j<data->audio_pid_count; j++)
++				for(j = 0; j < data->audio_pid_count; j++)
 +					if(pid == data->audio_pids[j])
 +						{ deskey = keydata->pvu_des_ks[PVU_CW_A1+j][oddKeyUsed]; }
 +			}
@@ -8835,19 +8834,19 @@ Index: module-emulator-stream.c
 +				deskey = keydata->pvu_des_ks[PVU_CW_HSD][oddKeyUsed];
 +			}
 +			
-+			for(j=offset; j+7<188; j+=8)
++			for(j = offset; j+7 < 188; j += 8)
 +			{
 +				pdata = stream_buf+i+j;
 +				des(pdata, deskey, 0);
 +			}
-+				
++			
 +			stream_buf[i+3] &= 0x3F;
 +		}
-+
-+#ifdef WITH_EMU	
++		
++#ifdef WITH_EMU
 +		if(!stream_server_has_ecm[data->connid])
 +		{
-+			SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[data->connid]); 
++			SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[data->connid]);
 +		}
 +#endif
 +	}
@@ -8862,13 +8861,13 @@ Index: module-emulator-stream.c
 +	if(streamfd == -1)
 +		{ return -1; }
 +
-+	struct timeval tv; 
-+	tv.tv_sec = 2; 
-+	tv.tv_usec = 0; 
-+	if (setsockopt(streamfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv)) 
-+	{ 
-+		cs_log("ERROR: setsockopt() failed for SO_RCVTIMEO"); 
-+		return -1; 
++	struct timeval tv;
++	tv.tv_sec = 2;
++	tv.tv_usec = 0;
++	if(setsockopt(streamfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv))
++	{
++		cs_log("ERROR: setsockopt() failed for SO_RCVTIMEO");
++		return -1;
 +	}
 +
 +	bzero(&cservaddr, sizeof(cservaddr));
@@ -8886,9 +8885,9 @@ Index: module-emulator-stream.c
 +				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n"
 +				"Accept-Language: en-US\n"
 +				"Authorization: Basic %s\n"
-+				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port, emu_stream_source_auth);		
++				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port, emu_stream_source_auth);
 +	}
-+	else			
++	else
 +	{
 +		snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
 +				"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0\n"
@@ -8899,8 +8898,8 @@ Index: module-emulator-stream.c
 +
 +	if(send(streamfd, http_buf, strlen(http_buf), 0) == -1)
 +		{ return -1; }
-+		
-+	return streamfd;	
++	
++	return streamfd;
 +}
 +
 +static void stream_client_disconnect(emu_stream_client_conn_data *conndata)
@@ -8937,7 +8936,7 @@ Index: module-emulator-stream.c
 +{
 +#define EMU_DVB_MAX_TS_PACKETS 278
 +#define EMU_DVB_BUFFER_SIZE_CSA 188*EMU_DVB_MAX_TS_PACKETS
-+#define EMU_DVB_BUFFER_WAIT_CSA 188*(EMU_DVB_MAX_TS_PACKETS-128) 
++#define EMU_DVB_BUFFER_WAIT_CSA 188*(EMU_DVB_MAX_TS_PACKETS-128)
 +#define EMU_DVB_BUFFER_SIZE_DES 188*32
 +#define EMU_DVB_BUFFER_WAIT_DES 188*29
 +#define EMU_DVB_BUFFER_SIZE EMU_DVB_BUFFER_SIZE_CSA
@@ -8957,7 +8956,7 @@ Index: module-emulator-stream.c
 +	int32_t i, srvidtmp;
 +	char *saveptr, *token;
 +	char http_version[4];
-+	int32_t http_status_code = 0;	
++	int32_t http_status_code = 0;
 +
 +	cs_log("Stream client %i connected", conndata->connid);
 +	
@@ -8989,7 +8988,7 @@ Index: module-emulator-stream.c
 +		NULLFREE(stream_buf);
 +		NULLFREE(data);
 +		stream_client_disconnect(conndata);
-+		return NULL;		
++		return NULL;
 +	}
 +	
 +	http_buf[1023] = '\0';
@@ -9016,7 +9015,7 @@ Index: module-emulator-stream.c
 +	{
 +		if(sscanf(token, "%x", &srvidtmp) < 1)
 +		{
-+			token = NULL;	
++			token = NULL;
 +		}
 +		else
 +		{
@@ -9047,21 +9046,21 @@ Index: module-emulator-stream.c
 +
 +	data->connid = conndata->connid;
 +
-+	while(!exit_oscam && clientStatus != -1 && streamConnectErrorCount < 3  && streamDataErrorCount < 15)
-+	{		
++	while(!exit_oscam && clientStatus != -1 && streamConnectErrorCount < 3 && streamDataErrorCount < 15)
++	{
 +		streamfd = connect_to_stream(http_buf, 1024, stream_path);
 +		if(streamfd == -1)
 +		{
 +			cs_log("WARNING: stream client %i cannot connect to stream source", conndata->connid);
 +			streamConnectErrorCount++;
 +			cs_sleepms(500);
-+			continue;	
++			continue;
 +		}
-+
++		
 +		streamStatus = 0;
 +		bytesRead = 0;
 +		
-+		while(!exit_oscam && clientStatus != -1 && streamStatus != -1 && streamConnectErrorCount < 3  && streamDataErrorCount < 15)
++		while(!exit_oscam && clientStatus != -1 && streamStatus != -1 && streamConnectErrorCount < 3 && streamDataErrorCount < 15)
 +		{
 +			if(data->key.pvu_csa_used)
 +			{
@@ -9071,7 +9070,7 @@ Index: module-emulator-stream.c
 +			else
 +			{
 +				cur_dvb_buffer_size = EMU_DVB_BUFFER_SIZE_DES;
-+				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_DES;				
++				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_DES;
 +			}
 +			
 +			streamStatus = recv(streamfd, stream_buf+bytesRead, cur_dvb_buffer_size-bytesRead, MSG_WAITALL);
@@ -9105,7 +9104,7 @@ Index: module-emulator-stream.c
 +					http_status_code != 200)
 +				{
 +					cs_log("ERROR: stream client %i got %d response from stream source", conndata->connid, http_status_code);
-+					streamConnectErrorCount++;  
++					streamConnectErrorCount++;
 +					cs_sleepms(100);
 +					break;
 +				}
@@ -9127,7 +9126,7 @@ Index: module-emulator-stream.c
 +			if(bytesRead >= cur_dvb_buffer_wait)
 +			{	
 +				startOffset = 0;
-+				if(stream_buf[0] != 0x47 || packetSize == 0)  // only search if not starting on ts packet or unknown packet size 
++				if(stream_buf[0] != 0x47 || packetSize == 0) // only search if not starting on ts packet or unknown packet size
 +				{
 +					SearchTsPackets(stream_buf, bytesRead, &packetSize, &startOffset);
 +				}
@@ -9164,7 +9163,7 @@ Index: module-emulator-stream.c
 +	for(i=0; i<8; i++)
 +	{
 +		if(data->key.pvu_csa_ks[i])
-+			{ free_key_struct(data->key.pvu_csa_ks[i]); }	
++			{ free_key_struct(data->key.pvu_csa_ks[i]); }
 +	}
 +	NULLFREE(data);
 +
@@ -9230,12 +9229,12 @@ Index: module-emulator-stream.c
 +		close(glistenfd);
 +		return NULL;
 +	}
-+
++	
 +	while(!exit_oscam)
-+  	{
++	{
 +		clilen = sizeof(cliaddr);
 +		connfd = accept(glistenfd,(struct sockaddr *)&cliaddr, &clilen);
-+
++		
 +		if(connfd == -1)
 +		{
 +			cs_log("ERROR: accept() failed");
@@ -9270,12 +9269,12 @@ Index: module-emulator-stream.c
 +		if(connaccepted)
 +		{
 +			int on = 1;
-+			if (setsockopt(connfd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on))<0) 
-+			{ 
-+				cs_log("ERROR: stream client %i setsockopt() failed for TCP_NODELAY", conndata->connid); 
++			if(setsockopt(connfd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
++			{
++				cs_log("ERROR: stream client %i setsockopt() failed for TCP_NODELAY", conndata->connid);
 +			}
-+
-+			start_thread("emu stream client", stream_client_handler, (void*)conndata, NULL, 1, 0);		
++			
++			start_thread("emu stream client", stream_client_handler, (void*)conndata, NULL, 1, 0);
 +		}
 +		else
 +		{
@@ -9285,7 +9284,7 @@ Index: module-emulator-stream.c
 +		}
 +		
 +		cs_sleepms(20);
-+	} 
++	}
 +	
 +	close(glistenfd);
 +	
@@ -9309,22 +9308,22 @@ Index: module-emulator-stream.c
 +		{
 +			it = ll_iter_create(ll_emu_stream_delayed_keys[i]);
 +			while((item = ll_iter_next(&it)))
-+			{   		
-+	    		if(comp_timeb(&t_now, &item->write_time) < 0)
++			{
++				if(comp_timeb(&t_now, &item->write_time) < 0)
 +				{
-+	    			break;
-+	    		}
-+
++					break;
++				}
++				
 +				SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[i]);
-+	    		
-+	    		cdata = &emu_fixed_key_data[i];
-+	    		
++				
++				cdata = &emu_fixed_key_data[i];
++				
 +				for(j=0; j<8; j++)
 +				{
 +					if(item->csa_used)
 +					{	
 +						if(cdata->pvu_csa_ks[j] == NULL)
-+							{  cdata->pvu_csa_ks[j] = get_key_struct(); }
++							{ cdata->pvu_csa_ks[j] = get_key_struct(); }
 +							
 +						if(item->is_even)
 +							{ set_even_control_word(cdata->pvu_csa_ks[j], item->cw[j]); }
@@ -9334,7 +9333,7 @@ Index: module-emulator-stream.c
 +						cdata->pvu_csa_used = 1;
 +					}
 +					else
-+					{					
++					{
 +						if(item->is_even)
 +							{ des_set_key(item->cw[j], cdata->pvu_des_ks[j][0]); }
 +						else
@@ -9343,7 +9342,7 @@ Index: module-emulator-stream.c
 +						cdata->pvu_csa_used = 0;
 +					}
 +				}
-+								
++				
 +				SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[i]);
 +				
 +				ll_iter_remove_data(&it);
@@ -9376,7 +9375,7 @@ Index: module-emulator-stream.c
 +	SAFE_MUTEX_UNLOCK(&emu_stream_server_mutex);
 +	
 +	shutdown(glistenfd, 2);
-+	close(glistenfd);	
++	close(glistenfd);
 +}
 Index: module-emulator-stream.h
 ===================================================================
@@ -9474,8 +9473,8 @@ Index: module-emulator.c
 +#include "module-emulator-stream.h"
 +
 +// oscam virtual emu card reader
-+#define CS_OK      1
-+#define CS_ERROR   0
++#define CS_OK     1
++#define CS_ERROR  0
 +
 +static int32_t emu_do_ecm(struct s_reader *rdr, const struct ecm_request_t *er, struct s_ecm_answer *ea)
 +{
@@ -9662,23 +9661,23 @@ Index: module-emulator.c
 +	{
 +		switch(ep->emm[0])
 +		{
-+		case 0x86:
-+			ep->type = SHARED;
-+			memset(ep->hexserial, 0, 8);
-+			ep->hexserial[0] = ep->emm[3];
-+			return 1;
-+
++			case 0x86:
++				ep->type = SHARED;
++				memset(ep->hexserial, 0, 8);
++				ep->hexserial[0] = ep->emm[3];
++				return 1;
++			
 +			//case 0x87:
-+			//	ep->type = UNIQUE;
-+			//	return 1; //FIXME: no filling of ep->hexserial
++				//	ep->type = UNIQUE;
++				//	return 1; //FIXME: no filling of ep->hexserial
 +			
 +			case 0x88:
 +				ep->type = UNIQUE;
 +				return 1; //FIXME: no filling of ep->hexserial
-+    	
-+		default:
-+			ep->type = UNKNOWN;
-+			return 1;
++			
++			default:
++				ep->type = UNKNOWN;
++				return 1;
 +		}
 +	}
 +}
@@ -9694,7 +9693,7 @@ Index: module-emulator.c
 +		ep->type = UNKNOWN;
 +		rdr_log_dbg(rdr, D_EMM, "UNKNOWN");
 +	}
-+	return 1;	
++	return 1;
 +}
 +
 +static int32_t emu_get_emm_type(struct emm_packet_t *ep, struct s_reader *rdr)
@@ -9703,19 +9702,19 @@ Index: module-emulator.c
 +	{
 +		case 0x05:
 +			return emu_get_via3_emm_type(ep, rdr);
-+
++		
 +		case 0x06:
 +			return emu_get_ird2_emm_type(ep, rdr);
-+			
++		
 +		case 0x0E:
 +			return emu_get_pvu_emm_type(ep, rdr);
-+	
++		
 +		case 0x4A:
 +			return emu_get_dre2_emm_type(ep, rdr);
-+	
++		
 +		case 0x10:
 +			return emu_get_tan_emm_type(ep, rdr);
-+				
++		
 +		default:
 +			break;
 +	}
@@ -9731,22 +9730,22 @@ Index: module-emulator.c
 +		
 +		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +			{ return CS_ERROR; }
-+
++		
 +		struct s_csystem_emm_filter *filters = *emm_filters;
 +		*filter_count = 0;
-+
++		
 +		int32_t idx = 0;
-+
++		
 +		filters[idx].type = EMM_GLOBAL;
 +		filters[idx].enabled   = 1;
 +		filters[idx].filter[0] = 0x8A;
 +		filters[idx].mask[0]   = 0xFE;
-+		filters[idx].filter[3] = 0x80; 
++		filters[idx].filter[3] = 0x80;
 +		filters[idx].mask[3]   = 0x80;
 +		idx++;
-+
++		
 +		*filter_count = idx;
-+	}	
++	}
 +	
 +	return CS_OK;
 +}
@@ -9763,7 +9762,7 @@ Index: module-emulator.c
 +
 +	emu_provids = get_emu_prids_for_caid(rdr, caid);
 +	if(emu_provids != NULL && emu_provids->nprids > 0)
-+		{ have_provid = 1;}		
++		{ have_provid = 1; }
 +
 +	if(*emm_filters == NULL)
 +	{
@@ -9802,7 +9801,7 @@ Index: module-emulator.c
 +			memcpy(&filters[idx].filter[2], &prid[1], 3);
 +			memset(&filters[idx].mask[2], 0xFF, 3);
 +			idx++;
-+        	
++			
 +			filters[idx].type = EMM_SHARED;
 +			filters[idx].enabled   = 1;
 +			filters[idx].filter[0] = 0x82;
@@ -9813,10 +9812,10 @@ Index: module-emulator.c
 +			memset(&filters[idx].mask[2], 0xFF, 2);
 +			idx++;
 +		}
-+
++		
 +		*filter_count = idx;
 +	}
-+
++	
 +	return CS_OK;
 +}
 +
@@ -9833,29 +9832,29 @@ Index: module-emulator.c
 +		const unsigned int max_filter_count = count;
 +		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +			{ return CS_ERROR; }
-+
++		
 +		struct s_csystem_emm_filter *filters = *emm_filters;
 +		*filter_count = 0;
-+
++		
 +		int32_t idx = 0;
-+
++		
 +		for(i=0; i<count; i++)
 +		{
 +			filters[idx].type = EMM_UNIQUE;
-+			filters[idx].enabled   = 1;
-+			filters[idx].filter[0] = 0x82;
++			filters[idx].enabled    = 1;
++			filters[idx].filter[0]  = 0x82;
 +			filters[idx].filter[10] = hexserials[i][0];
 +			filters[idx].filter[11] = hexserials[i][1];
 +			filters[idx].filter[12] = hexserials[i][2];
 +			filters[idx].filter[13] = hexserials[i][3];
-+			filters[idx].mask[0]   = 0xFF;
-+			filters[idx].mask[10]  = 0xFF;
-+			filters[idx].mask[11]  = 0xFF;
-+			filters[idx].mask[12]  = 0xFF;
-+			filters[idx].mask[13]  = 0xFF;
++			filters[idx].mask[0]    = 0xFF;
++			filters[idx].mask[10]   = 0xFF;
++			filters[idx].mask[11]   = 0xFF;
++			filters[idx].mask[12]   = 0xFF;
++			filters[idx].mask[13]   = 0xFF;
 +			idx++;
 +		}
-+
++		
 +		*filter_count = idx;
 +	}
 +
@@ -9875,12 +9874,12 @@ Index: module-emulator.c
 +		const unsigned int max_filter_count = 1 + count + 1;
 +		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +			{ return CS_ERROR; }
-+
++		
 +		struct s_csystem_emm_filter *filters = *emm_filters;
 +		*filter_count = 0;
-+
++		
 +		int32_t idx = 0;
-+
++		
 +		if(provid == 0xFE)
 +		{
 +			filters[idx].type = EMM_GLOBAL;
@@ -9915,7 +9914,7 @@ Index: module-emulator.c
 +		
 +		*filter_count = idx;
 +	}
-+
++	
 +	return CS_OK;
 +}
 +
@@ -9931,24 +9930,24 @@ Index: module-emulator.c
 +		
 +		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +			{ return CS_ERROR; }
-+
++		
 +		struct s_csystem_emm_filter *filters = *emm_filters;
 +		*filter_count = 0;
-+
++		
 +		int32_t idx = 0;
-+
++		
 +		filters[idx].type = EMM_GLOBAL;
 +		filters[idx].enabled   = 1;
 +		filters[idx].filter[0] = 0x82;
 +		filters[idx].mask[0]   = 0xFF;
 +		idx++;
-+
++		
 +		filters[idx].type = EMM_GLOBAL;
 +		filters[idx].enabled   = 1;
 +		filters[idx].filter[0] = 0x83;
 +		filters[idx].mask[0]   = 0xFF;
 +		idx++;
-+
++		
 +		*filter_count = idx;
 +	}	
 +	
@@ -9961,16 +9960,16 @@ Index: module-emulator.c
 +	{
 +		case 0x05:
 +			return emu_get_via3_emm_filter(rdr, emm_filters, filter_count, caid, provid);
-+
++		
 +		case 0x06:
 +			return emu_get_ird2_emm_filter(rdr, emm_filters, filter_count, caid, provid);
-+			
++		
 +		case 0x0E:
 +			return emu_get_pvu_emm_filter(rdr, emm_filters, filter_count, caid, provid, srvid);
-+			
++		
 +		case 0x4A:
 +			return emu_get_dre2_emm_filter(rdr, emm_filters, filter_count, caid, provid);
-+	
++		
 +		case 0x10:
 +			return emu_get_tan_emm_filter(rdr, emm_filters, filter_count, caid, provid);
 +		
@@ -9990,7 +9989,7 @@ Index: module-emulator.c
 +	.card_info = emu_card_info,
 +	.card_init = emu_card_init,
 +	.get_emm_type = emu_get_emm_type,
-+	.get_emm_filter = emu_get_emm_filter, //needed to pass checks
++	.get_emm_filter = emu_get_emm_filter, // needed to pass checks
 +	.get_emm_filter_adv = emu_get_emm_filter_adv,
 +};
 +
@@ -10005,7 +10004,7 @@ Index: module-emulator.c
 +	S_ENTITLEMENT *item;
 +	if(cs_malloc(&item, sizeof(S_ENTITLEMENT)))
 +	{
-+
++	
 +		// fill item
 +		item->caid = caid;
 +		item->provid = provid;
@@ -10019,8 +10018,8 @@ Index: module-emulator.c
 +		item->key = key;
 +		item->keyLength = keyLength;
 +		item->isData = isData;
-+
-+		//add item
++		
++		// add item
 +		ll_append(rdr->ll_entitlements, item);
 +	}
 +}
@@ -10211,15 +10210,15 @@ Index: module-emulator.c
 +static int32_t EMU_GetStatus(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; return CR_OK; }
 +static int32_t EMU_Activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { return CR_OK; }
 +static int32_t EMU_Transmit(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
-+							uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
++									uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
 +static int32_t EMU_Receive(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
-+						   uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
++									uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
 +static int32_t EMU_Close(struct s_reader *UNUSED(reader)) { return CR_OK; }
 +static int32_t EMU_write_settings(struct s_reader *UNUSED(reader), struct s_cardreader_settings *UNUSED(s)) { return CR_OK; }
 +static int32_t EMU_card_write(struct s_reader *UNUSED(pcsc_reader),const uchar *UNUSED(buf) ,uint8_t *UNUSED(cta_res),
-+							  uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
++									uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
 +static int32_t EMU_set_protocol(struct s_reader *UNUSED(rdr),uint8_t *UNUSED(params),uint32_t *UNUSED(length),
-+								uint32_t UNUSED(len_request)) { return CR_OK; }
++									uint32_t UNUSED(len_request)) { return CR_OK; }
 +
 +const struct s_cardreader cardreader_emu =
 +{
@@ -10253,18 +10252,18 @@ Index: module-emulator.c
 +			break;
 +		}
 +	}
-+
++	
 +	rdr = NULL;
-+
++	
 +	if(!haveEmuReader) {
 +		if(!cs_malloc(&rdr, sizeof(struct s_reader))) { return; }
 +		reader_set_defaults(rdr);
-+
++		
 +		rdr->enable = 1;
 +		rdr->typ = R_EMU;
 +		strncpy(rdr->label, emuName, strlen(emuName));
 +		strncpy(rdr->device, emuName, strlen(emuName));
-+
++		
 +		ctab = strdup("090F,0500,1801,0604,2600,FFFF,0E00,4AE1,1010");
 +		chk_caidtab(ctab, &rdr->ctab);
 +		NULLFREE(ctab);
@@ -10283,20 +10282,20 @@ Index: module-emulator.c
 +		
 +		chk_ftab(ftab, &rdr->ftab);
 +		NULLFREE(ftab);
-+
++		
 +		emu_auproviders = strdup("0604:010200;0E00:000000;4AE1:000011,000014,0000FE;1010:000000;");
 +		chk_ftab(emu_auproviders, &rdr->emu_auproviders);
 +		NULLFREE(emu_auproviders);
-+
++		
 +		rdr->cachemm = 2;
 +		rdr->rewritemm = 1;
 +		rdr->logemm = 2;
 +		rdr->deviceemm = 1;
-+
++		
 +		rdr->grp = 0x1ULL;
-+
++		
 +		rdr->crdr = &cardreader_emu;
-+
++		
 +		reader_fixups_fn(rdr);
 +		ll_append(configured_readers, rdr);
 +	}
@@ -10574,13 +10573,13 @@ Index: module-webif.c
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
-+#ifdef WITH_EMU					
++#ifdef WITH_EMU
 +					char keyBuffer[1024];
 +#endif
  					int jsondelimiter = 0;
  					while((item = ll_iter_next(&itr)))
  					{
-+#ifdef WITH_EMU						
++#ifdef WITH_EMU
 +						if(item->isKey) {
 +							tpl_addVar(vars, TPLADD, "ENTSTARTDATE", "");
 +							tpl_addVar(vars, TPLADD, "ENTENDDATE", "");
@@ -10598,11 +10597,11 @@ Index: module-webif.c
 +							if(item->isData) { tpl_addVar(vars, TPLADD, "ENTTYPE", "data"); }
 +							else { tpl_addVar(vars, TPLADD, "ENTTYPE", "key"); }
 +							tpl_addVar(vars, TPLADD, "ENTRESNAME", "");
-+
++							
 +							if((strcmp(getParam(params, "hideexpired"), "1") != 0) || (item->end > now))
-+								{ tpl_addVar(vars, TPLAPPEND, "READERENTENTRY", tpl_getTpl(vars, "ENTITLEMENTITEMBIT")); }							
-+						
-+							continue;	
++								{ tpl_addVar(vars, TPLAPPEND, "READERENTENTRY", tpl_getTpl(vars, "ENTITLEMENTITEMBIT")); }
++							
++							continue;
 +						}
 +#endif
 +
@@ -10624,7 +10623,7 @@ Index: module-webif.c
  		{ "gsms.nack",       MNU_GBX_FSMSNACK,  FTYPE_GBOX },     // id 26
  #endif
 +#ifdef WITH_EMU
-+		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },	// id 27
++		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },  // id 27
 +#endif
  		{ NULL, 0, 0 },
  	};
@@ -10706,7 +10705,7 @@ Index: oscam-config-global.c
 +static const struct config_list streamrelay_opts[] =
 +{
 +	DEF_OPT_SAVE_FUNC(streamrelay_should_save_fn),
-+	DEF_OPT_STR("stream_source_host"	      , OFS(emu_stream_source_host),          "127.0.0.1"),
++	DEF_OPT_STR("stream_source_host"          , OFS(emu_stream_source_host),          "127.0.0.1"),
 +	DEF_OPT_INT32("stream_source_port"        , OFS(emu_stream_source_port),          8001),
 +	DEF_OPT_STR("stream_source_auth_user"     , OFS(emu_stream_source_auth_user),     NULL),
 +	DEF_OPT_STR("stream_source_auth_password" , OFS(emu_stream_source_auth_password), NULL),
@@ -10795,7 +10794,7 @@ Index: oscam-config.h
  	FTAB_IGNCHKSMCAID			= 0x40,
 -	FTAB_IGNCRCCEX4USERONLYFOR	= 0x80
 +	FTAB_IGNCRCCEX4USERONLYFOR	= 0x80,
-+	FTAB_EMUAU                  = 0x100
++	FTAB_EMUAU									= 0x100
  };
  
  void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE *f);
@@ -10848,8 +10847,8 @@ Index: oscam-emm.c
 +				{
 +					return 1;
 +				}
-+			}		
-+		}		
++			}
++		}
 +		return 0;
 +	}
 +#endif
@@ -10976,7 +10975,7 @@ Index: oscam.c
  	init_readerdb();
 +#ifdef WITH_EMU
 +	add_emu_reader();
-+#endif	
++#endif
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
@@ -11052,7 +11051,7 @@ Index: webif/config/dvbapi.html
  			</TD>
 -		</TR> -->			
 \ No newline at end of file
-+		</TR>		
++		</TR>
 \ No newline at end of file
 Index: webif/config/menu.html
 ===================================================================
@@ -11062,7 +11061,7 @@ Index: webif/config/menu.html
  ##TPLCONFIGMENUDVBAPI##		<!-- CMENUACTIVE13 -->
  ##TPLCONFIGMENULCD##		<!-- CMENUACTIVE14 -->
  ##TPLCONFIGMENUMONITOR##	<!-- CMENUACTIVE15 -->
-+##TPLCONFIGMENUSTREAMRELAY##<!-- CMENUACTIVE18 -->
++##TPLCONFIGMENUSTREAMRELAY##	<!-- CMENUACTIVE18 -->
  			<LI CLASS="##CMENUACTIVE16##"><A HREF="config.html?part=webif">WebIf</A></LI>
  	</UL>
  </DIV>
@@ -11120,7 +11119,7 @@ Index: webif/files/menu.html
  ##VIEW_FILEMENUCSS##		<!-- CMENUACTIVE16 -->
  ##TPLFILEMENUTWIN##		<!-- CMENUACTIVE17 -->
  ##TPLFILEMENUCONSTCW##  	<!-- CMENUACTIVE18 -->
-+##TPLFILEMENUSOFTCAMKEY##  	<!-- CMENUACTIVE27 -->
++##TPLFILEMENUSOFTCAMKEY##		<!-- CMENUACTIVE27 -->
  			</UL>
  		</LI>
  	</UL>
