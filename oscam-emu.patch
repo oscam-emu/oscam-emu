@@ -11061,7 +11061,7 @@ Index: webif/config/menu.html
  ##TPLCONFIGMENUDVBAPI##		<!-- CMENUACTIVE13 -->
  ##TPLCONFIGMENULCD##		<!-- CMENUACTIVE14 -->
  ##TPLCONFIGMENUMONITOR##	<!-- CMENUACTIVE15 -->
-+##TPLCONFIGMENUSTREAMRELAY##	<!-- CMENUACTIVE18 -->
++##TPLCONFIGMENUSTREAMRELAY##	<!-- CMENUACTIVE17 -->
  			<LI CLASS="##CMENUACTIVE16##"><A HREF="config.html?part=webif">WebIf</A></LI>
  	</UL>
  </DIV>
@@ -11070,7 +11070,7 @@ Index: webif/config/menu_streamrelay.html
 --- webif/config/menu_streamrelay.html	(nonexistent)
 +++ webif/config/menu_streamrelay.html	(working copy)
 @@ -0,0 +1 @@
-+			<LI CLASS="##CMENUACTIVE18##"><A HREF="config.html?part=streamrelay">Stream Relay</A></LI>
++			<LI CLASS="##CMENUACTIVE17##"><A HREF="config.html?part=streamrelay">Stream Relay</A></LI>
 Index: webif/config/streamrelay.html
 ===================================================================
 --- webif/config/streamrelay.html	(nonexistent)
