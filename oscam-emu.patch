@@ -93,6 +93,55 @@ Index: CMakeLists.txt
 +endif (WITH_EMU)
 +
  message (STATUS "")
+Index: Makefile
+===================================================================
+--- Makefile	(revision 11384)
++++ Makefile	(working copy)
+@@ -65,6 +65,13 @@
+ 
+ LDFLAGS = -Wl,--gc-sections
+ 
++TARGETHELP := $(shell $(CC) --target-help 2>&1)
++ifneq (,$(findstring sse2,$(TARGETHELP)))
++override CFLAGS += -fexpensive-optimizations -mmmx -msse -msse2 -msse3
++else
++override CFLAGS += -fexpensive-optimizations
++endif
++
+ # The linker for powerpc have bug that prevents --gc-sections from working
+ # Check for the linker version and if it matches disable --gc-sections
+ # For more information about the bug see:
+@@ -268,6 +275,21 @@
+ SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
+ SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
+ SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
++SRC-$(CONFIG_WITH_EMU) += module-emulator.c
++SRC-$(CONFIG_WITH_EMU) += module-emulator-osemu.c
++SRC-$(CONFIG_WITH_EMU) += module-emulator-stream.c
++SRC-$(CONFIG_WITH_EMU) += ffdecsa/ffdecsa.c
++UNAME := $(shell uname -s)
++ifneq ($(UNAME),Darwin)
++ifndef ANDROID_NDK
++ifndef ANDROID_STANDALONE_TOOLCHAIN
++ifeq "$(CONFIG_WITH_EMU)" "y"
++TOUCH_SK := $(shell touch SoftCam.Key)
++override LDFLAGS += -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default
++endif
++endif
++endif
++endif
+ SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
+ SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
+ SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
+@@ -365,7 +387,7 @@
+ # starts the compilation.
+ all:
+ 	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
+-	@-mkdir -p $(OBJDIR)/cscrypt $(OBJDIR)/csctapi $(OBJDIR)/minilzo $(OBJDIR)/webif
++	@-mkdir -p $(OBJDIR)/cscrypt $(OBJDIR)/csctapi $(OBJDIR)/minilzo $(OBJDIR)/ffdecsa $(OBJDIR)/webif
+ 	@-printf "\
+ +-------------------------------------------------------------------------------\n\
+ | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
 --- config.h	(revision 11384)
@@ -3024,55 +3073,6 @@ Index: globals.h
  #endif
 +
 +#endif
-Index: Makefile
-===================================================================
---- Makefile	(revision 11384)
-+++ Makefile	(working copy)
-@@ -65,6 +65,13 @@
- 
- LDFLAGS = -Wl,--gc-sections
- 
-+TARGETHELP := $(shell $(CC) --target-help 2>&1)
-+ifneq (,$(findstring sse2,$(TARGETHELP)))
-+override CFLAGS += -fexpensive-optimizations -mmmx -msse -msse2 -msse3
-+else
-+override CFLAGS += -fexpensive-optimizations
-+endif
-+
- # The linker for powerpc have bug that prevents --gc-sections from working
- # Check for the linker version and if it matches disable --gc-sections
- # For more information about the bug see:
-@@ -268,6 +275,21 @@
- SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
- SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
- SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
-+SRC-$(CONFIG_WITH_EMU) += module-emulator.c
-+SRC-$(CONFIG_WITH_EMU) += module-emulator-osemu.c
-+SRC-$(CONFIG_WITH_EMU) += module-emulator-stream.c
-+SRC-$(CONFIG_WITH_EMU) += ffdecsa/ffdecsa.c
-+UNAME := $(shell uname -s)
-+ifneq ($(UNAME),Darwin)
-+ifndef ANDROID_NDK
-+ifndef ANDROID_STANDALONE_TOOLCHAIN
-+ifeq "$(CONFIG_WITH_EMU)" "y"
-+TOUCH_SK := $(shell touch SoftCam.Key)
-+override LDFLAGS += -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default
-+endif
-+endif
-+endif
-+endif
- SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
- SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
- SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -365,7 +387,7 @@
- # starts the compilation.
- all:
- 	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
--	@-mkdir -p $(OBJDIR)/cscrypt $(OBJDIR)/csctapi $(OBJDIR)/minilzo $(OBJDIR)/webif
-+	@-mkdir -p $(OBJDIR)/cscrypt $(OBJDIR)/csctapi $(OBJDIR)/minilzo $(OBJDIR)/ffdecsa $(OBJDIR)/webif
- 	@-printf "\
- +-------------------------------------------------------------------------------\n\
- | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: module-dvbapi.c
 ===================================================================
 --- module-dvbapi.c	(revision 11384)
