@@ -3257,7 +3257,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 743 $"+10);
++	return atoi("$Version: 744 $"+10);
 +}
 +
 +// Key DB
@@ -5745,7 +5745,7 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+void PowervuHashMode01CustomMD5(uint8_t *data, int len, uint8_t *hash)
++void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
 +{
 +	int i, j, s;
 +	uint32_t a, b, c, d, f, g;
@@ -5837,7 +5837,7 @@ Index: module-emulator-osemu.c
 +	switch(mode)
 +	{
 +		case 1:
-+			PowervuHashMode01CustomMD5(dataPadded, len, hash);
++			PowervuHashMode01CustomMD5(dataPadded, hash);
 +			break;
 +		default:
 +			cs_log("A new hash mode [%d] is in use.", mode);
@@ -6460,6 +6460,7 @@ Index: module-emulator-osemu.c
 +			csaUsed = GetBit(ecm[i+7], 7);
 +			fixedKey = !GetBit(ecm[i+6], 5);
 +			oddKey = GetBit(ecm[i+6], 4);
++			xorMode = GetBit(ecm[i+6], 0);
 +			bid = (GetBit(ecm[i+7], 1) << 1) | GetBit(ecm[i+7], 0);
 +			sbox = GetBit(ecm[i+6], 3);
 +			
