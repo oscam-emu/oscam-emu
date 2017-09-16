@@ -6203,7 +6203,7 @@ Index: module-emulator-osemu.c
 +
 +static uint8_t PowervuExpandSeed(uint8_t seedType, uint8_t *seed)
 +{
-+	uint8_t seedLength, i;
++	uint8_t seedLength = 0, i;
 +	
 +	switch(seedType)
 +	{
