@@ -7832,21 +7832,21 @@ Index: module-emulator-osemu.c
 +				continue;
 +			}
 +			
++			snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "%.2X", emmType);
++			snprintf(uaInfo, sizeof(uaInfo), "UA: %08X", uniqueAddress);
++			
 +			if(emm[i+3] == 0 && emm[i+4] == 0)
 +			{
 +				cs_hexdump(0, &emm[i+3], 7, keyValue, sizeof(keyValue));
-+				cs_log("Key found in EMM: P %08X %s %s -> REJECTED (looks invalid) UA: %X", groupId, keyName, keyValue, uniqueAddress);
++				cs_log("Key found in EMM: P %.4X**** %s %s -> REJECTED (looks invalid) UA: %.8X", groupId, keyName, keyValue, uniqueAddress);
 +				continue;	
 +			}
-+			
-+			snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "%.2X", emmType);
-+			snprintf(uaInfo, sizeof(uaInfo), "UA: %08X", uniqueAddress);
 +			
 +			UpdateKeysByProviderMask('P', groupId<<16, 0x0000FFFF, keyName, &emm[i+3], 7, uaInfo);
 +			
 +			(*keysAdded)++;
 +			cs_hexdump(0, &emm[i+3], 7, keyValue, sizeof(keyValue));
-+			cs_log("Key found in EMM: P %08X %s %s ; UA: %X", groupId, keyName, keyValue, uniqueAddress);
++			cs_log("Key found in EMM: P %.4X**** %s %s ; UA: %.8X", groupId, keyName, keyValue, uniqueAddress);
 +		}
 +		
 +	} while(!decryptOk);
