@@ -5691,7 +5691,7 @@ Index: module-emulator-osemu.c
 +}
 +
 +// PowerVu Emu
-+uint8_t PowervuCrc8Calc(uint8_t *data, int len)
++static uint8_t PowervuCrc8Calc(uint8_t *data, int len)
 +{
 +	int i;
 +	uint8_t crc = 0x00;
@@ -5720,7 +5720,7 @@ Index: module-emulator-osemu.c
 +	return crc;
 +}
 +
-+void PowervuPadData(uint8_t *data, int len, uint8_t *dataPadded)
++static void PowervuPadData(uint8_t *data, int len, uint8_t *dataPadded)
 +{
 +	int i;
 +	uint8_t pad[] = {0x01, 0x02, 0x22, 0x04, 0x20, 0x2A, 0x1F, 0x03, 0x04, 0x06, 0x02, 0x0C, 0x2B, 0x2B, 0x01, 0x7B};
@@ -5745,7 +5745,7 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
++static void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
 +{
 +	int i, j, s;
 +	uint32_t a, b, c, d, f, g;
@@ -5828,7 +5828,7 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
++static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
 +{
 +	uint8_t dataPadded[0x40];
 +
@@ -5845,7 +5845,7 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+void PowervuCreateDataEcmEmm(uint8_t *emmEcm, uint8_t *pos, int lenHeader, int len, uint8_t *data)
++static void PowervuCreateDataEcmEmm(uint8_t *emmEcm, uint8_t *pos, int lenHeader, int len, uint8_t *data)
 +{
 +	int i;
 +	
@@ -5855,7 +5855,7 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+uint8_t PowervuCreateDataCw(uint8_t *seed, uint8_t lenSeed, uint8_t *baseCw, uint8_t val, uint8_t *seedEcmCw, uint8_t *data)
++static uint8_t PowervuCreateDataCw(uint8_t *seed, uint8_t lenSeed, uint8_t *baseCw, uint8_t val, uint8_t *seedEcmCw, uint8_t *data)
 +{
 +	int i;
 +	
@@ -5879,7 +5879,7 @@ Index: module-emulator-osemu.c
 +	return lenSeed + 7 + 1 + 0x10;
 +}
 +
-+uint8_t PowervuUnmaskEcm(uint8_t *ecm, uint8_t *seedEcmCw)
++static uint8_t PowervuUnmaskEcm(uint8_t *ecm, uint8_t *seedEcmCw)
 +{
 +	int i, l;
 +	
@@ -5937,8 +5937,8 @@ Index: module-emulator-osemu.c
 +	return hashModeCw;
 +}
 +
-+void PowervuCreateCw(uint8_t *seed, uint8_t lenSeed, uint8_t *baseCw, uint8_t val,
-+						uint8_t *seedEcmCw, uint8_t *cw, int modeDesCsa, int hashMode)
++static void PowervuCreateCw(uint8_t *seed, uint8_t lenSeed, uint8_t *baseCw, uint8_t val,
++								uint8_t *seedEcmCw, uint8_t *cw, int modeDesCsa, int hashMode)
 +{
 +	uint8_t tableFixParity[] = {0x01, 0x01, 0x02, 0x02, 0x04, 0x04, 0x07, 0x07, 0x08, 0x08, 0x0B, 0x0B, 0x0D, 0x0D, 0x0E, 0x0E,
 +								0x10, 0x10, 0x13, 0x13, 0x15, 0x15, 0x16, 0x16, 0x19, 0x19, 0x1A, 0x1A, 0x1C, 0x1C, 0x1F, 0x1F,
@@ -7712,7 +7712,7 @@ Index: module-emulator-osemu.c
 +
 +
 +// PowerVu EMM EMU
-+void PowervuUnmaskEmm(uint8_t *emm)
++static void PowervuUnmaskEmm(uint8_t *emm)
 +{
 +	int i, l;
 +	
