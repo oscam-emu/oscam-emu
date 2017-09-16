@@ -3222,7 +3222,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,5313 @@
+@@ -0,0 +1,5308 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5893,11 +5893,6 @@ Index: module-emulator-osemu.c
 +	uint8_t hashModeEcm;
 +	uint8_t hashModeCw;
 +	uint32_t crc;
-+	
-+	if((ecm[3] & 0xF0) != 0x50)
-+	{
-+		return;
-+	}
 +	
 +	// Create seed for CW decryption
 +	memset(seedEcmCw, 0, 0x10);
