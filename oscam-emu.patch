@@ -3222,7 +3222,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,5308 @@
+@@ -0,0 +1,5307 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -7727,11 +7727,6 @@ Index: module-emulator-osemu.c
 +	uint8_t mask[0x10];
 +	uint32_t crc;
 +	
-+	if((emm[3] & 0xF0) != 0x50)
-+	{
-+		return;
-+	}
-+	
 +	// Create Mask for ECM decryption
 +	PowervuCreateDataEcmEmm(emm, sourcePos, 0x13, 0x1E, data);
 +	
@@ -7775,7 +7770,11 @@ Index: module-emulator-osemu.c
 +		return 1;
 +	}
 +	
-+	PowervuUnmaskEmm(emm);
++	// Check if unmasking is needed
++	if((emm[3] & 0xF0) == 0x50)
++	{
++		PowervuUnmaskEmm(emm);
++	}
 +	
 +	// looks like checksum does not work for all EMMs
 +	//emmCrc32 = b2i(4, emm+emmLen-4);
