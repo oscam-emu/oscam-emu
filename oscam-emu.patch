@@ -3222,7 +3222,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,5307 @@
+@@ -0,0 +1,5355 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3257,7 +3257,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 746 $"+10);
++	return atoi("$Version: 747 $"+10);
 +}
 +
 +// Key DB
@@ -6995,7 +6995,29 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
-+//Tandberg EMU
++// Tandberg EMU
++static uint16_t TandbergChecksum(uint8_t *data, uint8_t length)
++{
++	// ECM and EMM checksum calculation
++	// 1. Combine data in 2 byte groups
++	// 2. Add them together
++	// 3. Multiply result by itself (power of 7)
++	// 4. XOR with fixed value 0x17E3
++	
++	uint8_t i;
++	uint16_t checksum = 0;
++	
++	for(i = 0; i < length; i += 2)
++	{
++		checksum += (data[i] << 8) | data[i + 1];
++	}
++	
++	checksum =  checksum * checksum * checksum * checksum * checksum * checksum * checksum;
++	checksum ^= 0x17E3;
++	
++	return checksum;
++}
++
 +static int8_t GetTandbergKey(uint8_t *buf, uint32_t entitlementId)
 +{
 +	if(FindKey('T', entitlementId, 0, "00", buf, 8, 0, 0, 0, NULL))
@@ -7037,6 +7059,17 @@ Index: module-emulator-osemu.c
 +		}
 +		
 +		nanoData = ecm + pos + 2;
++		
++		// ECM validation
++		uint16_t payloadChecksum = (nanoData[nanoLength - 2] << 8) | nanoData[nanoLength - 1];
++		uint16_t calculatedChecksum = TandbergChecksum(nanoData, nanoLength - 2);
++		
++		if(calculatedChecksum != payloadChecksum)
++		{
++			cs_log("ECM checksum error (%.4X instead of %.4X)", calculatedChecksum, payloadChecksum);
++			return 8;
++		}
++		// End of ECM validation
 +		
 +		switch(nanoType)
 +		{
@@ -8460,6 +8493,21 @@ Index: module-emulator-osemu.c
 +		}
 +		
 +		keyIndex = emm[pos+1];
++		
++		// EMM validation
++		// Copy payload checksum bytes and then set them to zero,
++		// so they do not affect the calculated checksum.
++		uint16_t payloadChecksum = (emm[pos + 2] << 8) | emm[pos + 3];
++		memset(emm + pos + 2, 0, 2);
++		uint16_t calculatedChecksum = TandbergChecksum(emm + 3, emmLen - 3);
++		
++		if(calculatedChecksum != payloadChecksum)
++		{
++			cs_log("EMM checksum error (%.4X instead of %.4X)", calculatedChecksum, payloadChecksum);
++			return = 8;
++		}
++		// End of EMM validation
++		
 +		pos += 0x04;
 +		ret = TandbergParseEMMNanoData(emm + pos, &nanoLength, emmLen - pos, keyIndex, keysAdded);
 +		pos += nanoLength;
