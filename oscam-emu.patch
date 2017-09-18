@@ -8504,7 +8504,7 @@ Index: module-emulator-osemu.c
 +		if(calculatedChecksum != payloadChecksum)
 +		{
 +			cs_log("EMM checksum error (%.4X instead of %.4X)", calculatedChecksum, payloadChecksum);
-+			return = 8;
++			return 8;
 +		}
 +		// End of EMM validation
 +		
