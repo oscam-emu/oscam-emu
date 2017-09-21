@@ -3257,7 +3257,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 747 $"+10);
++	return atoi("$Version: 748 $"+10);
 +}
 +
 +// Key DB
@@ -6307,7 +6307,7 @@ Index: module-emulator-osemu.c
 +		ExpandDesKey(cw);
 +	}
 +	
-+	if(needsUnmasking)
++	if(needsUnmasking && (hashModeCw > 0))
 +	{
 +		switch(seedType)
 +		{
