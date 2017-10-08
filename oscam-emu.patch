@@ -6018,7 +6018,7 @@ Index: module-emulator-osemu.c
 +	}
 +
 +	// Default BISS key for events with many feeds sharing same key
-+	if (FindKey('F', 0xA11FEED5, 0, "00", dw, 8, 1, 0, 0, NULL))
++	if (ecmpid != 0 && FindKey('F', 0xA11FEED5, 0, "00", dw, 8, 1, 0, 0, NULL)) // Search default key only for local ecm
 +	{
 +		memcpy(&dw[8], dw, 8);
 +		cs_hexdump(0, dw, 8, keyValue, sizeof(keyValue));
