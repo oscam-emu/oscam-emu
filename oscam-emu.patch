@@ -213,6 +213,96 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
+Index: cscrypt/aes.c
+===================================================================
+--- cscrypt/aes.c	(revision 11391)
++++ cscrypt/aes.c	(working copy)
+@@ -1250,4 +1250,71 @@
+ 		rk[3];
+ 	PUTU32(out + 12, s3);
+ }
++
++void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
++					 const unsigned long length, const AES_KEY *key,
++					 unsigned char *ivec, const int enc)
++{
++	unsigned long n;
++	unsigned long len = length;
++	unsigned char tmp[AES_BLOCK_SIZE];
++
++	assert(in && out && key && ivec);
++	assert((AES_ENCRYPT == enc)||(AES_DECRYPT == enc));
++
++	if(AES_ENCRYPT == enc)
++	{
++		while(len >= AES_BLOCK_SIZE)
++		{
++			for(n=0; n < AES_BLOCK_SIZE; ++n)
++				tmp[n] = in[n] ^ ivec[n];
++
++			AES_encrypt(tmp, out, key);
++			memcpy(ivec, out, AES_BLOCK_SIZE);
++			len -= AES_BLOCK_SIZE;
++			in += AES_BLOCK_SIZE;
++			out += AES_BLOCK_SIZE;
++		}
++
++		if(len)
++		{
++			for(n=0; n < len; ++n)
++				tmp[n] = in[n] ^ ivec[n];
++
++			for(n=len; n < AES_BLOCK_SIZE; ++n)
++				tmp[n] = ivec[n];
++
++			AES_encrypt(tmp, tmp, key);
++			memcpy(out, tmp, AES_BLOCK_SIZE);
++			memcpy(ivec, tmp, AES_BLOCK_SIZE);
++		}
++	}
++	else
++	{
++		while(len >= AES_BLOCK_SIZE)
++		{
++			memcpy(tmp, in, AES_BLOCK_SIZE);
++			AES_decrypt(in, out, key);
++
++			for(n=0; n < AES_BLOCK_SIZE; ++n)
++				out[n] ^= ivec[n];
++
++			memcpy(ivec, tmp, AES_BLOCK_SIZE);
++			len -= AES_BLOCK_SIZE;
++			in += AES_BLOCK_SIZE;
++			out += AES_BLOCK_SIZE;
++		}
++
++		if(len)
++		{
++			memcpy(tmp, in, AES_BLOCK_SIZE);
++			AES_decrypt(tmp, tmp, key);
++
++			for(n=0; n < len; ++n)
++				out[n] ^= ivec[n];
++
++			memcpy(ivec, tmp, AES_BLOCK_SIZE);
++		}
++	}
++}
+ #endif
+Index: cscrypt/aes.h
+===================================================================
+--- cscrypt/aes.h	(revision 11391)
++++ cscrypt/aes.h	(working copy)
+@@ -42,6 +42,9 @@
+ void AES_decrypt(const unsigned char *in, unsigned char *out,
+ 				 const AES_KEY *key);
+ 
++void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
++					 const unsigned long length, const AES_KEY *key,
++					 unsigned char *ivec, const int enc);
+ #endif /* !HEADER_AES_H */
+ 
+ #endif
 Index: cscrypt/md5.c
 ===================================================================
 --- cscrypt/md5.c	(revision 11391)
@@ -3274,7 +3364,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,5642 @@
+@@ -0,0 +1,5731 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3309,7 +3399,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 749 $"+10);
++	return atoi("$Version: 750 $"+10);
 +}
 +
 +// Key DB
@@ -7357,19 +7447,17 @@ Index: module-emulator-osemu.c
 +	return checksum;
 +}
 +
-+static int8_t GetTandbergKey(uint8_t *buf, uint32_t entitlementId)
++static int8_t GetTandbergKey(uint32_t index, const char *name, uint8_t *key, uint32_t length)
 +{
-+	if(FindKey('T', entitlementId, 0, "00", buf, 8, 0, 0, 0, NULL))
-+	{
-+		return 1;
-+	}
-+	
-+	if(FindKey('T', entitlementId, 0, "01", buf, 8, 1, 0, 0, NULL))
-+	{
-+		return 1;
-+	}
-+	
-+	return 0;
++	// index: ecm keys --> entitlementId
++	//		  emm keys --> aeskeyIndex
++	//		  aes keys --> keyIndex
++
++	// name: ecm keys --> "01"
++	//		 emm keys --> "MK" or "MK01"
++	//		 aes keys --> "AES"
++
++	return FindKey('T', index, 0, name, key, length, 1, 0, 0, NULL);
 +}
 +
 +static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
@@ -7412,6 +7500,102 @@ Index: module-emulator-osemu.c
 +		
 +		switch(nanoType)
 +		{
++			case 0xEC: // Director v6 (September 2017)
++			{
++				if(nanoLength != 0x28)
++				{
++					cs_log("WARNING: nanoType EC length (%d) != %d", nanoLength, 0x28);
++					break;
++				}
++				
++				entitlementId = b2i(4, nanoData);
++				
++				if(!GetTandbergKey(entitlementId, "01", ecmKey, 8))
++				{
++					return 2;
++				}
++				
++				cs_log("Active entitlement %.4X", entitlementId);
++				
++				// Step 1 - Decrypt DES CBC with ecmKey and iv = { 0 } (equal to nanoED)
++				uint8_t encryptedData[32] = { 0 };
++				memcpy(encryptedData, nanoData + 6, 32);
++				
++				uint8_t iv[8] = { 0 };
++				des_cbc_decrypt(encryptedData, iv, ecmKey, 32);
++				
++				uint8_t nanoMode = nanoData[5];
++
++				if ((nanoMode & 0x20) == 0) // Old algo
++				{
++					// Step 2 - Create CW (equal to nano ED)
++					dw[0] = encryptedData[0x05];
++					dw[1] = encryptedData[0x19];
++					dw[2] = encryptedData[0x1D];
++
++					dw[4] = encryptedData[0x0B];
++					dw[5] = encryptedData[0x12];
++					dw[6] = encryptedData[0x1A];
++
++					dw[8] = encryptedData[0x16];
++					dw[9] = encryptedData[0x03];
++					dw[10] = encryptedData[0x11];
++
++					dw[12] = encryptedData[0x18];
++					dw[13] = encryptedData[0x10];
++					dw[14] = encryptedData[0x0E];
++
++					return 0;
++				}
++				else // New algo (overencryption with AES)
++				{
++					// Step 2 - Prepare data for AES (it is like the creation of CW in nanoED but swapped each 8 bytes)
++					uint8_t dataEC[16] = { 0 };
++
++					dataEC[0] = encryptedData[0x02];
++					dataEC[1] = encryptedData[0x0E];
++					dataEC[2] = encryptedData[0x10];
++					dataEC[3] = encryptedData[0x18];
++					dataEC[4] = encryptedData[0x09];
++					dataEC[5] = encryptedData[0x11];
++					dataEC[6] = encryptedData[0x03];
++					dataEC[7] = encryptedData[0x16];
++
++					dataEC[8] = encryptedData[0x13];
++					dataEC[9] = encryptedData[0x1A];
++					dataEC[10] = encryptedData[0x12];
++					dataEC[11] = encryptedData[0x0B];
++					dataEC[12] = encryptedData[0x04];
++					dataEC[13] = encryptedData[0x1D];
++					dataEC[14] = encryptedData[0x19];
++					dataEC[15] = encryptedData[0x05];
++
++					// Step 3 - Decrypt AES CBC with new aesKey and iv 2EBD816A5E749A708AE45ADDD84333DE
++					uint8_t aesKeyIndex = nanoMode & 0x1F; // 32 possible AES keys
++					uint8_t aesKey[16] = { 0 };
++
++					if(!GetTandbergKey(aesKeyIndex, "AES", aesKey, 16))
++					{
++						return 2;
++					}
++
++					struct aes_keys aes;
++					aes_set_key(&aes, (char *)aesKey);
++
++					uint8_t ivAes[16] = { 0x2E, 0xBD, 0x81, 0x6A, 0x5E, 0x74, 0x9A, 0x70, 0x8A, 0xE4, 0x5A, 0xDD, 0xD8, 0x43, 0x33, 0xDE };
++					aes_cbc_decrypt(&aes, dataEC, 16, ivAes);
++
++					// Step 4 - Create CW (a simple swap)
++					uint8_t offset;
++					for (offset = 0; offset < 16; offset++)
++					{
++						dw[offset] = dataEC[15 - offset];
++					}
++
++					return 0;
++				}
++			}
++
 +			case 0xED: // ECM_TAG_CW_DESCRIPTOR
 +			{
 +				if(nanoLength != 0x26)
@@ -7422,7 +7606,7 @@ Index: module-emulator-osemu.c
 +				
 +				entitlementId = b2i(4, nanoData);
 +				
-+				if(!GetTandbergKey(ecmKey, entitlementId))
++				if(!GetTandbergKey(entitlementId, "01", ecmKey, 8))
 +				{
 +					return 2;
 +				}
@@ -7461,7 +7645,7 @@ Index: module-emulator-osemu.c
 +				
 +				entitlementId = b2i(4, nanoData);
 +				
-+				if(!GetTandbergKey(ecmKey, entitlementId))
++				if(!GetTandbergKey(entitlementId, "01", ecmKey, 8))
 +				{
 +					return 2;
 +				}
@@ -8563,11 +8747,6 @@ Index: module-emulator-osemu.c
 +	ecmKey[7] = payLoad[0x08];
 +}
 +
-+static int8_t GetTandbergEMMKey(uint8_t *buf, uint16_t keyIndex, uint8_t isCriticalKey, const char *keySet)
-+{
-+	return FindKey('T', keyIndex, 0, keySet, buf, 8, isCriticalKey, 0, 0, NULL);
-+}
-+
 +static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t keyIndex, uint32_t *keysAdded)
 +{
 +	uint8_t tagType, tagLength, blockIndex;
@@ -8612,7 +8791,7 @@ Index: module-emulator-osemu.c
 +							break;
 +						}
 +						
-+						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK01"))
++						if(!GetTandbergKey(keyIndex, "MK01", emmKey, 8))
 +						{
 +							break;
 +						}
@@ -8648,7 +8827,7 @@ Index: module-emulator-osemu.c
 +						
 +						blockIndex = tagData[1] & 0x03;
 +						
-+						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
++						if(!GetTandbergKey(keyIndex, "MK", emmKey, 8))
 +						{
 +							break;
 +						}
@@ -8690,7 +8869,7 @@ Index: module-emulator-osemu.c
 +						
 +						entitlementId = b2i(4, tagData);
 +						
-+						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
++						if(!GetTandbergKey(keyIndex, "MK", emmKey, 8))
 +						{
 +							break;
 +						}
@@ -8722,7 +8901,7 @@ Index: module-emulator-osemu.c
 +						
 +						entitlementId = b2i(4, tagData);
 +						
-+						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK01"))
++						if(!GetTandbergKey(keyIndex, "MK01", emmKey, 8))
 +						{
 +							break;
 +						}
@@ -11444,6 +11623,40 @@ Index: module-webif.c
  		{
  			cs_log("error: too much data received from %s", cs_inet_ntoa(in));
  			NULLFREE(*result);
+Index: oscam-aes.c
+===================================================================
+--- oscam-aes.c	(revision 11391)
++++ oscam-aes.c	(working copy)
+@@ -37,6 +37,16 @@
+ 	}
+ }
+ 
++void aes_cbc_encrypt(struct aes_keys *aes, uchar *buf, int32_t n, uchar *iv)
++{
++	AES_cbc_encrypt(buf, buf, n, &aes->aeskey_encrypt, iv, AES_ENCRYPT);
++}
++
++void aes_cbc_decrypt(struct aes_keys *aes, uchar *buf, int32_t n, uchar *iv)
++{
++	AES_cbc_encrypt(buf, buf, n, &aes->aeskey_decrypt, iv, AES_DECRYPT);
++}
++
+ /* Creates an AES_ENTRY and adds it to the given linked list. */
+ void add_aes_entry(AES_ENTRY **list, uint16_t caid, uint32_t ident, int32_t keyid, uchar *aesKey)
+ {
+Index: oscam-aes.h
+===================================================================
+--- oscam-aes.h	(revision 11391)
++++ oscam-aes.h	(working copy)
+@@ -5,6 +5,8 @@
+ bool aes_set_key_alloc(struct aes_keys **aes, char *key);
+ void aes_decrypt(struct aes_keys *aes, uchar *buf, int32_t n);
+ void aes_encrypt_idx(struct aes_keys *aes, uchar *buf, int32_t n);
++void aes_cbc_encrypt(struct aes_keys *aes, uchar *buf, int32_t n, uchar *iv);
++void aes_cbc_decrypt(struct aes_keys *aes, uchar *buf, int32_t n, uchar *iv);
+ 
+ void add_aes_entry(AES_ENTRY **list, uint16_t caid, uint32_t ident, int32_t keyid, uchar *aesKey);
+ void parse_aes_entry(AES_ENTRY **list, char *label, char *value);
 Index: oscam-chk.c
 ===================================================================
 --- oscam-chk.c	(revision 11391)
