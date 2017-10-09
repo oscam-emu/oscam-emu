@@ -7447,17 +7447,17 @@ Index: module-emulator-osemu.c
 +	return checksum;
 +}
 +
-+static int8_t GetTandbergKey(uint32_t index, const char *name, uint8_t *key, uint32_t length)
++static int8_t GetTandbergKey(uint32_t keyIndex, const char *keyName, uint8_t *key, uint32_t keyLength)
 +{
-+	// index: ecm keys --> entitlementId
-+	//		  emm keys --> aeskeyIndex
-+	//		  aes keys --> keyIndex
++	// keyIndex: ecm keys --> entitlementId
++	//			 emm keys --> aeskeyIndex
++	//			 aes keys --> keyIndex
 +
-+	// name: ecm keys --> "01"
-+	//		 emm keys --> "MK" or "MK01"
-+	//		 aes keys --> "AES"
++	// keyName: ecm keys --> "01"
++	//			emm keys --> "MK" or "MK01"
++	//			aes keys --> "AES"
 +
-+	return FindKey('T', index, 0, name, key, length, 1, 0, 0, NULL);
++	return FindKey('T', keyIndex, 0, keyName, key, keyLength, 1, 0, 0, NULL);
 +}
 +
 +static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
