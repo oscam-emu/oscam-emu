@@ -3364,7 +3364,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,5731 @@
+@@ -0,0 +1,5829 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3399,7 +3399,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 750 $"+10);
++	return atoi("$Version: 751 $"+10);
 +}
 +
 +// Key DB
@@ -6257,6 +6257,99 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
++static void PowervuHashMode03(uint8_t *data, uint8_t *hash)
++{
++	int i, j, k, s, s2, tmp;
++	uint32_t a, b, c, d, f, g;
++	uint32_t a2, b2, c2, d2, f2, g2;
++
++	uint32_t T[] = { 0xC88F3F2E, 0x967506BA, 0xDA877A7B, 0x0DECCDFE };
++	uint32_t T2[] = { 0x01F42668, 0x39C7CDA5, 0xD490E2FE, 0x9965235D };
++
++	uint8_t r[] = { 0x0B, 0x0E, 0x0F, 0x0C, 0x05, 0x08, 0x07, 0x09, 0x0B, 0x0D, 0x0E, 0x0F, 0x06, 0x07, 0x09, 0x08,
++					0x07, 0x06, 0x08, 0x0D, 0x0B, 0x09, 0x07, 0x0F, 0x07, 0x0C, 0x0F, 0x09, 0x0B, 0x07, 0x0D, 0x0C };
++
++	uint8_t tIdxIncr[] = { 0x07, 0x04, 0x0D, 0x01, 0x0A, 0x06, 0x0F, 0x03, 0x0C, 0x00, 0x09, 0x05, 0x02, 0x0E, 0x0B, 0x08,
++						   0x05, 0x0D, 0x02, 0x00, 0x04, 0x09, 0x03, 0x08, 0x01, 0x0A, 0x07, 0x0B, 0x06, 0x0F, 0x0C, 0x0E };
++
++	uint32_t h[] = { 0xC8616857, 0x9D3F5B8E, 0x4D7B8F76, 0x97BC8D80 };
++
++	uint32_t dataLongs[0x50];
++	uint32_t result[4];
++
++	for (i = 0; i < 0x10; i++)
++	{
++		dataLongs[i] = (data[4 * i + 0] << 24) + (data[4 * i + 1] << 16) + (data[4 * i + 2] << 8) + (data[4 * i + 3] << 0);
++	}
++
++	a = h[0];
++	b = h[1];
++	c = h[2];
++	d = h[3];
++
++	a2 = h[3];
++	b2 = h[2];
++	c2 = h[1];
++	d2 = h[0];
++
++	for (i = 0; i < 4; i++)
++	{
++		for (j = 0; j < 16; j++)
++		{
++			tmp = j;
++
++			for (k = 0; k < i; k++)
++			{
++				tmp = tIdxIncr[tmp];
++			}
++
++			g = 0x0F - tmp;
++			g2 = tmp;
++
++			if (i == 0) f = (b & d) | (~d & c);
++			else if (i == 1) f = (~c | b) ^ d;
++			else if (i == 2) f = (~b & d) | (b & c);
++			else if (i == 3) f = (b ^ c ^ d);
++
++			if (i == 0) f2 = (b2 ^ c2 ^ d2);
++			else if (i == 1) f2 = (~b2 & d2) | (b2 & c2);
++			else if (i == 2) f2 = (~c2 | b2) ^ d2;
++			else if (i == 3) f2 = (b2 & d2) | (~d2 & c2);
++
++			f = dataLongs[g] + a + T[i] + f;
++			s = r[0x0F + (((i & 1) ^ 1) << 4) - j];
++			f = (f << s) | (f >> (32 - s));
++
++			f2 = dataLongs[g2] + a2 + T2[i] + f2;
++			s2 = r[((i & 1) << 4) + j];
++			f2 = (f2 << s2) | (f2 >> (32 - s2));
++
++			a = d;
++			d = (c << 10) | (c >> 22);
++			c = b;
++			b = f;
++
++			a2 = d2;
++			d2 = (c2 << 10) | (c2 >> 22);
++			c2 = b2;
++			b2 = f2;
++		}
++	}
++
++	result[0] = h[3] + b + a2;
++	result[1] = h[2] + c + b2;
++	result[2] = h[1] + d + c2;
++	result[3] = h[0] + a + d2;
++
++	for (i = 0; i < 4; i++)
++	{
++		hash[4 * i + 0] = result[i] >> 0;
++		hash[4 * i + 1] = result[i] >> 8;
++		hash[4 * i + 2] = result[i] >> 16;
++		hash[4 * i + 3] = result[i] >> 24;
++	}
++}
++
 +static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
 +{
 +	uint8_t dataPadded[0x40];
@@ -6268,6 +6361,11 @@ Index: module-emulator-osemu.c
 +		case 1:
 +			PowervuHashMode01CustomMD5(dataPadded, hash);
 +			break;
++
++		case 3:
++			PowervuHashMode03(dataPadded, hash);
++			break;
++
 +		default:
 +			cs_log("A new hash mode [%d] is in use.", mode);
 +			break;
