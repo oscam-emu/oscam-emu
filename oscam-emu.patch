@@ -5981,13 +5981,13 @@ Index: module-emulator-osemu.c
 +	if (noFreq)
 +	{
 +		transponder = namespace & 0xFFFF; // Select our custom "transponder identifier"
-+		snprintf(buf, len, "%5.1f%c t:%04X", degrees / 10.0, compass, transponder); // Degree sign "\u00B0" requires c99 standard
++		snprintf(buf, len, "%.1f%c t:%04X", degrees / 10.0, compass, transponder); // Degree sign "\u00B0" requires c99 standard
 +	}
 +	else
 +	{
 +		frequency = namespace & 0x7FFF; // Remove polarity bit
 +		polarisation = namespace & 0x8000 ? 'V' : 'H';
-+		snprintf(buf, len, "%5.1f%c %5d%c", degrees / 10.0, compass, frequency, polarisation); // Degree sign "\u00B0" requires c99 standard
++		snprintf(buf, len, "%.1f%c %5d%c", degrees / 10.0, compass, frequency, polarisation); // Degree sign "\u00B0" requires c99 standard
 +	}
 +}
 +
