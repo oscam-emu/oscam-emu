@@ -3364,7 +3364,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,5829 @@
+@@ -0,0 +1,5871 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -6070,9 +6070,23 @@ Index: module-emulator-osemu.c
 +		haveKey1 = FindKey('F', (srvid<<16)|ecmpid, 0, "00", dw, 8, 1, 0, 0, NULL);
 +		haveKey2 = FindKey('F', (srvid<<16)|ecmpid, 0, "01", &dw[8], 8, 0, 0, 0, NULL); // Do not print "key not found". "01" keys will be removed in the future
 +		
-+		if(haveKey1 && haveKey2) {return 0;}
-+		else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
-+		else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
++		if(haveKey1 && haveKey2)
++		{
++			cs_log("Key found: F %04X%04X 00", srvid, ecmpid);
++			return 0;
++		}
++		else if(haveKey1 && !haveKey2)
++		{
++			memcpy(&dw[8], dw, 8);
++			cs_log("Key found: F %04X%04X 00", srvid, ecmpid);
++			return 0;
++		}
++		else if(!haveKey1 && haveKey2)
++		{
++			memcpy(dw, &dw[8], 8);
++			cs_log("Key found: F %04X%04X 01", srvid, ecmpid);
++			return 0;
++		}
 +	}
 +
 +	// Try to get the pid from oscam's fake ecm ([sid] [pmtpid] [pid1] [pid2] ... [pidx] [namespace])
@@ -6090,9 +6104,23 @@ Index: module-emulator-osemu.c
 +			haveKey1 = FindKey('F', (srvid<<16)|pid, 0, "00", dw, 8, 1, 0, 0, NULL);
 +			haveKey2 = FindKey('F', (srvid<<16)|pid, 0, "01", &dw[8], 8, 0, 0, 0, NULL); // Do not print "key not found". "01" keys will be removed in the future
 +			
-+			if(haveKey1 && haveKey2) {return 0;}
-+			else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
-+			else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
++			if(haveKey1 && haveKey2)
++			{
++				cs_log("Key found: F %04X%04X 00", srvid, pid);
++				return 0;
++			}
++			else if(haveKey1 && !haveKey2)
++			{
++				memcpy(&dw[8], dw, 8);
++				cs_log("Key found: F %04X%04X 00", srvid, pid);
++				return 0;
++			}
++			else if(!haveKey1 && haveKey2)
++			{
++				memcpy(dw, &dw[8], 8);
++				cs_log("Key found: F %04X%04X 01", srvid, pid);
++				return 0;
++			}
 +		}
 +	}
 +
@@ -6102,9 +6130,23 @@ Index: module-emulator-osemu.c
 +		haveKey1 = FindKey('F', (srvid<<16)|0x1FFF, 0, "00", dw, 8, 1, 0, 0, NULL);
 +		haveKey2 = FindKey('F', (srvid<<16)|0x1FFF, 0, "01", &dw[8], 8, 0, 0, 0, NULL); // Do not print "key not found". "01" keys will be removed in the future
 +
-+		if(haveKey1 && haveKey2) {return 0;}
-+		else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
-+		else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
++		if(haveKey1 && haveKey2)
++		{
++			cs_log("Key found: F %04X1FFF 00", srvid);
++			return 0;
++		}
++		else if(haveKey1 && !haveKey2)
++		{
++			memcpy(&dw[8], dw, 8);
++			cs_log("Key found: F %04X1FFF 00", srvid);
++			return 0;
++		}
++		else if(!haveKey1 && haveKey2)
++		{
++			memcpy(dw, &dw[8], 8);
++			cs_log("Key found: F %04X1FFF 01", srvid);
++			return 0;
++		}
 +	}
 +
 +	// Default BISS key for events with many feeds sharing same key
