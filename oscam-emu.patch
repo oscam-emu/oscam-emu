@@ -3209,7 +3209,7 @@ Index: module-dvbapi.c
  	er->msgid = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2113,19 +2130,39 @@
+@@ -2113,19 +2130,30 @@
  		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss(demux[demux_id].ECMpids[pid].CAID))
  		{
  			int32_t j, n;
@@ -3230,29 +3230,20 @@ Index: module-dvbapi.c
  				er->ecmlen += 2;
  			}
  
-+			// extend the ecm with enigma2's namespace, which for feeds, usually contains the TP frequency
-+			if (0 != er->ens && (er->ens >> 16) < 3600) // check namespace for valid orbital pos (restrict to DVB-S only)
-+			{
-+				er->ens |= 0x80000000; // flag to emu: this is the namespace, not a pid
++			er->ens &= 0x0FFFFFFF; // clear top 4 bits (in case of DVB-T/C or garbage), prepare for flagging
++			er->ens |= 0xA0000000; // flag to emu: this is the namespace, not a pid
 +
-+				// If the onid & sid are deemed valid for a normal service, enigma2 strips the frequency
-+				// from the namespace. See https://github.com/openatv/enigma2/blob/master/lib/dvb/scan.cpp#L59
-+				// In the case of a null frequency in the fake ecm's namespace, we inject with tsid^onid^ecmpid^0x1FFF.
-+				if (0 == (er->ens & 0xFFFF))
-+				{
-+					er->ens |= (er->tsid ^ er->onid ^ er->pid ^ 0x1FFF); // our custom "transponder identifier"
-+					er->ens |= 0x40000000; // nofreq flag: value is not frequency
-+				}
++			i2b_buf(2, er->tsid, er->ecm + 3 + er->ecm[2]);     // place tsid after the last stream pid
++			i2b_buf(2, er->onid, er->ecm + 3 + er->ecm[2] + 2); // place onid right after tsid
++			i2b_buf(4, er->ens, er->ecm + 3 + er->ecm[2] + 4);  // place namespace at the end of the ecm
 +
-+				i2b_buf(4, er->ens, er->ecm + 3 + er->ecm[2]); // place namespace after the last stream pid
-+				er->ecm[2] += 4;
-+				er->ecmlen += 4;
-+			}
++			er->ecm[2] += 8;
++			er->ecmlen += 8;
 +
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X", demux_id, pid,
  				   demux[demux_id].ECMpids[pid].CAID, demux[demux_id].ECMpids[pid].PROVID, demux[demux_id].ECMpids[pid].ECM_PID,
  				   demux[demux_id].pmtpid, demux[demux_id].ECMpids[pid].VPID);
-@@ -4374,6 +4411,7 @@
+@@ -4374,6 +4402,7 @@
  	if(filtertype == TYPE_ECM)
  	{
  		uint32_t chid = 0x10000;
@@ -3260,7 +3251,7 @@ Index: module-dvbapi.c
  		ECM_REQUEST *er;
  
  		if(len != 0)  // len = 0 receiver encountered an internal bufferoverflow!
-@@ -4400,9 +4438,24 @@
+@@ -4400,9 +4429,24 @@
  				return;
  			}
  
@@ -3287,7 +3278,7 @@ Index: module-dvbapi.c
  				if(!(er = get_ecmtask()))
  				{
  					return;
-@@ -4684,6 +4737,40 @@
+@@ -4684,6 +4728,40 @@
  			dvbapi_stop_filternum(demux_id, filter_num, msgid);
  			return;
  		}
@@ -3328,7 +3319,7 @@ Index: module-dvbapi.c
  		dvbapi_process_emm(demux_id, filter_num, buffer, sctlen);
  	}
  
-@@ -6202,6 +6289,9 @@
+@@ -6202,6 +6280,9 @@
  
  		delayer(er, delay);
  
@@ -3364,7 +3355,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,5871 @@
+@@ -0,0 +1,5987 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3399,7 +3390,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 751 $"+10);
++	return atoi("$Version: 752 $"+10);
 +}
 +
 +// Key DB
@@ -5946,179 +5937,301 @@ Index: module-emulator-osemu.c
 +	*namespace = (*namespace & 0xF000FFFF) | (pos << 16);
 +}
 +
-+static void BissNamespace2str(char *buf, uint8_t len, uint32_t namespace)
++static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ecmLen, uint8_t isNamespaceHash)
 +{
-+	// Extract the orbital position & frequency or onid from the supplied namespace.
++	// Extract useful information to append to the "Example key ..." message.
++	//
++	// For feeds, the orbital position & frequency are usually embedded in the namespace.
 +	// See https://github.com/openatv/enigma2/blob/master/lib/dvb/frontend.cpp#L496
 +	// hash = (sat.orbital_position << 16);
 +	// hash |= ((sat.frequency/1000)&0xFFFF)|((sat.polarisation&1) << 15);
 +	//
-+	// If the onid & sid are deemed valid for a normal service, enigma2 strips the frequency
-+	// from the namespace. See https://github.com/openatv/enigma2/blob/master/lib/dvb/scan.cpp#L59
-+	// In the case of a null frequency in the fake ecm's namespace, we inject with tsid^onid^ecmpid^0x1FFF.
++	// If the onid & tsid appear to be a unique DVB identifier, enigma2 strips the frequency
++	// from our namespace. See https://github.com/openatv/enigma2/blob/master/lib/dvb/scan.cpp#L59
++	// In that case, our annotation contains the onid:tsid:sid triplet in lieu of frequency.
++	//
++	// For the universal case, we print the number of es pids & pmtpid.
++	// The sid and current time are included for all. Examples:
++	//
++	// 110.5W 12345H sid:0001 added: 2017-10-17 @ 13:14:15 // namespace
++	//  33.5E  ABCD:9876:1234 added: 2017-10-17 @ 13:14:15 // stripped namespace
++	// av:5 pmt:0134 sid:0001 added: 2017-10-17 @ 13:14:15 // universal
 +
-+	uint16_t frequency, degrees, transponder;
-+	char compass, polarisation, noFreq = 0;
++	uint16_t frequency, degrees;
++	uint16_t pmtpid, srvid, tsid, onid;
++	uint8_t pidcount;
++	uint32_t ens;
++	char compass, polarisation, timeStr[32];
 +
-+	degrees = (namespace >> 16) & 0x7FFF; // Remove not-a-pid bit/flag
++	time_t rawtime;
++	struct tm timeinfo;
++	time(&rawtime);
++	localtime_r(&rawtime, &timeinfo);
++	strftime(timeStr, sizeof(timeStr), "added: %F @ %R", &timeinfo);
 +
-+	if (degrees & 0x4000) // nofreq flag
++	if (isNamespaceHash) // Namespace hash
 +	{
-+		degrees &= ~0x4000;
-+		noFreq = 1;
-+	}
++		ens = b2i(4, ecm + ecmLen - 4); // Namespace will be the last 4 bytes of the ecm
++		degrees = (ens >> 16) & 0x0FFF; // Remove not-a-pid flag
 +
-+	if (degrees > 1800)
-+	{
-+		degrees = 3600 - degrees;
-+		compass = 'W';
-+	}
-+	else
-+	{
-+		compass = 'E';
-+	}
++		if (degrees > 1800)
++		{
++			degrees = 3600 - degrees;
++			compass = 'W';
++		}
++		else
++		{
++			compass = 'E';
++		}
 +
-+	if (noFreq)
-+	{
-+		transponder = namespace & 0xFFFF; // Select our custom "transponder identifier"
-+		snprintf(buf, len, "%.1f%c t:%04X", degrees / 10.0, compass, transponder); // Degree sign "\u00B0" requires c99 standard
++		if (0 == (ens & 0xFFFF)) // Stripped namespace hash
++		{
++			srvid = b2i(2, ecm + 3);
++			tsid = b2i(2, ecm + ecmLen - 8);
++			onid = b2i(2, ecm + ecmLen - 6);
++			// Printing degree sign "\u00B0" requires c99 standard
++			snprintf(buf, len, "%5.1f%c  %04X:%04X:%04X %s", degrees / 10.0, compass, onid, tsid, srvid, timeStr);
++		}
++		else // Full namespace hash
++		{
++			srvid = b2i(2, ecm + 3);
++			frequency = ens & 0x7FFF; // Remove polarity bit
++			polarisation = ens & 0x8000 ? 'V' : 'H';
++			// Printing degree sign "\u00B0" requires c99 standard
++			snprintf(buf, len, "%5.1f%c %5d%c sid:%04X %s", degrees / 10.0, compass, frequency, polarisation, srvid, timeStr);
++		}
 +	}
-+	else
++	else // Universal hash
 +	{
-+		frequency = namespace & 0x7FFF; // Remove polarity bit
-+		polarisation = namespace & 0x8000 ? 'V' : 'H';
-+		snprintf(buf, len, "%.1f%c %5d%c", degrees / 10.0, compass, frequency, polarisation); // Degree sign "\u00B0" requires c99 standard
++		srvid = b2i(2, ecm + 3);
++		pmtpid = b2i(2, ecm + 5);
++		pidcount = (ecmLen - 15) / 2; // video + audio pids count
++		snprintf(buf, len, "av:%d pmt:%04X sid:%04X %s", pidcount, pmtpid, srvid, timeStr);
 +	}
++}
++
++static uint8_t BissIsCommonHash(uint32_t hash)
++{
++	// Check universal hash against a number of commnon universal
++	// hashes in order to warn users about potential key clashes
++
++	switch (hash)
++	{
++		case 0xBAFCD9FD: // 0001 0020 0200 1010 1020 (most common hash)
++			return 1;
++		case 0xA6A4FBD4: // 0001 0800 0200 1010 1020
++			return 1;
++		case 0xEFAB7A4D: // 0001 0800 1010 1020 0200
++			return 1;
++		case 0x83FA15D1: // 0001 0020 0134 0100 0101
++			return 1;
++		case 0x58934C38: // 0001 0800 1010 1020 1030 0200
++			return 1;
++		case 0x2C3CEC17: // 0001 0020 0134 0100
++			return 1;
++		case 0x73DF7F7E: // 0001 0020 0200 1010 1020 1030
++			return 1;
++		case 0xAFA85BC8: // 0001 0020 0021 0022 0023
++			return 1;
++		case 0x8C51F31D: // 0001 0800 0200 1010 1020 1030 1040
++			return 1;
++		case 0xE2F9BD29: // 0001 0800 0200 1010 1020 1030
++			return 1;
++		case 0xB9EBE0FF: // 0001 0100 0200 1010 1020 (less common hash)
++			return 1;
++		default:
++			return 0;
++	}
++}
++
++static uint8_t BissIsValidNamespace(uint32_t namespace)
++{
++	// Note to developers:
++	// If we ever have a satellite at 0.0E, edit to allow stripped namespace
++	// '0xA0000000' with an additional test on tsid and onid being != 0
++
++	uint16_t orbital, frequency;
++
++	orbital = (namespace >> 16) & 0x0FFF;
++	frequency = namespace & 0x7FFF;
++
++	if ((namespace & 0xA0000000) != 0xA0000000) return 0;   // Value isn't flagged as namespace
++	if (namespace == 0xA0000000) return 0;                  // Empty namespace
++	if (orbital > 3599) return 0;                           // Allow only DVB-S
++	if (frequency == 0) return 1;                           // Stripped namespace
++	if (frequency >= 3400 && frequency <= 4200) return 1;   // Super extended C band
++	if (frequency >= 10700 && frequency <= 12750) return 1; // Ku band Europe
++
++	return 0;
 +}
 +
 +static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmDataLen,
 +					  uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
 +{
-+	uint8_t haveKey1 = 0, haveKey2 = 0;
-+	uint16_t ecmLen = 0, pid = 0, pmtpid;
-+	uint32_t i, ens, pidsCRC32;
-+	char tbuf1[32], tbuf2[32], keyValue[17];
++	// Oscam's fake ecm consists of [sid] [pmtpid] [pid1] [pid2] ... [pidx] [tsid] [onid] [namespace]
++	//
++	// On enigma boxes tsid, onid and namespace should be non zero, while on non-enigma
++	// boxes they are usually all zero.
++	// The emulator creates a unique channel hash using srvid and enigma namespace or
++	// srvid, tsid, onid and namespace (in case of namespace without frequency) and
++	// another weaker (not unique) hash based on every pid of the channel. This universal
++	// hash should be available on all types of stbs (enigma and non-enigma).
++
++	// Flags inside [namespace]
++	//
++	// emu r748- : no namespace, no flag
++	// emu r749  : 0x80000000 (full namespase), 0xC0000000 (stripped namespace, injected with tsid^onid^ecmpid^0x1FFF)
++	// emu r752+ : 0xA0000000 (pure namespace, either full, stripped, or null)
++
++	// Key searches are made in order:
++	// Highest priority / tightest test first
++	// Lowest priority / loosest test last
++	//
++	// 1st: namespace hash (only on enigma boxes)
++	// 2nd: universal hash (all box types with emu r752+)
++	// 3rd: faulty ecmpid (other than 0x1FFF)
++	// 4th: reverse order pid (audio, video, pmt pids)
++	// 5th: standard BISS ecmpid (0x1FFF)
++	// 6th: default "All Feeds" key
++
 +	uint8_t ecmCopy[EMU_MAX_ECM_LEN];
++	uint16_t ecmLen = 0, pid = 0;
++	uint32_t i, ens, hash;
++	char tbuf[64], keyValue[17];
 +
 +	if (ecmDataLen >= 3)
 +	{
 +		ecmLen = GetEcmLen(ecm);
 +	}
 +
-+	// Key searches are made in order:
-+	// Highest priority / tightest test first
-+	// Lowest priority / loosest test last
-+
-+	// First try using the unique channel hash (if namespace is present in the ecm)
-+	if (ecmLen >= 13 && ecmLen <= ecmDataLen)
++	// First try using the unique namespace hash (enigma only)
++	if (ecmLen >= 13 && ecmLen <= ecmDataLen) // ecmLen >= 13, allow allow patching the ecmLen for r749 ecms
 +	{
 +		memcpy(ecmCopy, ecm, ecmLen);
-+		ens = b2i(4, ecmCopy + ecmLen - 4); // namespace will be the last 4 bytes
-+		pmtpid = b2i(2, ecmCopy + 5); // pmtpid follows sid in our extended fake ecm
++		ens = b2i(4, ecm + ecmLen - 4); // Namespace will be the last 4 bytes
 +
-+		if (ens & 0x80000000) // Top bit set: a valid namespace, not a pid
++		if (BissIsValidNamespace(ens)) // An r752+ extended ecm with valid namespace
 +		{
 +			BissUnifyOrbitals(&ens);
 +			i2b_buf(4, ens, ecmCopy + ecmLen - 4);
 +
 +			for (i = 0; i < 5; i++) // Find key matching hash made with frequency modified to: f+0, then f-1, f+1, f-2, lastly f+2
 +			{
-+				if (i & 1)
++				ecmCopy[ecmLen - 1] = (i & 1) ? ecmCopy[ecmLen - 1] - i : ecmCopy[ecmLen - 1] + i; // frequency +/- 1, 2 MHz
++
++				if (0 != (ens & 0xFFFF)) // Full namespace - Calculate hash with srvid and namespace only
 +				{
-+					ecmCopy[ecmLen - 1] -= i; // f-1 MHz, f-2 MHz
++					i2b_buf(2, srvid, ecmCopy + ecmLen - 6); // Put [srvid] right before [namespace]
++					hash = crc32(0x2600, ecmCopy + ecmLen - 6, 6);
 +				}
-+				else
++				else // Namespace without frequency - Calculate hash with srvid, tsid, onid and namespace
 +				{
-+					ecmCopy[ecmLen - 1] += i; // f+1 MHz, f+2 MHz
++					i2b_buf(2, srvid, ecmCopy + ecmLen - 10); // Put [srvid] right before [tsid] [onid] [namespace] sequence
++					hash = crc32(0x2600, ecmCopy + ecmLen - 10, 10);
 +				}
 +
-+				pidsCRC32 = crc32(0x2600, ecmCopy + 3, ecmLen - 3);
-+				haveKey1 = FindKey('F', pidsCRC32, 0, "00", dw, 8, 1, 0, 0, NULL);
-+				BissNamespace2str(tbuf1, sizeof(tbuf1), b2i(4, ecmCopy + ecmLen - 4));
-+
-+				if (haveKey1)
++				if (FindKey('F', hash, 0, "00", dw, 8, (i == 0 ? 1 : 0), 0, 0, NULL)) // Do not print "key not found" for frequency off by 1, 2
 +				{
-+					memcpy(&dw[8], dw, 8);
-+					cs_log("Key found: F %08X 00 ; %s pmt:%04X sid:%04X", pidsCRC32, tbuf1, pmtpid, srvid);
++					memcpy(dw + 8, dw, 8);
++					cs_log("Key found: F %08X 00", hash);
 +					return 0;
 +				}
 +
-+				// No key found matching our hash: put example SoftCam.Key BISS line for this feed in the live log
-+				if (i == 0)
++				if (i == 0) // No key found matching our hash: put example SoftCam.Key BISS line in the live log
 +				{
-+					time_t rawtime;
-+					struct tm timeinfo;
-+					time(&rawtime);
-+					localtime_r(&rawtime, &timeinfo);
-+					strftime(tbuf2, sizeof(tbuf2), "added: %F @ %R", &timeinfo);
-+
-+					cs_log("Example key: F %08X 00 XXXXXXXXXXXXXXXX ; %s pmt:%04X sid:%04X %s", pidsCRC32, tbuf1, pmtpid, srvid, tbuf2);
++					BissAnnotate(tbuf, sizeof(tbuf), ecmCopy, ecmLen, 1);
++					cs_log("Example key based on namespace hash: F %08X 00 XXXXXXXXXXXXXXXX ; %s", hash, tbuf);
 +				}
 +
-+				// nofreq flag - do not iterate if this value is not a frequency
-+				if (ens & 0x40000000)
++				if (0 == (ens & 0xFFFF)) // Namespace without frequency - Do not iterate
 +				{
 +					break;
 +				}
 +			}
++		}
++
++		if ((ens & 0xA0000000) == 0x80000000) // r749 ecms only (exclude r752+ ecms)
++		{
++			cs_log("Hey! Network buddy, you need to upgrade your OSCam-Emu");
++			ecmCopy[ecmLen] = 0xA0; // Patch ecm to look like r752+
++			ecmLen += 4;
++			ecmDataLen += 4;
++		}
++	}
++
++	// Try using the universal channel hash (namespace not available)
++	if (ecmLen >= 17 && ecmLen <= ecmDataLen) // ecmLen >= 17, length of r749 ecms has been patched to match r752+ ecms
++	{
++		ens = b2i(4, ecmCopy + ecmLen - 4); // Namespace will be last 4 bytes
++
++		if ((ens & 0xE0000000) == 0xA0000000) // We have an r752+ style ecm which contains pmtpid
++		{
++			memcpy(ecmCopy, ecm, ecmLen - 8); // Make a new ecmCopy from the original ecm as the old ecmCopy may be altered in namespace hash (skip [tsid] [onid] [namespace])
++			hash = crc32(0x2600, ecmCopy + 3, ecmLen - 3 - 8); // ecmCopy doesn't have [tsid] [onid] [namespace] part
++
++			if (FindKey('F', hash, 0, "00", dw, 8, 1, 0, 0, NULL))
++			{
++				memcpy(dw + 8, dw, 8);
++				cs_log("Key found: F %08X 00", hash);
++				return 0;
++			}
++			else // No key found matching our hash: put example SoftCam.Key BISS line in the live log
++			{
++				BissAnnotate(tbuf, sizeof(tbuf), ecmCopy, ecmLen, 0);
++				cs_log("Example key based on universal hash: F %08X 00 XXXXXXXXXXXXXXXX ; %s", hash, tbuf);
++			}
++
++			if (BissIsCommonHash(hash)) // Check if hash is common and warn user
++			{
++				cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
++			}
++
++			// Strip [tsid] [onid] [namespace]
++			ecmLen -= 8;
++			ecmDataLen -= 8;
 +		}
 +	}
 +
 +	// Try using ecmpid if it seems to be faulty (should be 0x1FFF always for BISS)
 +	if (ecmpid != 0x1FFF && ecmpid != 0)
 +	{
-+		haveKey1 = FindKey('F', (srvid<<16)|ecmpid, 0, "00", dw, 8, 1, 0, 0, NULL);
-+		haveKey2 = FindKey('F', (srvid<<16)|ecmpid, 0, "01", &dw[8], 8, 0, 0, 0, NULL); // Do not print "key not found". "01" keys will be removed in the future
-+		
-+		if(haveKey1 && haveKey2)
++		if (FindKey('F', (srvid << 16) | ecmpid, 0, "00", dw, 8, 1, 0, 0, NULL))
 +		{
++			memcpy(dw + 8, dw, 8);
 +			cs_log("Key found: F %04X%04X 00", srvid, ecmpid);
 +			return 0;
 +		}
-+		else if(haveKey1 && !haveKey2)
++
++		if (FindKey('F', (srvid << 16) | ecmpid, 0, "01", dw, 8, 0, 0, 0, NULL))
 +		{
-+			memcpy(&dw[8], dw, 8);
-+			cs_log("Key found: F %04X%04X 00", srvid, ecmpid);
-+			return 0;
-+		}
-+		else if(!haveKey1 && haveKey2)
-+		{
-+			memcpy(dw, &dw[8], 8);
-+			cs_log("Key found: F %04X%04X 01", srvid, ecmpid);
++			memcpy(dw + 8, dw, 8);
++			cs_log("Key found: F %04X%04X 01 <-- Support for '01' keys will be dropped in the future", srvid, ecmpid);
++			cs_log("Convert your key to the '00' equivalent: F %04X%04X 00", srvid, ecmpid);
 +			return 0;
 +		}
 +	}
 +
-+	// Try to get the pid from oscam's fake ecm ([sid] [pmtpid] [pid1] [pid2] ... [pidx] [namespace])
-+	if (ecmLen >= 7 && ecmLen <= ecmDataLen) // Use >= for BISS radio channels with just one (audio) pid
++	// Try to get the pid from oscam's fake ecm (only search [pid1] [pid2] ... [pidx] to be compatible with emu r748-)
++	if (ecmLen >= 7 && ecmLen <= ecmDataLen) // Use >= for radio channels with just one (audio) pid
 +	{
-+		for (i = 5; i + 1 < ecmLen; i += 2)
++		// Reverse search order: last pid in list first
++		// Better identifies channels where they share identical video pid but have variable counts of audio pids
++		for (i = ecmLen - 2; i >= 5; i -= 2)
 +		{
 +			pid = b2i(2, ecm + i);
 +
-+			if ((pid & 0x8000) && (i + 4 == ecmLen)) // This is the namespace, not a stream pid
++			if (FindKey('F', (srvid << 16) | pid, 0, "00", dw, 8, 1, 0, 0, NULL))
 +			{
-+				break;
++				memcpy(dw + 8, dw, 8);
++				cs_log("Key found: F %04X%04X 00", srvid, pid);
++				return 0;
 +			}
 +
-+			haveKey1 = FindKey('F', (srvid<<16)|pid, 0, "00", dw, 8, 1, 0, 0, NULL);
-+			haveKey2 = FindKey('F', (srvid<<16)|pid, 0, "01", &dw[8], 8, 0, 0, 0, NULL); // Do not print "key not found". "01" keys will be removed in the future
-+			
-+			if(haveKey1 && haveKey2)
++			if (FindKey('F', (srvid << 16) | pid, 0, "01", dw, 8, 0, 0, 0, NULL))
 +			{
-+				cs_log("Key found: F %04X%04X 00", srvid, pid);
-+				return 0;
-+			}
-+			else if(haveKey1 && !haveKey2)
-+			{
-+				memcpy(&dw[8], dw, 8);
-+				cs_log("Key found: F %04X%04X 00", srvid, pid);
-+				return 0;
-+			}
-+			else if(!haveKey1 && haveKey2)
-+			{
-+				memcpy(dw, &dw[8], 8);
-+				cs_log("Key found: F %04X%04X 01", srvid, pid);
++				memcpy(dw + 8, dw, 8);
++				cs_log("Key found: F %04X%04X 01 <-- Support for '01' keys will be dropped in the future", srvid, pid);
++				cs_log("Convert your key to the '00' equivalent: F %04X%04X 00", srvid, pid);
 +				return 0;
 +			}
 +		}
@@ -6127,32 +6240,26 @@ Index: module-emulator-osemu.c
 +	// Try using the standard BISS ecm pid
 +	if (ecmpid == 0x1FFF || ecmpid == 0)
 +	{
-+		haveKey1 = FindKey('F', (srvid<<16)|0x1FFF, 0, "00", dw, 8, 1, 0, 0, NULL);
-+		haveKey2 = FindKey('F', (srvid<<16)|0x1FFF, 0, "01", &dw[8], 8, 0, 0, 0, NULL); // Do not print "key not found". "01" keys will be removed in the future
++		if (FindKey('F', (srvid << 16) | 0x1FFF, 0, "00", dw, 8, 1, 0, 0, NULL))
++		{
++			memcpy(dw + 8, dw, 8);
++			cs_log("Key found: F %04X1FFF 00", srvid);
++			return 0;
++		}
 +
-+		if(haveKey1 && haveKey2)
++		if (FindKey('F', (srvid << 16) | 0x1FFF, 0, "01", dw, 8, 0, 0, 0, NULL))
 +		{
-+			cs_log("Key found: F %04X1FFF 00", srvid);
-+			return 0;
-+		}
-+		else if(haveKey1 && !haveKey2)
-+		{
-+			memcpy(&dw[8], dw, 8);
-+			cs_log("Key found: F %04X1FFF 00", srvid);
-+			return 0;
-+		}
-+		else if(!haveKey1 && haveKey2)
-+		{
-+			memcpy(dw, &dw[8], 8);
-+			cs_log("Key found: F %04X1FFF 01", srvid);
++			memcpy(dw + 8, dw, 8);
++			cs_log("Key found: F %04X1FFF 01 <-- Support for '01' keys will be dropped in the future", srvid);
++			cs_log("Convert your key to the '00' equivalent: F %04X1FFF 00", srvid);
 +			return 0;
 +		}
 +	}
 +
 +	// Default BISS key for events with many feeds sharing same key
-+	if (ecmpid != 0 && FindKey('F', 0xA11FEED5, 0, "00", dw, 8, 1, 0, 0, NULL)) // Search default key only for local ecm
++	if (ecmpid != 0 && FindKey('F', 0xA11FEED5, 0, "00", dw, 8, 1, 0, 0, NULL)) // Limit to local ecms, block netwotk ecms
 +	{
-+		memcpy(&dw[8], dw, 8);
++		memcpy(dw + 8, dw, 8);
 +		cs_hexdump(0, dw, 8, keyValue, sizeof(keyValue));
 +		cs_log("No specific match found. Using default key: F A11FEED5 00 %s", keyValue); // "All Feeds"
 +		return 0;
