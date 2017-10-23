@@ -6934,7 +6934,7 @@ Index: module-emulator-osemu.c
 +								uint8_t needsUnmasking, uint8_t xorMode)
 +{
 +	int32_t k;
-+	uint8_t seedLength, val;
++	uint8_t seedLength, val = 0;
 +
 +	seedLength = PowervuExpandSeed(seedType, seed);
 +
@@ -7035,7 +7035,7 @@ Index: module-emulator-osemu.c
 +	uint32_t keyRef1, keyRef2;
 +	uint8_t calculateAllCws;
 +	uint8_t seedEcmCw[0x10];
-+	uint8_t hashModeCw, needsUnmasking, xorMode;
++	uint8_t hashModeCw = 0, needsUnmasking, xorMode;
 +#ifdef WITH_EMU
 +	uint8_t *dwp;
 +	emu_stream_cw_item *cw_item;
