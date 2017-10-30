@@ -3791,7 +3791,7 @@ Index: module-emulator-osemu.c
 +		switch (identifier)
 +		{
 +			case 'F': // BISS keys
-+				cs_log("Key not found: %c %08X %s", identifier, provider, keyName);
++				cs_log("Key not found: F %08X %s", provider, keyName);
 +				break;
 +
 +			default:
