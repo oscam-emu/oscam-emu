@@ -1,16 +1,9 @@
 OSCam-Emu: Open Source Conditional Access Module Emulator
 =========================================================
 
-OSCam-Emu is an OSCam addon module to include emulator support and other functionality that collides with the goal of the original OSCam developers.
+OSCam-Emu is an addon module that adds emulator support and other functionality to the OSCam server.
 
-This patch creates a virtual card reader which is configured automatically.
-You may save the default reader configuration with the webif and then modify it to your own liking.
-
-Key file ("SoftCam.Key"):
-OSCam-Emu does not require, but will make use of "SoftCam.Key" if available.
-"SoftCam.Key" is searched in the OSCam config folder (where oscam.conf is located) and also in "/var/keys".
-
-You may use OSEmu instead and add it as a reader to your plain oscam server.
+You may use OSEmu instead and add it as a reader to your plain OSCam server.
 OSEmu can be found at https://github.com/oscam-emu/OSEmu
 
 
@@ -24,14 +17,14 @@ OSCam-Emu history is accessible through GitHub commits at:
 Help and Support
 ================
 
-You may visit our issues system for filling in bug reports regarding OSCam-Emu issues.
+OSCam-Emu Configuration wiki:
+   https://github.com/oscam-emu/oscam-emu/wiki
+
+Bug reports and feature requests:
    https://github.com/oscam-emu/oscam-emu/issues
 
 OSCam Configuration wiki:
    http://www.streamboard.tv/wiki/index.php/OSCam
-
-OSCam-Emu Configuration wiki:
-   https://github.com/oscam-emu/oscam-emu/wiki 
 
 
 Contact
