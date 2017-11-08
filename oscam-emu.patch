@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11391)
+--- CMakeLists.txt	(revision 11392)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
      ${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -95,7 +95,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11391)
+--- Makefile	(revision 11392)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -144,7 +144,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11391)
+--- config.h	(revision 11392)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -156,7 +156,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11391)
+--- config.sh	(revision 11392)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -215,7 +215,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/aes.c
 ===================================================================
---- cscrypt/aes.c	(revision 11391)
+--- cscrypt/aes.c	(revision 11392)
 +++ cscrypt/aes.c	(working copy)
 @@ -1250,4 +1250,71 @@
  		rk[3];
@@ -291,7 +291,7 @@ Index: cscrypt/aes.c
  #endif
 Index: cscrypt/aes.h
 ===================================================================
---- cscrypt/aes.h	(revision 11391)
+--- cscrypt/aes.h	(revision 11392)
 +++ cscrypt/aes.h	(working copy)
 @@ -42,6 +42,9 @@
  void AES_decrypt(const unsigned char *in, unsigned char *out,
@@ -305,7 +305,7 @@ Index: cscrypt/aes.h
  #endif
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 11391)
+--- cscrypt/md5.c	(revision 11392)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -350,7 +350,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 11391)
+--- cscrypt/md5.h	(revision 11392)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -373,7 +373,7 @@ Index: cscrypt/md5.h
 +#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 11391)
+--- csctapi/cardreaders.h	(revision 11392)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -14,5 +14,6 @@
  extern const struct s_cardreader cardreader_stapi;
@@ -3050,7 +3050,7 @@ Index: ffdecsa/stream.c
 +
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11391)
+--- globals.h	(revision 11392)
 +++ globals.h	(working copy)
 @@ -389,17 +389,17 @@
  #define CS_ECM_RINGBUFFER_MAX 0x10 // max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -3160,12 +3160,12 @@ Index: globals.h
  
 +#ifdef WITH_EMU
 +FILTER* get_emu_prids_for_caid(struct s_reader *rdr, uint16_t caid);
- #endif
-+
 +#endif
++
+ #endif
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11391)
+--- module-dvbapi.c	(revision 11392)
 +++ module-dvbapi.c	(working copy)
 @@ -1471,7 +1471,15 @@
  			}
@@ -3331,7 +3331,7 @@ Index: module-dvbapi.c
  #if defined(WITH_STAPI) || defined(WITH_STAPI5)
 Index: module-dvbapi.h
 ===================================================================
---- module-dvbapi.h	(revision 11391)
+--- module-dvbapi.h	(revision 11392)
 +++ module-dvbapi.h	(working copy)
 @@ -136,6 +136,7 @@
  	int8_t useMultipleIndices;
@@ -3355,7 +3355,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6046 @@
+@@ -0,0 +1,6146 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3390,10 +3390,34 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 754 $"+10);
++	return atoi("$Version: 755 $"+10);
 +}
 +
-+// Key DB
++/*
++ * Key DB
++ *
++ * The Emu reader gets keys from the OSCcam-Emu binary and the "SoftCam.Key" file.
++ *
++ * The keys are stored in structures of type "KeyDataContainer", one per CAS. Each
++ * container points to a dynamically allocated array of type "KeyData", which holds
++ * the actual keys. The array initially holds up to 64 keys (64 * KeyData), and it
++ * is expanded by 16 every time it's filled with keys. The "KeyDataContainer" also
++ * includes info about the number of keys it contains ("KeyCount") and the maximum
++ * number of keys it can store ("KeyMax").
++ *
++ * The "KeyData" structure on the other hand, stores the actual key information,
++ * including the "identifier", "provider", "keyName", "key" and "keyLength". There
++ * is also a "nextKey" pointer to a similar "KeyData" structure which is only used
++ * for Irdeto multiple keys, in a linked list style structure. For all other CAS,
++ * the "nextKey" is a "NULL" pointer.
++ *
++ * For storing keys, the "SetKey" function is used. Duplicate keys are not allowed.
++ * When storing a key that is already present in the database, its "key" value is
++ * updated with the new one. For reading keys from the database, the "FindKey"
++ * function is used. To delete all keys in a container, the "DeleteKeysInContainer"
++ * function can be called.
++*/
++
 +static char *emu_keyfile_path = NULL;
 +
 +void set_emu_keyfile_path(const char *path)
@@ -3420,7 +3444,6 @@ Index: module-emulator-osemu.c
 +	}
 +	return 1;
 +}
-+
 +
 +KeyDataContainer CwKeys = { NULL, 0, 0 };
 +KeyDataContainer ViKeys = { NULL, 0, 0 };
@@ -3603,6 +3626,7 @@ Index: module-emulator-osemu.c
 +		provider = provider<<8;
 +	}
 +
++	// key already exists on db, update its value
 +	for(i=0; i<KeyDB->keyCount; i++) {
 +		
 +		if(KeyDB->EmuKeys[i].provider != provider) {
@@ -3667,7 +3691,7 @@ Index: module-emulator-osemu.c
 +				WriteKeyToFile(identifier, provider, keyName, tmpKey, keyLength, comment);
 +			}
 +		}
-+		else // identifier != 'I' 
++		else // identifier != 'I'
 +		{
 +			free(KeyDB->EmuKeys[i].key);
 +			KeyDB->EmuKeys[i].key = tmpKey;
@@ -3680,9 +3704,12 @@ Index: module-emulator-osemu.c
 +		
 +		return 1;
 +	}
-+	
-+	if(KeyDB->keyCount+1 > KeyDB->keyMax) {
-+		if(KeyDB->EmuKeys == NULL) {
++
++	// key does not exist on db
++	if(KeyDB->keyCount+1 > KeyDB->keyMax)
++	{
++		if(KeyDB->EmuKeys == NULL) // db is empty
++		{
 +			KeyDB->EmuKeys = (KeyData*)malloc(sizeof(KeyData)*(KeyDB->keyMax+64));
 +			if(KeyDB->EmuKeys == NULL) {
 +				free(tmpKey);
@@ -3690,7 +3717,8 @@ Index: module-emulator-osemu.c
 +			}
 +			KeyDB->keyMax+=64;
 +		}
-+		else {
++		else // db is full, expand it
++		{
 +			tmpKeyData = (KeyData*)realloc(KeyDB->EmuKeys, sizeof(KeyData)*(KeyDB->keyMax+16));
 +			if(tmpKeyData == NULL) {
 +				free(tmpKey);
@@ -3853,8 +3881,80 @@ Index: module-emulator-osemu.c
 +		}
 +	}
 +
-+	free(tmpKey);	
++	free(tmpKey);
 +	return ret;
++}
++
++int32_t DeleteKeysInContainer(char identifier)
++{
++	// Deletes all keys stored in memory for the specified identifier,
++	// but keeps the container itself, re-initialized at { NULL, 0, 0 }.
++	// Returns the count of deleted keys.
++
++	uint32_t oldKeyCount, i;
++	KeyData *tmpKeyData;
++	KeyDataContainer *KeyDB = GetKeyContainer(identifier);
++
++	if (KeyDB == NULL || KeyDB->EmuKeys == NULL || KeyDB->keyCount == 0)
++	{
++		return 0;
++	}
++
++	for (i = 0; i < KeyDB->keyCount; i++)
++	{
++		// For Irdeto multiple keys only (linked list structure)
++		while (KeyDB->EmuKeys[i].nextKey != NULL)
++		{
++			tmpKeyData = KeyDB->EmuKeys[i].nextKey;
++			KeyDB->EmuKeys[i].nextKey = KeyDB->EmuKeys[i].nextKey->nextKey;
++			free(tmpKeyData->key); // Free key
++			free(tmpKeyData); // Free KeyData
++		}
++
++		// For single keys (all identifiers, including Irdeto)
++		free(KeyDB->EmuKeys[i].key); // Free key
++	}
++
++	// Free the KeyData array
++	NULLFREE(KeyDB->EmuKeys);
++	oldKeyCount = KeyDB->keyCount;
++	KeyDB->keyCount = 0;
++	KeyDB->keyMax = 0;
++
++	return oldKeyCount;
++}
++
++void clear_emu_keydata(void)
++{
++	uint32_t total = 0;
++
++	total  = CwKeys.keyCount;
++	total += ViKeys.keyCount;
++	total += NagraKeys.keyCount;
++	total += IrdetoKeys.keyCount;
++	total += NDSKeys.keyCount;
++	total += BissKeys.keyCount;
++	total += PowervuKeys.keyCount;
++	total += DreKeys.keyCount;
++	total += TandbergKeys.keyCount;
++
++	if (total != 0)
++	{
++		cs_log("Freeing keys in memory: W:%d V:%d N:%d I:%d S:%d F:%d P:%d D:%d T:%d", \
++						CwKeys.keyCount, ViKeys.keyCount, NagraKeys.keyCount, \
++						IrdetoKeys.keyCount, NDSKeys.keyCount, BissKeys.keyCount, \
++						PowervuKeys.keyCount, DreKeys.keyCount, TandbergKeys.keyCount);
++
++		DeleteKeysInContainer('W');
++		DeleteKeysInContainer('V');
++		DeleteKeysInContainer('N');
++		DeleteKeysInContainer('I');
++		DeleteKeysInContainer('S');
++		DeleteKeysInContainer('F');
++		DeleteKeysInContainer('P');
++		DeleteKeysInContainer('D');
++		DeleteKeysInContainer('T');
++	}
 +}
 +
 +uint8_t read_emu_keyfile(const char *opath)
@@ -9406,7 +9506,7 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(revision 0)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,141 @@
+@@ -0,0 +1,142 @@
 +#include "globals.h"
 +#include "module-emulator-stream.h"
 +
@@ -9450,6 +9550,7 @@ Index: module-emulator-osemu.h
 +	uint32_t GetOSemuVersion(void);
 +	
 +	void set_emu_keyfile_path(const char *path);
++	void clear_emu_keydata(void);
 +	uint8_t read_emu_keyfile(const char *path);
 +
 +#if !defined(__APPLE__) && !defined(__ANDROID__)
@@ -10742,7 +10843,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(revision 0)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,846 @@
+@@ -0,0 +1,941 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -10750,12 +10851,167 @@ Index: module-emulator.c
 +#include "oscam-config.h"
 +#include "oscam-conf-chk.h"
 +#include "oscam-time.h"
++#include "oscam-reader.h"
 +#include "module-emulator-osemu.h"
 +#include "module-emulator-stream.h"
 +
-+// oscam virtual emu card reader
++/*
++ * Readers in OSCam consist of 2 basic parts.
++ * The hardware or the device part. This is where physical smart cards are inserted
++ * and made available to OSCam.
++ * The software or the emulation part. This is where the actual card reading is done,
++ * including ecm and emm processing (i.e emulation of the various cryptosystems).
++ * In the Emu reader, the device part has no meaning, but we have to create it in
++ * order to be compatible with OSCam's reader structure.
++*/
++
++/*
++ * Create the Emu "emulation" part. This is of type s_cardsystem.
++ * Similar structures are found in the main sources folder (files reader-xxxxxx.c)
++ * for every cryptosystem supported by OSCam.
++ * Here we read keys from our virtual card (aka the SoftCam.Key file) and we inform
++ * OSCam about them. This is done with the emu_card_info() function. Keep in mind
++ * that Emu holds all its keys to separate structures for faster access.
++ * In addition, ECM and EMM requests are processed here, with the emu_do_ecm() and
++ * emu_do_emm() functions.
++*/
++
 +#define CS_OK     1
 +#define CS_ERROR  0
++
++static uint8_t oneByte = 0x01;
++extern char cs_confdir[128];
++
++static void set_hexserial_to_version(struct s_reader *rdr)
++{
++	char cVersion[32];
++	uint32_t version = GetOSemuVersion();
++	uint8_t hversion[2];
++	memset(hversion, 0, 2);
++	snprintf(cVersion, sizeof(cVersion), "%04d", version);
++	CharToBin(hversion, cVersion, 4);
++	rdr->hexserial[3] = hversion[0];
++	rdr->hexserial[4] = hversion[1];
++}
++
++static void set_prids(struct s_reader *rdr)
++{
++	int32_t i, j;
++
++	rdr->nprov = 0;
++
++	for (i = 0; (i < rdr->emu_auproviders.nfilts) && (rdr->nprov < CS_MAXPROV); i++)
++	{
++		for (j = 0; (j < rdr->emu_auproviders.filts[i].nprids) && (rdr->nprov < CS_MAXPROV); j++)
++		{
++			i2b_buf(4, rdr->emu_auproviders.filts[i].prids[j], rdr->prid[i]);
++			rdr->nprov++;
++		}
++	}
++}
++
++static void emu_add_entitlement(struct s_reader *rdr, uint16_t caid, uint32_t provid, uint8_t *key, char *keyName, uint32_t keyLength, uint8_t isData)
++{
++	if (!rdr->ll_entitlements)
++	{
++		rdr->ll_entitlements = ll_create("ll_entitlements");
++	}
++
++	S_ENTITLEMENT *item;
++	if (cs_malloc(&item, sizeof(S_ENTITLEMENT)))
++	{
++		// fill item
++		item->caid = caid;
++		item->provid = provid;
++		item->id = 0;
++		item->class = 0;
++		item->start = 0;
++		item->end = 2147472000;
++		item->type = 0;
++		item->isKey = 1;
++		memcpy(item->name, keyName, 8);
++		item->key = key;
++		item->keyLength = keyLength;
++		item->isData = isData;
++
++		// add item
++		ll_append(rdr->ll_entitlements, item);
++	}
++}
++
++static void refresh_entitlements(struct s_reader *rdr)
++{
++	uint32_t i;
++	KeyData *tmpKeyData;
++
++	cs_clear_entitlement(rdr);
++
++	for (i = 0; i < CwKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, CwKeys.EmuKeys[i].provider >> 8, CwKeys.EmuKeys[i].provider & 0xFF,
++							CwKeys.EmuKeys[i].key, CwKeys.EmuKeys[i].keyName, CwKeys.EmuKeys[i].keyLength, 0);
++	}
++
++	for (i = 0; i < ViKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, 0x500, ViKeys.EmuKeys[i].provider, ViKeys.EmuKeys[i].key,
++							ViKeys.EmuKeys[i].keyName, ViKeys.EmuKeys[i].keyLength, 0);
++	}
++
++	for (i = 0; i < NagraKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, 0x1801, NagraKeys.EmuKeys[i].provider, NagraKeys.EmuKeys[i].key,
++							NagraKeys.EmuKeys[i].keyName, NagraKeys.EmuKeys[i].keyLength, 0);
++	}
++
++	for (i = 0; i < IrdetoKeys.keyCount; i++)
++	{
++		tmpKeyData = &IrdetoKeys.EmuKeys[i];
++		do
++		{
++			emu_add_entitlement(rdr, tmpKeyData->provider >> 8, tmpKeyData->provider & 0xFF,
++								tmpKeyData->key, tmpKeyData->keyName, tmpKeyData->keyLength, 0);
++
++			tmpKeyData = tmpKeyData->nextKey;
++		}
++		while (tmpKeyData != NULL);
++	}
++
++	for (i = 0; i < NDSKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, NDSKeys.EmuKeys[i].provider, 0, NDSKeys.EmuKeys[i].key,
++							NDSKeys.EmuKeys[i].keyName, NDSKeys.EmuKeys[i].keyLength, 0);
++	}
++
++	emu_add_entitlement(rdr, 0x090F, 0, viasat_const, "00", 64, 1);
++	emu_add_entitlement(rdr, 0x093E, 0, viasat_const, "00", 64, 1);
++
++	for (i = 0; i < BissKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, 0x2600, BissKeys.EmuKeys[i].provider, BissKeys.EmuKeys[i].key,
++							BissKeys.EmuKeys[i].keyName, BissKeys.EmuKeys[i].keyLength, 0);
++	}
++
++	emu_add_entitlement(rdr, 0xFFFF, 0, &oneByte, "00", 1, 1);
++	
++	for (i = 0; i < PowervuKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, 0x0E00, PowervuKeys.EmuKeys[i].provider, PowervuKeys.EmuKeys[i].key,
++							PowervuKeys.EmuKeys[i].keyName, PowervuKeys.EmuKeys[i].keyLength, 0);
++	}
++
++	for (i = 0; i < DreKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, 0x4AE1, DreKeys.EmuKeys[i].provider, DreKeys.EmuKeys[i].key,
++							DreKeys.EmuKeys[i].keyName, DreKeys.EmuKeys[i].keyLength, 0);
++	}
++
++	for (i = 0; i < TandbergKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, 0x1010, TandbergKeys.EmuKeys[i].provider, TandbergKeys.EmuKeys[i].key,
++							TandbergKeys.EmuKeys[i].keyName, TandbergKeys.EmuKeys[i].keyLength, 0);
++	}
++}
 +
 +static int32_t emu_do_ecm(struct s_reader *rdr, const struct ecm_request_t *er, struct s_ecm_answer *ea)
 +{
@@ -10766,25 +11022,26 @@ Index: module-emulator.c
 +	idata.ee56 = rdr->ee56;
 +	idata.dre36_force_group = rdr->dre36_force_group;
 +	idata.dre56_force_group = rdr->dre56_force_group;
-+	
-+	if (!ProcessECM(er->ecmlen, er->caid, er->prid, er->ecm, ea->cw, er->srvid, er->pid, &ea->cw_ex, &idata)) {
++
++	if (!ProcessECM(er->ecmlen, er->caid, er->prid, er->ecm, ea->cw, er->srvid, er->pid, &ea->cw_ex, &idata))
++	{
 +		return CS_OK;
 +	}
 +
 +	return CS_ERROR;
 +}
 +
-+static void refresh_entitlements(struct s_reader *reader);
-+
 +static int32_t emu_do_emm(struct s_reader *rdr, struct emm_packet_t *emm)
 +{
 +	uint32_t keysAdded = 0;
 +
-+	if(emm->emmlen < 3) {
++	if (emm->emmlen < 3)
++	{
 +		return CS_ERROR;
 +	}
 +
-+	if(SCT_LEN(emm->emm) > emm->emmlen) {
++	if (SCT_LEN(emm->emm) > emm->emmlen)
++	{
 +		return CS_ERROR;
 +	}
 +
@@ -10795,28 +11052,85 @@ Index: module-emulator.c
 +	idata.ee56 = rdr->ee56;
 +	idata.dre36_force_group = rdr->dre36_force_group;
 +	idata.dre56_force_group = rdr->dre56_force_group;
-+	
-+	if(!ProcessEMM(b2i(2, emm->caid), b2i(4, emm->provid), emm->emm, &idata, &keysAdded)) {
-+		if(keysAdded > 0) { refresh_entitlements(rdr); }
++
++	if (!ProcessEMM(b2i(2, emm->caid), b2i(4, emm->provid), emm->emm, &idata, &keysAdded))
++	{
++		if (keysAdded > 0)
++		{
++			refresh_entitlements(rdr);
++		}
++
 +		return CS_OK;
 +	}
 +
 +	return CS_ERROR;
 +}
 +
-+static int32_t EMU_Init(struct s_reader *reader);
++static int32_t emu_card_info(struct s_reader *rdr)
++{
++	int32_t i;
++	char keyStr[EMU_MAX_CHAR_KEYNAME];
 +
-+static int32_t emu_card_info(struct s_reader *rdr) {
-+	EMU_Init(rdr);
++	// Delete keys from Emu's memory
++	clear_emu_keydata();
++
++	// Read keys built in the OSCam-Emu binary
++#if !defined(__APPLE__) && !defined(__ANDROID__)
++	read_emu_keymemory();
++#endif
++
++	// Read keys from SoftCam.Key file
++	set_emu_keyfile_path(cs_confdir);
++
++	if (!read_emu_keyfile(cs_confdir))
++	{
++		if (read_emu_keyfile("/var/keys/"))
++		{
++			set_emu_keyfile_path("/var/keys/");
++		}
++	}
++
++	cs_log("Total keys in memory: W:%d V:%d N:%d I:%d S:%d F:%d P:%d D:%d T:%d", \
++						CwKeys.keyCount, ViKeys.keyCount, NagraKeys.keyCount, \
++						IrdetoKeys.keyCount, NDSKeys.keyCount, BissKeys.keyCount, \
++						PowervuKeys.keyCount, DreKeys.keyCount, TandbergKeys.keyCount);
++
++	if (rdr->des_key_length >= 128)
++	{
++		for (i = 0; i < 16; i++)
++		{
++			snprintf(keyStr, EMU_MAX_CHAR_KEYNAME, "%X", i);
++			SetKey('D', 0, keyStr, rdr->des_key + (i * 8), 8, 0, NULL);
++		}
++	}
++
++	ReaderInstanceData idata;
++	idata.extee36 = rdr->extee36;
++	idata.extee56 = rdr->extee56;
++	idata.ee36 = rdr->ee36;
++	idata.ee56 = rdr->ee56;
++	idata.dre36_force_group = rdr->dre36_force_group;
++	idata.dre56_force_group = rdr->dre56_force_group;
++
++	DrecryptSetEmuExtee(&idata);
++
++	// Inform OSCam about all available keys.
++	// This is used for listing the "entitlements" in the webif's reader page.
++	refresh_entitlements(rdr);
++
++	set_prids(rdr);
++
++	set_hexserial_to_version(rdr);
++
 +	return CS_OK;
 +}
 +
++/*
 +static int32_t emu_card_init(struct s_reader *UNUSED(rdr), struct s_ATR *UNUSED(atr))
-+{return CS_ERROR;}
-+
-+static int32_t emu_get_emm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **UNUSED(emm_filters), unsigned int *UNUSED(filter_count))
-+{return CS_ERROR;}
-+
++{
++	return CS_ERROR;
++}
++*/
 +
 +int32_t emu_get_via3_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 +{
@@ -11001,6 +11315,21 @@ Index: module-emulator.c
 +	}
 +	
 +	return CS_ERROR;
++}
++
++FILTER* get_emu_prids_for_caid(struct s_reader *rdr, uint16_t caid)
++{
++	int32_t i;
++	
++	for(i = 0; i < rdr->emu_auproviders.nfilts; i++)
++	{
++		if(caid == rdr->emu_auproviders.filts[i].caid)
++		{
++			return &rdr->emu_auproviders.filts[i];
++		}
++	}
++	
++	return NULL;
 +}
 +
 +static int32_t emu_get_via3_emm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **emm_filters, unsigned int *filter_count, uint16_t UNUSED(caid), uint32_t UNUSED(provid))
@@ -11235,6 +11564,11 @@ Index: module-emulator.c
 +	return CS_OK;
 +}
 +
++static int32_t emu_get_emm_filter(struct s_reader *UNUSED(rdr), struct s_csystem_emm_filter **UNUSED(emm_filters), unsigned int *UNUSED(filter_count))
++{
++	return CS_ERROR;
++}
++
 +static int32_t emu_get_emm_filter_adv(struct s_reader *rdr, struct s_csystem_emm_filter **emm_filters, unsigned int *filter_count, uint16_t caid, uint32_t provid, uint16_t srvid)
 +{
 +	switch(caid>>8)
@@ -11268,171 +11602,50 @@ Index: module-emulator.c
 +	.do_ecm = emu_do_ecm,
 +	.do_emm = emu_do_emm,
 +	.card_info = emu_card_info,
-+	.card_init = emu_card_init,
++	//.card_init = emu_card_init, // apparently this is not needed at all
 +	.get_emm_type = emu_get_emm_type,
 +	.get_emm_filter = emu_get_emm_filter, // needed to pass checks
 +	.get_emm_filter_adv = emu_get_emm_filter_adv,
 +};
 +
++/*
++ * Create the Emu virtual "device" part. This is of type s_cardreader.
++ * Similar structures are found in the csctapi (Card System Card Terminal API)
++ * folder for every IFD (InterFace Device), aka smart card reader.
++ * Since we have no hardware to initialize, we start our Stream Relay server
++ * with the emu_reader_init() function.
++ * At Emu shutdown, we remove keys from memory with the emu_close() function.
++*/
 +
-+#define CR_OK 0
-+#define CR_ERROR 1
++#define CR_OK     0
++#define CR_ERROR  1
 +
-+static void emu_add_entitlement(struct s_reader *rdr, uint16_t caid, uint32_t provid, uint8_t *key, char *keyName, uint32_t keyLength, uint8_t isData)
-+{
-+	if(!rdr->ll_entitlements) { rdr->ll_entitlements = ll_create("ll_entitlements"); }
-+
-+	S_ENTITLEMENT *item;
-+	if(cs_malloc(&item, sizeof(S_ENTITLEMENT)))
-+	{
-+	
-+		// fill item
-+		item->caid = caid;
-+		item->provid = provid;
-+		item->id = 0;
-+		item->class = 0;
-+		item->start = 0;
-+		item->end = 2147472000;
-+		item->type = 0;
-+		item->isKey = 1;
-+		memcpy(item->name, keyName, 8);
-+		item->key = key;
-+		item->keyLength = keyLength;
-+		item->isData = isData;
-+		
-+		// add item
-+		ll_append(rdr->ll_entitlements, item);
-+	}
-+}
-+
-+static uint8_t oneByte = 0x01;
-+
-+static void refresh_entitlements(struct s_reader *reader)
-+{
-+	uint32_t i;
-+	KeyData *tmpKeyData;
-+
-+	if(reader->ll_entitlements)
-+	{ ll_clear_data(reader->ll_entitlements); }
-+
-+	for(i=0; i<CwKeys.keyCount; i++)
-+		emu_add_entitlement(reader, CwKeys.EmuKeys[i].provider>>8, CwKeys.EmuKeys[i].provider&0xFF,
-+							CwKeys.EmuKeys[i].key, CwKeys.EmuKeys[i].keyName, CwKeys.EmuKeys[i].keyLength, 0);
-+
-+	for(i=0; i<ViKeys.keyCount; i++)
-+		emu_add_entitlement(reader, 0x500, ViKeys.EmuKeys[i].provider, ViKeys.EmuKeys[i].key, ViKeys.EmuKeys[i].keyName,
-+							ViKeys.EmuKeys[i].keyLength, 0);
-+
-+	for(i=0; i<NagraKeys.keyCount; i++)
-+		emu_add_entitlement(reader, 0x1801, NagraKeys.EmuKeys[i].provider, NagraKeys.EmuKeys[i].key, NagraKeys.EmuKeys[i].keyName,
-+							NagraKeys.EmuKeys[i].keyLength, 0);
-+
-+	for(i=0; i<IrdetoKeys.keyCount; i++) {
-+		tmpKeyData = &IrdetoKeys.EmuKeys[i];
-+		do {
-+			emu_add_entitlement(reader, tmpKeyData->provider>>8, tmpKeyData->provider&0xFF, tmpKeyData->key, tmpKeyData->keyName, tmpKeyData->keyLength, 0);
-+			tmpKeyData = tmpKeyData->nextKey;
-+		}
-+		while(tmpKeyData!= NULL);
-+	}
-+
-+	for(i=0; i<NDSKeys.keyCount; i++)
-+	{ emu_add_entitlement(reader, NDSKeys.EmuKeys[i].provider, 0, NDSKeys.EmuKeys[i].key, NDSKeys.EmuKeys[i].keyName, NDSKeys.EmuKeys[i].keyLength, 0); }
-+
-+	emu_add_entitlement(reader, 0x090F, 0, viasat_const, "00", 64, 1);
-+	emu_add_entitlement(reader, 0x093E, 0, viasat_const, "00", 64, 1);
-+
-+	for(i=0; i<BissKeys.keyCount; i++)
-+	{ emu_add_entitlement(reader, 0x2600, BissKeys.EmuKeys[i].provider, BissKeys.EmuKeys[i].key, BissKeys.EmuKeys[i].keyName, BissKeys.EmuKeys[i].keyLength, 0); }
-+
-+	emu_add_entitlement(reader, 0xFFFF, 0, &oneByte, "00", 1, 1);
-+	
-+	for(i=0; i<PowervuKeys.keyCount; i++)
-+		emu_add_entitlement(reader, 0x0E00, PowervuKeys.EmuKeys[i].provider, PowervuKeys.EmuKeys[i].key, PowervuKeys.EmuKeys[i].keyName,
-+							PowervuKeys.EmuKeys[i].keyLength, 0);
-+	
-+	for(i=0; i<DreKeys.keyCount; i++)
-+		emu_add_entitlement(reader, 0x4AE1, DreKeys.EmuKeys[i].provider, DreKeys.EmuKeys[i].key, DreKeys.EmuKeys[i].keyName,
-+							DreKeys.EmuKeys[i].keyLength, 0);
-+
-+	for(i=0; i<TandbergKeys.keyCount; i++)
-+		emu_add_entitlement(reader, 0x1010, TandbergKeys.EmuKeys[i].provider, TandbergKeys.EmuKeys[i].key, TandbergKeys.EmuKeys[i].keyName,
-+							TandbergKeys.EmuKeys[i].keyLength, 0);
-+}
-+
-+extern char cs_confdir[128];
-+
-+static void set_hexserial_to_version(struct s_reader *rdr)
-+{
-+	char cVersion[32];
-+	
-+	uint32_t version = GetOSemuVersion();
-+	uint8_t hversion[2];
-+	memset(hversion, 0, 2);
-+	snprintf(cVersion, sizeof(cVersion), "%04d", version);
-+	CharToBin(hversion, cVersion, 4);
-+	rdr->hexserial[3] = hversion[0];
-+	rdr->hexserial[4] = hversion[1];	
-+}
-+
-+static void set_prids(struct s_reader *rdr)
-+{
-+	int32_t i, j;
-+
-+	rdr->nprov = 0;
-+	
-+	for(i = 0; (i < rdr->emu_auproviders.nfilts) && (rdr->nprov < CS_MAXPROV); i++)
-+	{
-+		for(j = 0; (j < rdr->emu_auproviders.filts[i].nprids) && (rdr->nprov < CS_MAXPROV); j++)
-+		{
-+			i2b_buf(4, rdr->emu_auproviders.filts[i].prids[j], rdr->prid[i]);
-+			rdr->nprov++;
-+		}
-+	}
-+}
-+
-+FILTER* get_emu_prids_for_caid(struct s_reader *rdr, uint16_t caid)
-+{
-+	int32_t i;
-+	
-+	for(i = 0; i < rdr->emu_auproviders.nfilts; i++)
-+	{
-+		if(caid == rdr->emu_auproviders.filts[i].caid)
-+		{
-+			return &rdr->emu_auproviders.filts[i];
-+		}
-+	}
-+	
-+	return NULL;
-+}
-+
-+static int32_t EMU_Init(struct s_reader *reader)
++static int32_t emu_reader_init(struct s_reader *UNUSED(reader))
 +{
 +	int32_t i;
 +	char authtmp[128];
-+	char keyStr[EMU_MAX_CHAR_KEYNAME];
-+	
-+	if(stream_server_thread_init == 0)
++
++	if (stream_server_thread_init == 0)
 +	{
 +		stream_server_thread_init = 1;
-+
 +		SAFE_MUTEX_INIT(&emu_fixed_key_srvid_mutex, NULL);
 +
-+		for(i=0; i<EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
++		for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
 +		{
 +			SAFE_MUTEX_INIT(&emu_fixed_key_data_mutex[i], NULL);
 +			ll_emu_stream_delayed_keys[i] = ll_create("ll_emu_stream_delayed_keys");
 +			memset(&emu_fixed_key_data[i], 0, sizeof(emu_stream_client_key_data));
 +		}
-+		
++
 +		start_thread("stream_key_delayer", stream_key_delayer, NULL, NULL, 1, 1);
-+			
++		cs_log("Stream key delayer initialized");
++
 +		cs_strncpy(emu_stream_source_host, cfg.emu_stream_source_host, sizeof(emu_stream_source_host));
 +		emu_stream_source_port = cfg.emu_stream_source_port;
 +		emu_stream_relay_port = cfg.emu_stream_relay_port;
 +		emu_stream_emm_enabled = cfg.emu_stream_emm_enabled;
-+		
-+		if(cfg.emu_stream_source_auth_user && cfg.emu_stream_source_auth_password)
++
++		if (cfg.emu_stream_source_auth_user && cfg.emu_stream_source_auth_password)
 +		{
 +			snprintf(authtmp, sizeof(authtmp), "%s:%s", cfg.emu_stream_source_auth_user, cfg.emu_stream_source_auth_password);
 +			b64encode(authtmp, strlen(authtmp), &emu_stream_source_auth);
@@ -11443,146 +11656,129 @@ Index: module-emulator.c
 +		}
 +
 +		start_thread("stream_server", stream_server, NULL, NULL, 1, 1);
-+	}
-+	
-+	set_hexserial_to_version(reader);
-+	
-+#if !defined(__APPLE__) && !defined(__ANDROID__)
-+	read_emu_keymemory();
-+#endif
-+
-+	set_emu_keyfile_path(cs_confdir);
-+
-+	if(!read_emu_keyfile(cs_confdir))
-+	{
-+		if(read_emu_keyfile("/var/keys/"))
-+		{
-+			set_emu_keyfile_path("/var/keys/");
-+		}
-+	}
-+	
-+	if(reader->des_key_length >= 128)
-+	{
-+		for(i=0; i<16; i++)
-+		{
-+			snprintf(keyStr, EMU_MAX_CHAR_KEYNAME, "%X", i);
-+			
-+			SetKey('D', 0, keyStr, reader->des_key + (i*8), 8, 0, NULL);
-+		}
++		cs_log("Stream relay server initialized");
 +	}
 +
-+	ReaderInstanceData idata;
-+	idata.extee36 = reader->extee36;
-+	idata.extee56 = reader->extee56;
-+	idata.ee36 = reader->ee36;
-+	idata.ee56 = reader->ee56;
-+	idata.dre36_force_group = reader->dre36_force_group;
-+	idata.dre56_force_group = reader->dre56_force_group;
-+	
-+	DrecryptSetEmuExtee(&idata);
-+
-+	refresh_entitlements(reader);
-+
-+	set_prids(reader);
-+	
 +	return CR_OK;
 +}
 +
-+static int32_t EMU_GetStatus(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; return CR_OK; }
-+static int32_t EMU_Activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { return CR_OK; }
-+static int32_t EMU_Transmit(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
-+									uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
-+static int32_t EMU_Receive(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
-+									uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
-+static int32_t EMU_Close(struct s_reader *UNUSED(reader)) { return CR_OK; }
-+static int32_t EMU_write_settings(struct s_reader *UNUSED(reader), struct s_cardreader_settings *UNUSED(s)) { return CR_OK; }
-+static int32_t EMU_card_write(struct s_reader *UNUSED(pcsc_reader),const uchar *UNUSED(buf) ,uint8_t *UNUSED(cta_res),
-+									uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
-+static int32_t EMU_set_protocol(struct s_reader *UNUSED(rdr),uint8_t *UNUSED(params),uint32_t *UNUSED(length),
-+									uint32_t UNUSED(len_request)) { return CR_OK; }
++static int32_t emu_close(struct s_reader *UNUSED(reader))
++{
++	cs_log("Reader is shutting down");
++
++	// Delete keys from Emu's memory
++	clear_emu_keydata();
++
++	return CR_OK;
++}
++
++static int32_t emu_get_status(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; return CR_OK; }
++static int32_t emu_activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { return CR_OK; }
++static int32_t emu_transmit(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size), uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
++static int32_t emu_receive(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
++static int32_t emu_write_settings(struct s_reader *UNUSED(reader), struct s_cardreader_settings *UNUSED(s)) { return CR_OK; }
++static int32_t emu_card_write(struct s_reader *UNUSED(pcsc_reader),const uchar *UNUSED(buf) ,uint8_t *UNUSED(cta_res), uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
++static int32_t emu_set_protocol(struct s_reader *UNUSED(rdr),uint8_t *UNUSED(params),uint32_t *UNUSED(length), uint32_t UNUSED(len_request)) { return CR_OK; }
 +
 +const struct s_cardreader cardreader_emu =
 +{
-+	.desc           = "emu",
-+	.typ            = R_EMU,
++	.desc                   = "emu",
++	.typ                    = R_EMU,
 +	.skip_extra_atr_parsing = 1,
-+	.reader_init    = EMU_Init,
-+	.get_status     = EMU_GetStatus,
-+	.activate       = EMU_Activate,
-+	.transmit       = EMU_Transmit,
-+	.receive        = EMU_Receive,
-+	.close          = EMU_Close,
-+	.write_settings = EMU_write_settings,
-+	.card_write     = EMU_card_write,
-+	.set_protocol   = EMU_set_protocol,
++	.reader_init            = emu_reader_init,
++	.get_status             = emu_get_status,
++	.activate               = emu_activate,
++	.transmit               = emu_transmit,
++	.receive                = emu_receive,
++	.close                  = emu_close,
++	.write_settings         = emu_write_settings,
++	.card_write             = emu_card_write,
++	.set_protocol           = emu_set_protocol,
 +};
 +
 +void add_emu_reader(void)
 +{
++	// This function is called inside oscam.c and creates an emu [reader] with default
++	// settings in oscam.server file. If an emu [reader] already exists, it uses that.
++
 +	LL_ITER itr;
 +	struct s_reader *rdr;
 +	int8_t haveEmuReader = 0;
 +	char *emuName = "emulator";
 +	char *ctab, *ftab, *emu_auproviders;
 +
++	// Check if emu [reader] entry already exists in oscam.server file and get it
 +	itr = ll_iter_create(configured_readers);
-+	while((rdr = ll_iter_next(&itr)))
++	while ((rdr = ll_iter_next(&itr)))
 +	{
-+		if(rdr->typ == R_EMU) {
++		if (rdr->typ == R_EMU)
++		{
 +			haveEmuReader = 1;
 +			break;
 +		}
 +	}
-+	
++
 +	rdr = NULL;
-+	
-+	if(!haveEmuReader) {
-+		if(!cs_malloc(&rdr, sizeof(struct s_reader))) { return; }
++
++	// If there's no emu [reader] in oscam.server, create one with default settings
++	if (!haveEmuReader)
++	{
++		if (!cs_malloc(&rdr, sizeof(struct s_reader)))
++		{
++			return;
++		}
++
 +		reader_set_defaults(rdr);
-+		
++
 +		rdr->enable = 1;
 +		rdr->typ = R_EMU;
 +		strncpy(rdr->label, emuName, strlen(emuName));
 +		strncpy(rdr->device, emuName, strlen(emuName));
-+		
++
++		// CAIDs
 +		ctab = strdup("090F,0500,1801,0604,2600,FFFF,0E00,4AE1,1010");
 +		chk_caidtab(ctab, &rdr->ctab);
 +		NULLFREE(ctab);
-+		
-+		ftab = strdup(
-+						"090F:000000;"
-+						"0500:000000,023800,021110,007400,007800;"
-+						"1801:000000,007301,001101,002111;"
-+						"0604:000000;"
-+						"2600:000000;"
-+						"FFFF:000000;"
-+						"0E00:000000;"
-+						"4AE1:000011,000014,0000FE;"
-+						"1010:000000;"
-+						);
-+		
++
++		// Idents
++		ftab = strdup("090F:000000;"
++					  "0500:000000,023800,021110,007400,007800;"
++					  "1801:000000,007301,001101,002111;"
++					  "0604:000000;"
++					  "2600:000000;"
++					  "FFFF:000000;"
++					  "0E00:000000;"
++					  "4AE1:000011,000014,0000FE;"
++					  "1010:000000;"
++					 );
 +		chk_ftab(ftab, &rdr->ftab);
 +		NULLFREE(ftab);
-+		
++
++		// AU providers
 +		emu_auproviders = strdup("0604:010200;0E00:000000;4AE1:000011,000014,0000FE;1010:000000;");
 +		chk_ftab(emu_auproviders, &rdr->emu_auproviders);
 +		NULLFREE(emu_auproviders);
-+		
++
++		// EMM cache
 +		rdr->cachemm = 2;
 +		rdr->rewritemm = 1;
 +		rdr->logemm = 2;
 +		rdr->deviceemm = 1;
-+		
++
++		// User group
 +		rdr->grp = 0x1ULL;
-+		
++
++		// Add the "device" part to our emu reader
 +		rdr->crdr = &cardreader_emu;
-+		
++
 +		reader_fixups_fn(rdr);
 +		ll_append(configured_readers, rdr);
 +	}
 +
++	// Set DVB Api delayer option
 +#ifdef HAVE_DVBAPI
-+	if(cfg.dvbapi_enabled && cfg.dvbapi_delayer < 60) {
++	if (cfg.dvbapi_enabled && cfg.dvbapi_delayer < 60)
++	{
 +		cfg.dvbapi_delayer = 60;
 +	}
 +#endif
@@ -11591,7 +11787,7 @@ Index: module-emulator.c
 +}
 Index: module-newcamd-des.c
 ===================================================================
---- module-newcamd-des.c	(revision 11391)
+--- module-newcamd-des.c	(revision 11392)
 +++ module-newcamd-des.c	(working copy)
 @@ -5,10 +5,7 @@
  #define DES_IP              1
@@ -11615,7 +11811,7 @@ Index: module-newcamd-des.c
  	unsigned char left[8];
 Index: module-newcamd-des.h
 ===================================================================
---- module-newcamd-des.h	(revision 11391)
+--- module-newcamd-des.h	(revision 11392)
 +++ module-newcamd-des.h	(working copy)
 @@ -1,8 +1,15 @@
  #ifndef MODULE_NEWCAMD_DES_H_
@@ -11635,7 +11831,7 @@ Index: module-newcamd-des.h
  #endif
 Index: module-newcamd.c
 ===================================================================
---- module-newcamd.c	(revision 11391)
+--- module-newcamd.c	(revision 11392)
 +++ module-newcamd.c	(working copy)
 @@ -919,6 +919,13 @@
  			// set userfilter for au enabled clients
@@ -11709,7 +11905,7 @@ Index: module-newcamd.c
  						mbuf[22 + 11 * j] = 0x00;
 Index: module-stat.c
 ===================================================================
---- module-stat.c	(revision 11391)
+--- module-stat.c	(revision 11392)
 +++ module-stat.c	(working copy)
 @@ -903,7 +903,7 @@
  
@@ -11731,7 +11927,7 @@ Index: module-stat.c
  				continue; // proxy can convert or reject
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 11391)
+--- module-webif-tpl.c	(revision 11392)
 +++ module-webif-tpl.c	(working copy)
 @@ -457,6 +457,7 @@
  											check_conf(WITH_SSL, ptr2);
@@ -11743,7 +11939,7 @@ Index: module-webif-tpl.c
  										{
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 11391)
+--- module-webif.c	(revision 11392)
 +++ module-webif.c	(working copy)
 @@ -101,6 +101,7 @@
  #define MNU_CFG_LCD			14
@@ -11931,7 +12127,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-aes.c
 ===================================================================
---- oscam-aes.c	(revision 11391)
+--- oscam-aes.c	(revision 11392)
 +++ oscam-aes.c	(working copy)
 @@ -37,6 +37,16 @@
  	}
@@ -11952,7 +12148,7 @@ Index: oscam-aes.c
  {
 Index: oscam-aes.h
 ===================================================================
---- oscam-aes.h	(revision 11391)
+--- oscam-aes.h	(revision 11392)
 +++ oscam-aes.h	(working copy)
 @@ -5,6 +5,8 @@
  bool aes_set_key_alloc(struct aes_keys **aes, char *key);
@@ -11965,7 +12161,7 @@ Index: oscam-aes.h
  void parse_aes_entry(AES_ENTRY **list, char *label, char *value);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 11391)
+--- oscam-chk.c	(revision 11392)
 +++ oscam-chk.c	(working copy)
 @@ -758,7 +758,7 @@
  		return 0;
@@ -12005,7 +12201,7 @@ Index: oscam-chk.c
  	}
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 11391)
+--- oscam-config-global.c	(revision 11392)
 +++ oscam-config-global.c	(working copy)
 @@ -854,6 +854,30 @@
  #else
@@ -12048,7 +12244,7 @@ Index: oscam-config-global.c
  	{ "webif",	webif_opts },
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 11391)
+--- oscam-config-reader.c	(revision 11392)
 +++ oscam-config-reader.c	(working copy)
 @@ -109,6 +109,7 @@
  			{ "newcamd525", R_NEWCAMD },
@@ -12093,7 +12289,7 @@ Index: oscam-config-reader.c
  	DEF_OPT_FUNC("auprovid"             , 0,                            auprovid_fn),
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 11391)
+--- oscam-config.h	(revision 11392)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -12115,7 +12311,7 @@ Index: oscam-config.h
  void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE *f);
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 11391)
+--- oscam-ecm.c	(revision 11392)
 +++ oscam-ecm.c	(working copy)
 @@ -1584,7 +1584,7 @@
  
@@ -12128,7 +12324,7 @@ Index: oscam-ecm.c
  					+ chk_if_ignore_checksum(er, reader->disablecrccws, &reader->disablecrccws_only_for);
 Index: oscam-emm.c
 ===================================================================
---- oscam-emm.c	(revision 11391)
+--- oscam-emm.c	(revision 11392)
 +++ oscam-emm.c	(working copy)
 @@ -50,7 +50,14 @@
  	unsigned int j, filter_count = 0;
@@ -12173,7 +12369,7 @@ Index: oscam-emm.c
  		rdr_log_dbg(reader, D_EMM, "reader auprovid = %06X matching with emm provid = %06X -> SEND!", prid, provid);
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 11391)
+--- oscam-string.c	(revision 11392)
 +++ oscam-string.c	(working copy)
 @@ -510,6 +510,62 @@
  	return crc ^ 0xffffffffL;
@@ -12240,7 +12436,7 @@ Index: oscam-string.c
  	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 11391)
+--- oscam-string.h	(revision 11392)
 +++ oscam-string.h	(working copy)
 @@ -37,6 +37,7 @@
  void get_random_bytes(uint8_t *dst, uint32_t dst_len);
@@ -12252,7 +12448,7 @@ Index: oscam-string.h
  
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11391)
+--- oscam.c	(revision 11392)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -12306,7 +12502,7 @@ Index: oscam.c
  	coolapi_close_all();
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 11391)
+--- reader-common.c	(revision 11392)
 +++ reader-common.c	(working copy)
 @@ -15,6 +15,7 @@
  #include "reader-common.h"
@@ -12338,7 +12534,7 @@ Index: reader-common.c
  		NULLFREE(reader->csystem_data);
 Index: readers.h
 ===================================================================
---- readers.h	(revision 11391)
+--- readers.h	(revision 11392)
 +++ readers.h	(working copy)
 @@ -16,5 +16,6 @@
  extern const struct s_cardsystem reader_bulcrypt;
@@ -12349,7 +12545,7 @@ Index: readers.h
  #endif
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11391)
+--- webif/config/dvbapi.html	(revision 11392)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -53,7 +53,7 @@
  			</TD>
@@ -12370,7 +12566,7 @@ Index: webif/config/dvbapi.html
 \ No newline at end of file
 Index: webif/config/menu.html
 ===================================================================
---- webif/config/menu.html	(revision 11391)
+--- webif/config/menu.html	(revision 11392)
 +++ webif/config/menu.html	(working copy)
 @@ -16,6 +16,7 @@
  ##TPLCONFIGMENUDVBAPI##		<!-- CMENUACTIVE13 -->
@@ -12419,7 +12615,7 @@ Index: webif/config/streamrelay.html
 \ No newline at end of file
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 11391)
+--- webif/files/menu.html	(revision 11392)
 +++ webif/files/menu.html	(working copy)
 @@ -10,7 +10,7 @@
  		<LI CLASS="##CMENUACTIVE7##"><A HREF="files.html?file=logfile">logfile</A></LI>
@@ -12446,7 +12642,7 @@ Index: webif/files/menu_softcamkey.html
 +			<LI CLASS="##CMENUACTIVE30##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 11391)
+--- webif/pages_index.txt	(revision 11392)
 +++ webif/pages_index.txt	(working copy)
 @@ -80,11 +80,13 @@
  CONFIGMENUNEWCAMD             config/menu_newcamd.html                                    MODULE_NEWCAMD
