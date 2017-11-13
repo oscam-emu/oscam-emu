@@ -3127,7 +3127,7 @@ Index: globals.h
 +	char        *emu_stream_source_host;
 +	int32_t     emu_stream_source_port;
 +	char        *emu_stream_source_auth_user;
-+	char        *emu_stream_source_auth_password;	
++	char        *emu_stream_source_auth_password;
 +	int32_t     emu_stream_relay_port;
 +	uint32_t    emu_stream_ecm_delay;
 +	int8_t      emu_stream_relay_enabled;
@@ -11605,7 +11605,7 @@ Index: module-emulator.c
 +	int32_t i;
 +	char authtmp[128];
 +
-+	if (stream_server_thread_init == 0)
++	if (cfg.emu_stream_relay_enabled && (stream_server_thread_init == 0))
 +	{
 +		stream_server_thread_init = 1;
 +		SAFE_MUTEX_INIT(&emu_fixed_key_srvid_mutex, NULL);
@@ -12570,10 +12570,10 @@ Index: webif/config/streamrelay.html
 +		<input name="part" type="hidden" value="streamrelay">
 +		<TABLE CLASS="config">
 +			<TR><TH COLSPAN="2">Edit Stream Relay Config</TH></TR>
-+			<TR><TD><A>Mode (disable to use direct dvbapi decryption)</A></TD>
++			<TR><TD><A>Mode (requires OSCam restart)</A></TD>
 +				<TD>
 +					<select name="stream_relay_enabled">
-+						<option value="0" ##STREAMRELAYENABLEDSELECTED0##>0 - disabled (use DVBAPI)</option>
++						<option value="0" ##STREAMRELAYENABLEDSELECTED0##>0 - disabled (use direct DVBAPI decryption)</option>
 +						<option value="1" ##STREAMRELAYENABLEDSELECTED1##>1 - enabled (use Stream Relay)</option>
 +					</select>
 +				</TD>
