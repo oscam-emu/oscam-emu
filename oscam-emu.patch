@@ -3118,7 +3118,15 @@ Index: globals.h
  	uint8_t cnxlastecm; // == 0 - las ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST           *emmstat; //emm stats
  	CS_MUTEX_LOCK   emmstat_lock;
-@@ -2207,6 +2223,18 @@
+@@ -2161,6 +2177,7 @@
+ 	int8_t      dvbapi_read_sdt;
+ 	int8_t      dvbapi_write_sdt_prov;
+ 	int8_t      dvbapi_extended_cw_api;
++	int8_t      dvbapi_extended_cw_pids;            // pid limiter
+ #endif
+ 
+ #ifdef CS_ANTICASC
+@@ -2207,6 +2224,18 @@
  	IN_ADDR_T   scam_srvip;
  	struct s_ip *scam_allowed;
  #endif
@@ -3137,7 +3145,7 @@ Index: globals.h
  	int32_t    max_cache_time;  //seconds ecms are stored in ecmcwcache
  	int32_t    max_hitcache_time;  //seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
  
-@@ -2388,4 +2416,8 @@
+@@ -2388,4 +2417,8 @@
  static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710;}
  const char *get_cardsystem_desc_by_caid(uint16_t caid);
  
@@ -3226,7 +3234,37 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X", demux_id, pid,
  				   demux[demux_id].ECMpids[pid].CAID, demux[demux_id].ECMpids[pid].PROVID, demux[demux_id].ECMpids[pid].ECM_PID,
  				   demux[demux_id].pmtpid, demux[demux_id].ECMpids[pid].VPID);
-@@ -4374,6 +4402,7 @@
+@@ -3191,6 +3219,7 @@
+ {
+ 	uint32_t i = 0, start_descrambling = 0;
+ 	int32_t j = 0;
++	int32_t max_pids = 64;
+ 	int32_t demux_id = -1;
+ 	uint16_t demux_index, adapter_index, pmtpid;
+ 	uint32_t ca_mask;
+@@ -3353,6 +3382,12 @@
+ 	uint32_t es_info_length = 0, vpid = 0;
+ 	struct s_dvbapi_priority *addentry;
+ 
++	// pid limiter - use "max_pids"
++	if(cfg.dvbapi_extended_cw_api == 1)
++	{
++		max_pids = cfg.dvbapi_extended_cw_pids;
++	}
++
+ 	for(i = program_info_length + program_info_start; i + 4 < length; i += es_info_length + 5)
+ 	{
+ 		uint8_t stream_type = buffer[i];
+@@ -3360,7 +3395,7 @@
+ 		uint8_t is_audio = 0;
+ 		es_info_length = b2i(2, buffer + i +3)&0x0FFF;
+ 
+-		if(demux[demux_id].STREAMpidcount < ECM_PIDS)
++		if(demux[demux_id].STREAMpidcount < max_pids) // was "ECM_PIDS" (pid limiter)
+ 		{
+ 
+ 			demux[demux_id].STREAMpids[demux[demux_id].STREAMpidcount] = elementary_pid;
+@@ -4374,6 +4409,7 @@
  	if(filtertype == TYPE_ECM)
  	{
  		uint32_t chid = 0x10000;
@@ -3234,7 +3272,7 @@ Index: module-dvbapi.c
  		ECM_REQUEST *er;
  
  		if(len != 0)  // len = 0 receiver encountered an internal bufferoverflow!
-@@ -4400,9 +4429,24 @@
+@@ -4400,9 +4436,24 @@
  				return;
  			}
  
@@ -3261,7 +3299,7 @@ Index: module-dvbapi.c
  				if(!(er = get_ecmtask()))
  				{
  					return;
-@@ -4684,6 +4728,40 @@
+@@ -4684,6 +4735,40 @@
  			dvbapi_stop_filternum(demux_id, filter_num, msgid);
  			return;
  		}
@@ -3302,7 +3340,7 @@ Index: module-dvbapi.c
  		dvbapi_process_emm(demux_id, filter_num, buffer, sctlen);
  	}
  
-@@ -6202,6 +6280,9 @@
+@@ -6202,6 +6287,9 @@
  
  		delayer(er, delay);
  
@@ -3373,7 +3411,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 756 $"+10);
++	return atoi("$Version: 757 $"+10);
 +}
 +
 +/*
@@ -11975,7 +12013,18 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams *params)
  {
-@@ -1631,6 +1661,9 @@
+@@ -1554,6 +1584,10 @@
+ 	tpl_printf(vars, TPLADD, "TMP", "EXTENDEDCWAPISELECTED%d", cfg.dvbapi_extended_cw_api);
+ 	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
+ 
++	//extended_cw_pids (pid limiter)
++	tpl_printf(vars, TPLADD, "TMP", "EXTENDEDCWPIDSSELECTED%d", cfg.dvbapi_extended_cw_pids);
++	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
++
+ 	//write_sdt_prov
+ 	if(cfg.dvbapi_write_sdt_prov > 0)
+ 		{ tpl_addVar(vars, TPLADD, "WRITESDTPROVCHECKED", "checked"); } 
+@@ -1631,6 +1665,9 @@
  #ifdef MODULE_SCAM
  	else if(!strcmp(part, "scam")) { return send_oscam_config_scam(vars, params); }
  #endif
@@ -11985,7 +12034,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  	else if(!strcmp(part, "cccam")) { return send_oscam_config_cccam(vars, params); }
  #endif
-@@ -2093,7 +2126,7 @@
+@@ -2093,7 +2130,7 @@
  		chk_reader("services", servicelabels, rdr);
  		chk_reader("lb_whitelist_services", servicelabelslb, rdr);
  
@@ -11994,7 +12043,7 @@ Index: module-webif.c
  		{
  			restart_cardreader(rdr, 1);
  		}
-@@ -2671,6 +2704,21 @@
+@@ -2671,6 +2708,21 @@
  	tpl_addVar(vars, TPLADD, "USERSCRIPT", rdr->userscript);
  #endif
  
@@ -12016,7 +12065,7 @@ Index: module-webif.c
  	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
  
  	// Show only parameters which needed for the reader
-@@ -2692,6 +2740,9 @@
+@@ -2692,6 +2744,9 @@
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
@@ -12026,7 +12075,7 @@ Index: module-webif.c
  	case R_CS378X :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
  		break;
-@@ -4414,9 +4465,38 @@
+@@ -4414,9 +4469,38 @@
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -12065,7 +12114,7 @@ Index: module-webif.c
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -4892,6 +4972,9 @@
+@@ -4892,6 +4976,9 @@
  #else
  						filtered = (type == cl->typ);
  #endif
@@ -12075,7 +12124,7 @@ Index: module-webif.c
  					}
  				}
  
-@@ -6336,6 +6419,9 @@
+@@ -6336,6 +6423,9 @@
  		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
  		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
  #endif
@@ -12085,7 +12134,7 @@ Index: module-webif.c
  		{ NULL, 0, 0 },
  	};
  
-@@ -6806,7 +6892,7 @@
+@@ -6806,7 +6896,7 @@
  		else if(!proxy && rdr->csystem_active)     // local active reader
  		{
  			csystem = rdr->csystem;
@@ -12094,7 +12143,7 @@ Index: module-webif.c
  		}
  
  		if(csystem)
-@@ -7813,8 +7899,8 @@
+@@ -7813,8 +7903,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -12214,7 +12263,15 @@ Index: oscam-config-global.c
  #ifdef MODULE_RADEGAST
  static bool radegast_should_save_fn(void *UNUSED(var))
  {
-@@ -1289,6 +1313,7 @@
+@@ -1236,6 +1260,7 @@
+ 	DEF_OPT_INT8("read_sdt"		, OFS(dvbapi_read_sdt),	0),
+ 	DEF_OPT_INT8("write_sdt_prov", OFS(dvbapi_write_sdt_prov),	0),
+ 	DEF_OPT_INT8("extended_cw_api", OFS(dvbapi_extended_cw_api),	0),
++	DEF_OPT_INT8("extended_cw_pids", OFS(dvbapi_extended_cw_pids),	8), // pid limiter
+ 	DEF_OPT_FUNC("boxtype"		, OFS(dvbapi_boxtype),		dvbapi_boxtype_fn),
+ 	DEF_OPT_FUNC("services"		, OFS(dvbapi_sidtabs.ok),	dvbapi_services_fn),
+ 	// OBSOLETE OPTIONS
+@@ -1289,6 +1314,7 @@
  	{ "cccam",	cccam_opts },
  	{ "pandora",	pandora_opts },
  	{ "scam",	scam_opts },
@@ -12536,12 +12593,26 @@ Index: webif/config/dvbapi.html
  			<TD>
  				<select name="extended_cw_api">
  					<option value="0" ##EXTENDEDCWAPISELECTED0##>0 - none (disabled)</option>
-@@ -61,4 +61,4 @@
+@@ -61,4 +61,18 @@
  					<option value="2" ##EXTENDEDCWAPISELECTED2##>2 - OE2.0</option>
  				</select>
  			</TD>
 -		</TR> -->			
 \ No newline at end of file
++		</TR>
++		</TR>
++		<TR><TD><A>Max pids for extended CWs</A></TD>
++			<TD>
++				<select name="extended_cw_pids">
++					<option value="2" ##EXTENDEDCWPIDSSELECTED2##>2</option>
++					<option value="3" ##EXTENDEDCWPIDSSELECTED3##>3</option>
++					<option value="4" ##EXTENDEDCWPIDSSELECTED4##>4</option>
++					<option value="5" ##EXTENDEDCWPIDSSELECTED5##>5</option>
++					<option value="6" ##EXTENDEDCWPIDSSELECTED6##>6</option>
++					<option value="7" ##EXTENDEDCWPIDSSELECTED7##>7</option>
++					<option value="8" ##EXTENDEDCWPIDSSELECTED8##>8</option>
++				</select>
++			</TD>
 +		</TR>
 \ No newline at end of file
 Index: webif/config/menu.html
