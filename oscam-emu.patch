@@ -12731,7 +12731,7 @@ Index: webif/readerconfig/readerconfig_emubit.html
 +++ webif/readerconfig/readerconfig_emubit.html	(working copy)
 @@ -0,0 +1,5 @@
 +			<TR><TD><A>AU providers:</A></TD><TD><textarea name="emu_auproviders" rows="3" class="bt">##EMUAUPROVIDERS##</textarea></TD></TR>
-+			<TR><TD><A>DRE extee36:</A></TD><TD><input name="extee36" type="text" maxlength="150" value="##EXTEE36##"></TD></TR>
-+			<TR><TD><A>DRE extee56:</A></TD><TD><input name="extee56" type="text" maxlength="150" value="##EXTEE56##"></TD></TR>
-+			<TR><TD><A>DRE center force group:</A></TD><TD><input name="dre36_force_group" class="medium" type="text" maxlength="2" value="##DRE36FORCEGROUP##"></TD></TR>
-+			<TR><TD><A>DRE siberia force group:</A></TD><TD><input name="dre56_force_group" class="medium" type="text" maxlength="2" value="##DRE56FORCEGROUP##"></TD></TR>
++			<TR><TD><A>[Drecrypt] Path to ee36.bin:</A></TD><TD><input name="extee36" type="text" maxlength="150" value="##EXTEE36##"></TD></TR>
++			<TR><TD><A>[Drecrypt] Path to ee56.bin:</A></TD><TD><input name="extee56" type="text" maxlength="150" value="##EXTEE56##"></TD></TR>
++			<TR><TD><A>[Drecrypt] Center force group:</A></TD><TD><input name="dre36_force_group" class="medium" type="text" maxlength="2" value="##DRE36FORCEGROUP##"></TD></TR>
++			<TR><TD><A>[Drecrypt] Siberia force group:</A></TD><TD><input name="dre56_force_group" class="medium" type="text" maxlength="2" value="##DRE56FORCEGROUP##"></TD></TR>
