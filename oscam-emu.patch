@@ -3376,7 +3376,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6195 @@
+@@ -0,0 +1,6277 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3411,7 +3411,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 757 $"+10);
++	return atoi("$Version: 758 $"+10);
 +}
 +
 +/*
@@ -4154,7 +4154,7 @@ Index: module-emulator-osemu.c
 +	// Save keys to db
 +	memset(dummy[0], 0x00, 32);
 +	memset(dummy[1], 0xFF, 32);
-+	prvid = (strcmp(name, "ee36.bin") == 0) ? 0x4AE111 : 0x4AE114;
++	prvid = (strncmp(name, "ee36.bin", 9) == 0) ? 0x4AE111 : 0x4AE114;
 +
 +	for (i = 0; i < 32; i++) // Set "3B" type keys
 +	{
@@ -8945,52 +8945,95 @@ Index: module-emulator-osemu.c
 +	snprintf(keyStr, EMU_MAX_CHAR_KEYNAME, "MK%04X", keyName);
 +	return FindKey('D', keyIdent, 0, keyStr, buf, 32, isCriticalKey, 0, 0, NULL);
 +}
-+/*
-+static void DrecryptWriteEEToFile(uint8_t ident)
++
++static void DrecryptWriteEebin(const char *path, const char *name)
 +{
++	char tmp[256];
 +	FILE *file = NULL;
-+	opkeys_t *ee = ident == 0x11 ? idata->ee36 : idata->ee56;
-+	char *path = ident == 0x11 ? idata->extee36 : idata->extee56;
-+	
-+	if(ee == NULL) return;
-+	
-+	if((file = fopen(path,"wb")) == NULL) return;
-+	fwrite(ee,1,sizeof(opkeys_t),file);
++	uint8_t i, buffer[64][32];
++	uint32_t prvid;
++
++	// Set path
++	if (path != NULL)
++	{
++		snprintf(tmp, 256, "%s%s", path, name);
++	}
++	else // No path set, use SoftCam.Keys's path
++	{
++		snprintf(tmp, 256, "%s%s", emu_keyfile_path, name);
++	}
++
++	if ((file = fopen(tmp, "wb")) != NULL)
++	{
++		cs_log("Writing key file: %s", tmp);
++	}
++	else
++	{
++		cs_log("Error writing key file: %s", tmp);
++		return;
++	}
++
++	// Load keys from db to buffer
++	prvid = (strncmp(name, "ee36.bin", 9) == 0) ? 0x4AE111 : 0x4AE114;
++
++	for (i = 0; i < 32; i++) // Load "3B" type keys
++	{
++		snprintf(tmp, 5, "3B%02X", i);
++		if (!FindKey('D', prvid, 0, tmp, buffer[i], 32, 0, 0, 0, NULL))
++		{
++			memset(buffer[i], 0xFF, 32);
++		}
++	}
++
++	for (i = 0; i < 32; i++) // Load "56" type keys
++	{
++		snprintf(tmp, 5, "56%02X", i);
++		if (!FindKey('D', prvid, 0, tmp, buffer[32 + i], 32, 0, 0, 0, NULL))
++		{
++			memset(buffer[32 + i], 0xFF, 32);
++		}
++	}
++
++	// Write buffer to ee.bin file
++	fwrite(buffer, 1, sizeof(buffer), file);
 +	fclose(file);
 +}
-+*/
-+static int8_t DrecryptProcessEMM(uint16_t caid, uint32_t provId, uint8_t *emm, uint32_t *keysAdded)
++
++static int8_t DrecryptProcessEMM(struct s_reader *rdr, uint32_t provId, uint8_t *emm, uint32_t *keysAdded)
 +{
-+	uint16_t emmLen = ((emm[1] & 0xF) << 8) | emm[2];
-+	uint32_t keyIdent;
++	uint16_t emmLen, emmDataLen;
++	uint32_t i, keyIdent;
 +	uint16_t keyName;
 +	uint8_t emmKey[32];
-+	int32_t i;
 +	uint8_t *curECMkey3B = NULL, *curECMkey56 = NULL;
 +	uint8_t keynum =0, keyidx = 0, keyclass = 0, key1offset, key2offset;
 +	char newKeyName[EMU_MAX_CHAR_KEYNAME], curKeyName[EMU_MAX_CHAR_KEYNAME], keyValue[100];
 +	
-+	if(emmLen < 1 || caid != 0x4AE1)
++	emmDataLen = GetEcmLen(emm);
++	emmLen = ((emm[1] & 0xF) << 8) | emm[2];
++
++	if (emmDataLen < emmLen + 3)
 +	{
-+		return 1;
++		return 4; // Corrupt data
 +	}
 +
-+	if(emm[0] == 0x91)
++	if (emm[0] == 0x91)
 +	{
 +		Drecrypt2OverEMM(emm);
 +		return 0;
 +	}
-+	else if(emm[0] == 0x82)
++	else if (emm[0] == 0x82)
 +	{
 +		ReasmEMM82(emm);
 +		return 0;
 +	}
-+	else if(emm[0] != 0x86) 
++	else if (emm[0] != 0x86)
 +	{
-+		return 1;
++		return 1; // Not supported
 +	}
-+	
-+	switch(emm[4])
++
++	// Emm type 0x86 only
++	switch (emm[4])
 +	{
 +		case 0x02:
 +			keynum = 0x2C;
@@ -8999,7 +9042,7 @@ Index: module-emulator-osemu.c
 +			key1offset = 0x35;
 +			key2offset = 0x6D;
 +			break;
-+			
++
 +		case 0x4D:
 +			keynum = 0x61;
 +			keyidx = 0x60;
@@ -9007,19 +9050,19 @@ Index: module-emulator-osemu.c
 +			key1offset = 0x62;
 +			key2offset = 0x8B;
 +			break;
-+			
++
 +		default:
-+			return 1;
++			return 1; // Not supported
 +	}
 +	
 +	switch (provId & 0xFF)
 +	{
 +		case 0x11:
 +		{
-+			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "3B%02X", keyclass);
++			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "3B%02X", emm[keyclass]);
 +			FindKey('D', 0x4AE111, 0, curKeyName, curECMkey3B, 32, 0, 0, 0, NULL);
 +
-+			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "56%02X", keyclass);
++			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "56%02X", emm[keyclass]);
 +			FindKey('D', 0x4AE111, 0, curKeyName, curECMkey56, 32, 0, 0, 0, NULL);
 +
 +			break;
@@ -9027,46 +9070,49 @@ Index: module-emulator-osemu.c
 +
 +		case 0x14:
 +		{
-+			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "3B%02X", keyclass);
++			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "3B%02X", emm[keyclass]);
 +			FindKey('D', 0x4AE114, 0, curKeyName, curECMkey3B, 32, 0, 0, 0, NULL);
 +
-+			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "56%02X", keyclass);
++			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "56%02X", emm[keyclass]);
 +			FindKey('D', 0x4AE114, 0, curKeyName, curECMkey56, 32, 0, 0, 0, NULL);
 +
 +			break;
 +		}
 +
 +		default:
-+			return 9;
++			return 9; // Wrong provider
 +	}
 +	
-+	keyIdent = caid<<8 | provId;
-+	keyName = emm[0x3]<<8 | emm[keynum];
++	keyIdent = (0x4AE1 << 8) | provId;
++	keyName = (emm[3] << 8) | emm[keynum];
 +
-+	if(!DrecryptGetEmmKey(emmKey, keyIdent, keyName, 1))
++	if (!DrecryptGetEmmKey(emmKey, keyIdent, keyName, 1))
 +	{
-+		return 2; 
++		return 2;
 +	}
 +	
-+	//key #1
-+	for(i=0; i<4; i++)
++	// Key #1
++	for (i = 0; i < 4; i++)
 +	{
-+		DrecryptDecrypt(&emm[key1offset+(i*8)], emmKey);
++		DrecryptDecrypt(&emm[key1offset + (i * 8)], emmKey);
 +	}
 +
-+	//key #2
-+	for(i=0; i<4; i++)
++	// Key #2
++	for (i = 0; i < 4; i++)
 +	{
-+		DrecryptDecrypt(&emm[key2offset+(i*8)], emmKey);
++		DrecryptDecrypt(&emm[key2offset + (i * 8)], emmKey);
 +	}
-+	
-+	//key #1
-+	keyName = emm[keyidx]<<8 | emm[keyclass];
++
++	// Key #1
++	keyName = emm[keyidx] << 8 | emm[keyclass];
 +	snprintf(newKeyName, EMU_MAX_CHAR_KEYNAME, "%.4X", keyName);
-+	if(memcmp(&emm[key1offset], emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, 32) != 0)
++
++	if (memcmp(&emm[key1offset], emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, 32) != 0)
 +	{
 +		memcpy(emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, &emm[key1offset], 32);
++		SetKey('D', keyIdent, newKeyName, &emm[key1offset], 32, 0, NULL);
 +		(*keysAdded)++;
++
 +		cs_hexdump(0, &emm[key1offset], 32, keyValue, sizeof(keyValue));
 +		cs_log("Key found in EMM: D %.6X %s %s class %02X", keyIdent, newKeyName, keyValue, emm[keyclass]);
 +	}
@@ -9075,13 +9121,16 @@ Index: module-emulator-osemu.c
 +		cs_log("Key %.6X %s already exists", keyIdent, newKeyName);
 +	}
 +
-+	//key #2
++	// Key #2
 +	keyName = (emm[keyidx] == 0x56 ? 0x3B00 : 0x5600) | emm[keyclass];
 +	snprintf(newKeyName, EMU_MAX_CHAR_KEYNAME, "%.4X", keyName);
-+	if(memcmp(&emm[key2offset], emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, 32) != 0)
++
++	if (memcmp(&emm[key2offset], emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, 32) != 0)
 +	{
 +		memcpy(emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, &emm[key2offset], 32);
++		SetKey('D', keyIdent, newKeyName, &emm[key2offset], 32, 0, NULL);
 +		(*keysAdded)++;
++
 +		cs_hexdump(0, &emm[key2offset], 32, keyValue, sizeof(keyValue));
 +		cs_log("Key found in EMM: D %.6X %s %s class %02X", keyIdent, newKeyName, keyValue, emm[keyclass]);
 +	}
@@ -9089,81 +9138,114 @@ Index: module-emulator-osemu.c
 +	{
 +		cs_log("Key %.6X %s already exists", keyIdent, newKeyName);
 +	}
-+	
-+	//if(*keysAdded > 0) DrecryptWriteEEToFile(provId & 0xFF);
-+	
++
++	if (*keysAdded > 0) // Write new ecm keys to ee.bin file
++	{
++		switch (provId & 0xFF)
++		{
++			case 0x11:
++				DrecryptWriteEebin(rdr->extee36, "ee36.bin");
++				break;
++
++			case 0x14:
++				DrecryptWriteEebin(rdr->extee56, "ee56.bin");
++				break;
++
++			default:
++				cs_log("Provider %02X doesn't have a matching ee.bin file", provId & 0xFF);
++				break;
++		}
++	}
++
 +	return 0;
 +}
 +
-+static int8_t Drecrypt2EMM(struct s_reader *rdr, uint16_t caid, uint32_t provId, uint8_t *emm, uint32_t *keysAdded)
++static int8_t Drecrypt2EMM(struct s_reader *rdr, uint32_t provId, uint8_t *emm, uint32_t *keysAdded)
 +{
-+	int8_t result = DrecryptProcessEMM(caid, provId, emm, keysAdded);
++	int8_t result = DrecryptProcessEMM(rdr, provId, emm, keysAdded);
 +
-+	if(result == 2)
++	if (result == 2)
 +	{
 +		uint8_t keynum = 0, emmkey;
-+		uint32_t i, len;
-+		KeyDataContainer *KeyDB;
-+		
-+		emmkey = emm[4] == 0x4D ? emm[0x61] : emm[0x2c];
-+		
-+		if((KeyDB = GetKeyContainer('D')) != NULL)
++		uint32_t i;
++		KeyDataContainer *KeyDB = GetKeyContainer('D');
++
++		if (KeyDB == NULL)
 +		{
-+			for(i=0; i<KeyDB->keyCount; i++)
++			return result;
++		}
++
++		for (i = 0; i < KeyDB->keyCount; i++)
++		{
++			if (KeyDB->EmuKeys[i].provider != ((0x4AE1 << 8) | provId))
 +			{
-+				if(KeyDB->EmuKeys[i].provider != ((caid << 8) | provId)) 
-+					{ continue; }
-+				
-+				len = strlen(KeyDB->EmuKeys[i].keyName);
-+				
-+				if(len < 6)
-+					{ continue; }
-+					
-+				if(memcmp(KeyDB->EmuKeys[i].keyName, "MK", 2))
-+					{ continue; }
-+				
-+				CharToBin(&keynum, KeyDB->EmuKeys[i].keyName+4, 2);
-+				if(keynum == emmkey)
++				continue;
++			}
++
++			if (strlen(KeyDB->EmuKeys[i].keyName) < 6)
++			{
++				continue;
++			}
++
++			if (memcmp(KeyDB->EmuKeys[i].keyName, "MK", 2))
++			{
++				continue;
++			}
++
++			CharToBin(&keynum, KeyDB->EmuKeys[i].keyName + 4, 2);
++			emmkey = (emm[4] == 0x4D) ? emm[0x61] : emm[0x2C];
++
++			if (keynum == emmkey)
++			{
++				if (provId == 0x11)
 +				{
-+					if(provId == 0x11) CharToBin(&rdr->dre36_force_group, KeyDB->EmuKeys[i].keyName+2, 2);
-+					else CharToBin(&rdr->dre56_force_group, KeyDB->EmuKeys[i].keyName+2, 2);
-+					break;
++					CharToBin(&rdr->dre36_force_group, KeyDB->EmuKeys[i].keyName + 2, 2);
 +				}
++				else
++				{
++					CharToBin(&rdr->dre56_force_group, KeyDB->EmuKeys[i].keyName + 2, 2);
++				}
++
++				break;
 +			}
 +		}
 +	}
-+	
++
 +	return result;
 +}
 +
 +int32_t GetDrecryptHexserials(uint16_t caid, uint32_t provid, uint8_t *hexserials, int32_t length, int32_t *count)
 +{
 +	uint32_t i;
-+	int32_t len;
-+	KeyDataContainer *KeyDB;
++	KeyDataContainer *KeyDB = GetKeyContainer('D');
 +
-+	KeyDB = GetKeyContainer('D');
-+	if(KeyDB == NULL)
-+		{ return 0; }
-+	
++	if (KeyDB == NULL)
++	{
++		return 0;
++	}
++
 +	(*count) = 0;
 +
-+	for(i=0; i<KeyDB->keyCount && (*count)<length ; i++)
++	for (i = 0; i < KeyDB->keyCount && (*count) < length; i++)
 +	{
 +
-+		if(KeyDB->EmuKeys[i].provider != ((caid << 8) | provid))
-+			{ continue; }
-+		
-+		len = strlen(KeyDB->EmuKeys[i].keyName);
-+		
-+		if(len < 6)
-+			{ continue; }
-+			
-+		if(memcmp(KeyDB->EmuKeys[i].keyName, "MK", 2))
-+			{ continue; }
-+		
-+		CharToBin(&hexserials[(*count)], KeyDB->EmuKeys[i].keyName+2, 2);
-+	
++		if (KeyDB->EmuKeys[i].provider != ((caid << 8) | provid))
++		{
++			continue;
++		}
++
++		if (strlen(KeyDB->EmuKeys[i].keyName) < 6)
++		{
++			continue;
++		}
++
++		if (memcmp(KeyDB->EmuKeys[i].keyName, "MK", 2))
++		{
++			continue;
++		}
++
++		CharToBin(&hexserials[(*count)], KeyDB->EmuKeys[i].keyName + 2, 2);
++
 +		(*count)++;
 +	}
 +
@@ -9560,7 +9642,7 @@ Index: module-emulator-osemu.c
 +		result = PowervuEMM(emmCopy, keysAdded);
 +	}
 +	else if(caid==0x4AE1) {
-+		result = Drecrypt2EMM(rdr, caid, provider, emmCopy, keysAdded);
++		result = Drecrypt2EMM(rdr, provider, emmCopy, keysAdded);
 +	}
 +	else if((caid>>8)==0x10) {
 +		result = TandbergEMM(emmCopy, keysAdded);
