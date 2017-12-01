@@ -3376,7 +3376,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6277 @@
+@@ -0,0 +1,6303 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -4061,8 +4061,21 @@ Index: module-emulator-osemu.c
 +			return 0;
 +		}
 +
-+		CharToBin(key, keyString, strlen(keyString));
-+		SetKey(identifier, provider, keyName, key, keyLength, 0, NULL);
++		if (CharToBin(key, keyString, strlen(keyString))) // Conversion OK
++		{
++			SetKey(identifier, provider, keyName, key, keyLength, 0, NULL);
++		}
++		else // Non-hex characters in keyString
++		{
++			if ((identifier != ';' && identifier != '#' && // Skip warning for comments, etc.
++				 identifier != '=' && identifier != '-' &&
++				 identifier != ' ') &&
++				!(identifier == 'F' && 0 == strncmp(keyString, "XXXXXXXXXXXX", 12))) // Skip warning for BISS 'Example key' lines
++			{
++				// Alert user regarding faulty line
++				cs_log("WARNING: non-hex value in %s at %c %04X %s %s", EMU_KEY_FILENAME, identifier, provider, keyName, keyString);
++			}
++		}
 +		free(key);
 +	}
 +	fclose(file);
@@ -4101,8 +4114,21 @@ Index: module-emulator-osemu.c
 +			return;
 +		}
 +
-+		CharToBin(key, keyString, strlen(keyString));
-+		SetKey(identifier, provider, keyName, key, keyLength, 0, NULL);
++		if (CharToBin(key, keyString, strlen(keyString))) // Conversion OK
++		{
++			SetKey(identifier, provider, keyName, key, keyLength, 0, NULL);
++		}
++		else // Non-hex characters in keyString
++		{
++			if ((identifier != ';' && identifier != '#' && // Skip warning for comments, etc.
++				 identifier != '=' && identifier != '-' &&
++				 identifier != ' ') &&
++				!(identifier == 'F' && 0 == strncmp(keyString, "XXXXXXXXXXXX", 12))) // Skip warning for BISS 'Example key' lines
++			{
++				// Alert user regarding faulty line
++				cs_log("WARNING: non-hex value in internal keyfile at %c %04X %s %s", identifier, provider, keyName, keyString);
++			}
++		}
 +		free(key);
 +		line = strtok_r(NULL, "\n", &saveptr);
 +	}
