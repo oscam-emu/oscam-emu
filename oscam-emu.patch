@@ -3246,8 +3246,8 @@ Index: module-dvbapi.c
  	uint32_t es_info_length = 0, vpid = 0;
  	struct s_dvbapi_priority *addentry;
  
-+	// pid limiter - use "max_pids"
-+	if(cfg.dvbapi_extended_cw_api == 1)
++	// pid limiter for PowerVu
++	if(demux[demux_id].ECMpids[0].CAID >> 8 == 0x0E)
 +	{
 +		max_pids = cfg.dvbapi_extended_cw_pids;
 +	}
@@ -12349,7 +12349,7 @@ Index: oscam-config-global.c
  	DEF_OPT_INT8("read_sdt"		, OFS(dvbapi_read_sdt),	0),
  	DEF_OPT_INT8("write_sdt_prov", OFS(dvbapi_write_sdt_prov),	0),
  	DEF_OPT_INT8("extended_cw_api", OFS(dvbapi_extended_cw_api),	0),
-+	DEF_OPT_INT8("extended_cw_pids", OFS(dvbapi_extended_cw_pids),	16), // pid limiter
++	DEF_OPT_INT8("extended_cw_pids", OFS(dvbapi_extended_cw_pids),	64), // pid limiter
  	DEF_OPT_FUNC("boxtype"		, OFS(dvbapi_boxtype),		dvbapi_boxtype_fn),
  	DEF_OPT_FUNC("services"		, OFS(dvbapi_sidtabs.ok),	dvbapi_services_fn),
  	// OBSOLETE OPTIONS
@@ -12675,7 +12675,7 @@ Index: webif/config/dvbapi.html
  			<TD>
  				<select name="extended_cw_api">
  					<option value="0" ##EXTENDEDCWAPISELECTED0##>0 - none (disabled)</option>
-@@ -61,4 +61,21 @@
+@@ -61,4 +61,19 @@
  					<option value="2" ##EXTENDEDCWAPISELECTED2##>2 - OE2.0</option>
  				</select>
  			</TD>
@@ -12693,8 +12693,6 @@ Index: webif/config/dvbapi.html
 +					<option value="6" ##EXTENDEDCWPIDSSELECTED6##>6</option>
 +					<option value="7" ##EXTENDEDCWPIDSSELECTED7##>7</option>
 +					<option value="8" ##EXTENDEDCWPIDSSELECTED8##>8</option>
-+					<option value="16" ##EXTENDEDCWPIDSSELECTED16##>16</option>
-+					<option value="32" ##EXTENDEDCWPIDSSELECTED32##>32</option>
 +					<option value="64" ##EXTENDEDCWPIDSSELECTED64##>64</option>
 +				</select>
 +			</TD>
