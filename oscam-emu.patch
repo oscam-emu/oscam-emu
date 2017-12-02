@@ -3411,7 +3411,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 759 $"+10);
++	return atoi("$Version: 760 $"+10);
 +}
 +
 +/*
