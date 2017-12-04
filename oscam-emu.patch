@@ -3376,7 +3376,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6303 @@
+@@ -0,0 +1,6334 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3411,7 +3411,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 760 $"+10);
++	return atoi("$Version: 761 $"+10);
 +}
 +
 +/*
@@ -6787,6 +6787,28 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
++uint8_t table06[] = { 0x00, 0x01, 0x02, 0x06, 0x07, 0x08, 0x03, 0x2A, 0x2B, 0x2C, 0x2E, 0x2F, 0x04, 0x05, 0x09, 0x0D,
++					  0x20, 0x21, 0x22, 0x26, 0x27, 0x3A, 0x3B, 0x3C, 0x3E, 0x3F, 0x10, 0x11, 0x12, 0x16, 0x17, 0x28,
++					  0x18, 0x13, 0x14, 0x15, 0x19, 0x1C, 0x1A, 0x1B, 0x1C, 0x1E, 0x1F, 0x23, 0x24, 0x25, 0x29, 0x2D,
++					  0x30, 0x31, 0x32, 0x36, 0x37, 0x38, 0x33, 0x34, 0x0A, 0x0B, 0x0C, 0x0E, 0x0F, 0x35, 0x39, 0x3D };
++
++static void PowervuHashModes04to0ATables(uint8_t *data, uint8_t *hash, uint8_t *table)
++{
++	int i;
++
++	for (i = 0; i < 0x10; i++)
++	{
++		hash[i] = table[i];
++		hash[i] ^= data[table[i]];
++		hash[i] ^= table[0x10 + i];
++		hash[i] ^= data[table[0x10 + i]];
++		hash[i] ^= table[0x20 + i];
++		hash[i] ^= data[table[0x20 + i]];
++		hash[i] ^= table[0x30 + i];
++		hash[i] ^= data[table[0x30 + i]];
++	}
++}
++
 +static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
 +{
 +	uint8_t dataPadded[0x40];
@@ -6805,6 +6827,10 @@ Index: module-emulator-osemu.c
 +
 +		case 3:
 +			PowervuHashMode03(dataPadded, hash);
++			break;
++
++		case 6:
++			PowervuHashModes04to0ATables(dataPadded, hash, table06);
 +			break;
 +
 +		default:
@@ -6865,16 +6891,19 @@ Index: module-emulator-osemu.c
 +	// Create seed for CW decryption
 +	memset(seedEcmCw, 0, 0x10);
 +	
-+	for(i = 0; i < 0x0B; i++)
++	int extraBytesLen = ecm[9];
++	int startOffset = extraBytesLen + 0x0A;
++
++	for (i = 0; i < 0x0B; i++)
 +	{
-+		seedEcmCw[i] = ecm[0x0A + seedCwPos[i]];
++		seedEcmCw[i] = ecm[startOffset + seedCwPos[i]];
 +	}
 +	
 +	// Read hash mode CW
-+	hashModeCw = ecm[28] ^ PowervuCrc8Calc(seedEcmCw, 0x10);
++	hashModeCw = ecm[28 + extraBytesLen] ^ PowervuCrc8Calc(seedEcmCw, 0x10);
 +	
 +	// Create mask for ECM decryption
-+	PowervuCreateDataEcmEmm(ecm, sourcePos, 0x0A, 0x18, data);
++	PowervuCreateDataEcmEmm(ecm, sourcePos, startOffset, 0x18, data);
 +	
 +	hashModeEcm = ecm[8] ^ PowervuCrc8Calc(data, 0x18);
 +	
@@ -6884,12 +6913,12 @@ Index: module-emulator-osemu.c
 +	ecm[3] &= 0x0F;
 +	ecm[3] |= 0x30;
 +	ecm[8]  = 0x00;
-+	ecm[28] = 0x00;
++	ecm[28 + extraBytesLen] = 0x00;
 +	
 +	// Unmask body
-+	for(i = 0; i < 0x10; i++)
++	for (i = 0; i < 0x10; i++)
 +	{
-+		ecm[0x0A + destPos[i]] ^= mask[i & 0x0F];
++		ecm[startOffset + destPos[i]] ^= mask[i & 0x0F];
 +	}
 +	
 +	// Fix CRC (optional)
@@ -7419,7 +7448,9 @@ Index: module-emulator-osemu.c
 +			{
 +				break;
 +			}
-+			
++
++			i += ecm[i + 3]; // Extra Data Length
++
 +			csaUsed = GetBit(ecm[i+7], 7);
 +			fixedKey = !GetBit(ecm[i+6], 5);
 +			oddKey = GetBit(ecm[i+6], 4);
