@@ -3282,12 +3282,12 @@ Index: module-dvbapi.c
 -
 +				pvu_skip = 1;
 +				
-+				if(sctlen > 0xb)
++				if(sctlen > 11 + buffer[9])
 +				{
-+					if(buffer[0xb] > curpid->pvu_counter || (curpid->pvu_counter == 255 && buffer[0xb] == 0)
-+							|| ((curpid->pvu_counter - buffer[0xb]) > 5))
++					if(buffer[11 + buffer[9]] > curpid->pvu_counter || (curpid->pvu_counter == 255 && buffer[11 + buffer[9]] == 0)
++							|| ((curpid->pvu_counter - buffer[11 + buffer[9]]) > 5))
 +					{
-+						curpid->pvu_counter = buffer[0xb];
++						curpid->pvu_counter = buffer[11 + buffer[9]];
 +						pvu_skip = 0;
 +					}
 +				}
@@ -3411,7 +3411,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 761 $"+10);
++	return atoi("$Version: 762 $"+10);
 +}
 +
 +/*
