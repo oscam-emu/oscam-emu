@@ -3282,7 +3282,7 @@ Index: module-dvbapi.c
 -
 +				pvu_skip = 1;
 +				
-+				if(sctlen > 11 + buffer[9])
++				if(sctlen - 11 > buffer[9])
 +				{
 +					if(buffer[11 + buffer[9]] > curpid->pvu_counter || (curpid->pvu_counter == 255 && buffer[11 + buffer[9]] == 0)
 +							|| ((curpid->pvu_counter - buffer[11 + buffer[9]]) > 5))
