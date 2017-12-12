@@ -3086,7 +3086,7 @@ Index: globals.h
  	uint32_t        class;              // the class needed for some systems
  	time_t          start;              // startdate
  	time_t          end;                // enddate
-+#ifdef WITH_EMU	
++#ifdef WITH_EMU
 +	bool            isKey;
 +	bool            isData;
 +	char            name[8];
@@ -3104,12 +3104,13 @@ Index: globals.h
  	int32_t (*get_tunemm_filter)(struct s_reader *, struct s_csystem_emm_filter **, unsigned int *);
  };
  
-@@ -1714,6 +1723,13 @@
+@@ -1714,6 +1723,14 @@
  #ifdef MODULE_GHTTP
  	uint8_t         ghttp_use_ssl;
  #endif
 +#ifdef WITH_EMU
 +	FTAB            emu_auproviders;                // AU providers for Emu reader
++	int8_t          emu_datecodedenabled;           // date-coded keys for BISS
 +	char            *extee36;                       // path to "ee36.bin" - Set by the user via the webif
 +	char            *extee56;                       // path to "ee56.bin" - Set by the user via the webif
 +	uint8_t         dre36_force_group;
@@ -3118,7 +3119,7 @@ Index: globals.h
  	uint8_t cnxlastecm; // == 0 - las ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST           *emmstat; //emm stats
  	CS_MUTEX_LOCK   emmstat_lock;
-@@ -2161,6 +2177,7 @@
+@@ -2161,6 +2178,7 @@
  	int8_t      dvbapi_read_sdt;
  	int8_t      dvbapi_write_sdt_prov;
  	int8_t      dvbapi_extended_cw_api;
@@ -3126,7 +3127,7 @@ Index: globals.h
  #endif
  
  #ifdef CS_ANTICASC
-@@ -2207,6 +2224,18 @@
+@@ -2207,6 +2225,18 @@
  	IN_ADDR_T   scam_srvip;
  	struct s_ip *scam_allowed;
  #endif
@@ -3145,7 +3146,7 @@ Index: globals.h
  	int32_t    max_cache_time;  //seconds ecms are stored in ecmcwcache
  	int32_t    max_hitcache_time;  //seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
  
-@@ -2388,4 +2417,8 @@
+@@ -2388,4 +2418,8 @@
  static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710;}
  const char *get_cardsystem_desc_by_caid(uint16_t caid);
  
@@ -3376,7 +3377,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6334 @@
+@@ -0,0 +1,6442 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3411,7 +3412,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 762 $"+10);
++	return atoi("$Version: 763 $"+10);
 +}
 +
 +/*
@@ -3502,6 +3503,35 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
++static void Date2Str(char *dateStr, uint8_t len, int8_t offset, uint8_t format)
++{
++	// Creates a formatted date string for use in various functions.
++	// A positive or negative time offset (in hours) can be set as well
++	// as the format of the output string.
++
++	time_t rawtime;
++	struct tm timeinfo;
++
++	time(&rawtime);
++	rawtime += (time_t) offset * 60 * 60; // Add a positive or negative offset
++	localtime_r(&rawtime, &timeinfo);
++
++	switch (format)
++	{
++		case 1: // Use in WriteKeyToFile()
++			strftime(dateStr, len, "%c", &timeinfo);
++			break;
++
++		case 2: // Used in BissAnnotate()
++			strftime(dateStr, len, "added: %F @ %R", &timeinfo);
++			break;
++
++		case 3: // Used in SetKey(), BissECM()
++			strftime(dateStr, len, "%y%m%d%H", &timeinfo);
++			break;
++	}
++}
++
 +static void WriteKeyToFile(char identifier, uint32_t provider, const char *keyName, uint8_t *key, uint32_t keyLength, char* comment)
 +{
 +	char line[1200], dateText[100];
@@ -3511,8 +3541,6 @@ Index: module-emulator-osemu.c
 +	char *path, *filepath, filename[EMU_KEY_FILENAME_MAX_LEN+1], *keyValue;
 +	FILE *file = NULL;
 +	uint8_t fileNameLen = strlen(EMU_KEY_FILENAME);
-+	time_t now;
-+	struct tm t;
 +
 +	pathLength = strlen(emu_keyfile_path);
 +	path = (char*)malloc(pathLength+1);
@@ -3569,9 +3597,7 @@ Index: module-emulator-osemu.c
 +		return;
 +	}
 +
-+	now = time(NULL);
-+	localtime_r(&now, &t);
-+	strftime(dateText, sizeof(dateText)-1, "%c", &t);
++	Date2Str(dateText, sizeof(dateText), 0, 1);
 +
 +	keyValue = (char*)malloc((keyLength*2)+1);
 +	if(keyValue == NULL) {
@@ -3597,8 +3623,8 @@ Index: module-emulator-osemu.c
 +	fclose(file);
 +}
 +
-+int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey,
-+					  uint32_t keyLength, uint8_t writeKey, char *comment)
++int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey, uint32_t keyLength,
++				uint8_t writeKey, char *comment, struct s_reader *rdr)
 +{
 +	uint32_t i, j;
 +	uint8_t *tmpKey = NULL;
@@ -3613,9 +3639,38 @@ Index: module-emulator-osemu.c
 +
 +	keyName = strtoupper(keyName);
 +
-+	// fix checksum for biss keys with a length of 6
-+	if(identifier == 'F' && keyLength == 6) {
++	if (identifier == 'F') // Prepare BISS keys before saving to the db
++	{
++		// Convert legacy BISS "00" & "01" keynames
++		if (0 == strcmp(keyName, "00") || 0 == strcmp(keyName, "01"))
++		{
++			keyName = "00000000";
++		}
 +
++		// All keyNames should have a length of 8 after converting
++		if (strlen(keyName) != 8)
++		{
++			cs_log("WARNING: Wrong key format in %s: F %08X %s", EMU_KEY_FILENAME, provider, keyName);
++			return 0;
++		}
++
++		// Verify date-coded keyName (if enabled), ignoring old (expired) keys
++		if (rdr->emu_datecodedenabled)
++		{
++			char timeStr[9];
++			Date2Str(timeStr, sizeof(timeStr), 0, 3);
++
++			// Reject old date-coded keys, but allow our "00000000" evergreen label
++			if (strcmp("00000000", keyName) != 0 && strcmp(timeStr, keyName) >= 0)
++			{
++				return 0;
++			}
++		}
++	}
++
++	// fix checksum for BISS keys with a length of 6
++	if (identifier == 'F' && keyLength == 6)
++	{
 +		tmpKey = (uint8_t*)malloc(8*sizeof(uint8_t));
 +		if(tmpKey == NULL) {
 +			return 0;
@@ -3629,16 +3684,16 @@ Index: module-emulator-osemu.c
 +		tmpKey[5] = orgKey[4];
 +		tmpKey[6] = orgKey[5];
 +		tmpKey[7] = ((orgKey[3] + orgKey[4] + orgKey[5]) & 0xff);
-+		
++
 +		keyLength = 8;
 +	}
-+	else
-+	{	
++	else // All keys with a length of 8, including BISS
++	{
 +		tmpKey = (uint8_t*)malloc(keyLength*sizeof(uint8_t));
 +		if(tmpKey == NULL) {
 +			return 0;
 +		}
-+		
++
 +		memcpy(tmpKey, orgKey, keyLength);
 +	}
 +
@@ -3654,7 +3709,8 @@ Index: module-emulator-osemu.c
 +			continue;
 +		}
 +
-+		if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) {
++		// Don't match keyName (i.e. expiration date) for BISS
++		if(identifier != 'F' && strcmp(KeyDB->EmuKeys[i].keyName, keyName)) {
 +			continue;
 +		}
 +	
@@ -3718,6 +3774,11 @@ Index: module-emulator-osemu.c
 +			KeyDB->EmuKeys[i].key = tmpKey;
 +			KeyDB->EmuKeys[i].keyLength = keyLength;
 +
++			if (identifier == 'F') // Update keyName (i.e. expiration date) for BISS
++			{
++				strncpy(KeyDB->EmuKeys[i].keyName, keyName, EMU_MAX_CHAR_KEYNAME);
++			}
++
 +			if(writeKey) {
 +				WriteKeyToFile(identifier, provider, keyName, tmpKey, keyLength, comment);
 +			}
@@ -3771,8 +3832,8 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
-+int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
-+										uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider)
++int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, char *keyName, uint8_t *key,
++				uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider)
 +{
 +	uint32_t i;
 +	uint16_t j;
@@ -3791,7 +3852,8 @@ Index: module-emulator-osemu.c
 +			continue;
 +		}
 +
-+		if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) {
++		// Don't match keyName (i.e. expiration date) for BISS
++		if(identifier != 'F' && strcmp(KeyDB->EmuKeys[i].keyName, keyName)) {
 +			continue;
 +		}
 +
@@ -3825,6 +3887,12 @@ Index: module-emulator-osemu.c
 +			if(tmpKeyData->keyLength < maxKeyLength) {
 +				memset(key+tmpKeyData->keyLength, 0, maxKeyLength - tmpKeyData->keyLength);
 +			}
++
++			if (identifier == 'F') // Report the keyName of found key back to BissGetKey()
++			{
++				strncpy(keyName, tmpKeyData->keyName, EMU_MAX_CHAR_KEYNAME);
++			}
++
 +			if(getProvider != NULL) {
 +				(*getProvider) = tmpKeyData->provider;
 +			}
@@ -3837,17 +3905,9 @@ Index: module-emulator-osemu.c
 +
 +	if (isCriticalKey)
 +	{
-+		switch (identifier)
-+		{
-+			case 'F': // BISS keys
-+				cs_log("Key not found: F %08X %s", provider, keyName);
-+				break;
-+
-+			default:
-+				cs_log("Key not found: %c %X %s", identifier, provider, keyName);
-+				break;
-+		}
++		cs_log("Key not found: %c %X %s", identifier, provider, keyName);
 +	}
++
 +	return 0;
 +}
 +
@@ -3872,7 +3932,7 @@ Index: module-emulator-osemu.c
 +	}
 +
 +	free(tmpKey);
-+	return SetKey(identifier, provider, keyName, key, keyLength, writeKey, comment);
++	return SetKey(identifier, provider, keyName, key, keyLength, writeKey, comment, NULL);
 +}
 +
 +static int32_t UpdateKeysByProviderMask(char identifier, uint32_t provider, uint32_t providerIgnoreMask, char *keyName, uint8_t *key, 
@@ -3896,7 +3956,7 @@ Index: module-emulator-osemu.c
 +			continue;
 +		}
 +		
-+		if(SetKey(identifier, foundProvider, keyName, key, keyLength, 1, comment))
++		if(SetKey(identifier, foundProvider, keyName, key, keyLength, 1, comment, NULL))
 +		{
 +			ret = 1;
 +		}
@@ -3978,7 +4038,7 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+uint8_t read_emu_keyfile(const char *opath)
++uint8_t read_emu_keyfile(struct s_reader *rdr, const char *opath)
 +{
 +	char line[1200], keyName[EMU_MAX_CHAR_KEYNAME], keyString[1026];
 +	uint32_t pathLength, provider, keyLength;
@@ -4063,7 +4123,7 @@ Index: module-emulator-osemu.c
 +
 +		if (CharToBin(key, keyString, strlen(keyString))) // Conversion OK
 +		{
-+			SetKey(identifier, provider, keyName, key, keyLength, 0, NULL);
++			SetKey(identifier, provider, keyName, key, keyLength, 0, NULL, rdr);
 +		}
 +		else // Non-hex characters in keyString
 +		{
@@ -4087,7 +4147,7 @@ Index: module-emulator-osemu.c
 +extern uint8_t SoftCamKey_Data[]    __asm__("_binary_SoftCam_Key_start");
 +extern uint8_t SoftCamKey_DataEnd[] __asm__("_binary_SoftCam_Key_end");
 +
-+void read_emu_keymemory(void)
++void read_emu_keymemory(struct s_reader *rdr)
 +{
 +	char *keyData, *line, *saveptr, keyName[EMU_MAX_CHAR_KEYNAME], keyString[1026];
 +	uint32_t provider, keyLength;
@@ -4116,7 +4176,7 @@ Index: module-emulator-osemu.c
 +
 +		if (CharToBin(key, keyString, strlen(keyString))) // Conversion OK
 +		{
-+			SetKey(identifier, provider, keyName, key, keyLength, 0, NULL);
++			SetKey(identifier, provider, keyName, key, keyLength, 0, NULL, rdr);
 +		}
 +		else // Non-hex characters in keyString
 +		{
@@ -4188,7 +4248,7 @@ Index: module-emulator-osemu.c
 +		if ((memcmp(buffer[i], dummy[0], 32) !=0) && (memcmp(buffer[i], dummy[1], 32) != 0))
 +		{
 +			snprintf(tmp, 5, "3B%02X", i);
-+			SetKey('D', prvid, tmp, buffer[i], 32, 0, NULL);
++			SetKey('D', prvid, tmp, buffer[i], 32, 0, NULL, NULL);
 +		}
 +	}
 +
@@ -4198,7 +4258,7 @@ Index: module-emulator-osemu.c
 +		if ((memcmp(buffer[32 + i], dummy[0], 32) !=0) && (memcmp(buffer[32 + i], dummy[1], 32) != 0))
 +		{
 +			snprintf(tmp, 5, "56%02X", i);
-+			SetKey('D', prvid, tmp, buffer[32 + i], 32, 0, NULL);
++			SetKey('D', prvid, tmp, buffer[32 + i], 32, 0, NULL, NULL);
 +		}
 +	}
 +}
@@ -4213,7 +4273,7 @@ Index: module-emulator-osemu.c
 +
 +		for (i = 0; i < 16; i++)
 +		{
-+			SetKey('D', i, "OVER", dreOverKey + (i * 8), 8, 0, NULL);
++			SetKey('D', i, "OVER", dreOverKey + (i * 8), 8, 0, NULL, NULL);
 +		}
 +	}
 +	else if ((len != 0 && len < 128) || len > 128)
@@ -6196,11 +6256,7 @@ Index: module-emulator-osemu.c
 +	uint32_t ens;
 +	char compass, polarisation, timeStr[32];
 +
-+	time_t rawtime;
-+	struct tm timeinfo;
-+	time(&rawtime);
-+	localtime_r(&rawtime, &timeinfo);
-+	strftime(timeStr, sizeof(timeStr), "added: %F @ %R", &timeinfo);
++	Date2Str(timeStr, sizeof(timeStr), 0, 2);
 +
 +	if (isNamespaceHash) // Namespace hash
 +	{
@@ -6243,7 +6299,7 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+static uint8_t BissIsCommonHash(uint32_t hash)
++static int8_t BissIsCommonHash(uint32_t hash)
 +{
 +	// Check universal hash against a number of commnon universal
 +	// hashes in order to warn users about potential key clashes
@@ -6277,7 +6333,7 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+static uint8_t BissIsValidNamespace(uint32_t namespace)
++static int8_t BissIsValidNamespace(uint32_t namespace)
 +{
 +	// Note to developers:
 +	// If we ever have a satellite at 0.0E, edit to allow stripped namespace
@@ -6298,8 +6354,52 @@ Index: module-emulator-osemu.c
 +	return 0;
 +}
 +
-+static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmDataLen,
-+					  uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
++static int8_t BissGetKey(uint32_t provider, uint8_t *key, int8_t dateCoded, int8_t printMsg)
++{
++	// If date-coded keys are enabled in the webif, this function evaluates the expiration date
++	// of the keys found. Expired keys are not sent to BissECM(). If date-coded keys are disabled,
++	// then all keys found are sent without any evaluation. It takes the "provider" as input and
++	// outputs the "key". Returns 0 (Key not found, or expired) or 1 (Key found).
++
++	// printMsg: 0 => No message
++	// printMsg: 1 => Print message only if key is found
++	// printMsg: 2 => Always print message, regardless if key is found or not
++
++	char keyExpDate[9] = "00000000";
++
++	if (FindKey('F', provider, 0, keyExpDate, key, 8, 0, 0, 0, NULL)) // Key found
++	{
++		if (dateCoded) // Date-coded keys are enabled, evaluate expiration date
++		{
++			char currentDate[9];
++			Date2Str(currentDate, sizeof(currentDate), 0, 3);
++
++			if (strncmp("00000000", keyExpDate, 9) == 0 || strncmp(currentDate, keyExpDate, 9) < 0) // Evergreen or not expired
++			{
++				if (printMsg == 1 || printMsg == 2) cs_log("Key found: F %08X %s", provider, keyExpDate);
++				return 1;
++			}
++			else // Key expired
++			{
++				key = NULL; // Make sure we don't send any expired key
++				if (printMsg == 2) cs_log("Key expired: F %08X %s", provider, keyExpDate);
++				return 0;
++			}
++		}
++		else // Date-coded keys are disabled, don't evaluate expiration date
++		{
++			if (printMsg == 1 || printMsg == 2) cs_log("Key found: F %08X %s", provider, keyExpDate);
++			return 1;
++		}
++	}
++	else // Key not found
++	{
++		if (printMsg == 2) cs_log("Key not found: F %08X", provider);
++		return 0;
++	}
++}
++
++static int8_t BissECM(struct s_reader *rdr, const uint8_t *ecm, int16_t ecmDataLen, uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
 +{
 +	// Oscam's fake ecm consists of [sid] [pmtpid] [pid1] [pid2] ... [pidx] [tsid] [onid] [namespace]
 +	//
@@ -6322,15 +6422,20 @@ Index: module-emulator-osemu.c
 +	//
 +	// 1st: namespace hash (only on enigma boxes)
 +	// 2nd: universal hash (all box types with emu r752+)
-+	// 3rd: faulty ecmpid (other than 0x1FFF)
-+	// 4th: reverse order pid (audio, video, pmt pids)
-+	// 5th: standard BISS ecmpid (0x1FFF)
-+	// 6th: default "All Feeds" key
++	// 3rd: valid tsid, onid combination
++	// 4th: faulty ecmpid (other than 0x1FFF)
++	// 5th: reverse order pid (audio, video, pmt pids)
++	// 6th: standard BISS ecmpid (0x1FFF)
++	// 7th: default "All Feeds" key
++
++	// If enabled in the webif, a date based key search can be performed. If the expiration
++	// date has passed, the key is not sent from BissGetKey(). This search method is only
++	// used in the namespace hash, universal hash and the default "All Feeds" key.
 +
 +	uint8_t ecmCopy[EMU_MAX_ECM_LEN];
 +	uint16_t ecmLen = 0, pid = 0;
 +	uint32_t i, ens, hash;
-+	char tbuf[64], keyValue[17];
++	char tmpBuffer1[17], tmpBuffer2[64];
 +
 +	if (ecmDataLen >= 3)
 +	{
@@ -6338,7 +6443,7 @@ Index: module-emulator-osemu.c
 +	}
 +
 +	// First try using the unique namespace hash (enigma only)
-+	if (ecmLen >= 13 && ecmLen <= ecmDataLen) // ecmLen >= 13, allow allow patching the ecmLen for r749 ecms
++	if (ecmLen >= 13 && ecmLen <= ecmDataLen) // ecmLen >= 13, allow patching the ecmLen for r749 ecms
 +	{
 +		memcpy(ecmCopy, ecm, ecmLen);
 +		ens = b2i(4, ecm + ecmLen - 4); // Namespace will be the last 4 bytes
@@ -6363,17 +6468,25 @@ Index: module-emulator-osemu.c
 +					hash = crc32(0x2600, ecmCopy + ecmLen - 10, 10);
 +				}
 +
-+				if (FindKey('F', hash, 0, "00", dw, 8, (i == 0 ? 1 : 0), 0, 0, NULL)) // Do not print "key not found" for frequency off by 1, 2
++				if (BissGetKey(hash, dw, rdr->emu_datecodedenabled, i == 0 ? 2 : 1)) // Do not print "key not found" for frequency off by 1, 2
 +				{
 +					memcpy(dw + 8, dw, 8);
-+					cs_log("Key found: F %08X 00", hash);
 +					return 0;
 +				}
 +
 +				if (i == 0) // No key found matching our hash: put example SoftCam.Key BISS line in the live log
 +				{
-+					BissAnnotate(tbuf, sizeof(tbuf), ecmCopy, ecmLen, 1);
-+					cs_log("Example key based on namespace hash: F %08X 00 XXXXXXXXXXXXXXXX ; %s", hash, tbuf);
++					if (rdr->emu_datecodedenabled)
++					{
++						Date2Str(tmpBuffer1, sizeof(tmpBuffer1), 4, 3);
++					}
++					else
++					{
++						snprintf(tmpBuffer1, sizeof(tmpBuffer1), "00000000");
++					}
++
++					BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, 1);
++					cs_log("Example key based on namespace hash: F %08X %s XXXXXXXXXXXXXXXX ; %s", hash, tmpBuffer1, tmpBuffer2);
 +				}
 +
 +				if (0 == (ens & 0xFFFF)) // Namespace without frequency - Do not iterate
@@ -6402,24 +6515,47 @@ Index: module-emulator-osemu.c
 +			memcpy(ecmCopy, ecm, ecmLen - 8); // Make a new ecmCopy from the original ecm as the old ecmCopy may be altered in namespace hash (skip [tsid] [onid] [namespace])
 +			hash = crc32(0x2600, ecmCopy + 3, ecmLen - 3 - 8); // ecmCopy doesn't have [tsid] [onid] [namespace] part
 +
-+			if (FindKey('F', hash, 0, "00", dw, 8, 1, 0, 0, NULL))
++			if (BissGetKey(hash, dw, rdr->emu_datecodedenabled, 2)) // Key found
 +			{
 +				memcpy(dw + 8, dw, 8);
-+				cs_log("Key found: F %08X 00", hash);
 +				return 0;
 +			}
 +			else // No key found matching our hash: put example SoftCam.Key BISS line in the live log
 +			{
-+				BissAnnotate(tbuf, sizeof(tbuf), ecmCopy, ecmLen, 0);
-+				cs_log("Example key based on universal hash: F %08X 00 XXXXXXXXXXXXXXXX ; %s", hash, tbuf);
++				if (rdr->emu_datecodedenabled)
++				{
++					Date2Str(tmpBuffer1, sizeof(tmpBuffer1), 4, 3);
++				}
++				else
++				{
++					snprintf(tmpBuffer1, sizeof(tmpBuffer1), "00000000");
++				}
++
++				BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, 0);
++				cs_log("Example key based on universal hash: F %08X %s XXXXXXXXXXXXXXXX ; %s", hash, tmpBuffer1, tmpBuffer2);
 +			}
 +
 +			if (BissIsCommonHash(hash)) // Check if hash is common and warn user
 +			{
 +				cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
 +			}
++		}
++	}
 +
-+			// Strip [tsid] [onid] [namespace]
++	// Try using only [tsid][onid] (useful when many channels on a transpoder use the same key)
++	if (ecmLen >= 17 && ecmLen <= ecmDataLen) // ecmLen >= 17, length of r749 ecms has been patched to match r752+ ecms
++	{
++		ens = b2i(4, ecmCopy + ecmLen - 4); // Namespace will be last 4 bytes
++
++		// We have an r752+ style ecm with stripped namespace, thus a valid [tsid][onid] combo to use as provider
++		if ((ens & 0xE000FFFF) == 0xA0000000 && BissGetKey(b2i(4, ecm + ecmLen - 8), dw, 0, 2))
++		{
++			memcpy(dw + 8, dw, 8);
++			return 0;
++		}
++
++		if ((ens & 0xE0000000) == 0xA0000000) // Strip [tsid] [onid] [namespace] on r752+ ecms
++		{
 +			ecmLen -= 8;
 +			ecmDataLen -= 8;
 +		}
@@ -6428,18 +6564,9 @@ Index: module-emulator-osemu.c
 +	// Try using ecmpid if it seems to be faulty (should be 0x1FFF always for BISS)
 +	if (ecmpid != 0x1FFF && ecmpid != 0)
 +	{
-+		if (FindKey('F', (srvid << 16) | ecmpid, 0, "00", dw, 8, 1, 0, 0, NULL))
++		if (BissGetKey((srvid << 16) | ecmpid, dw, 0, 2))
 +		{
 +			memcpy(dw + 8, dw, 8);
-+			cs_log("Key found: F %04X%04X 00", srvid, ecmpid);
-+			return 0;
-+		}
-+
-+		if (FindKey('F', (srvid << 16) | ecmpid, 0, "01", dw, 8, 0, 0, 0, NULL))
-+		{
-+			memcpy(dw + 8, dw, 8);
-+			cs_log("Key found: F %04X%04X 01 <-- Support for '01' keys will be dropped in the future", srvid, ecmpid);
-+			cs_log("Convert your key to the '00' equivalent: F %04X%04X 00", srvid, ecmpid);
 +			return 0;
 +		}
 +	}
@@ -6453,18 +6580,9 @@ Index: module-emulator-osemu.c
 +		{
 +			pid = b2i(2, ecm + i);
 +
-+			if (FindKey('F', (srvid << 16) | pid, 0, "00", dw, 8, 1, 0, 0, NULL))
++			if (BissGetKey((srvid << 16) | pid, dw, 0, 2))
 +			{
 +				memcpy(dw + 8, dw, 8);
-+				cs_log("Key found: F %04X%04X 00", srvid, pid);
-+				return 0;
-+			}
-+
-+			if (FindKey('F', (srvid << 16) | pid, 0, "01", dw, 8, 0, 0, 0, NULL))
-+			{
-+				memcpy(dw + 8, dw, 8);
-+				cs_log("Key found: F %04X%04X 01 <-- Support for '01' keys will be dropped in the future", srvid, pid);
-+				cs_log("Convert your key to the '00' equivalent: F %04X%04X 00", srvid, pid);
 +				return 0;
 +			}
 +		}
@@ -6473,28 +6591,19 @@ Index: module-emulator-osemu.c
 +	// Try using the standard BISS ecm pid
 +	if (ecmpid == 0x1FFF || ecmpid == 0)
 +	{
-+		if (FindKey('F', (srvid << 16) | 0x1FFF, 0, "00", dw, 8, 1, 0, 0, NULL))
++		if (BissGetKey((srvid << 16) | 0x1FFF, dw, 0, 2))
 +		{
 +			memcpy(dw + 8, dw, 8);
-+			cs_log("Key found: F %04X1FFF 00", srvid);
-+			return 0;
-+		}
-+
-+		if (FindKey('F', (srvid << 16) | 0x1FFF, 0, "01", dw, 8, 0, 0, 0, NULL))
-+		{
-+			memcpy(dw + 8, dw, 8);
-+			cs_log("Key found: F %04X1FFF 01 <-- Support for '01' keys will be dropped in the future", srvid);
-+			cs_log("Convert your key to the '00' equivalent: F %04X1FFF 00", srvid);
 +			return 0;
 +		}
 +	}
 +
 +	// Default BISS key for events with many feeds sharing same key
-+	if (ecmpid != 0 && FindKey('F', 0xA11FEED5, 0, "00", dw, 8, 1, 0, 0, NULL)) // Limit to local ecms, block netwotk ecms
++	if (ecmpid != 0 && BissGetKey(0xA11FEED5, dw, rdr->emu_datecodedenabled, 2)) // Limit to local ecms, block netwotk ecms
 +	{
 +		memcpy(dw + 8, dw, 8);
-+		cs_hexdump(0, dw, 8, keyValue, sizeof(keyValue));
-+		cs_log("No specific match found. Using default key: F A11FEED5 00 %s", keyValue); // "All Feeds"
++		cs_hexdump(0, dw, 8, tmpBuffer1, sizeof(tmpBuffer1));
++		cs_log("No specific match found. Using 'All Feeds' key: %s", tmpBuffer1);
 +		return 0;
 +	}
 +
@@ -7966,7 +8075,7 @@ Index: module-emulator-osemu.c
 +	return checksum;
 +}
 +
-+static int8_t GetTandbergKey(uint32_t keyIndex, const char *keyName, uint8_t *key, uint32_t keyLength)
++static int8_t GetTandbergKey(uint32_t keyIndex, char *keyName, uint8_t *key, uint32_t keyLength)
 +{
 +	// keyIndex: ecm keys --> entitlementId
 +	//			 emm keys --> aeskeyIndex
@@ -8235,10 +8344,10 @@ Index: module-emulator-osemu.c
 +9  ICG error
 +*/
 +#ifdef WITH_EMU
-+int8_t ProcessECM(struct s_reader *UNUSED(rdr), int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
++int8_t ProcessECM(struct s_reader *rdr, int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
 +				  uint8_t *dw, uint16_t srvid, uint16_t ecmpid, EXTENDED_CW* cw_ex)
 +#else
-+int8_t ProcessECM(struct s_reader *UNUSED(rdr), int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
++int8_t ProcessECM(struct s_reader *rdr, int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
 +				  uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
 +#endif
 +{
@@ -8281,7 +8390,7 @@ Index: module-emulator-osemu.c
 +		result = Irdeto2ECM(caid, ecmCopy, dw);
 +	}
 +	else if((caid >> 8) == 0x26 || caid == 0xFFFF) {
-+		result = BissECM(caid, ecm, ecmDataLen, dw, srvid, ecmpid);
++		result = BissECM(rdr, ecm, ecmDataLen, dw, srvid, ecmpid);
 +	}
 +	else if((caid >> 8) == 0x0E) {
 +#ifdef WITH_EMU
@@ -8497,12 +8606,12 @@ Index: module-emulator-osemu.c
 +
 +			if(haveNewD0) {
 +				
-+				SetKey('V', ecmProvider, "D0", keyD0, 2, 1, NULL);
++				SetKey('V', ecmProvider, "D0", keyD0, 2, 1, NULL, NULL);
 +				
 +				for(j=0; j<ecmKeyCount; j++) {
 +					
 +					snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "E%X", ecmKeyIndex[j]);
-+					SetKey('V', ecmProvider, keyName, ecmKeys[j], 16, 1, NULL);
++					SetKey('V', ecmProvider, keyName, ecmKeys[j], 16, 1, NULL, NULL);
 +					
 +					(*keysAdded)++;
 +					cs_hexdump(0, ecmKeys[j], 16, keyValue, sizeof(keyValue));
@@ -8566,7 +8675,7 @@ Index: module-emulator-osemu.c
 +				if(l==0x13 && i<=startOffset+length-9-l) {
 +					
 +					snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "%02X", emm[i+2]>>2);
-+					SetKey('I', ident, keyName, &emm[i+3], 16, 1, NULL);
++					SetKey('I', ident, keyName, &emm[i+3], 16, 1, NULL, NULL);
 +					
 +					(*keysAdded)++;
 +					cs_hexdump(0, &emm[i+3], 16, keyValue, sizeof(keyValue));
@@ -8632,7 +8741,7 @@ Index: module-emulator-osemu.c
 +					for(j=0; j<2; j++) {
 +						
 +						snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "M%01X", 3+j);
-+						SetKey('I', ident, keyName, &emm[i+3+j*16], 16, 1, NULL);
++						SetKey('I', ident, keyName, &emm[i+3+j*16], 16, 1, NULL, NULL);
 +						
 +						(*keysAdded)++;
 +						cs_hexdump(0, &emm[i+3+j*16], 16, keyValue, sizeof(keyValue));
@@ -9167,7 +9276,7 @@ Index: module-emulator-osemu.c
 +	if (memcmp(&emm[key1offset], emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, 32) != 0)
 +	{
 +		memcpy(emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, &emm[key1offset], 32);
-+		SetKey('D', keyIdent, newKeyName, &emm[key1offset], 32, 0, NULL);
++		SetKey('D', keyIdent, newKeyName, &emm[key1offset], 32, 0, NULL, NULL);
 +		(*keysAdded)++;
 +
 +		cs_hexdump(0, &emm[key1offset], 32, keyValue, sizeof(keyValue));
@@ -9185,7 +9294,7 @@ Index: module-emulator-osemu.c
 +	if (memcmp(&emm[key2offset], emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, 32) != 0)
 +	{
 +		memcpy(emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, &emm[key2offset], 32);
-+		SetKey('D', keyIdent, newKeyName, &emm[key2offset], 32, 0, NULL);
++		SetKey('D', keyIdent, newKeyName, &emm[key2offset], 32, 0, NULL, NULL);
 +		(*keysAdded)++;
 +
 +		cs_hexdump(0, &emm[key2offset], 32, keyValue, sizeof(keyValue));
@@ -9427,7 +9536,7 @@ Index: module-emulator-osemu.c
 +						
 +						for(i = 0; i < 0x10; i++)
 +						{
-+							SetKey('T', (blockIndex << 4) + i, "MK01", tagDataDecrypted[i], 8, 0, NULL);
++							SetKey('T', (blockIndex << 4) + i, "MK01", tagDataDecrypted[i], 8, 0, NULL, NULL);
 +						}
 +					}
 +					break;
@@ -9456,7 +9565,7 @@ Index: module-emulator-osemu.c
 +						
 +						for(i = 0; i < 0x10; i++)
 +						{
-+							SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL);
++							SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL, NULL);
 +						}
 +					}
 +					break;
@@ -9762,10 +9871,10 @@ Index: module-emulator-osemu.h
 +
 +void set_emu_keyfile_path(const char *path);
 +void clear_emu_keydata(void);
-+uint8_t read_emu_keyfile(const char *path);
++uint8_t read_emu_keyfile(struct s_reader *rdr, const char *path);
 +
 +#if !defined(__APPLE__) && !defined(__ANDROID__)
-+void read_emu_keymemory(void);
++void read_emu_keymemory(struct s_reader *rdr);
 +#endif
 +
 +void read_emu_eebin(const char *path, const char *name);
@@ -9786,10 +9895,10 @@ Index: module-emulator-osemu.h
 +9  ICG error
 +*/
 +#ifdef WITH_EMU
-+int8_t ProcessECM(struct s_reader *UNUSED(rdr), int16_t ecmDataLen, uint16_t caid, uint32_t provider,
++int8_t ProcessECM(struct s_reader *rdr, int16_t ecmDataLen, uint16_t caid, uint32_t provider,
 +				  const uint8_t *ecm, uint8_t *dw, uint16_t srvid, uint16_t ecmpid, EXTENDED_CW* cw_ex);
 +#else
-+int8_t ProcessECM(struct s_reader *UNUSED(rdr), int16_t ecmDataLen, uint16_t caid, uint32_t provider,
++int8_t ProcessECM(struct s_reader *rdr, int16_t ecmDataLen, uint16_t caid, uint32_t provider,
 +				  const uint8_t *ecm, uint8_t *dw, uint16_t srvid, uint16_t ecmpid);
 +#endif
 +
@@ -9838,7 +9947,7 @@ Index: module-emulator-osemu.h
 +#endif
 +
 +#ifdef WITH_EMU
-+int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key,
++int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, char *keyName, uint8_t *key,
 +				uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider);
 +#endif
 +
@@ -11252,15 +11361,15 @@ Index: module-emulator.c
 +
 +	// Read keys built in the OSCam-Emu binary
 +#if !defined(__APPLE__) && !defined(__ANDROID__)
-+	read_emu_keymemory();
++	read_emu_keymemory(rdr);
 +#endif
 +
 +	// Read keys from SoftCam.Key file
 +	set_emu_keyfile_path(cs_confdir);
 +
-+	if (!read_emu_keyfile(cs_confdir))
++	if (!read_emu_keyfile(rdr, cs_confdir))
 +	{
-+		if (read_emu_keyfile("/var/keys/"))
++		if (read_emu_keyfile(rdr, "/var/keys/"))
 +		{
 +			set_emu_keyfile_path("/var/keys/");
 +		}
@@ -12182,7 +12291,7 @@ Index: module-webif.c
  		{
  			restart_cardreader(rdr, 1);
  		}
-@@ -2671,6 +2708,21 @@
+@@ -2671,6 +2708,31 @@
  	tpl_addVar(vars, TPLADD, "USERSCRIPT", rdr->userscript);
  #endif
  
@@ -12191,11 +12300,21 @@ Index: module-webif.c
 +	value = mk_t_ftab(&rdr->emu_auproviders);
 +	tpl_addVar(vars, TPLADD, "EMUAUPROVIDERS", value);
 +	free_mk_t(value);
-+	
++
++	// Date-coded BISS keys
++	if(!apicall)
++	{
++		tpl_addVar(vars, TPLADD, "EMUDATECODEDENABLED", (rdr->emu_datecodedenabled == 1) ? "checked" : "");
++	}
++	else
++	{
++		tpl_addVar(vars, TPLADD, "EMUDATECODEDENABLED", (rdr->emu_datecodedenabled == 1) ? "1" : "0");
++	}
++
 +	//extee
 +	tpl_addVar(vars, TPLADD, "EXTEE36", rdr->extee36);
 +	tpl_addVar(vars, TPLADD, "EXTEE56", rdr->extee56);
-+	
++
 +	//dre force group
 +	tpl_printf(vars, TPLADD, "DRE36FORCEGROUP","%02X", rdr->dre36_force_group);
 +	tpl_printf(vars, TPLADD, "DRE56FORCEGROUP","%02X", rdr->dre56_force_group);
@@ -12204,7 +12323,7 @@ Index: module-webif.c
  	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
  
  	// Show only parameters which needed for the reader
-@@ -2692,6 +2744,9 @@
+@@ -2692,6 +2754,9 @@
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
@@ -12214,7 +12333,7 @@ Index: module-webif.c
  	case R_CS378X :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
  		break;
-@@ -4414,9 +4469,38 @@
+@@ -4414,9 +4479,38 @@
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -12253,7 +12372,7 @@ Index: module-webif.c
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -4892,6 +4976,9 @@
+@@ -4892,6 +4986,9 @@
  #else
  						filtered = (type == cl->typ);
  #endif
@@ -12263,7 +12382,7 @@ Index: module-webif.c
  					}
  				}
  
-@@ -6336,6 +6423,9 @@
+@@ -6336,6 +6433,9 @@
  		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
  		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
  #endif
@@ -12273,7 +12392,7 @@ Index: module-webif.c
  		{ NULL, 0, 0 },
  	};
  
-@@ -6806,7 +6896,7 @@
+@@ -6806,7 +6906,7 @@
  		else if(!proxy && rdr->csystem_active)     // local active reader
  		{
  			csystem = rdr->csystem;
@@ -12282,7 +12401,7 @@ Index: module-webif.c
  		}
  
  		if(csystem)
-@@ -7813,8 +7903,8 @@
+@@ -7813,8 +7913,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -12449,12 +12568,13 @@ Index: oscam-config-reader.c
  {
  	struct s_reader *rdr = var;
  #ifdef WITH_LB
-@@ -923,6 +927,13 @@
+@@ -923,6 +927,14 @@
  #ifdef READER_DRECAS
  	DEF_OPT_STR("stmkeys"               , OFS(stmkeys),                 NULL),
  #endif
 +#ifdef WITH_EMU
 +	DEF_OPT_FUNC_X("emu_auproviders"    , OFS(emu_auproviders),         ftab_fn, FTAB_READER | FTAB_EMUAU),
++	DEF_OPT_INT8("emu_datecodedenabled" , OFS(emu_datecodedenabled),    0),
 +	DEF_OPT_STR("extee36"               , OFS(extee36),                 NULL),
 +	DEF_OPT_STR("extee56"               , OFS(extee56),                 NULL),
 +	DEF_OPT_HEX("dre36_force_group"     , OFS(dre36_force_group),       1),
@@ -12869,8 +12989,9 @@ Index: webif/readerconfig/readerconfig_emubit.html
 ===================================================================
 --- webif/readerconfig/readerconfig_emubit.html	(revision 0)
 +++ webif/readerconfig/readerconfig_emubit.html	(working copy)
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +			<TR><TD><A>AU providers:</A></TD><TD><textarea name="emu_auproviders" rows="3" class="bt">##EMUAUPROVIDERS##</textarea></TD></TR>
++			<TR><TD><A>[BISS] Enable date-coded keys:</A></TD><TD><input name="emu_datecodedenabled" type="hidden" value="0"><input name="emu_datecodedenabled" type="checkbox" value="1" ##EMUDATECODEDENABLED##><label></label></TD></TR>
 +			<TR><TD><A>[Drecrypt] Path to ee36.bin:</A></TD><TD><input name="extee36" type="text" maxlength="150" value="##EXTEE36##"></TD></TR>
 +			<TR><TD><A>[Drecrypt] Path to ee56.bin:</A></TD><TD><input name="extee56" type="text" maxlength="150" value="##EXTEE56##"></TD></TR>
 +			<TR><TD><A>[Drecrypt] Center force group:</A></TD><TD><input name="dre36_force_group" class="medium" type="text" maxlength="2" value="##DRE36FORCEGROUP##"></TD></TR>
