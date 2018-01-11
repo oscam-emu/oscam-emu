@@ -3377,7 +3377,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(revision 0)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6460 @@
+@@ -0,0 +1,6452 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3523,10 +3523,10 @@ Index: module-emulator-osemu.c
 +			break;
 +
 +		case 2: // Used in BissAnnotate()
-+			strftime(dateStr, len, "added: %F @ %R", &timeinfo);
++			strftime(dateStr, len, "%F @ %R", &timeinfo);
 +			break;
 +
-+		case 3: // Used in SetKey(), BissECM()
++		case 3: // Used in SetKey(), BissAnnotate()
 +			strftime(dateStr, len, "%y%m%d%H", &timeinfo);
 +			break;
 +	}
@@ -6230,7 +6230,7 @@ Index: module-emulator-osemu.c
 +	*namespace = (*namespace & 0xF000FFFF) | (pos << 16);
 +}
 +
-+static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ecmLen, uint8_t isNamespaceHash)
++static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ecmLen, uint32_t hash, int8_t isNamespaceHash, int8_t datecoded)
 +{
 +	// Extract useful information to append to the "Example key ..." message.
 +	//
@@ -6243,20 +6243,28 @@ Index: module-emulator-osemu.c
 +	// from our namespace. See https://github.com/openatv/enigma2/blob/master/lib/dvb/scan.cpp#L59
 +	// In that case, our annotation contains the onid:tsid:sid triplet in lieu of frequency.
 +	//
-+	// For the universal case, we print the number of es pids & pmtpid.
++	// For the universal case, we print the number of elementary stream pids & pmtpid.
 +	// The sid and current time are included for all. Examples:
 +	//
-+	// 110.5W 12345H sid:0001 added: 2017-10-17 @ 13:14:15 // namespace
-+	//  33.5E  ABCD:9876:1234 added: 2017-10-17 @ 13:14:15 // stripped namespace
-+	// av:5 pmt:0134 sid:0001 added: 2017-10-17 @ 13:14:15 // universal
++	// F 1A2B3C4D 00000000 XXXXXXXXXXXXXXXX ; 110.5W 12345H sid:0001 added: 2017-10-17 @ 13:14:15 // namespace
++	// F 1A2B3C4D 20180123 XXXXXXXXXXXXXXXX ;  33.5E  ABCD:9876:1234 added: 2017-10-17 @ 13:14:15 // stripped namespace
++	// F 1A2B3C4D 20180123 XXXXXXXXXXXXXXXX ; av:5 pmt:0134 sid:0001 added: 2017-10-17 @ 13:14:15 // universal
 +
-+	uint16_t frequency, degrees;
-+	uint16_t pmtpid, srvid, tsid, onid;
 +	uint8_t pidcount;
++	uint16_t frequency, degrees, pmtpid, srvid, tsid, onid;
 +	uint32_t ens;
-+	char compass, polarisation, timeStr[32];
++	char compass, polarisation, timeStr1[9], timeStr2[19];
 +
-+	Date2Str(timeStr, sizeof(timeStr), 0, 2);
++	if (datecoded)
++	{
++		Date2Str(timeStr1, sizeof(timeStr1), 4, 3);
++	}
++	else
++	{
++		snprintf(timeStr1, sizeof(timeStr1), "00000000");
++	}
++
++	Date2Str(timeStr2, sizeof(timeStr2), 0, 2);
 +
 +	if (isNamespaceHash) // Namespace hash
 +	{
@@ -6279,7 +6287,8 @@ Index: module-emulator-osemu.c
 +			tsid = b2i(2, ecm + ecmLen - 8);
 +			onid = b2i(2, ecm + ecmLen - 6);
 +			// Printing degree sign "\u00B0" requires c99 standard
-+			snprintf(buf, len, "%5.1f%c  %04X:%04X:%04X %s", degrees / 10.0, compass, onid, tsid, srvid, timeStr);
++			snprintf(buf, len, "F %08X %s XXXXXXXXXXXXXXXX ; %5.1f%c  %04X:%04X:%04X added: %s",
++								hash, timeStr1, degrees / 10.0, compass, onid, tsid, srvid, timeStr2);
 +		}
 +		else // Full namespace hash
 +		{
@@ -6287,7 +6296,8 @@ Index: module-emulator-osemu.c
 +			frequency = ens & 0x7FFF; // Remove polarity bit
 +			polarisation = ens & 0x8000 ? 'V' : 'H';
 +			// Printing degree sign "\u00B0" requires c99 standard
-+			snprintf(buf, len, "%5.1f%c %5d%c sid:%04X %s", degrees / 10.0, compass, frequency, polarisation, srvid, timeStr);
++			snprintf(buf, len, "F %08X %s XXXXXXXXXXXXXXXX ; %5.1f%c %5d%c sid:%04X added: %s",
++								hash, timeStr1, degrees / 10.0, compass, frequency, polarisation, srvid, timeStr2);
 +		}
 +	}
 +	else // Universal hash
@@ -6295,7 +6305,8 @@ Index: module-emulator-osemu.c
 +		srvid = b2i(2, ecm + 3);
 +		pmtpid = b2i(2, ecm + 5);
 +		pidcount = (ecmLen - 15) / 2; // video + audio pids count
-+		snprintf(buf, len, "av:%d pmt:%04X sid:%04X %s", pidcount, pmtpid, srvid, timeStr);
++		snprintf(buf, len, "F %08X %s XXXXXXXXXXXXXXXX ; av:%d pmt:%04X sid:%04X added: %s",
++							hash, timeStr1, pidcount, pmtpid, srvid, timeStr2);
 +	}
 +}
 +
@@ -6434,8 +6445,8 @@ Index: module-emulator-osemu.c
 +
 +	uint8_t ecmCopy[EMU_MAX_ECM_LEN];
 +	uint16_t ecmLen = 0, pid = 0;
-+	uint32_t i, ens, hash;
-+	char tmpBuffer1[17], tmpBuffer2[64];
++	uint32_t i, ens = 0, hash = 0;
++	char tmpBuffer1[17], tmpBuffer2[90] = "0", tmpBuffer3[90] = "0";
 +
 +	if (ecmDataLen >= 3)
 +	{
@@ -6474,19 +6485,9 @@ Index: module-emulator-osemu.c
 +					return 0;
 +				}
 +
-+				if (i == 0) // No key found matching our hash: put example SoftCam.Key BISS line in the live log
++				if (i == 0) // No key found matching our hash: create example SoftCam.Key BISS line for the live log
 +				{
-+					if (rdr->emu_datecodedenabled)
-+					{
-+						Date2Str(tmpBuffer1, sizeof(tmpBuffer1), 4, 3);
-+					}
-+					else
-+					{
-+						snprintf(tmpBuffer1, sizeof(tmpBuffer1), "00000000");
-+					}
-+
-+					BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, 1);
-+					cs_log("Example key based on namespace hash: F %08X %s XXXXXXXXXXXXXXXX ; %s", hash, tmpBuffer1, tmpBuffer2);
++					BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, hash, 1, rdr->emu_datecodedenabled);
 +				}
 +
 +				if (0 == (ens & 0xFFFF)) // Namespace without frequency - Do not iterate
@@ -6520,25 +6521,9 @@ Index: module-emulator-osemu.c
 +				memcpy(dw + 8, dw, 8);
 +				return 0;
 +			}
-+			else // No key found matching our hash: put example SoftCam.Key BISS line in the live log
-+			{
-+				if (rdr->emu_datecodedenabled)
-+				{
-+					Date2Str(tmpBuffer1, sizeof(tmpBuffer1), 4, 3);
-+				}
-+				else
-+				{
-+					snprintf(tmpBuffer1, sizeof(tmpBuffer1), "00000000");
-+				}
-+
-+				BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, 0);
-+				cs_log("Example key based on universal hash: F %08X %s XXXXXXXXXXXXXXXX ; %s", hash, tmpBuffer1, tmpBuffer2);
-+			}
-+
-+			if (BissIsCommonHash(hash)) // Check if hash is common and warn user
-+			{
-+				cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
-+			}
++			
++			// No key found matching our hash: create example SoftCam.Key BISS line for the live log
++			BissAnnotate(tmpBuffer3, sizeof(tmpBuffer3), ecmCopy, ecmLen, hash, 0, rdr->emu_datecodedenabled);
 +		}
 +	}
 +
@@ -6606,6 +6591,13 @@ Index: module-emulator-osemu.c
 +		cs_log("No specific match found. Using 'All Feeds' key: %s", tmpBuffer1);
 +		return 0;
 +	}
++
++	// Print example key lines for available hash search methods, if no key is found
++	if (strncmp(tmpBuffer2, "0", 2)) cs_log("Example key based on namespace hash: %s", tmpBuffer2);
++	if (strncmp(tmpBuffer3, "0", 2)) cs_log("Example key based on universal hash: %s", tmpBuffer3);
++
++	// Check if universal hash is common and warn user
++	if (BissIsCommonHash(hash)) cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
 +
 +	return 2;
 +}
