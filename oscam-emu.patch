@@ -3375,7 +3375,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6775 @@
+@@ -0,0 +1,6827 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3384,6 +3384,9 @@ Index: module-emulator-osemu.c
 +#include "cscrypt/des.h"
 +#include "cscrypt/idea.h"
 +#include "cscrypt/md5.h"
++
++#include <endian.h>
++#include <byteswap.h>
 +
 +#ifdef WITH_EMU
 +#include "oscam-aes.h"
@@ -3410,7 +3413,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 771 $"+10);
++	return atoi("$Version: 772 $"+10);
 +}
 +
 +/*
@@ -6938,6 +6941,47 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
++uint16_t table15[] = { 0x45C7, 0x7115, 0x0761, 0x4705 };
++uint16_t table16[] = { 0x470F, 0x6C2B, 0x0FAD, 0xEAB3 };
++
++static void PowervuHashModes15to19Tables(uint8_t *data, uint8_t *hash, uint16_t *table)
++{
++	uint32_t i = 0, c = 0, d = 0;
++	uint32_t h[4] = { 0, 0, 0, 0 };
++
++	uint32_t c0 = table[0];
++	uint32_t c1 = table[1];
++	uint32_t c2 = table[2];
++	uint32_t c3 = table[3];
++
++	for (i = 0; i < 60; i += 4)
++	{
++		c0 = ((c0 & 0xFFFF) * c2) + ((c0 >> 16) & 0x0000FFFF);
++		c1 = ((c1 & 0xFFFF) * c3) + ((c1 >> 16) & 0x0000FFFF);
++
++		c = c0 + c1;
++
++		#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
++		d = __bswap_32(*(uint32_t *)(data + i));
++		#else
++		d =            *(uint32_t *)(data + i);
++		#endif
++		h[(i >> 2) & 0x3] = h[(i >> 2) & 0x3] ^ c ^ d;
++	}
++
++	#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
++	*(uint32_t *)(hash + 0) = __bswap_32(h[0]);
++	*(uint32_t *)(hash + 4) = __bswap_32(h[1]);
++	*(uint32_t *)(hash + 8) = __bswap_32(h[2]);
++	*(uint32_t *)(hash + 12)= __bswap_32(h[3]);
++	#else
++	*(uint32_t *)(hash + 0) =           (h[0]);
++	*(uint32_t *)(hash + 4) =           (h[1]);
++	*(uint32_t *)(hash + 8) =           (h[2]);
++	*(uint32_t *)(hash + 12)=           (h[3]);
++	#endif
++}
++
 +static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
 +{
 +	uint8_t dataPadded[0x40];
@@ -6984,6 +7028,14 @@ Index: module-emulator-osemu.c
 +
 +		case 10:
 +			PowervuHashModes04to0ATables(dataPadded, hash, table0A);
++			break;
++
++		case 15:
++			PowervuHashModes15to19Tables(dataPadded, hash, table15);
++			break;
++
++		case 16:
++			PowervuHashModes15to19Tables(dataPadded, hash, table16);
 +			break;
 +
 +		default:
