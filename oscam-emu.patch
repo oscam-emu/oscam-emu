@@ -3375,7 +3375,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6827 @@
+@@ -0,0 +1,6831 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3387,6 +3387,10 @@ Index: module-emulator-osemu.c
 +
 +#include <endian.h>
 +#include <byteswap.h>
++
++#if defined(__ANDROID__)
++#define __bswap_32 bswap_32
++#endif
 +
 +#ifdef WITH_EMU
 +#include "oscam-aes.h"
