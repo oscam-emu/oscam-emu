@@ -3375,7 +3375,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,6831 @@
+@@ -0,0 +1,6841 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3417,7 +3417,7 @@ Index: module-emulator-osemu.c
 +// Version info
 +uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 772 $"+10);
++	return atoi("$Version: 773 $"+10);
 +}
 +
 +/*
@@ -6945,10 +6945,12 @@ Index: module-emulator-osemu.c
 +	}
 +}
 +
-+uint16_t table15[] = { 0x45C7, 0x7115, 0x0761, 0x4705 };
-+uint16_t table16[] = { 0x470F, 0x6C2B, 0x0FAD, 0xEAB3 };
++uint16_t table0F[] = { 0x45C7, 0x7115, 0x0761, 0x4705 };
++uint16_t table10[] = { 0x470F, 0x6C2B, 0x0FAD, 0xEAB3 };
++uint16_t table11[] = { 0x46B1, 0x66D1, 0x285D, 0xD259 };
++uint16_t table12[] = { 0x4B0B, 0x68D7, 0xAD5F, 0xBB4B };
 +
-+static void PowervuHashModes15to19Tables(uint8_t *data, uint8_t *hash, uint16_t *table)
++static void PowervuHashModes0Fto13Tables(uint8_t *data, uint8_t *hash, uint16_t *table)
 +{
 +	uint32_t i = 0, c = 0, d = 0;
 +	uint32_t h[4] = { 0, 0, 0, 0 };
@@ -7035,11 +7037,19 @@ Index: module-emulator-osemu.c
 +			break;
 +
 +		case 15:
-+			PowervuHashModes15to19Tables(dataPadded, hash, table15);
++			PowervuHashModes0Fto13Tables(dataPadded, hash, table0F);
 +			break;
 +
 +		case 16:
-+			PowervuHashModes15to19Tables(dataPadded, hash, table16);
++			PowervuHashModes0Fto13Tables(dataPadded, hash, table10);
++			break;
++
++		case 17:
++			PowervuHashModes0Fto13Tables(dataPadded, hash, table11);
++			break;
++
++		case 18:
++			PowervuHashModes0Fto13Tables(dataPadded, hash, table12);
 +			break;
 +
 +		default:
