@@ -7761,7 +7761,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2044 @@
+@@ -0,0 +1,2094 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -8217,6 +8217,52 @@ Index: module-emulator-powervu.c
 +	}
 +}
 +
++static const uint8_t table19[] = { 0x02, 0x03, 0x05, 0x10 };
++
++static void PowervuHashModes19to27Tables3(uint8_t *data, uint8_t *hash, const uint8_t *table)
++{
++	int i;
++	uint8_t val, it[4];
++	uint16_t seed = 0xFFFF, tmp;
++
++	memset(hash, 0x00, 16);
++
++	for (i = 0; i < 4; i++)
++	{
++		it[i] = 0x10 - table[i];
++	}
++
++	for (i = 0; i < 16; i++)
++	{
++		val = ((seed >> it[0]) ^ (seed >> it[1]) ^ (seed >> it[2]) ^ (seed >> it[3])) & 0x01;
++
++		if (val == 0x00)
++		{
++			seed = seed >> 1;
++		}
++		else
++		{
++			seed = (seed >> 1) | 0x8000;
++		}
++		tmp = seed + (data[i] << 8) + data[i + 32];
++
++		val = ((seed >> it[0]) ^ (seed >> it[1]) ^ (seed >> it[2]) ^ (seed >> it[3])) & 0x01;
++
++		if (val == 0x00)
++		{
++			seed = seed >> 1;
++		}
++		else
++		{
++			seed = (seed >> 1) | 0x8000;
++		}
++		tmp = tmp + seed + (data[i + 16] << 8) + data[i + 48];
++
++		hash[i & 0x0F] ^= tmp >> 8;
++		hash[(i + 1) & 0x0F] ^= tmp;
++	}
++}
++
 +static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
 +{
 +	uint8_t dataPadded[64];
@@ -8303,6 +8349,10 @@ Index: module-emulator-powervu.c
 +
 +		case 24:
 +			PowervuHashModes0Fto18Tables(dataPadded, hash, table18);
++			break;
++
++		case 25:
++			PowervuHashModes19to27Tables3(dataPadded, hash, table19);
 +			break;
 +
 +		default:
@@ -12110,7 +12160,7 @@ Index: module-emulator.c
 +
 +static inline uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 778 $" + 10);
++	return atoi("$Version: 779 $" + 10);
 +}
 +
 +static void set_hexserial_to_version(struct s_reader *rdr)
