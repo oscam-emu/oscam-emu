@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11439)
+--- CMakeLists.txt	(revision 11440)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
      ${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -95,7 +95,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11439)
+--- Makefile	(revision 11440)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -111,7 +111,7 @@ Index: Makefile
  # The linker for powerpc have bug that prevents --gc-sections from working
  # Check for the linker version and if it matches disable --gc-sections
  # For more information about the bug see:
-@@ -268,6 +275,30 @@
+@@ -272,6 +279,30 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -153,7 +153,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11439)
+--- config.h	(revision 11440)
 +++ config.h	(working copy)
 @@ -1,6 +1,7 @@
  #ifndef CONFIG_H_
@@ -165,7 +165,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11439)
+--- config.sh	(revision 11440)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -201,20 +201,21 @@ Index: config.sh
  }
  
  list_config() {
-@@ -346,9 +350,9 @@
- 	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
+@@ -349,10 +353,10 @@
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
--	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+ 	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
+-	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA_MERLIN && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
++	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA_MERLIN WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+ 	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
 -	enabled_any MODULE_CCCAM READER_NAGRA READER_NAGRA_MERLIN READER_SECA && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 -	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA READER_NAGRA_MERLIN && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
-+	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 +	enabled_any MODULE_CCCAM READER_NAGRA READER_NAGRA_MERLIN READER_SECA WITH_EMU && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 +	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA READER_NAGRA_MERLIN WITH_EMU && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
  }
  
  make_config_c() {
-@@ -460,6 +464,7 @@
+@@ -464,6 +468,7 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
@@ -224,7 +225,7 @@ Index: config.sh
  	opt=${?}
 Index: cscrypt/aes.c
 ===================================================================
---- cscrypt/aes.c	(revision 11439)
+--- cscrypt/aes.c	(revision 11440)
 +++ cscrypt/aes.c	(working copy)
 @@ -1250,4 +1250,71 @@
  		rk[3];
@@ -300,7 +301,7 @@ Index: cscrypt/aes.c
  #endif
 Index: cscrypt/aes.h
 ===================================================================
---- cscrypt/aes.h	(revision 11439)
+--- cscrypt/aes.h	(revision 11440)
 +++ cscrypt/aes.h	(working copy)
 @@ -42,6 +42,9 @@
  void AES_decrypt(const unsigned char *in, unsigned char *out,
@@ -314,7 +315,7 @@ Index: cscrypt/aes.h
  #endif
 Index: cscrypt/md5.c
 ===================================================================
---- cscrypt/md5.c	(revision 11439)
+--- cscrypt/md5.c	(revision 11440)
 +++ cscrypt/md5.c	(working copy)
 @@ -25,13 +25,6 @@
  
@@ -359,7 +360,7 @@ Index: cscrypt/md5.c
  	unsigned char *p;
 Index: cscrypt/md5.h
 ===================================================================
---- cscrypt/md5.h	(revision 11439)
+--- cscrypt/md5.h	(revision 11440)
 +++ cscrypt/md5.h	(working copy)
 @@ -7,8 +7,16 @@
  #define MD5_DIGEST_LENGTH 16
@@ -377,12 +378,12 @@ Index: cscrypt/md5.h
 +void MD5_Init(MD5_CTX *ctx);
 +void MD5_Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len);
 +void MD5_Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx);
-+#endif
-+char *__md5_crypt(const char *text_pass, const char *salt, char *crypted_passwd);
  #endif
++char *__md5_crypt(const char *text_pass, const char *salt, char *crypted_passwd);
++#endif
 Index: csctapi/cardreaders.h
 ===================================================================
---- csctapi/cardreaders.h	(revision 11439)
+--- csctapi/cardreaders.h	(revision 11440)
 +++ csctapi/cardreaders.h	(working copy)
 @@ -14,5 +14,6 @@
  extern const struct s_cardreader cardreader_stapi;
@@ -3059,7 +3060,7 @@ Index: ffdecsa/stream.c
 +
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11439)
+--- globals.h	(revision 11440)
 +++ globals.h	(working copy)
 @@ -389,9 +389,9 @@
  #define CS_ECM_RINGBUFFER_MAX 0x10 // max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -3153,7 +3154,7 @@ Index: globals.h
  	int32_t    max_cache_time;  //seconds ecms are stored in ecmcwcache
  	int32_t    max_hitcache_time;  //seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
  
-@@ -2424,15 +2453,23 @@
+@@ -2424,11 +2453,15 @@
  const char *boxname_get(void);
  static inline bool caid_is_fake(uint16_t caid) { return caid == 0xffff; }
  static inline bool caid_is_biss(uint16_t caid) { return caid >> 8 == 0x26; }
@@ -3169,17 +3170,18 @@ Index: globals.h
  static inline bool caid_is_betacrypt(uint16_t caid) { return caid >> 8 == 0x17; }
  static inline bool caid_is_nagra(uint16_t caid) { return caid >> 8 == 0x18; }
  static inline bool caid_is_bulcrypt(uint16_t caid) { return caid == 0x5581 || caid == 0x4AEE; }
+@@ -2435,4 +2468,8 @@
  static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710;}
  const char *get_cardsystem_desc_by_caid(uint16_t caid);
  
 +#ifdef WITH_EMU
 +FILTER* get_emu_prids_for_caid(struct s_reader *rdr, uint16_t caid);
-+#endif
-+
  #endif
++
++#endif
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11439)
+--- module-dvbapi.c	(revision 11440)
 +++ module-dvbapi.c	(working copy)
 @@ -1471,7 +1471,14 @@
  			}
@@ -3222,7 +3224,7 @@ Index: module-dvbapi.c
  	er->msgid = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2110,22 +2126,33 @@
+@@ -2110,16 +2126,17 @@
  		// BISS or FAKE CAID
  		// ecm stream pid is fake, so send out one fake ecm request
  		// special treatment: if we asked the cw first without starting a filter the cw request will be killed due to no ecmfilter started
@@ -3244,6 +3246,7 @@ Index: module-dvbapi.c
  			{
  				i2b_buf(2, demux[demux_id].STREAMpids[j], er->ecm + n);
  				er->ecm[2] += 2;
+@@ -2126,6 +2143,16 @@
  				er->ecmlen += 2;
  			}
  
@@ -3375,7 +3378,7 @@ Index: module-dvbapi.c
  #if defined(WITH_STAPI) || defined(WITH_STAPI5)
 Index: module-dvbapi.h
 ===================================================================
---- module-dvbapi.h	(revision 11439)
+--- module-dvbapi.h	(revision 11440)
 +++ module-dvbapi.h	(working copy)
 @@ -136,6 +136,7 @@
  	int8_t useMultipleIndices;
@@ -12160,7 +12163,7 @@ Index: module-emulator.c
 +
 +static inline uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 779 $" + 10);
++	return atoi("$Version: 780 $" + 10);
 +}
 +
 +static void set_hexserial_to_version(struct s_reader *rdr)
@@ -13087,7 +13090,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: module-newcamd-des.c
 ===================================================================
---- module-newcamd-des.c	(revision 11439)
+--- module-newcamd-des.c	(revision 11440)
 +++ module-newcamd-des.c	(working copy)
 @@ -5,10 +5,7 @@
  #define DES_IP              1
@@ -13111,7 +13114,7 @@ Index: module-newcamd-des.c
  	unsigned char left[8];
 Index: module-newcamd-des.h
 ===================================================================
---- module-newcamd-des.h	(revision 11439)
+--- module-newcamd-des.h	(revision 11440)
 +++ module-newcamd-des.h	(working copy)
 @@ -1,8 +1,15 @@
  #ifndef MODULE_NEWCAMD_DES_H_
@@ -13131,7 +13134,7 @@ Index: module-newcamd-des.h
  #endif
 Index: module-newcamd.c
 ===================================================================
---- module-newcamd.c	(revision 11439)
+--- module-newcamd.c	(revision 11440)
 +++ module-newcamd.c	(working copy)
 @@ -919,6 +919,13 @@
  			// set userfilter for au enabled clients
@@ -13203,7 +13206,7 @@ Index: module-newcamd.c
  						mbuf[22 + 11 * j] = 0x00;
 Index: module-stat.c
 ===================================================================
---- module-stat.c	(revision 11439)
+--- module-stat.c	(revision 11440)
 +++ module-stat.c	(working copy)
 @@ -903,7 +903,7 @@
  
@@ -13225,7 +13228,7 @@ Index: module-stat.c
  				continue; // proxy can convert or reject
 Index: module-webif-tpl.c
 ===================================================================
---- module-webif-tpl.c	(revision 11439)
+--- module-webif-tpl.c	(revision 11440)
 +++ module-webif-tpl.c	(working copy)
 @@ -459,6 +459,7 @@
  											check_conf(WITH_SSL, ptr2);
@@ -13237,7 +13240,7 @@ Index: module-webif-tpl.c
  										{
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 11439)
+--- module-webif.c	(revision 11440)
 +++ module-webif.c	(working copy)
 @@ -103,6 +103,7 @@
  #define MNU_CFG_LCD			14
@@ -13442,7 +13445,7 @@ Index: module-webif.c
  			NULLFREE(*result);
 Index: oscam-aes.c
 ===================================================================
---- oscam-aes.c	(revision 11439)
+--- oscam-aes.c	(revision 11440)
 +++ oscam-aes.c	(working copy)
 @@ -37,6 +37,16 @@
  	}
@@ -13463,7 +13466,7 @@ Index: oscam-aes.c
  {
 Index: oscam-aes.h
 ===================================================================
---- oscam-aes.h	(revision 11439)
+--- oscam-aes.h	(revision 11440)
 +++ oscam-aes.h	(working copy)
 @@ -5,6 +5,8 @@
  bool aes_set_key_alloc(struct aes_keys **aes, char *key);
@@ -13476,7 +13479,7 @@ Index: oscam-aes.h
  void parse_aes_entry(AES_ENTRY **list, char *label, char *value);
 Index: oscam-chk.c
 ===================================================================
---- oscam-chk.c	(revision 11439)
+--- oscam-chk.c	(revision 11440)
 +++ oscam-chk.c	(working copy)
 @@ -758,7 +758,7 @@
  		return 0;
@@ -13516,7 +13519,7 @@ Index: oscam-chk.c
  	}
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 11439)
+--- oscam-config-global.c	(revision 11440)
 +++ oscam-config-global.c	(working copy)
 @@ -854,6 +854,30 @@
  #else
@@ -13567,7 +13570,7 @@ Index: oscam-config-global.c
  	{ "webif",	webif_opts },
 Index: oscam-config-reader.c
 ===================================================================
---- oscam-config-reader.c	(revision 11439)
+--- oscam-config-reader.c	(revision 11440)
 +++ oscam-config-reader.c	(working copy)
 @@ -111,6 +111,7 @@
  			{ "newcamd525", R_NEWCAMD },
@@ -13613,7 +13616,7 @@ Index: oscam-config-reader.c
  	DEF_OPT_FUNC("auprovid"             , 0,                            auprovid_fn),
 Index: oscam-config.h
 ===================================================================
---- oscam-config.h	(revision 11439)
+--- oscam-config.h	(revision 11440)
 +++ oscam-config.h	(working copy)
 @@ -22,6 +22,7 @@
  int32_t free_readerdb(void);
@@ -13635,7 +13638,7 @@ Index: oscam-config.h
  void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE *f);
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 11439)
+--- oscam-ecm.c	(revision 11440)
 +++ oscam-ecm.c	(working copy)
 @@ -2238,7 +2238,7 @@
  	}
@@ -13648,7 +13651,7 @@ Index: oscam-ecm.c
  	}
 Index: oscam-emm.c
 ===================================================================
---- oscam-emm.c	(revision 11439)
+--- oscam-emm.c	(revision 11440)
 +++ oscam-emm.c	(working copy)
 @@ -41,6 +41,7 @@
  static int8_t do_simple_emm_filter(struct s_reader *rdr, const struct s_cardsystem *csystem, EMM_PACKET *ep, int8_t cl_dvbapi)
@@ -13685,7 +13688,7 @@ Index: oscam-emm.c
  		rdr_log_dbg(reader, D_EMM, "reader auprovid = %06X matching with emm provid = %06X -> SEND!", prid, provid);
 Index: oscam-string.c
 ===================================================================
---- oscam-string.c	(revision 11439)
+--- oscam-string.c	(revision 11440)
 +++ oscam-string.c	(working copy)
 @@ -497,6 +497,62 @@
  	return crc ^ 0xffffffffL;
@@ -13752,7 +13755,7 @@ Index: oscam-string.c
  	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,
 Index: oscam-string.h
 ===================================================================
---- oscam-string.h	(revision 11439)
+--- oscam-string.h	(revision 11440)
 +++ oscam-string.h	(working copy)
 @@ -37,6 +37,7 @@
  void get_random_bytes(uint8_t *dst, uint32_t dst_len);
@@ -13764,7 +13767,7 @@ Index: oscam-string.h
  
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11439)
+--- oscam.c	(revision 11440)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -13818,7 +13821,7 @@ Index: oscam.c
  	coolapi_close_all();
 Index: reader-common.c
 ===================================================================
---- reader-common.c	(revision 11439)
+--- reader-common.c	(revision 11440)
 +++ reader-common.c	(working copy)
 @@ -143,6 +143,19 @@
  static int32_t reader_get_cardsystem(struct s_reader *reader, ATR *atr)
@@ -13842,7 +13845,7 @@ Index: reader-common.c
  		NULLFREE(reader->csystem_data);
 Index: readers.h
 ===================================================================
---- readers.h	(revision 11439)
+--- readers.h	(revision 11440)
 +++ readers.h	(working copy)
 @@ -17,5 +17,6 @@
  extern const struct s_cardsystem reader_bulcrypt;
@@ -13853,7 +13856,7 @@ Index: readers.h
  #endif
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11439)
+--- webif/config/dvbapi.html	(revision 11440)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -53,7 +53,7 @@
  			</TD>
@@ -13889,7 +13892,7 @@ Index: webif/config/dvbapi.html
 \ No newline at end of file
 Index: webif/config/menu.html
 ===================================================================
---- webif/config/menu.html	(revision 11439)
+--- webif/config/menu.html	(revision 11440)
 +++ webif/config/menu.html	(working copy)
 @@ -16,6 +16,7 @@
  ##TPLCONFIGMENUDVBAPI##		<!-- CMENUACTIVE13 -->
@@ -13938,7 +13941,7 @@ Index: webif/config/streamrelay.html
 \ No newline at end of file
 Index: webif/files/menu.html
 ===================================================================
---- webif/files/menu.html	(revision 11439)
+--- webif/files/menu.html	(revision 11440)
 +++ webif/files/menu.html	(working copy)
 @@ -10,7 +10,7 @@
  		<LI CLASS="##CMENUACTIVE7##"><A HREF="files.html?file=logfile">logfile</A></LI>
@@ -13965,7 +13968,7 @@ Index: webif/files/menu_softcamkey.html
 +			<LI CLASS="##CMENUACTIVE30##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 11439)
+--- webif/pages_index.txt	(revision 11440)
 +++ webif/pages_index.txt	(working copy)
 @@ -80,11 +80,13 @@
  CONFIGMENUNEWCAMD             config/menu_newcamd.html                                    MODULE_NEWCAMD
