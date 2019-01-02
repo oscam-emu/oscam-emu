@@ -3136,7 +3136,7 @@ Index: globals.h
  #endif
  
  #ifdef CS_ANTICASC
-@@ -2256,6 +2274,17 @@
+@@ -2256,6 +2274,18 @@
  	struct s_ip *scam_allowed;
  #endif
  
@@ -3149,12 +3149,13 @@ Index: globals.h
 +	uint32_t    emu_stream_ecm_delay;
 +	int8_t      emu_stream_relay_enabled;
 +	int8_t      emu_stream_emm_enabled;
++	CAIDTAB     emu_stream_relay_ctab;              // use the stream server for these caids
 +#endif
 +
  	int32_t    max_cache_time;  //seconds ecms are stored in ecmcwcache
  	int32_t    max_hitcache_time;  //seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
  
-@@ -2426,15 +2455,23 @@
+@@ -2426,15 +2456,23 @@
  const char *boxname_get(void);
  static inline bool caid_is_fake(uint16_t caid) { return caid == 0xffff; }
  static inline bool caid_is_biss(uint16_t caid) { return caid >> 8 == 0x26; }
@@ -3378,12 +3379,12 @@ Index: module-dvbapi.c
  		delayer(er, delay);
  
 +#ifdef WITH_EMU
-+		if(!caid_is_powervu(er->caid) || !cfg.emu_stream_relay_enabled)
++		if(!chk_ctab_ex(er->caid, &cfg.emu_stream_relay_ctab) || !cfg.emu_stream_relay_enabled)
 +#endif
  		switch(selected_api)
  		{
  #if defined(WITH_STAPI) || defined(WITH_STAPI5)
-@@ -6259,29 +6344,48 @@
+@@ -6259,29 +6344,51 @@
  					{
  						stream_type = demux[i].STREAMpidsType[k];
  
@@ -3424,10 +3425,13 @@ Index: module-dvbapi.c
 +							case 0x0F: // MPEG-2 part 7 audio (AAC)
 +							case 0x11: // MPEG-4 part 3 audio (AAC, HE AAC and AAC v2)
 +							case 0x1C: // MPEG-4 part 3 audio (DST, ALS, SLS)
-+							case 0x2D: // MPEG-H part 3 audio (main stream)
-+							case 0x2E: // MPEG-H part 3 audio (auxiliary stream)
++							case 0x2D: // MPEG-H part 3 3D audio (main stream)
++							case 0x2E: // MPEG-H part 3 3D audio (auxiliary stream)
 +							case 0x81: // AC-3 audio (ATSC)
 +							case 0x87: // Enhanced AC-3 audio (ATSC)
++							//case 0x88: // DTS-HD audio (ATSC 2.0) /* fixme: has ATSC 2.0 ever been used? */
++							//case 0x??: // AC-4 audio (ATSC 3.0) /* fixme: add the actual value when it gets published */
++							//case 0x??: // MPEG-H part 3 3D audio (ATSC 3.0) /* fixme: add the actual value when it gets published */
  							{
 -								key_pos_a++;
 +								cw = er->cw_ex.audio[key_pos_a];
@@ -7945,7 +7949,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2065 @@
+@@ -0,0 +1,2063 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -9586,7 +9590,7 @@ Index: module-emulator-powervu.c
 +					SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
 +					for (j = 0; j < EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
 +					{
-+						if(!stream_server_has_ecm[j] && emu_stream_cur_srvid[j] == srvid)
++						if (!stream_server_has_ecm[j] && emu_stream_cur_srvid[j] == srvid)
 +						{
 +							update_global_key = 1;
 +							update_global_keys[j] = 1;
@@ -9599,7 +9603,6 @@ Index: module-emulator-powervu.c
 +
 +				if (calculateAll) // Calculate all seeds
 +				{
-+
 +					for (j = 0; j < 8; j++)
 +					{
 +						memcpy(ecmKey, tmpEcmKey, 7);
@@ -9831,7 +9834,6 @@ Index: module-emulator-powervu.c
 +	snprintf(uaInfo, 13, "UA: %08X", uniqueAddress);
 +
 +	SAFE_MUTEX_LOCK(&emu_key_data_mutex);
-+
 +	while (FindKey('P', groupId << 16 & 0xFFFF0000, 0x0000FFFF, indexStr, oldKey, 7, 0, keyRef, 0, &foundProvider))
 +	{
 +		keyRef++;
@@ -10067,7 +10069,7 @@ Index: module-emulator-streamserver.c
 ===================================================================
 --- module-emulator-streamserver.c	(nonexistent)
 +++ module-emulator-streamserver.c	(working copy)
-@@ -0,0 +1,1165 @@
+@@ -0,0 +1,1393 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -10083,6 +10085,7 @@ Index: module-emulator-streamserver.c
 +#include "oscam-net.h"
 +#include "oscam-string.h"
 +#include "oscam-time.h"
++#include "oscam-chk.h"
 +
 +extern int32_t exit_oscam;
 +
@@ -10148,7 +10151,7 @@ Index: module-emulator-streamserver.c
 +
 +typedef void (*ts_data_callback)(emu_stream_client_data *cdata);
 +
-+static void ParseTSData(uint8_t table_id, uint8_t table_mask, uint8_t min_table_length, int8_t *flag,
++static void ParseTsData(uint8_t table_id, uint8_t table_mask, uint8_t min_table_length, int8_t *flag,
 +						uint8_t *data, uint16_t data_length, uint16_t *data_pos, int8_t payloadStart,
 +						uint8_t *buf, int32_t len, ts_data_callback func, emu_stream_client_data *cdata)
 +{
@@ -10253,7 +10256,7 @@ Index: module-emulator-streamserver.c
 +	*flag = 1;
 +}
 +
-+static void ParsePATData(emu_stream_client_data *cdata)
++static void ParsePatData(emu_stream_client_data *cdata)
 +{
 +	int32_t i;
 +	uint8_t *data = cdata->pat_data;
@@ -10276,12 +10279,12 @@ Index: module-emulator-streamserver.c
 +	}
 +}
 +
-+static void ParsePMTData(emu_stream_client_data *cdata)
++static void ParsePmtData(emu_stream_client_data *cdata)
 +{
 +	int32_t i;
 +	uint8_t *data = cdata->pmt_data;
 +	uint8_t descriptor_tag = 0, descriptor_length = 0, stream_type;
-+	uint16_t program_info_length = 0, es_info_length = 0, stream_pid, caid;
++	uint16_t program_info_length = 0, es_info_length = 0, elementary_pid, caid;
 +	uint16_t section_length = SCT_LEN(data);
 +
 +	cdata->pcr_pid = b2i(2, data + 8) & 0x1FFF;
@@ -10311,8 +10314,9 @@ Index: module-emulator-streamserver.c
 +		{
 +			caid = b2i(2, data + i + 2);
 +
-+			if (caid_is_powervu(caid))
++			if (caid_is_powervu(caid)) // add all supported caids here
 +			{
++				if (cdata->caid == NO_CAID_VALUE) { cdata->caid = caid; }
 +				cdata->ecm_pid = b2i(2, data + i + 4) & 0x1FFF;
 +				cs_log_dbg(D_READER, "Stream %i found ecm pid: 0x%04X (%i)",
 +							cdata->connid, cdata->ecm_pid, cdata->ecm_pid);
@@ -10324,13 +10328,13 @@ Index: module-emulator-streamserver.c
 +	for (i = 12 + program_info_length; i + 4 < section_length; i += 5 + es_info_length)
 +	{
 +		stream_type = data[i];
-+		stream_pid = b2i(2, data + i + 1) & 0x1FFF;
++		elementary_pid = b2i(2, data + i + 1) & 0x1FFF;
 +		es_info_length = b2i(2, data + i + 3) & 0xFFF;
 +
 +		switch (stream_type)
 +		{
 +			case 0x01: // MPEG-1 video
-+			case 0x02: // MPEG-2 video
++			case 0x02: // MPEG-1, MPEG-2 video
 +			case 0x10: // MPEG-4 video
 +			case 0x1B: // AVC video
 +			case 0x20: // MVC video
@@ -10341,9 +10345,9 @@ Index: module-emulator-streamserver.c
 +			case 0xD1: // Dirac video
 +			case 0xEA: // VC-1 video
 +			{
-+				cdata->video_pid = stream_pid;
++				cdata->video_pid = elementary_pid;
 +				cs_log_dbg(D_READER, "Stream %i found video pid: 0x%04X (%i)",
-+							cdata->connid, stream_pid, stream_pid);
++							cdata->connid, elementary_pid, elementary_pid);
 +				break;
 +			}
 +
@@ -10353,60 +10357,64 @@ Index: module-emulator-streamserver.c
 +			case 0x0F: // MPEG-2 part 7 audio (AAC)
 +			case 0x11: // MPEG-4 part 3 audio (AAC, HE AAC and AAC v2)
 +			case 0x1C: // MPEG-4 part 3 audio (DST, ALS, SLS)
-+			case 0x2D: // MPEG-H part 3 audio (main stream)
-+			case 0x2E: // MPEG-H part 3 audio (auxiliary stream)
++			case 0x2D: // MPEG-H part 3 3D audio (main stream)
++			case 0x2E: // MPEG-H part 3 3D audio (auxiliary stream)
 +			case 0x81: // AC-3 audio (ATSC)
 +			case 0x87: // Enhanced AC-3 audio (ATSC)
++			//case 0x88: // DTS-HD audio (ATSC 2.0) /* fixme: has ATSC 2.0 ever been used? */
++			//case 0x??: // AC-4 audio (ATSC 3.0) /* fixme: add the actual value when it gets published */
++			//case 0x??: // MPEG-H part 3 3D audio (ATSC 3.0) /* fixme: add the actual value when it gets published */
 +			{
 +				if (cdata->audio_pid_count >= EMU_STREAM_MAX_AUDIO_SUB_TRACKS)
 +					{ continue; }
 +
-+				cdata->audio_pids[cdata->audio_pid_count] = stream_pid;
++				cdata->audio_pids[cdata->audio_pid_count] = elementary_pid;
 +				cdata->audio_pid_count++;
 +				cs_log_dbg(D_READER, "Stream %i found audio pid: 0x%04X (%i)",
-+							cdata->connid, stream_pid, stream_pid);
++							cdata->connid, elementary_pid, elementary_pid);
 +				break;
 +			}
 +		}
 +	}
 +}
 +
-+static void ParseCATData(emu_stream_client_data *cdata)
++static void ParseCatData(emu_stream_client_data *cdata)
 +{
 +	uint8_t *data = cdata->cat_data;
 +	uint32_t i;
 +
 +	for (i = 8; i < (b2i(2, data + 1) & 0xFFF) - 1; i += data[i + 1] + 2)
 +	{
-+		if (data[i] != 0x09) { continue; }
++		if (data[i] != 0x09)
++			{ continue; }
 +
 +		uint16_t caid = b2i(2, data + i + 2);
-+		uint16_t emm_pid = b2i(2, data + i + 4) & 0x1FFF;
 +
-+		if (caid_is_powervu(caid))
++		if (caid_is_powervu(caid)) // add all supported caids here
 +		{
-+			cdata->emm_pid = emm_pid;
++			if (cdata->caid == NO_CAID_VALUE) { cdata->caid = caid; }
++			cdata->emm_pid = b2i(2, data + i + 4) & 0x1FFF;;
 +			cs_log_dbg(D_READER, "Stream %i found emm pid: 0x%04X (%i)",
-+						cdata->connid, emm_pid, emm_pid);
++						cdata->connid, cdata->emm_pid, cdata->emm_pid);
 +			break;
 +		}
 +	}
 +}
 +
-+static void ParseEMMData(emu_stream_client_data *cdata)
++static void ParseEmmData(emu_stream_client_data *cdata)
 +{
-+	uint8_t *data = cdata->emm_data;
 +	uint32_t keysAdded = 0;
 +
-+	ProcessEMM(NULL, 0x0E00, 0, data, &keysAdded);
++	ProcessEMM(NULL, cdata->caid, 0, cdata->emm_data, &keysAdded);
 +
 +	if (keysAdded)
 +	{
++		//refresh_entitlements(rdr);
 +		cs_log("Stream %i found %i keys", cdata->connid, keysAdded);
 +	}
 +}
 +
-+static void ParseECMData(emu_stream_client_data *cdata)
++static void ParseEcmData(emu_stream_client_data *cdata)
 +{
 +	uint8_t *data = cdata->ecm_data;
 +	uint8_t dcw[16];
@@ -10415,14 +10423,65 @@ Index: module-emulator-streamserver.c
 +	if (section_length < 11)
 +		{ return; }
 +
-+	if (data[11] > cdata->ecm_nb || (cdata->ecm_nb == 255 && data[11] == 0) || ((cdata->ecm_nb - data[11]) > 5))
++	if (caid_is_powervu(cdata->caid))
 +	{
-+		cdata->ecm_nb = data[11];
-+		PowervuECM(data, dcw, cdata->srvid, &cdata->key, NULL);
++		if (data[11] > cdata->ecm_nb || (cdata->ecm_nb == 255 && data[11] == 0) || ((cdata->ecm_nb - data[11]) > 5))
++		{
++			cdata->ecm_nb = data[11];
++			PowervuECM(data, dcw, cdata->srvid, &cdata->key, NULL);
++		}
++	}
++	//else if () // All other caids
++	//{
++		//ProcessECM();
++	//}
++}
++
++static void ParseTsPackets(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
++{
++	uint8_t payloadStart;
++	uint16_t pid, offset;
++	uint32_t i, tsHeader;
++
++	for (i = 0; i < bufLength; i += packetSize)
++	{
++		tsHeader = b2i(4, stream_buf + i);
++		pid = (tsHeader & 0x1FFF00) >> 8;
++		payloadStart = (tsHeader & 0x400000) >> 22;
++
++		if (tsHeader & 0x20)
++		{
++			offset = 4 + stream_buf[i + 4] + 1;
++		}
++		else
++		{
++			offset = 4;
++		}
++
++		if (packetSize - offset < 1)
++			{ continue; }
++
++		if (pid == 0x0000 && data->have_pat_data != 1) // Search the PAT for the PMT pid
++		{
++			ParseTsData(0x00, 0xFF, 16, &data->have_pat_data, data->pat_data, sizeof(data->pat_data),
++						&data->pat_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParsePatData, data);
++			continue;
++		}
++
++		if (pid == data->pmt_pid && data->have_pmt_data != 1) // Search the PMT for PCR, ECM, Video and Audio pids
++		{
++			ParseTsData(0x02, 0xFF, 21, &data->have_pmt_data, data->pmt_data, sizeof(data->pmt_data),
++						&data->pmt_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParsePmtData, data);
++			continue;
++		}
++
++		// We have bot PAT and PMT data - No need to search the rest of the packets
++		if (data->have_pat_data == 1 && data->have_pmt_data == 1)
++			{ break; }
 +	}
 +}
 +
-+static void ParseTSPackets(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
++static void DescrambleTsPacketsPowervu(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
 +{
 +	int8_t oddKeyUsed;
 +
@@ -10462,46 +10521,29 @@ Index: module-emulator-streamserver.c
 +		if (packetSize - offset < 1)
 +			{ continue; }
 +
-+		if (pid == 1)
++		if (emu_stream_emm_enabled && pid == 0x0001 && data->have_cat_data != 1) // Search the CAT for EMM pids
 +		{
 +			// set to null pid
 +			stream_buf[i + 1] |= 0x1F;
 +			stream_buf[i + 2] = 0xFF;
 +
-+			if (emu_stream_emm_enabled && !data->emm_pid)
-+			{
-+				ParseTSData(0x01, 0xFF, 8, &data->have_cat_data, data->cat_data, sizeof(data->cat_data),
-+							&data->cat_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseCATData, data);
-+				continue;
-+			}
++			ParseTsData(0x01, 0xFF, 8, &data->have_cat_data, data->cat_data, sizeof(data->cat_data),
++						&data->cat_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseCatData, data);
++			continue;
 +		}
 +
-+		if (emu_stream_emm_enabled && data->emm_pid && pid == data->emm_pid)
++		if (emu_stream_emm_enabled && data->emm_pid && pid == data->emm_pid) // Process the EMM data
 +		{
 +			// set to null pid
 +			stream_buf[i + 1] |= 0x1F;
 +			stream_buf[i + 2] = 0xFF;
 +
-+			ParseTSData(0x80, 0xF0, 3, &data->have_emm_data, data->emm_data, sizeof(data->emm_data),
-+						&data->emm_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseEMMData, data);
++			ParseTsData(0x80, 0xF0, 3, &data->have_emm_data, data->emm_data, sizeof(data->emm_data),
++						&data->emm_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseEmmData, data);
 +			continue;
 +		}
 +
-+		if (pid == 0 && !data->pmt_pid)
-+		{
-+			ParseTSData(0x00, 0xFF, 16, &data->have_pat_data, data->pat_data, sizeof(data->pat_data),
-+						&data->pat_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParsePATData, data);
-+			continue;
-+		}
-+
-+		if (!data->ecm_pid && pid == data->pmt_pid)
-+		{
-+			ParseTSData(0x02, 0xFF, 21, &data->have_pmt_data, data->pmt_data, sizeof(data->pmt_data),
-+						&data->pmt_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParsePMTData, data);
-+			continue;
-+		}
-+
-+		if (data->ecm_pid && pid == data->ecm_pid)
++		if (data->ecm_pid && pid == data->ecm_pid) // Process the ECM data
 +		{
 +			stream_server_has_ecm[data->connid] = 1;
 +
@@ -10509,8 +10551,8 @@ Index: module-emulator-streamserver.c
 +			stream_buf[i + 1] |= 0x1F;
 +			stream_buf[i + 2] = 0xFF;
 +
-+			ParseTSData(0x80, 0xFE, 3, &data->have_ecm_data, data->ecm_data, sizeof(data->ecm_data),
-+						&data->ecm_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseECMData, data);
++			ParseTsData(0x80, 0xFE, 3, &data->have_ecm_data, data->ecm_data, sizeof(data->ecm_data),
++						&data->ecm_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseEcmData, data);
 +			continue;
 +		}
 +
@@ -10700,6 +10742,168 @@ Index: module-emulator-streamserver.c
 +	}
 +}
 +
++static void DescrambleTsPacketsCompel(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
++{
++	int8_t can_decode = 0;
++	int32_t j;
++
++	uint8_t scramblingControl;
++	uint16_t pid, offset;
++	uint32_t i, tsHeader;
++
++	for (i = 0; i < bufLength; i += packetSize)
++	{
++		tsHeader = b2i(4, stream_buf + i);
++		pid = (tsHeader & 0x1FFF00) >> 8;
++		scramblingControl = tsHeader & 0xC0;
++
++		if (tsHeader & 0x20)
++		{
++			offset = 4 + stream_buf[i + 4] + 1;
++		}
++		else
++		{
++			offset = 4;
++		}
++
++		if (packetSize - offset < 1)
++			{ continue; }
++
++		if (scramblingControl == 0)
++			{ continue; }
++
++		if (!(stream_buf[i + 3] & 0x10))
++		{
++			stream_buf[i + 3] &= 0x3F;
++			continue;
++		}
++
++		if (pid == data->video_pid)
++		{
++			can_decode = 1;
++		}
++		else
++		{
++			for (j = 0; j < data->audio_pid_count; j++)
++			{
++					if (pid == data->audio_pids[j])
++					{
++						can_decode = 1;
++						break;
++					}
++			}
++		}
++
++		if (can_decode)
++		{
++			static uint8_t dyn_key[184];
++
++			int8_t matches00 = 0;
++			int8_t matchesFF = 0;
++			int8_t last00_was_good = 0;
++			int8_t lastFF_was_good = 0;
++			int8_t limit = 64;
++
++			for (j = 0; j < 184; j++)
++			{
++				if (stream_buf[i + 4 + j] == 0x00)
++				{
++					last00_was_good = 1;
++					matches00++;
++					if (matches00 > limit) dyn_key[j] = 0x00;
++				}
++				else if (stream_buf[i + 4 + j] == 0x3F)
++				{
++					last00_was_good = 1;
++					matches00++;
++					if (matches00 > limit) dyn_key[j] = 0x3F;
++				}
++				else
++				{
++					if (last00_was_good) matches00--;
++					else matches00 -= 2;
++
++					if (matches00 < 0) matches00 = 0;
++					last00_was_good = 0;
++				}
++
++				if (stream_buf[i + 4 + j] == 0xC0)
++				{
++					lastFF_was_good = 1;
++					matchesFF++;
++					if (matchesFF > limit) dyn_key[j] = 0x3F;
++				}
++				else if (stream_buf[i + 4 + j] == 0xFF)
++				{
++					lastFF_was_good = 1;
++					matchesFF++;
++					if (matchesFF > limit) dyn_key[j] = 0x00;
++				}
++				else
++				{
++					if (lastFF_was_good) matchesFF--;
++					else matchesFF -= 2;
++
++					if (matchesFF < 0) matchesFF = 0;
++					lastFF_was_good = 0;
++				}
++			}
++
++			for (j = 183; j >= 0; j--)
++			{
++				if (stream_buf[i + 4 + j] == 0x00)
++				{
++					last00_was_good = 1;
++					matches00++;
++					if (matches00 > limit) dyn_key[j] = 0x00;
++				}
++				else if (stream_buf[i + 4 + j] == 0x3F)
++				{
++					last00_was_good = 1;
++					matches00++;
++					if (matches00 > limit) dyn_key[j] = 0x3F;
++				}
++				else
++				{
++					if (last00_was_good) matches00--;
++					else matches00 -= 2;
++
++					if (matches00 < 0) matches00 = 0;
++					last00_was_good = 0;
++				}
++
++				if (stream_buf[i + 4 + j] == 0xC0)
++				{
++					lastFF_was_good = 1;
++					matchesFF++;
++					if (matchesFF > limit) dyn_key[j] = 0x3F;
++				}
++				else if (stream_buf[i + 4 + j] == 0xFF)
++				{
++					lastFF_was_good = 1;
++					matchesFF++;
++					if (matchesFF > limit) dyn_key[j] = 0x00;
++				}
++				else
++				{
++					if (lastFF_was_good) matchesFF--;
++					else matchesFF -= 2;
++
++					if (matchesFF < 0) matchesFF = 0;
++					lastFF_was_good = 0;
++				}
++			}
++
++			for (j = 0; j < 184; j++)
++			{
++				stream_buf[i + 4 + j] ^= dyn_key[j];
++			}
++
++			stream_buf[i + 3] &= 0x3F;
++		}
++	}
++}
++
 +static int32_t connect_to_stream(char *http_buf, int32_t http_buf_len, char *stream_path)
 +{
 +	struct sockaddr_in cservaddr;
@@ -10759,8 +10963,8 @@ Index: module-emulator-streamserver.c
 +	emu_stream_cur_srvid[conndata->connid] = NO_SRVID_VALUE;
 +	stream_server_has_ecm[conndata->connid] = 0;
 +	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
-+	SAFE_MUTEX_LOCK(&emu_stream_server_mutex);
 +
++	SAFE_MUTEX_LOCK(&emu_stream_server_mutex);
 +	for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
 +	{
 +		if (gconnfd[i] == conndata->connfd)
@@ -10882,6 +11086,7 @@ Index: module-emulator-streamserver.c
 +	clientStatus = send(conndata->connfd, http_buf, strlen(http_buf), 0);
 +
 +	data->connid = conndata->connid;
++	data->caid = NO_CAID_VALUE;
 +
 +	while (!exit_oscam && clientStatus != -1 && streamConnectErrorCount < 3
 +			&& streamDataErrorCount < 15)
@@ -10912,7 +11117,7 @@ Index: module-emulator-streamserver.c
 +				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_DES;
 +			}
 +
-+			streamStatus = recv(streamfd, stream_buf+bytesRead, cur_dvb_buffer_size-bytesRead, MSG_WAITALL);
++			streamStatus = recv(streamfd, stream_buf + bytesRead, cur_dvb_buffer_size - bytesRead, MSG_WAITALL);
 +			if (streamStatus == 0) // socket closed
 +			{
 +				cs_log("WARNING: stream client %i - stream source closed connection", conndata->connid);
@@ -10979,14 +11184,37 @@ Index: module-emulator-streamserver.c
 +				}
 +				else
 +				{
-+					packetCount = ((bytesRead-startOffset) / packetSize);
++					packetCount = ((bytesRead - startOffset) / packetSize);
 +
-+					ParseTSPackets(data, stream_buf+startOffset, packetCount * packetSize, packetSize);
++					// We have both PAT and PMT data - We can start descrambling
++					if (data->have_pat_data == 1 && data->have_pmt_data == 1)
++					{
++						if (chk_ctab_ex(data->caid, &cfg.emu_stream_relay_ctab))
++						{
++							if (caid_is_powervu(data->caid))
++							{
++								DescrambleTsPacketsPowervu(data, stream_buf + startOffset, packetCount * packetSize, packetSize);
++							}
++							else if (data->caid == NO_CAID_VALUE) // Compel
++							{
++								DescrambleTsPacketsCompel(data, stream_buf + startOffset, packetCount * packetSize, packetSize);
++							}
++						}
++						else
++						{
++							cs_log_dbg(D_READER, "Stream client %i caid %04X not enabled in stream relay config",
++										conndata->connid, data->caid);
++						}
++					}
++					else // Search PAT and PMT packets for service information
++					{
++						ParseTsPackets(data, stream_buf + startOffset, packetCount * packetSize, packetSize);
++					}
 +
-+					clientStatus = send(conndata->connfd, stream_buf+startOffset, packetCount * packetSize, 0);
++					clientStatus = send(conndata->connfd, stream_buf + startOffset, packetCount * packetSize, 0);
 +
 +					remainingDataPos = startOffset + (packetCount * packetSize);
-+					remainingDataLength = bytesRead-remainingDataPos;
++					remainingDataLength = bytesRead - remainingDataPos;
 +
 +					if (remainingDataPos < remainingDataLength)
 +					{
@@ -11007,6 +11235,7 @@ Index: module-emulator-streamserver.c
 +
 +	NULLFREE(http_buf);
 +	NULLFREE(stream_buf);
++
 +	for (i = 0; i < 8; i++)
 +	{
 +		if (data->key.pvu_csa_ks[i])
@@ -11153,6 +11382,7 @@ Index: module-emulator-streamserver.c
 +		for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
 +		{
 +			it = ll_iter_create(ll_emu_stream_delayed_keys[i]);
++
 +			while ((item = ll_iter_next(&it)))
 +			{
 +				if (comp_timeb(&t_now, &item->write_time) < 0)
@@ -11237,7 +11467,7 @@ Index: module-emulator-streamserver.h
 ===================================================================
 --- module-emulator-streamserver.h	(nonexistent)
 +++ module-emulator-streamserver.h	(working copy)
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,85 @@
 +#ifndef MODULE_EMULATOR_STREAMSERVER_H_
 +#define MODULE_EMULATOR_STREAMSERVER_H_
 +
@@ -11279,6 +11509,7 @@ Index: module-emulator-streamserver.h
 +	uint16_t ecm_data_pos;
 +	uint16_t emm_data_pos;
 +	uint16_t srvid;
++	uint16_t caid;
 +	uint16_t pmt_pid;
 +	uint16_t ecm_pid;
 +	uint16_t emm_pid;
@@ -12402,7 +12633,7 @@ Index: module-emulator.c
 +
 +static inline uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 782 $" + 10);
++	return atoi("$Version: 783 $" + 10);
 +}
 +
 +static void set_hexserial_to_version(struct s_reader *rdr)
@@ -13500,7 +13731,7 @@ Index: module-webif.c
  
  static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value) {
  	if (no_data)
-@@ -1225,6 +1227,34 @@
+@@ -1225,6 +1227,40 @@
  }
  #endif
  
@@ -13509,6 +13740,8 @@ Index: module-webif.c
 +
 +static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uriparams *params)
 +{
++	char *value;
++
 +	setActiveSubMenu(vars, MNU_CFG_STREAMRELAY);
 +
 +	webif_save_config("streamrelay", vars, params);
@@ -13528,6 +13761,10 @@ Index: module-webif.c
 +	tpl_printf(vars, TPLADD, "TMP", "STREAMEMMENABLEDSELECTED%d", cfg.emu_stream_emm_enabled);
 +	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
 +
++	value = mk_t_caidtab(&cfg.emu_stream_relay_ctab);
++	tpl_addVar(vars, TPLADD, "STREAM_RELAY_CTAB", value);
++	free_mk_t(value);
++
 +	return tpl_getTpl(vars, "CONFIGSTREAMRELAY");
 +}
 +#endif
@@ -13535,7 +13772,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams *params)
  {
-@@ -1571,6 +1601,10 @@
+@@ -1571,6 +1607,10 @@
  	tpl_printf(vars, TPLADD, "TMP", "EXTENDEDCWAPISELECTED%d", cfg.dvbapi_extended_cw_api);
  	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
  
@@ -13546,7 +13783,7 @@ Index: module-webif.c
  	//write_sdt_prov
  	if(cfg.dvbapi_write_sdt_prov > 0)
  		{ tpl_addVar(vars, TPLADD, "WRITESDTPROVCHECKED", "checked"); }
-@@ -1648,6 +1682,9 @@
+@@ -1648,6 +1688,9 @@
  #ifdef MODULE_SCAM
  	else if(!strcmp(part, "scam")) { return send_oscam_config_scam(vars, params); }
  #endif
@@ -13556,7 +13793,7 @@ Index: module-webif.c
  #ifdef MODULE_CCCAM
  	else if(!strcmp(part, "cccam")) { return send_oscam_config_cccam(vars, params); }
  #endif
-@@ -2123,7 +2160,7 @@
+@@ -2123,7 +2166,7 @@
  		chk_reader("services", servicelabels, rdr);
  		chk_reader("lb_whitelist_services", servicelabelslb, rdr);
  
@@ -13565,7 +13802,7 @@ Index: module-webif.c
  		{
  			if(rdr)
  				{
-@@ -2795,6 +2832,31 @@
+@@ -2795,6 +2838,31 @@
  	tpl_addVar(vars, TPLADD, "USERSCRIPT", rdr->userscript);
  #endif
  
@@ -13597,7 +13834,7 @@ Index: module-webif.c
  	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
  
  	// Show only parameters which needed for the reader
-@@ -2816,6 +2878,9 @@
+@@ -2816,6 +2884,9 @@
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
@@ -13607,7 +13844,7 @@ Index: module-webif.c
  	case R_CS378X :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
  		break;
-@@ -4552,9 +4617,34 @@
+@@ -4552,9 +4623,34 @@
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -13642,7 +13879,7 @@ Index: module-webif.c
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -5044,6 +5134,9 @@
+@@ -5044,6 +5140,9 @@
  #else
  						filtered = (type == cl->typ);
  #endif
@@ -13652,7 +13889,7 @@ Index: module-webif.c
  					}
  				}
  
-@@ -6507,6 +6600,9 @@
+@@ -6507,6 +6606,9 @@
  		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
  		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
  #endif
@@ -13662,7 +13899,7 @@ Index: module-webif.c
  		{ NULL, 0, 0 },
  	};
  
-@@ -6977,7 +7073,7 @@
+@@ -6977,7 +7079,7 @@
  		else if(!proxy && rdr->csystem_active)     // local active reader
  		{
  			csystem = rdr->csystem;
@@ -13671,7 +13908,7 @@ Index: module-webif.c
  		}
  
  		if(csystem)
-@@ -7984,8 +8080,8 @@
+@@ -7984,8 +8086,8 @@
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -13760,7 +13997,7 @@ Index: oscam-config-global.c
 ===================================================================
 --- oscam-config-global.c	(revision 11444)
 +++ oscam-config-global.c	(working copy)
-@@ -854,6 +854,30 @@
+@@ -854,6 +854,31 @@
  #else
  static const struct config_list scam_opts[] = { DEF_LAST_OPT };
  #endif
@@ -13781,6 +14018,7 @@ Index: oscam-config-global.c
 +	DEF_OPT_UINT32("stream_ecm_delay"         , OFS(emu_stream_ecm_delay),            600),
 +	DEF_OPT_INT8("stream_relay_enabled"       , OFS(emu_stream_relay_enabled),        1),
 +	DEF_OPT_INT8("stream_emm_enabled"         , OFS(emu_stream_emm_enabled),          1),
++	DEF_OPT_FUNC("stream_relay_ctab"          , OFS(emu_stream_relay_ctab),           check_caidtab_fn),
 +	DEF_LAST_OPT
 +};
 +#else
@@ -13791,7 +14029,7 @@ Index: oscam-config-global.c
  #ifdef MODULE_RADEGAST
  static bool radegast_should_save_fn(void *UNUSED(var))
  {
-@@ -1262,6 +1286,7 @@
+@@ -1262,6 +1287,7 @@
  	DEF_OPT_INT8("read_sdt"		, OFS(dvbapi_read_sdt),	0),
  	DEF_OPT_INT8("write_sdt_prov", OFS(dvbapi_write_sdt_prov),	0),
  	DEF_OPT_INT8("extended_cw_api", OFS(dvbapi_extended_cw_api),	0),
@@ -13799,7 +14037,7 @@ Index: oscam-config-global.c
  	DEF_OPT_FUNC("boxtype"		, OFS(dvbapi_boxtype),		dvbapi_boxtype_fn),
  	DEF_OPT_FUNC("services"		, OFS(dvbapi_sidtabs.ok),	dvbapi_services_fn),
  	// OBSOLETE OPTIONS
-@@ -1315,6 +1340,7 @@
+@@ -1315,6 +1341,7 @@
  	{ "cccam",	cccam_opts },
  	{ "pandora",	pandora_opts },
  	{ "scam",	scam_opts },
@@ -14151,18 +14389,19 @@ Index: webif/config/streamrelay.html
 ===================================================================
 --- webif/config/streamrelay.html	(nonexistent)
 +++ webif/config/streamrelay.html	(working copy)
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,26 @@
 +		<input name="part" type="hidden" value="streamrelay">
 +		<TABLE CLASS="config">
 +			<TR><TH COLSPAN="2">Edit Stream Relay Config</TH></TR>
 +			<TR><TD><A>Mode (requires OSCam restart)</A></TD>
 +				<TD>
 +					<select name="stream_relay_enabled">
-+						<option value="0" ##STREAMRELAYENABLEDSELECTED0##>0 - disabled (use direct DVB-Api decryption)</option>
-+						<option value="1" ##STREAMRELAYENABLEDSELECTED1##>1 - enabled (use Stream Relay)</option>
++						<option value="0" ##STREAMRELAYENABLEDSELECTED0##>0 - disabled</option>
++						<option value="1" ##STREAMRELAYENABLEDSELECTED1##>1 - enabled</option>
 +					</select>
 +				</TD>
 +			</TR>
++			<TR><TD><A>Caid:</A></TD><TD><input name="stream_relay_ctab" type="text" maxlength="160" value="##STREAM_RELAY_CTAB##"></TD></TR>
 +			<TR><TD><A>Source Stream Host:</A></TD><TD><input name="stream_source_host" type="text" maxlength="15" value="##STREAM_SOURCE_HOST##"></TD></TR>
 +			<TR><TD><A>Source Stream Port:</A></TD><TD><input name="stream_source_port" class="short" type="text" maxlength="5" value="##STREAM_SOURCE_PORT##"></TD></TR>
 +			<TR><TD><A>Source Stream User:</A></TD><TD><input name="stream_source_auth_user" type="text" value="##STREAM_SOURCE_AUTH_USER##"></TD></TR>
@@ -14172,8 +14411,8 @@ Index: webif/config/streamrelay.html
 +			<TR><TD><A>Process EMM from stream:</A></TD>
 +				<TD>
 +					<select name="stream_emm_enabled">
-+						<option value="0" ##STREAMEMMENABLEDSELECTED0##>0 - disabled </option>
-+						<option value="1" ##STREAMEMMENABLEDSELECTED1##>1 - enabled </option>
++						<option value="0" ##STREAMEMMENABLEDSELECTED0##>0 - disabled</option>
++						<option value="1" ##STREAMEMMENABLEDSELECTED1##>1 - enabled</option>
 +					</select>
 +				</TD>
 +			</TR>
