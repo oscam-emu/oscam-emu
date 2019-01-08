@@ -223,6 +223,17 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
+@@ -707,6 +707,10 @@ do
+                then
+                        which git > /dev/null 2>&1 && revision=`git log -10 --pretty=%B | grep git-svn-id | head -n 1 | sed -n -e 's/^.*trunk@\([0-9]*\) .*$/\1/p'`
+                fi
++               if [ -z "$revision" ]
++               then
++                       which git > /dev/null 2>&1 && revision=`git describe --abbrev=0 --tags | sed -n -e 's/^oscam\(.*\)emu/\1/p'`
++               fi
+                echo $revision
+                break
+        ;;
 Index: cscrypt/aes.c
 ===================================================================
 --- cscrypt/aes.c	(revision 11444)
