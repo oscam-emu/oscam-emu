@@ -107,12 +107,7 @@ Index: Makefile
 ===================================================================
 --- Makefile	(revision 11494)
 +++ Makefile	(working copy)
-@@ -62,9 +62,18 @@
- 
- CC = $(CROSS_DIR)$(CROSS)gcc
- STRIP = $(CROSS_DIR)$(CROSS)strip
-+LD = $(CROSS_DIR)$(CROSS)ld
-+OBJCOPY = $(CROSS_DIR)$(CROSS)objcopy
+@@ -65,6 +65,13 @@
  
  LDFLAGS = -Wl,--gc-sections
  
@@ -126,7 +121,7 @@ Index: Makefile
  # The linker for powerpc have bug that prevents --gc-sections from working
  # Check for the linker version and if it matches disable --gc-sections
  # For more information about the bug see:
-@@ -271,6 +280,32 @@
+@@ -271,6 +278,32 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -143,15 +138,15 @@ Index: Makefile
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-viaccess.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-videoguard.c
 +SRC-$(CONFIG_WITH_EMU) += ffdecsa/ffdecsa.c
++ifeq "$(CONFIG_WITH_EMU)" "y"
++ifeq "$(CONFIG_WITH_SOFTCAM)" "y"
 +UNAME := $(shell uname -s)
 +ifneq ($(UNAME),Darwin)
 +ifndef ANDROID_NDK
 +ifndef ANDROID_STANDALONE_TOOLCHAIN
-+ifeq "$(CONFIG_WITH_EMU)" "y"
 +TOUCH_SK := $(shell touch SoftCam.Key)
-+$(shell $(LD) -r -o "SoftCam.Key.o" -z noexecstack --format=binary "SoftCam.Key")
-+$(shell $(OBJCOPY) --rename-section .data=.rodata,alloc,load,readonly,data,contents "SoftCam.Key.o")
-+EXTRA_LIBS += SoftCam.Key.o
++override LDFLAGS += -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default
++endif
 +endif
 +endif
 +endif
@@ -159,7 +154,7 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -371,7 +406,7 @@
+@@ -371,7 +404,7 @@
  # starts the compilation.
  all:
  	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
@@ -172,11 +167,12 @@ Index: config.h
 ===================================================================
 --- config.h	(revision 11494)
 +++ config.h	(working copy)
-@@ -1,6 +1,7 @@
+@@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
  #define CONFIG_H_
  
 +#define WITH_EMU 1
++#define WITH_SOFTCAM 1
  #define WEBIF 1
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
@@ -188,19 +184,20 @@ Index: config.sh
  #!/bin/sh
  
 -addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
-+addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -25,6 +25,7 @@
+@@ -25,6 +25,8 @@
  # CONFIG_LEDSUPPORT=n
  CONFIG_CLOCKFIX=y
  # CONFIG_IPV6SUPPORT=n
 +CONFIG_WITH_EMU=y
++CONFIG_WITH_SOFTCAM=y
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -292,12 +293,15 @@
+@@ -292,12 +294,16 @@
  
  update_deps() {
  	# Calculate dependencies
@@ -215,10 +212,11 @@ Index: config.sh
 +	enabled WITH_EMU && enable_opt READER_VIACCESS >/dev/null
 +	enabled WITH_EMU && enable_opt READER_DRE >/dev/null
 +	enabled WITH_EMU && enable_opt MODULE_NEWCAMD >/dev/null
++	disabled WITH_EMU && disable_opt WITH_SOFTCAM >/dev/null
  }
  
  list_config() {
-@@ -347,9 +351,9 @@
+@@ -347,9 +353,9 @@
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -231,15 +229,16 @@ Index: config.sh
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -465,6 +469,7 @@
+@@ -465,6 +471,8 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
 +		WITH_EMU			"Emulator support"						$(check_test "WITH_EMU") \
++		WITH_SOFTCAM		"Built-in SoftCam.Key"					$(check_test "WITH_SOFTCAM") \
  		2> ${tempfile}
  
  	opt=${?}
-@@ -701,7 +706,11 @@
+@@ -701,7 +709,11 @@
  		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
  		if [ "$revision" = "0" ]
  		then
@@ -3822,7 +3821,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,1097 @@
+@@ -0,0 +1,1080 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3963,6 +3962,7 @@ Index: module-emulator-osemu.c
 +KeyDataContainer PowervuKeys = { NULL, 0, 0 };
 +KeyDataContainer DreKeys = { NULL, 0, 0 };
 +KeyDataContainer TandbergKeys = { NULL, 0, 0 };
++KeyDataContainer StreamKeys = { NULL, 0, 0 };
 +
 +KeyDataContainer *GetKeyContainer(char identifier)
 +{
@@ -3986,6 +3986,8 @@ Index: module-emulator-osemu.c
 +			return &DreKeys;
 +		case 'T':
 +			return &TandbergKeys;
++		case 'A':
++			return &StreamKeys;
 +		default:
 +			return NULL;
 +	}
@@ -4142,7 +4144,7 @@ Index: module-emulator-osemu.c
 +		}
 +	}
 +
-+	// fix checksum for BISS keys with a length of 6
++	// Fix checksum for BISS keys with a length of 6
 +	if (identifier == 'F' && keyLength == 6)
 +	{
 +		tmpKey = (uint8_t *)malloc(8 * sizeof(uint8_t));
@@ -4173,13 +4175,13 @@ Index: module-emulator-osemu.c
 +		memcpy(tmpKey, orgKey, keyLength);
 +	}
 +
-+	// fix patched mgcamd format for Irdeto
++	// Fix patched mgcamd format for Irdeto
 +	if (identifier == 'I' && provider < 0xFFFF)
 +	{
 +		provider = provider << 8;
 +	}
 +
-+	// key already exists on db, update its value
++	// Key already exists on db, update its value
 +	for (i = 0; i < KeyDB->keyCount; i++)
 +	{
 +		if (KeyDB->EmuKeys[i].provider != provider)
@@ -4193,10 +4195,10 @@ Index: module-emulator-osemu.c
 +			continue;
 +		}
 +
-+		// allow multiple keys for Irdeto
++		// Allow multiple keys for Irdeto
 +		if (identifier == 'I')
 +		{
-+			// reject duplicates
++			// Reject duplicates
 +			tmpKeyData = &KeyDB->EmuKeys[i];
 +			do
 +			{
@@ -4209,7 +4211,7 @@ Index: module-emulator-osemu.c
 +			}
 +			while(tmpKeyData != NULL);
 +
-+			// add new key
++			// Add new key
 +			newKeyData = (KeyData *)malloc(sizeof(KeyData));
 +			if (newKeyData == NULL)
 +			{
@@ -4273,7 +4275,7 @@ Index: module-emulator-osemu.c
 +		return 1;
 +	}
 +
-+	// key does not exist on db
++	// Key does not exist on db
 +	if (KeyDB->keyCount + 1 > KeyDB->keyMax)
 +	{
 +		if (KeyDB->EmuKeys == NULL) // db is empty
@@ -4352,9 +4354,9 @@ Index: module-emulator-osemu.c
 +			continue;
 +		}
 +
-+		//matchLength cannot be used when multiple keys are allowed
-+		//for a single provider/keyName combination.
-+		//Currently this is only the case for Irdeto keys.
++		// "matchLength" cannot be used when multiple keys are allowed
++		// for a single provider/keyName combination.
++		// Currently this is the case only for Irdeto keys.
 +		if (matchLength && KeyDB->EmuKeys[i].keyLength != maxKeyLength)
 +		{
 +			continue;
@@ -4387,10 +4389,11 @@ Index: module-emulator-osemu.c
 +			memcpy(key, tmpKeyData->key, tmpKeyData->keyLength > maxKeyLength ? maxKeyLength : tmpKeyData->keyLength);
 +			if (tmpKeyData->keyLength < maxKeyLength)
 +			{
-+				memset(key+tmpKeyData->keyLength, 0, maxKeyLength - tmpKeyData->keyLength);
++				memset(key + tmpKeyData->keyLength, 0, maxKeyLength - tmpKeyData->keyLength);
 +			}
 +
-+			if (identifier == 'F') // Report the keyName of found key back to BissGetKey()
++			// Report the keyName (i.e. expiration date) of found key back to BissGetKey()
++			if (identifier == 'F')
 +			{
 +				cs_strncpy(keyName, tmpKeyData->keyName, EMU_MAX_CHAR_KEYNAME);
 +			}
@@ -4493,13 +4496,14 @@ Index: module-emulator-osemu.c
 +	total += PowervuKeys.keyCount;
 +	total += DreKeys.keyCount;
 +	total += TandbergKeys.keyCount;
++	total += StreamKeys.keyCount;
 +
 +	if (total != 0)
 +	{
-+		cs_log("Freeing keys in memory: W:%d V:%d N:%d I:%d S:%d F:%d P:%d D:%d T:%d", \
-+						CwKeys.keyCount, ViKeys.keyCount, NagraKeys.keyCount, \
-+						IrdetoKeys.keyCount, NDSKeys.keyCount, BissKeys.keyCount, \
-+						PowervuKeys.keyCount, DreKeys.keyCount, TandbergKeys.keyCount);
++		cs_log("Freeing keys in memory: W:%d V:%d N:%d I:%d S:%d F:%d P:%d D:%d T:%d A:%d",
++				CwKeys.keyCount, ViKeys.keyCount, NagraKeys.keyCount, IrdetoKeys.keyCount,
++				NDSKeys.keyCount, BissKeys.keyCount, PowervuKeys.keyCount, DreKeys.keyCount,
++				TandbergKeys.keyCount, StreamKeys.keyCount);
 +
 +		DeleteKeysInContainer('W');
 +		DeleteKeysInContainer('V');
@@ -4510,6 +4514,7 @@ Index: module-emulator-osemu.c
 +		DeleteKeysInContainer('P');
 +		DeleteKeysInContainer('D');
 +		DeleteKeysInContainer('T');
++		DeleteKeysInContainer('A');
 +	}
 +}
 +
@@ -4630,7 +4635,7 @@ Index: module-emulator-osemu.c
 +	return 1;
 +}
 +
-+#if !defined(__APPLE__) && !defined(__ANDROID__)
++#if defined(WITH_SOFTCAM) && !defined(__APPLE__) && !defined(__ANDROID__)
 +extern uint8_t SoftCamKey_Data[]    __asm__("_binary_SoftCam_Key_start");
 +extern uint8_t SoftCamKey_DataEnd[] __asm__("_binary_SoftCam_Key_end");
 +
@@ -4777,28 +4782,17 @@ Index: module-emulator-osemu.c
 +{
 +	switch (result)
 +	{
-+		case 0:
-+			return "No error";
-+		case 1:
-+			return "ECM not supported";
-+		case 2:
-+			return "Key not found";
-+		case 3:
-+			return "Nano80 problem";
-+		case 4:
-+			return "Corrupt data";
-+		case 5:
-+			return "CW not found";
-+		case 6:
-+			return "CW checksum error";
-+		case 7:
-+			return "Out of memory";
-+		case 8:
-+			return "ECM checksum error";
-+		case 9:
-+			return "ICG error";
-+		default:
-+			return "Unknown";
++		case 0: return "No error";
++		case 1: return "ECM not supported";
++		case 2: return "Key not found";
++		case 3: return "Nano80 problem";
++		case 4: return "Corrupt data";
++		case 5: return "CW not found";
++		case 6: return "CW checksum error";
++		case 7: return "Out of memory";
++		case 8: return "ECM checksum error";
++		case 9: return "ICG error";
++		default: return "Unknown";
 +	}
 +}
 +
@@ -4853,7 +4847,6 @@ Index: module-emulator-osemu.c
 +	else if (caid_is_nagra(caid))       result = Nagra2ECM(ecmCopy, dw);
 +	else if (caid_is_biss(caid))        result = BissEcm(rdr, caid, ecm, dw, srvid, ecmpid);
 +	else if (caid_is_dre(caid))         result = Drecrypt2ECM(provider, ecmCopy, dw);
-+	else if (caid == 0xA101)            result = 0; // RossCrypt1 does not send ECM's
 +
 +	if (result != 0)
 +	{
@@ -4867,28 +4860,17 @@ Index: module-emulator-osemu.c
 +{
 +	switch (result)
 +	{
-+		case 0:
-+			return "No error";
-+		case 1:
-+			return "EMM not supported";
-+		case 2:
-+			return "Key not found";
-+		case 3:
-+			return "Nano80 problem";
-+		case 4:
-+			return "Corrupt data";
-+		case 5:
-+			return "Unknown";
-+		case 6:
-+			return "Checksum error";
-+		case 7:
-+			return "Out of memory";
-+		case 8:
-+			return "EMM checksum error";
-+		case 9:
-+			return "Wrong provider";
-+		default:
-+			return "Unknown";
++		case 0: return "No error";
++		case 1: return "EMM not supported";
++		case 2: return "Key not found";
++		case 3: return "Nano80 problem";
++		case 4: return "Corrupt data";
++		case 5: return "Unknown";
++		case 6: return "Checksum error";
++		case 7: return "Out of memory";
++		case 8: return "EMM checksum error";
++		case 9: return "Wrong provider";
++		default: return "Unknown";
 +	}
 +}
 +
@@ -4924,7 +4906,7 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(nonexistent)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,106 @@
+@@ -0,0 +1,107 @@
 +#ifndef MODULE_EMULATOR_H_
 +#define MODULE_EMULATOR_H_
 +
@@ -4991,6 +4973,7 @@ Index: module-emulator-osemu.h
 +extern KeyDataContainer PowervuKeys;
 +extern KeyDataContainer DreKeys;
 +extern KeyDataContainer TandbergKeys;
++extern KeyDataContainer StreamKeys;
 +extern uint8_t viasat_const[];
 +extern char *emu_keyfile_path;
 +extern pthread_mutex_t emu_key_data_mutex;
@@ -5035,7 +5018,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2068 @@
+@@ -0,0 +1,2073 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5495,6 +5478,7 @@ Index: module-emulator-powervu.c
 +static const uint8_t table1A[] = { 0x01, 0x05, 0x08, 0x10 };
 +static const uint8_t table1B[] = { 0x03, 0x07, 0x08, 0x10 };
 +static const uint8_t table1C[] = { 0x03, 0x05, 0x0A, 0x10 };
++static const uint8_t table1D[] = { 0x03, 0x07, 0x0A, 0x10 };
 +
 +static void PowervuHashModes19to27Tables3(uint8_t *data, uint8_t *hash, const uint8_t *table)
 +{
@@ -5642,6 +5626,10 @@ Index: module-emulator-powervu.c
 +
 +		case 28:
 +			PowervuHashModes19to27Tables3(dataPadded, hash, table1C);
++			break;
++
++		case 29:
++			PowervuHashModes19to27Tables3(dataPadded, hash, table1D);
 +			break;
 +
 +		default:
@@ -7160,7 +7148,7 @@ Index: module-emulator-streamserver.c
 ===================================================================
 --- module-emulator-streamserver.c	(nonexistent)
 +++ module-emulator-streamserver.c	(working copy)
-@@ -0,0 +1,1651 @@
+@@ -0,0 +1,1672 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -7389,6 +7377,19 @@ Index: module-emulator-streamserver.c
 +	}
 +}
 +
++static int8_t stream_client_get_caid(emu_stream_client_data *cdata)
++{
++	uint32_t tmp1 = (cdata->srvid << 16) | cdata->pmt_pid;
++	uint8_t tmp2[2];
++
++	if (FindKey('A', tmp1, 0, "FAKE", tmp2, 2, 0, 0, 0, NULL))
++	{
++		cdata->caid = b2i(2, tmp2);
++		return 1;
++	}
++	return 0;
++}
++
 +static void ParseDescriptors(uint8_t *buffer, uint16_t info_length, uint8_t *type)
 +{
 +	uint8_t descriptor_tag = buffer[0], descriptor_length = 0;
@@ -7592,6 +7593,14 @@ Index: module-emulator-streamserver.c
 +				break;
 +			}
 +		}
++	}
++
++	// If we haven't found a CAID for this service,
++	// search the keyDB for a fake one
++	if (cdata->caid == NO_CAID_VALUE && stream_client_get_caid(cdata) == 1)
++	{
++		cs_log_dbg(D_READER, "Stream %i found fake caid: 0x%04X (%i)",
++					cdata->connid, cdata->caid, cdata->caid);
 +	}
 +}
 +
@@ -9934,7 +9943,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,974 @@
+@@ -0,0 +1,979 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -9983,7 +9992,7 @@ Index: module-emulator.c
 +
 +static inline uint32_t GetOSemuVersion(void)
 +{
-+	return atoi("$Version: 787 $" + 10);
++	return atoi("$Version: 788 $" + 10);
 +}
 +
 +static void set_hexserial_to_version(struct s_reader *rdr)
@@ -10049,6 +10058,12 @@ Index: module-emulator.c
 +	KeyData *tmpKeyData;
 +
 +	cs_clear_entitlement(rdr);
++
++	for (i = 0; i < StreamKeys.keyCount; i++)
++	{
++		emu_add_entitlement(rdr, b2i(2, StreamKeys.EmuKeys[i].key), StreamKeys.EmuKeys[i].provider, StreamKeys.EmuKeys[i].key,
++							StreamKeys.EmuKeys[i].keyName, StreamKeys.EmuKeys[i].keyLength, 1);
++	}
 +
 +	for (i = 0; i < ViKeys.keyCount; i++)
 +	{
@@ -10161,7 +10176,7 @@ Index: module-emulator.c
 +	clear_emu_keydata();
 +
 +	// Read keys built in the OSCam-Emu binary
-+#if !defined(__APPLE__) && !defined(__ANDROID__)
++#if defined(WITH_SOFTCAM) && !defined(__APPLE__) && !defined(__ANDROID__)
 +	read_emu_keymemory(rdr);
 +#endif
 +
@@ -10181,10 +10196,10 @@ Index: module-emulator.c
 +	read_emu_eebin(rdr->extee56, "ee56.bin");           // Read "ee56.bin"
 +	read_emu_deskey(rdr->des_key, rdr->des_key_length); // Read overcrypt keys for DreCrypt ADEC
 +
-+	cs_log("Total keys in memory: W:%d V:%d N:%d I:%d S:%d F:%d P:%d D:%d T:%d", \
-+					CwKeys.keyCount, ViKeys.keyCount, NagraKeys.keyCount, \
-+					IrdetoKeys.keyCount, NDSKeys.keyCount, BissKeys.keyCount, \
-+					PowervuKeys.keyCount, DreKeys.keyCount, TandbergKeys.keyCount);
++	cs_log("Total keys in memory: W:%d V:%d N:%d I:%d S:%d F:%d P:%d D:%d T:%d A:%d",
++			CwKeys.keyCount, ViKeys.keyCount, NagraKeys.keyCount, IrdetoKeys.keyCount,
++			NDSKeys.keyCount, BissKeys.keyCount, PowervuKeys.keyCount, DreKeys.keyCount,
++			TandbergKeys.keyCount, StreamKeys.keyCount);
 +
 +	// Inform OSCam about all available keys.
 +	// This is used for listing the "entitlements" in the webif's reader page.
@@ -10212,8 +10227,8 @@ Index: module-emulator.c
 +
 +	if(ep->emm[3] == 0x90 && ep->emm[4] == 0x03)
 +	{
-+		provid = b2i(3, ep->emm+5);
-+		provid &=0xFFFFF0;
++		provid = b2i(3, ep->emm + 5);
++		provid &= 0xFFFFF0;
 +		i2b_buf(4, provid, ep->provid);
 +	}
 +
@@ -10276,8 +10291,8 @@ Index: module-emulator.c
 +		memcpy(ep->hexserial, ep->emm + 4, l);
 +		cs_hexdump(1, rdr->hexserial, l, dumprdrserial, sizeof(dumprdrserial));
 +		cs_hexdump(1, ep->hexserial, l, dumpemmserial, sizeof(dumpemmserial));
-+		rdr_log_dbg_sensitive(rdr, D_EMM, "SHARED l = %d ep = {%s} rdr = {%s} base = %02x", l,
-+								 dumpemmserial, dumprdrserial, base);
++		rdr_log_dbg_sensitive(rdr, D_EMM, "SHARED l = %d ep = {%s} rdr = {%s} base = %02x",
++								l, dumpemmserial, dumprdrserial, base);
 +		return 1;
 +
 +	case 3:
@@ -10287,8 +10302,8 @@ Index: module-emulator.c
 +		memcpy(ep->hexserial, ep->emm + 4, l);
 +		cs_hexdump(1, rdr->hexserial, l, dumprdrserial, sizeof(dumprdrserial));
 +		cs_hexdump(1, ep->hexserial, l, dumpemmserial, sizeof(dumpemmserial));
-+		rdr_log_dbg_sensitive(rdr, D_EMM, "UNIQUE l = %d ep = {%s} rdr = {%s} base = %02x", l,
-+								 dumpemmserial, dumprdrserial, base);
++		rdr_log_dbg_sensitive(rdr, D_EMM, "UNIQUE l = %d ep = {%s} rdr = {%s} base = %02x",
++								l, dumpemmserial, dumprdrserial, base);
 +		return 1;
 +
 +	default:
@@ -10464,7 +10479,7 @@ Index: module-emulator.c
 +
 +	if(*emm_filters == NULL)
 +	{
-+		const unsigned int max_filter_count = have_serial + (2*(have_provid ? emu_provids->nprids : 0));
++		const unsigned int max_filter_count = have_serial + (2 * (have_provid ? emu_provids->nprids : 0));
 +		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 +			{ return CS_ERROR; }
 +
@@ -10851,7 +10866,7 @@ Index: module-emulator.c
 +		cs_strncpy(rdr->device, emuName, sizeof(emuName));
 +
 +		// CAIDs
-+		ctab = strdup("0500,0604,090F,0E00,1010,1801,2600,2602,2610,4AE1,A101");
++		ctab = strdup("0500,0604,090F,0E00,1010,1801,2600,2602,2610,4AE1");
 +		chk_caidtab(ctab, &rdr->ctab);
 +		NULLFREE(ctab);
 +
@@ -10866,7 +10881,6 @@ Index: module-emulator.c
 +					  "2602:000000;"
 +					  "2610:000000;"
 +					  "4AE1:000011,000014,0000FE;"
-+					  "A101:000000;"
 +					 );
 +		chk_ftab(ftab, &rdr->ftab);
 +		NULLFREE(ftab);
@@ -11402,15 +11416,16 @@ Index: oscam.c
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -420,6 +425,7 @@
- 	write_conf(CW_CYCLE_CHECK, "CW Cycle Check support");
- 	write_conf(LCDSUPPORT, "LCD support");
- 	write_conf(LEDSUPPORT, "LED support");
+@@ -427,6 +432,8 @@
+ 		case CLOCK_TYPE_MONOTONIC: write_conf(CLOCKFIX, "Clockfix with monotonic clock"); break;
+ 	}
+ 	write_conf(IPV6SUPPORT, "IPv6 support");
 +	write_conf(WITH_EMU, "Emulator support");
- 	switch (cs_getclocktype())
- 	{
- 		case CLOCK_TYPE_UNKNOWN  : write_conf(CLOCKFIX, "Clockfix with UNKNOWN clock"); break;
-@@ -1642,6 +1648,9 @@
++	write_conf(WITH_SOFTCAM, "Built-in SoftCam.Key");
+ 
+ 	fprintf(fp, "\n");
+ 	write_conf(MODULE_CAMD33, "camd 3.3x");
+@@ -1642,6 +1649,9 @@
  #ifdef CARDREADER_STINGER
  	&cardreader_stinger,
  #endif
@@ -11420,7 +11435,7 @@ Index: oscam.c
  
  	NULL
  };
-@@ -1815,6 +1824,9 @@
+@@ -1815,6 +1825,9 @@
  
  	init_sidtab();
  	init_readerdb();
@@ -11430,7 +11445,7 @@ Index: oscam.c
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
-@@ -1902,6 +1914,9 @@
+@@ -1902,6 +1915,9 @@
  if(!cfg.gsms_dis)
  	{ stop_sms_sender(); }
  #endif
