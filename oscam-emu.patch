@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11500)
+--- CMakeLists.txt	(revision 11504)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -108,7 +108,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11500)
+--- Makefile	(revision 11504)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -124,7 +124,7 @@ Index: Makefile
  # The linker for powerpc have bug that prevents --gc-sections from working
  # Check for the linker version and if it matches disable --gc-sections
  # For more information about the bug see:
-@@ -272,6 +279,32 @@
+@@ -271,6 +278,32 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -157,7 +157,7 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -372,7 +405,7 @@
+@@ -371,7 +404,7 @@
  # starts the compilation.
  all:
  	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
@@ -168,7 +168,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11500)
+--- config.h	(revision 11504)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -181,7 +181,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11500)
+--- config.sh	(revision 11504)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -254,110 +254,23 @@ Index: config.sh
  		fi
  		echo $revision
  		break
-Index: csctapi/cardreaders.h
-===================================================================
---- csctapi/cardreaders.h	(revision 11500)
-+++ csctapi/cardreaders.h	(working copy)
-@@ -14,5 +14,6 @@
- extern const struct s_cardreader cardreader_stapi;
- extern const struct s_cardreader cardreader_stinger;
- extern const struct s_cardreader cardreader_drecas;
-+extern const struct s_cardreader cardreader_emu;
- 
- #endif
 Index: git-svn-diff.sh
 old mode 100644
 new mode 100755
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11500)
+--- globals.h	(revision 11504)
 +++ globals.h	(working copy)
-@@ -388,9 +388,9 @@
+@@ -388,7 +388,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
  
  // Support for multiple CWs per channel and other encryption algos
 -//#define WITH_EXTENDED_CW		1
 +#define WITH_EXTENDED_CW		1
  
--#if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS)
-+#if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
+ #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
- #define MAX_EMM_SIZE			1024
- #else
-@@ -398,7 +398,7 @@
- #define MAX_EMM_SIZE			512
- #endif
- 
--#define CS_EMMCACHESIZE			512		// nr of EMMs that each reader will cache
-+#define CS_EMMCACHESIZE			1024	// nr of EMMs that each reader will cache
- #define MSGLOGSIZE				64		// size of string buffer for a ecm to return messages
- 
- #define D_TRACE					0x0001	// Generate very detailed error/trace messages per routine
-@@ -430,6 +430,7 @@
- #define R_SMART					0x7		// Smartreader+
- #define R_PCSC					0x8		// PCSC
- #define R_DRECAS				0x9		// Reader DRECAS
-+#define R_EMU					0x17	// Reader EMU
- /////// proxy readers after R_CS378X
- #define R_CAMD35				0x20	// Reader cascading camd 3.5x
- #define R_CAMD33				0x21	// Reader cascading camd 3.3x
-@@ -858,6 +859,13 @@
- 	uint32_t		class;							// the class needed for some systems
- 	time_t			start;							// startdate
- 	time_t			end;							// enddate
-+#ifdef WITH_EMU
-+	bool			isKey;
-+	bool			isData;
-+	char			name[8];
-+	uint8_t			*key;
-+	uint32_t		keyLength;
-+#endif
- } S_ENTITLEMENT;
- 
- struct s_client;
-@@ -972,6 +980,7 @@
- 	void			(*post_process)(struct s_reader *);
- 	int32_t			(*get_emm_type)(struct emm_packet_t *, struct s_reader *);
- 	int32_t			(*get_emm_filter)(struct s_reader *, struct s_csystem_emm_filter **, uint32_t *);
-+	int32_t			(*get_emm_filter_adv)(struct s_reader *, struct s_csystem_emm_filter **, uint32_t *, uint16_t, uint32_t, uint16_t);
- 	int32_t			(*get_tunemm_filter)(struct s_reader *, struct s_csystem_emm_filter **, uint32_t *);
- };
- 
-@@ -1768,6 +1777,14 @@
- #ifdef MODULE_GHTTP
- 	uint8_t			ghttp_use_ssl;
- #endif
-+#ifdef WITH_EMU
-+	FTAB			emu_auproviders;				// AU providers for Emu reader
-+	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
-+	char			*extee36;						// path to "ee36.bin" - Set by the user via the webif
-+	char			*extee56;						// path to "ee56.bin" - Set by the user via the webif
-+	uint8_t			dre36_force_group;
-+	uint8_t			dre56_force_group;
-+#endif
- 	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
- 	LLIST			*emmstat;						// emm stats
- 	CS_MUTEX_LOCK	emmstat_lock;
-@@ -2267,6 +2284,18 @@
- 	struct s_ip		*scam_allowed;
- #endif
- 
-+#ifdef WITH_EMU
-+	char			*emu_stream_source_host;
-+	int32_t			emu_stream_source_port;
-+	char			*emu_stream_source_auth_user;
-+	char			*emu_stream_source_auth_password;
-+	int32_t			emu_stream_relay_port;
-+	uint32_t		emu_stream_ecm_delay;
-+	int8_t			emu_stream_relay_enabled;
-+	int8_t			emu_stream_emm_enabled;
-+	CAIDTAB			emu_stream_relay_ctab;			// use the stream server for these caids
-+#endif
-+
- 	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
- 	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
- 
-@@ -2424,6 +2453,8 @@
+@@ -2457,6 +2457,8 @@
  const char *boxname_get(void);
  static inline bool caid_is_fake(uint16_t caid) { return caid == 0xffff; }
  static inline bool caid_is_biss(uint16_t caid) { return caid >> 8 == 0x26; }
@@ -366,52 +279,11 @@ Index: globals.h
  static inline bool caid_is_seca(uint16_t caid) { return caid >> 8 == 0x01; }
  static inline bool caid_is_viaccess(uint16_t caid) { return caid >> 8 == 0x05; }
  static inline bool caid_is_irdeto(uint16_t caid) { return caid >> 8 == 0x06; }
-@@ -2438,4 +2469,8 @@
- static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710;}
- const char *get_cardsystem_desc_by_caid(uint16_t caid);
- 
-+#ifdef WITH_EMU
-+FILTER* get_emu_prids_for_caid(struct s_reader *rdr, uint16_t caid);
-+#endif
-+
- #endif
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11500)
+--- module-dvbapi.c	(revision 11504)
 +++ module-dvbapi.c	(working copy)
-@@ -1697,7 +1697,14 @@
- 
- 			if(match)
- 			{
--				csystem = get_cardsystem_by_caid(caid);
-+				if(rdr->typ == R_EMU)
-+				{
-+					csystem = rdr->csystem;
-+				}
-+				else
-+				{
-+					csystem = get_cardsystem_by_caid(caid);
-+				}
- 				if(csystem)
- 				{
- 					if(caid != ncaid)
-@@ -1717,7 +1724,14 @@
- 					}
- 					else if(csystem->get_emm_filter)
- 					{
--						csystem->get_emm_filter(rdr, &dmx_filter, &filter_count);
-+						if(rdr->typ == R_EMU)
-+						{
-+							csystem->get_emm_filter_adv(rdr, &dmx_filter, &filter_count, caid, provid, demux[demux_index].program_number);
-+						}
-+						else
-+						{
-+							csystem->get_emm_filter(rdr, &dmx_filter, &filter_count);
-+						}
- 					}
- 				}
- 				else
-@@ -2401,6 +2415,8 @@
+@@ -2415,6 +2415,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
  	er->pmtpid = demux[demux_id].pmtpid;
  	er->onid   = demux[demux_id].onid;
@@ -420,7 +292,7 @@ Index: module-dvbapi.c
  	er->msgid  = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2444,21 +2460,33 @@
+@@ -2458,21 +2460,33 @@
  		// ecm stream pid is fake, so send out one fake ecm request
  		// special treatment: if we asked the cw first without starting a filter,
  		// the cw request will be killed due to no ecmfilter started
@@ -458,107 +330,20 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-@@ -5141,6 +5169,7 @@
- 	if(filtertype == TYPE_ECM)
- 	{
- 		uint32_t chid = 0x10000;
-+		int8_t pvu_skip = 0;
- 		ECM_REQUEST *er;
- 		if(len != 0) // len = 0 receiver encountered an internal bufferoverflow!
- 		{
-@@ -5169,7 +5198,23 @@
- 				return;
- 			}
- 
--			if(curpid->table == buffer[0] && !caid_is_irdeto(curpid->CAID)) // wait for odd / even ecm change (only not for irdeto!)
-+			if(caid_is_powervu(curpid->CAID))
-+			{
-+				pvu_skip = 1;
-+
-+				if(sctlen - 11 > buffer[9])
-+				{
-+					if(buffer[11 + buffer[9]] > curpid->pvu_counter
-+						|| (curpid->pvu_counter == 255 && buffer[11 + buffer[9]] == 0)
-+						|| ((curpid->pvu_counter - buffer[11 + buffer[9]]) > 5))
-+					{
-+						curpid->pvu_counter = buffer[11 + buffer[9]];
-+						pvu_skip = 0;
-+					}
-+				}
-+			}
-+
-+			if((curpid->table == buffer[0] && !caid_is_irdeto(curpid->CAID)) || pvu_skip) // wait for odd / even ecm change (only not for irdeto!)
- 			{
- 				if(!(er = get_ecmtask()))
+@@ -7271,11 +7285,11 @@
+ 				else
  				{
-@@ -5498,6 +5543,35 @@
- 			return;
- 		}
- 
-+#ifdef WITH_EMU
-+		if(caid_is_director(demux[demux_id].demux_fd[filter_num].caid))
-+		{
-+			uint32_t i;
-+			uint32_t emmhash;
-+
-+			if(sctlen < 4)
-+			{
-+				return;
-+			}
-+
-+			for(i = 0; i + 2 < sctlen; i++)
-+			{
-+				if(buffer[i] == 0xF0 && (buffer[i + 2] == 0xE1 || buffer[i + 2] == 0xE4))
-+				{
-+					emmhash = (buffer[3] << 8) | buffer[sctlen - 2];
-+					if(demux[demux_id].demux_fd[filter_num].cadata == emmhash)
-+					{
-+						return;
-+					}
-+
-+					demux[demux_id].demux_fd[filter_num].cadata = emmhash;
-+					dvbapi_process_emm(demux_id, filter_num, buffer, sctlen);
-+					return;
-+				}
-+			}
-+			return;
-+		}
-+#endif
- 		// fix to handle more than one irdeto emm packet
- 		uint8_t *pbuf = buffer;
- 		int32_t done = 0;
-@@ -7151,6 +7225,9 @@
- 
- 		delayer(er, delay);
- 
-+#ifdef WITH_EMU
-+		if(!chk_ctab_ex(er->caid, &cfg.emu_stream_relay_ctab) || !cfg.emu_stream_relay_enabled)
-+#endif
- 		switch(selected_api)
- 		{
- #if defined(WITH_STAPI) || defined(WITH_STAPI5)
-Index: module-dvbapi.h
-===================================================================
---- module-dvbapi.h	(revision 11500)
-+++ module-dvbapi.h	(working copy)
-@@ -141,6 +141,7 @@
- 	int8_t useMultipleIndices;
- 	uint32_t streams;
- 	uint32_t cadata;
-+	int16_t pvu_counter;
- };
- 
- typedef struct filter_s
-@@ -163,6 +164,9 @@
- 	uint32_t SlotHandle[10];
- 	uint32_t BufferHandle[10];
+ 					demux[i].ECMpids[j].useMultipleIndices = 0;
+-					dvbapi_write_cw(i, er->cw, j, 0, er->cw_ex.algo, er->cw_ex.algo_mode, er->msgid);
++					dvbapi_write_cw(i, er->cw, j, 0, CA_ALGO_DVBCSA, CA_MODE_CBC, er->msgid); // quick fix - we need to properly initialize the er->cw_ex members
+ 				}
+ #else
+ 				cfg.dvbapi_extended_cw_api = 0; // in CSA mode extended_cw_api should be always 0 regardless what user selected!
+-				dvbapi_write_cw(i, er->cw, j, 0, CA_ALGO_DVBCSA, CA_MODE_ECB, er->msgid);
++				dvbapi_write_cw(i, er->cw, j, 0, CA_ALGO_DVBCSA, CA_MODE_CBC, er->msgid);
  #endif
-+#ifdef WITH_EMU
-+	uint32_t cadata;
-+#endif
- } FILTERTYPE;
- 
- struct s_emmpids
+ 				break;
+ 			}
 Index: module-emulator-biss.c
 ===================================================================
 --- module-emulator-biss.c	(nonexistent)
@@ -5310,7 +5095,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2166 @@
+@@ -0,0 +1,2171 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5769,6 +5554,7 @@ Index: module-emulator-powervu.c
 +static const uint8_t table1B[] = { 0x03, 0x07, 0x08, 0x10 };
 +static const uint8_t table1C[] = { 0x03, 0x05, 0x0A, 0x10 };
 +static const uint8_t table1D[] = { 0x03, 0x07, 0x0A, 0x10 };
++static const uint8_t table1E[] = { 0x01, 0x05, 0x0B, 0x10 };
 +
 +static void hash_modes_19_to_27_tables_3(uint8_t *data, uint8_t *hash, const uint8_t *table)
 +{
@@ -5920,6 +5706,10 @@ Index: module-emulator-powervu.c
 +
 +		case 29:
 +			hash_modes_19_to_27_tables_3(dataPadded, hash, table1D);
++			break;
++
++		case 30:
++			hash_modes_19_to_27_tables_3(dataPadded, hash, table1E);
 +			break;
 +
 +		default:
@@ -7151,7 +6941,7 @@ Index: module-emulator-powervu.c
 +						if (csaUsed)
 +						{
 +							cw_ex->algo = CW_ALGO_CSA;
-+							cw_ex->algo_mode = CW_ALGO_MODE_ECB;
++							cw_ex->algo_mode = CW_ALGO_MODE_CBC;
 +						}
 +						else
 +						{
@@ -10790,7 +10580,7 @@ Index: module-emulator.c
 +
 +static inline uint32_t get_osemu_version(void)
 +{
-+	return atoi("$Version: 789 $" + 10);
++	return atoi("$Version: 790 $" + 10);
 +}
 +
 +static void set_hexserial_to_version(struct s_reader *rdr)
@@ -11740,440 +11530,9 @@ Index: module-emulator.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-newcamd.c
-===================================================================
---- module-newcamd.c	(revision 11500)
-+++ module-newcamd.c	(working copy)
-@@ -919,6 +919,13 @@
- 			// set userfilter for au enabled clients
- 			if(aureader)
- 			{
-+#ifdef WITH_EMU
-+				if(aureader->typ == R_EMU)
-+				{
-+					usr_filter = * get_emu_prids_for_caid(aureader, cfg.ncd_ptab.ports[cl->port_idx].ncd->ncd_ftab.filts[0].caid);
-+				}
-+				else
-+#endif
- 				mk_user_au_ftab(aureader, &usr_filter);
- 			}
- 
-@@ -948,6 +955,12 @@
- 			else
- 				{ memset(&mbuf[8], 0, 6); } //mbuf[8] - mbuf[13]
- 
-+#ifdef WITH_EMU
-+			if(aureader && aureader->typ == R_EMU && caid_is_dre(pufilt->caid))
-+			{
-+				mbuf[10] = aureader->dre36_force_group;
-+			}
-+#endif
- 			mbuf[14] = pufilt->nprids;
- 			for(j = 0; j < pufilt->nprids; j++)
- 			{
-@@ -973,7 +986,7 @@
- 					int32_t k, found;
- 					uint32_t rprid;
- 					found = 0;
--					if(pufilt->caid == aureader->caid)
-+					if(pufilt->caid == aureader->caid && aureader->typ != R_EMU)
- 					{
- 						for(k = 0; (k < aureader->nprov); k++)
- 						{
-@@ -999,6 +1012,35 @@
- 							}
- 						}
- 					}
-+#ifdef WITH_EMU
-+					else if(aureader->typ == R_EMU)
-+					{
-+						if(caid_is_dre(pufilt->caid))
-+						{
-+							found = 1;
-+							memset(&mbuf[22 + 11 * j], 0, 4);
-+
-+							switch((uint8_t)(pufilt->prids[j]))
-+							{
-+								case 0x11:
-+									mbuf[22 + 11 * j] = aureader->dre36_force_group;
-+									break;
-+
-+								case 0x14:
-+									mbuf[22 + 11 * j] = aureader->dre56_force_group;
-+									break;
-+
-+								case 0xfe:
-+									mbuf[22 + 11 * j] = 0xED;
-+									mbuf[25 + 11 * j] = 0x02;
-+									break;
-+
-+								default:
-+									found = 0;
-+							}
-+						}
-+					}
-+#endif
- 					if(!found)
- 					{
- 						mbuf[22 + 11 * j] = 0x00;
-Index: module-stat.c
-===================================================================
---- module-stat.c	(revision 11500)
-+++ module-stat.c	(working copy)
-@@ -897,7 +897,7 @@
- 
- uint16_t get_rdr_caid(struct s_reader *rdr)
- {
--	if(is_network_reader(rdr))
-+	if(is_network_reader(rdr) || rdr->typ == R_EMU)
- 	{
- 		return 0; // reader caid is not real caid
- 	}
-@@ -1288,7 +1288,7 @@
- 		for(ea = er->matching_rdr; ea; ea = ea->next)
- 		{
- 			rdr = ea->reader;
--			if(is_network_reader(rdr)) // reader caid is not real caid
-+			if(is_network_reader(rdr) || rdr->typ == R_EMU) // reader caid is not real caid
- 			{
- 				prv = ea;
- 				continue; // proxy can convert or reject
-Index: module-webif-tpl.c
-===================================================================
---- module-webif-tpl.c	(revision 11500)
-+++ module-webif-tpl.c	(working copy)
-@@ -459,6 +459,7 @@
- 											check_conf(WITH_SSL, ptr2);
- 											check_conf(WITH_STAPI, ptr2);
- 											check_conf(WITH_STAPI5, ptr2);
-+											check_conf(WITH_EMU, ptr2);
- 										} // for
- 										if(ok == 0)
- 										{
-Index: module-webif.c
-===================================================================
---- module-webif.c	(revision 11500)
-+++ module-webif.c	(working copy)
-@@ -103,6 +103,7 @@
- #define MNU_CFG_LCD         14
- #define MNU_CFG_MONITOR     15
- #define MNU_CFG_WEBIF       16
-+#define MNU_CFG_STREAMRELAY 17
- 
- /* constants for files.html submenuactivating */
- #define MNU_CFG_FVERSION     0
-@@ -137,8 +138,9 @@
- #define MNU_GBX_FSTAINF     27
- #define MNU_GBX_FEXPINF     28
- #define MNU_GBX_INFOLOG     29
-+#define MNU_CFG_FSOFTCAMKEY 30
- 
--#define MNU_CFG_TOTAL_ITEMS 30 // sum of items above. Use it for "All inactive" in function calls too.
-+#define MNU_CFG_TOTAL_ITEMS 31 // sum of items above. Use it for "All inactive" in function calls too.
- 
- static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value)
- {
-@@ -1230,6 +1232,40 @@
- }
- #endif
- 
-+#ifdef WITH_EMU
-+#include "module-emulator-streamserver.h"
-+
-+static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uriparams *params)
-+{
-+	char *value;
-+
-+	setActiveSubMenu(vars, MNU_CFG_STREAMRELAY);
-+
-+	webif_save_config("streamrelay", vars, params);
-+
-+	tpl_printf(vars, TPLADD, "STREAM_SOURCE_HOST", "%s", cfg.emu_stream_source_host);
-+	tpl_printf(vars, TPLADD, "STREAM_SOURCE_PORT", "%d", cfg.emu_stream_source_port);
-+	if(cfg.emu_stream_source_auth_user)
-+		{ tpl_printf(vars, TPLADD, "STREAM_SOURCE_AUTH_USER", "%s", cfg.emu_stream_source_auth_user); }
-+	if(cfg.emu_stream_source_auth_password)
-+		{ tpl_printf(vars, TPLADD, "STREAM_SOURCE_AUTH_PASSWORD", "%s", cfg.emu_stream_source_auth_password); }
-+	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.emu_stream_relay_port);
-+	tpl_printf(vars, TPLADD, "STREAM_ECM_DELAY", "%d", cfg.emu_stream_ecm_delay);
-+
-+	tpl_printf(vars, TPLADD, "TMP", "STREAMRELAYENABLEDSELECTED%d", cfg.emu_stream_relay_enabled);
-+	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
-+
-+	tpl_printf(vars, TPLADD, "TMP", "STREAMEMMENABLEDSELECTED%d", cfg.emu_stream_emm_enabled);
-+	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
-+
-+	value = mk_t_caidtab(&cfg.emu_stream_relay_ctab);
-+	tpl_addVar(vars, TPLADD, "STREAM_RELAY_CTAB", value);
-+	free_mk_t(value);
-+
-+	return tpl_getTpl(vars, "CONFIGSTREAMRELAY");
-+}
-+#endif
-+
- #ifdef MODULE_CCCAM
- static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams *params)
- {
-@@ -1654,6 +1690,9 @@
- #ifdef MODULE_SCAM
- 	else if(!strcmp(part, "scam")) { return send_oscam_config_scam(vars, params); }
- #endif
-+#ifdef WITH_EMU
-+	else if(!strcmp(part, "streamrelay")) { return send_oscam_config_streamrelay(vars, params); }
-+#endif
- #ifdef MODULE_CCCAM
- 	else if(!strcmp(part, "cccam")) { return send_oscam_config_cccam(vars, params); }
- #endif
-@@ -2133,7 +2172,7 @@
- 		chk_reader("services", servicelabels, rdr);
- 		chk_reader("lb_whitelist_services", servicelabelslb, rdr);
- 
--		if(is_network_reader(rdr))    //physical readers make trouble if re-started
-+		if(is_network_reader(rdr) || rdr->typ == R_EMU)    //physical readers make trouble if re-started
- 		{
- 			if(rdr)
- 				{
-@@ -2817,6 +2856,31 @@
- 	tpl_addVar(vars, TPLADD, "USERSCRIPT", rdr->userscript);
- #endif
- 
-+#ifdef WITH_EMU
-+	//emu_auproviders
-+	value = mk_t_ftab(&rdr->emu_auproviders);
-+	tpl_addVar(vars, TPLADD, "EMUAUPROVIDERS", value);
-+	free_mk_t(value);
-+
-+	// Date-coded BISS keys
-+	if(!apicall)
-+	{
-+		tpl_addVar(vars, TPLADD, "EMUDATECODEDENABLED", (rdr->emu_datecodedenabled == 1) ? "checked" : "");
-+	}
-+	else
-+	{
-+		tpl_addVar(vars, TPLADD, "EMUDATECODEDENABLED", (rdr->emu_datecodedenabled == 1) ? "1" : "0");
-+	}
-+
-+	//extee
-+	tpl_addVar(vars, TPLADD, "EXTEE36", rdr->extee36);
-+	tpl_addVar(vars, TPLADD, "EXTEE56", rdr->extee56);
-+
-+	//dre force group
-+	tpl_printf(vars, TPLADD, "DRE36FORCEGROUP","%02X", rdr->dre36_force_group);
-+	tpl_printf(vars, TPLADD, "DRE56FORCEGROUP","%02X", rdr->dre56_force_group);
-+#endif
-+
- 	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
- 
- 	// Show only parameters which needed for the reader
-@@ -2838,6 +2902,9 @@
- 	case R_CAMD35 :
- 		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
- 		break;
-+	case R_EMU :
-+		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGEMUBIT"));
-+		break;
- 	case R_CS378X :
- 		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
- 		break;
-@@ -4598,9 +4665,34 @@
- 
- 					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
- 					char tbuffer[83];
-+#ifdef WITH_EMU
-+					char keyBuffer[1024];
-+#endif
- 					int jsondelimiter = 0;
- 					while((item = ll_iter_next(&itr)))
- 					{
-+#ifdef WITH_EMU
-+						if(item->isKey)
-+						{
-+							tpl_addVar(vars, TPLADD, "ENTSTARTDATE", "");
-+							tpl_addVar(vars, TPLADD, "ENTENDDATE", "");
-+							cs_hexdump(0, item->key, item->keyLength, keyBuffer, sizeof(keyBuffer));
-+							tpl_addVar(vars, TPLADD, "ENTEXPIERED", "e_valid");
-+							tpl_printf(vars, TPLADD, "ENTCAID", "%04X", item->caid);
-+							tpl_printf(vars, TPLADD, "ENTPROVID", "%08X", item->provid);
-+							tpl_addVar(vars, TPLADD, "ENTID", item->name);
-+							tpl_addVar(vars, TPLADD, "ENTCLASS", keyBuffer);
-+							if(item->isData) { tpl_addVar(vars, TPLADD, "ENTTYPE", "data"); }
-+							else { tpl_addVar(vars, TPLADD, "ENTTYPE", "key"); }
-+							tpl_addVar(vars, TPLADD, "ENTRESNAME", "");
-+
-+							if((strcmp(getParam(params, "hideexpired"), "1") != 0) || (item->end > now))
-+								{ tpl_addVar(vars, TPLAPPEND, "READERENTENTRY", tpl_getTpl(vars, "ENTITLEMENTITEMBIT")); }
-+
-+							continue;
-+						}
-+#endif
-+
- 						localtime_r(&item->start, &start_t);
- 						localtime_r(&item->end, &end_t);
- 
-@@ -5090,6 +5182,9 @@
- #else
- 						filtered = (type == cl->typ);
- #endif
-+#ifdef WITH_EMU
-+						if(type == 'e' && cl->typ == 'r' && cl->reader->typ == R_EMU) filtered = 1;
-+#endif
- 					}
- 				}
- 
-@@ -6589,6 +6684,9 @@
- 		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
- 		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
- #endif
-+#ifdef WITH_EMU
-+		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },  // id 30
-+#endif
- 		{ NULL, 0, 0 },
- 	};
- 
-@@ -7055,7 +7153,7 @@
- 		else if(!proxy && rdr->csystem_active)     // local active reader
- 		{
- 			csystem = rdr->csystem;
--			caid = rdr->caid;
-+			if(rdr->typ != R_EMU) caid = rdr->caid;
- 		}
- 
- 		if(csystem)
-@@ -8088,8 +8186,8 @@
- 		memcpy(*result + bufsize, buf2, n);
- 		bufsize += n;
- 
--		//max request size 100kb
--		if(bufsize > 102400)
-+		//max request size 200kb
-+		if(bufsize > 204800)
- 		{
- 			cs_log("error: too much data received from %s", cs_inet_ntoa(in));
- 			NULLFREE(*result);
-Index: oscam-chk.c
-===================================================================
---- oscam-chk.c	(revision 11500)
-+++ oscam-chk.c	(working copy)
-@@ -786,7 +786,7 @@
- 		return 0;
- 	}
- 
--	if(!is_network_reader(rdr) && ((rdr->caid >> 8) != ((er->caid >> 8) & 0xFF) && (rdr->caid >> 8) != ((er->ocaid >> 8) & 0xFF)))
-+	if(!(rdr->typ == R_EMU) && !is_network_reader(rdr) && ((rdr->caid >> 8) != ((er->caid >> 8) & 0xFF) && (rdr->caid >> 8) != ((er->ocaid >> 8) & 0xFF)))
- 	{
- 		if (!rdr->csystem)
- 			{ return 0; }
-@@ -824,7 +824,7 @@
- 	}
- 
- 	// Checking ident:
--	if(!chk_rfilter(er, rdr))
-+	if(!(rdr->typ == R_EMU && caid_is_biss(er->caid)) && !chk_rfilter(er, rdr))
- 	{
- 		cs_log_dbg(D_TRACE, "r-filter reader %s", rdr->label);
- 		return (0);
-@@ -885,7 +885,7 @@
- 	}
- 
- 	// Checking entitlements:
--	if(ll_count(rdr->ll_entitlements) > 0)
-+	if(ll_count(rdr->ll_entitlements) > 0 && !(rdr->typ == R_EMU))
- 	{
- 		LL_ITER itr = ll_iter_create(rdr->ll_entitlements);
- 		S_ENTITLEMENT *item;
-@@ -1067,7 +1067,7 @@
- 
- int32_t chk_caid_rdr(struct s_reader *rdr, uint16_t caid)
- {
--	if(is_network_reader(rdr))
-+	if(is_network_reader(rdr) || rdr->typ == R_EMU)
- 	{
- 		return 1; // reader caid is not real caid
- 	}
-Index: oscam-config-global.c
-===================================================================
---- oscam-config-global.c	(revision 11500)
-+++ oscam-config-global.c	(working copy)
-@@ -869,6 +869,31 @@
- #else
- static const struct config_list scam_opts[] = { DEF_LAST_OPT };
- #endif
-+
-+#ifdef WITH_EMU
-+static bool streamrelay_should_save_fn(void *UNUSED(var))
-+{
-+	return 1;
-+}
-+static const struct config_list streamrelay_opts[] =
-+{
-+	DEF_OPT_SAVE_FUNC(streamrelay_should_save_fn),
-+	DEF_OPT_STR("stream_source_host"          , OFS(emu_stream_source_host),          "127.0.0.1"),
-+	DEF_OPT_INT32("stream_source_port"        , OFS(emu_stream_source_port),          8001),
-+	DEF_OPT_STR("stream_source_auth_user"     , OFS(emu_stream_source_auth_user),     NULL),
-+	DEF_OPT_STR("stream_source_auth_password" , OFS(emu_stream_source_auth_password), NULL),
-+	DEF_OPT_INT32("stream_relay_port"         , OFS(emu_stream_relay_port),           17999),
-+	DEF_OPT_UINT32("stream_ecm_delay"         , OFS(emu_stream_ecm_delay),            600),
-+	DEF_OPT_INT8("stream_relay_enabled"       , OFS(emu_stream_relay_enabled),        1),
-+	DEF_OPT_INT8("stream_emm_enabled"         , OFS(emu_stream_emm_enabled),          1),
-+	DEF_OPT_FUNC("stream_relay_ctab"          , OFS(emu_stream_relay_ctab),           check_caidtab_fn),
-+	DEF_LAST_OPT
-+};
-+#else
-+static const struct config_list streamrelay_opts[] = { DEF_LAST_OPT };
-+#endif
-+
-+
- #ifdef MODULE_RADEGAST
- static bool radegast_should_save_fn(void *UNUSED(var))
- {
-@@ -1342,6 +1367,7 @@
- 	{ "cccam", cccam_opts },
- 	{ "pandora", pandora_opts },
- 	{ "scam", scam_opts },
-+	{ "streamrelay", streamrelay_opts },
- 	{ "dvbapi", dvbapi_opts },
- 	{ "monitor", monitor_opts },
- 	{ "webif", webif_opts },
-Index: oscam-config-reader.c
-===================================================================
---- oscam-config-reader.c	(revision 11500)
-+++ oscam-config-reader.c	(working copy)
-@@ -111,6 +111,7 @@
- 			{ "newcamd525", R_NEWCAMD },
- 			{ "newcamd524", R_NEWCAMD },
- 			{ "drecas",     R_DRECAS },
-+			{ "emu",        R_EMU },
- 			{ NULL,         0 }
- 		}, *p;
- 		int i;
-@@ -704,6 +705,9 @@
- 		if(ftab_type & FTAB_FBPCAID)     { rdr = container_of(setting, struct s_reader, fallback_percaid); }
- 		if(ftab_type & FTAB_LOCALCARDS)  { rdr = container_of(setting, struct s_reader, localcards); }
- 		if(ftab_type & FTAB_IGNCHKSMCAID){ rdr = container_of(setting, struct s_reader, disablecrccws_only_for); }
-+#ifdef WITH_EMU
-+		if(ftab_type & FTAB_EMUAU)       { rdr = container_of(setting, struct s_reader, emu_auproviders); }
-+#endif
- 		if(rdr)
- 			{ rdr->changes_since_shareupdate = 1; }
- 	}
-@@ -1189,6 +1193,14 @@
- #ifdef READER_DRECAS
- 	DEF_OPT_STR("stmkeys"                         , OFS(stmkeys),                         NULL),
- #endif
-+#ifdef WITH_EMU
-+	DEF_OPT_FUNC_X("emu_auproviders"              , OFS(emu_auproviders),                ftab_fn, FTAB_READER | FTAB_EMUAU),
-+	DEF_OPT_INT8("emu_datecodedenabled"           , OFS(emu_datecodedenabled),           0),
-+	DEF_OPT_STR("extee36"                         , OFS(extee36),                        NULL),
-+	DEF_OPT_STR("extee56"                         , OFS(extee56),                        NULL),
-+	DEF_OPT_HEX("dre36_force_group"               , OFS(dre36_force_group),              1),
-+	DEF_OPT_HEX("dre56_force_group"               , OFS(dre56_force_group),              1),
-+#endif
- 	DEF_OPT_INT8("deprecated"                     , OFS(deprecated),                      0),
- 	DEF_OPT_INT8("audisabled"                     , OFS(audisabled),                      0),
- 	DEF_OPT_FUNC("auprovid"                       , 0,                                    auprovid_fn),
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 11500)
+--- oscam-ecm.c	(revision 11504)
 +++ oscam-ecm.c	(working copy)
 @@ -2305,7 +2305,7 @@
  	}
@@ -12184,46 +11543,9 @@ Index: oscam-ecm.c
  		cs_log_dbg(D_TRACE, "warning: ecm with null odd/even byte from %s", (check_client(er->client)?er->client->account->usr:"-"));
  		er->rc = E_INVALID;
  	}
-Index: oscam-emm.c
-===================================================================
---- oscam-emm.c	(revision 11500)
-+++ oscam-emm.c	(working copy)
-@@ -40,6 +40,7 @@
- static int8_t do_simple_emm_filter(struct s_reader *rdr, const struct s_cardsystem *csystem, EMM_PACKET *ep, int8_t cl_dvbapi)
- {
- 	if(is_network_reader(rdr)) { return 1; } // don't evaluate on network readers, server with local reader will check it
-+	if(rdr->typ == R_EMU) { return 1; } // don't evalutate on emu reader
- 
- 	//copied and enhanced from module-dvbapi.c
- 	//dvbapi_start_emm_filter()
-@@ -212,6 +213,24 @@
- 		rdr_log_dbg(reader, D_EMM, "reader auprovid = %06X fixup to %06X (ignoring last digit)", reader->auprovid, prid);
- 	}
- 
-+#ifdef WITH_EMU
-+	if(reader->typ == R_EMU)
-+	{
-+		FILTER* emu_provids = get_emu_prids_for_caid(reader, caid);
-+		if(emu_provids != NULL)
-+		{
-+			for(i = 0; i < emu_provids->nprids; i++)
-+			{
-+				if(provid == emu_provids->prids[i])
-+				{
-+					return 1;
-+				}
-+			}
-+		}
-+		return 0;
-+	}
-+#endif
-+
- 	if(prid == provid)
- 	{
- 		rdr_log_dbg(reader, D_EMM, "reader auprovid = %06X matching with emm provid = %06X -> SEND!", prid, provid);
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11500)
+--- oscam.c	(revision 11504)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -12246,17 +11568,7 @@ Index: oscam.c
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1642,6 +1649,9 @@
- #ifdef CARDREADER_STINGER
- 	&cardreader_stinger,
- #endif
-+#ifdef WITH_EMU
-+	&cardreader_emu,
-+#endif
- 
- 	NULL
- };
-@@ -1815,6 +1825,9 @@
+@@ -1818,6 +1825,9 @@
  
  	init_sidtab();
  	init_readerdb();
@@ -12266,7 +11578,7 @@ Index: oscam.c
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
-@@ -1902,6 +1915,9 @@
+@@ -1905,6 +1915,9 @@
  if(!cfg.gsms_dis)
  	{ stop_sms_sender(); }
  #endif
@@ -12276,52 +11588,9 @@ Index: oscam.c
  	webif_close();
  	azbox_close();
  	coolapi_close_all();
-Index: reader-common.c
-===================================================================
---- reader-common.c	(revision 11500)
-+++ reader-common.c	(working copy)
-@@ -15,6 +15,7 @@
- #include "reader-common.h"
- //#include "csctapi/atr.h"
- #include "csctapi/icc_async.h"
-+#include "readers.h" // required by the emu reader
- 
- extern const struct s_cardsystem *cardsystems[];
- extern char *RDR_CD_TXT[];
-@@ -142,6 +143,19 @@
- static int32_t reader_get_cardsystem(struct s_reader *reader, ATR *atr)
- {
- 	int32_t i;
-+
-+#ifdef WITH_EMU
-+	if(reader->typ == R_EMU)
-+	{
-+		NULLFREE(reader->csystem_data);
-+		rdr_log(reader, "found card system %s", reader_emu.desc);
-+		reader->csystem = &reader_emu;
-+		reader->csystem_active = true;
-+		led_status_found_cardsystem();
-+		return (reader->csystem_active);
-+	}
-+#endif
-+
- 	for(i = 0; cardsystems[i]; i++)
- 	{
- 		NULLFREE(reader->csystem_data);
-Index: readers.h
-===================================================================
---- readers.h	(revision 11500)
-+++ readers.h	(working copy)
-@@ -17,5 +17,6 @@
- extern const struct s_cardsystem reader_bulcrypt;
- extern const struct s_cardsystem reader_griffin;
- extern const struct s_cardsystem reader_dgcrypt;
-+extern const struct s_cardsystem reader_emu;
- 
- #endif
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11500)
+--- webif/config/dvbapi.html	(revision 11504)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -53,7 +53,7 @@
  			</TD>
@@ -12340,125 +11609,3 @@ Index: webif/config/dvbapi.html
 \ No newline at end of file
 +		</TR>
 \ No newline at end of file
-Index: webif/config/menu.html
-===================================================================
---- webif/config/menu.html	(revision 11500)
-+++ webif/config/menu.html	(working copy)
-@@ -16,6 +16,7 @@
- ##TPLCONFIGMENUDVBAPI##		<!-- CMENUACTIVE13 -->
- ##TPLCONFIGMENULCD##		<!-- CMENUACTIVE14 -->
- ##TPLCONFIGMENUMONITOR##	<!-- CMENUACTIVE15 -->
-+##TPLCONFIGMENUSTREAMRELAY##	<!-- CMENUACTIVE17 -->
- 			<LI CLASS="##CMENUACTIVE16##"><A HREF="config.html?part=webif">WebIf</A></LI>
- 	</UL>
- </DIV>
-Index: webif/config/menu_streamrelay.html
-===================================================================
---- webif/config/menu_streamrelay.html	(nonexistent)
-+++ webif/config/menu_streamrelay.html	(working copy)
-@@ -0,0 +1 @@
-+			<LI CLASS="##CMENUACTIVE17##"><A HREF="config.html?part=streamrelay">Stream Relay</A></LI>
-Index: webif/config/streamrelay.html
-===================================================================
---- webif/config/streamrelay.html	(nonexistent)
-+++ webif/config/streamrelay.html	(working copy)
-@@ -0,0 +1,26 @@
-+		<input name="part" type="hidden" value="streamrelay">
-+		<TABLE CLASS="config">
-+			<TR><TH COLSPAN="2">Edit Stream Relay Config</TH></TR>
-+			<TR><TD><A>Mode (requires OSCam restart)</A></TD>
-+				<TD>
-+					<select name="stream_relay_enabled">
-+						<option value="0" ##STREAMRELAYENABLEDSELECTED0##>0 - disabled</option>
-+						<option value="1" ##STREAMRELAYENABLEDSELECTED1##>1 - enabled</option>
-+					</select>
-+				</TD>
-+			</TR>
-+			<TR><TD><A>Caid:</A></TD><TD><input name="stream_relay_ctab" type="text" maxlength="160" value="##STREAM_RELAY_CTAB##"></TD></TR>
-+			<TR><TD><A>Source Stream Host:</A></TD><TD><input name="stream_source_host" type="text" maxlength="15" value="##STREAM_SOURCE_HOST##"></TD></TR>
-+			<TR><TD><A>Source Stream Port:</A></TD><TD><input name="stream_source_port" class="short" type="text" maxlength="5" value="##STREAM_SOURCE_PORT##"></TD></TR>
-+			<TR><TD><A>Source Stream User:</A></TD><TD><input name="stream_source_auth_user" type="text" value="##STREAM_SOURCE_AUTH_USER##"></TD></TR>
-+			<TR><TD><A>Source Stream Password:</A></TD><TD><input name="stream_source_auth_password" type="text" value="##STREAM_SOURCE_AUTH_PASSWORD##"></TD></TR>
-+			<TR><TD><A>Relay Port:</A></TD><TD><input name="stream_relay_port" class="short" type="text" maxlength="5" value="##STREAM_RELAY_PORT##"></TD></TR>
-+			<TR><TD><A>ECM fix delay:</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"></TD></TR>
-+			<TR><TD><A>Process EMM from stream:</A></TD>
-+				<TD>
-+					<select name="stream_emm_enabled">
-+						<option value="0" ##STREAMEMMENABLEDSELECTED0##>0 - disabled</option>
-+						<option value="1" ##STREAMEMMENABLEDSELECTED1##>1 - enabled</option>
-+					</select>
-+				</TD>
-+			</TR>
-\ No newline at end of file
-Index: webif/files/menu.html
-===================================================================
---- webif/files/menu.html	(revision 11500)
-+++ webif/files/menu.html	(working copy)
-@@ -10,7 +10,7 @@
- 		<LI CLASS="##CMENUACTIVE7##"><A HREF="files.html?file=logfile">logfile</A></LI>
- 		<LI CLASS="##CMENUACTIVE8##"><A HREF="files.html?file=userfile">userfile</A></LI>
- ##TPLFILEMENUGBOX##		<!-- CMENUACTIVE19-29 -->
--		<LI CLASS="##CMENUACTIVE9## ##CMENUACTIVE10## ##CMENUACTIVE11## ##CMENUACTIVE12## ##CMENUACTIVE13## ##CMENUACTIVE14## ##CMENUACTIVE15## ##CMENUACTIVE16## ##CMENUACTIVE17## ##CMENUACTIVE18##"><A HREF="#"  class="drop">other files<b class="subcaret"></b></A>
-+		<LI CLASS="##CMENUACTIVE9## ##CMENUACTIVE10## ##CMENUACTIVE11## ##CMENUACTIVE12## ##CMENUACTIVE13## ##CMENUACTIVE14## ##CMENUACTIVE15## ##CMENUACTIVE16## ##CMENUACTIVE17## ##CMENUACTIVE18## ##CMENUACTIVE30##"><A HREF="#"  class="drop">other files<b class="subcaret"></b></A>
- 			<UL CLASS="dropdown_nav">
- 				<LI CLASS="##CMENUACTIVE9##"><A HREF="files.html?file=oscam.services">oscam.services</A></LI>
- 				<LI CLASS="##CMENUACTIVE10##"><A HREF="files.html?file=oscam.provid">oscam.provid</A></LI>
-@@ -22,6 +22,7 @@
- ##VIEW_FILEMENUCSS##		<!-- CMENUACTIVE16 -->
- ##TPLFILEMENUTWIN##		<!-- CMENUACTIVE17 -->
- ##TPLFILEMENUCONSTCW##  	<!-- CMENUACTIVE18 -->
-+##TPLFILEMENUSOFTCAMKEY##		<!-- CMENUACTIVE30 -->
- 			</UL>
- 		</LI>
- 	</UL>
-Index: webif/files/menu_softcamkey.html
-===================================================================
---- webif/files/menu_softcamkey.html	(nonexistent)
-+++ webif/files/menu_softcamkey.html	(working copy)
-@@ -0,0 +1 @@
-+			<LI CLASS="##CMENUACTIVE30##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
-Index: webif/pages_index.txt
-===================================================================
---- webif/pages_index.txt	(revision 11500)
-+++ webif/pages_index.txt	(working copy)
-@@ -81,11 +81,13 @@
- CONFIGMENUNEWCAMD             config/menu_newcamd.html                                    MODULE_NEWCAMD
- CONFIGMENURADEGAST            config/menu_radegast.html                                   MODULE_RADEGAST
- CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
-+CONFIGMENUSTREAMRELAY         config/menu_streamrelay.html                                WITH_EMU
- CONFIGMENUSERIAL              config/menu_serial.html                                     MODULE_SERIAL
- CONFIGMONITOR                 config/monitor.html                                         MODULE_MONITOR
- CONFIGNEWCAMD                 config/newcamd.html                                         MODULE_NEWCAMD
- CONFIGRADEGAST                config/radegast.html                                        MODULE_RADEGAST
- CONFIGSCAM                    config/scam.html                                            MODULE_SCAM
-+CONFIGSTREAMRELAY             config/streamrelay.html                                     WITH_EMU
- CONFIGSERIAL                  config/serial.html                                          MODULE_SERIAL
- CONFIGSERIALDEVICEBIT         config/serial_devices.html                                  MODULE_SERIAL
- CONFIGWEBIF                   config/webif.html
-@@ -119,6 +121,7 @@
- FILEMENUFAKECWS               files/menu_fakecws.html                                     CS_CACHEEX
- FILEMENUGBOX                  files/menu_gbox.html                                        MODULE_GBOX
- FILEMENUTWIN                  files/menu_twin.html                                        MODULE_SERIAL
-+FILEMENUSOFTCAMKEY            files/menu_softcamkey.html                                  WITH_EMU
- 
- AUTOCONF                      ghttp/autoconf.html                                         MODULE_GHTTP
- PREAUTOCONF                   ghttp/pre_autoconf.html                                     MODULE_GHTTP
-@@ -183,6 +186,7 @@
- READEREDITCACHEEXBIT          readerconfig/readerconfig_cacheexbit.html                   CS_CACHEEX
- READERCONFIGCAMD35BIT         readerconfig/readerconfig_camd35bit.html                    MODULE_CAMD35
- READERCONFIGCCCAMBIT          readerconfig/readerconfig_cccambit.html                     MODULE_CCCAM
-+READERCONFIGEMUBIT            readerconfig/readerconfig_emubit.html                       WITH_EMU
- READERCONFIGCS378XBIT         readerconfig/readerconfig_cs378xbit.html                    MODULE_CAMD35_TCP
- READERCONFIGGBOXBIT           readerconfig/readerconfig_gboxbit.html                      MODULE_GBOX
- READERINFOGBOXREMM            readerconfig/readerinfo_gbox_remm.html                      MODULE_GBOX
-Index: webif/readerconfig/readerconfig_emubit.html
-===================================================================
---- webif/readerconfig/readerconfig_emubit.html	(nonexistent)
-+++ webif/readerconfig/readerconfig_emubit.html	(working copy)
-@@ -0,0 +1,6 @@
-+			<TR><TD><A>AU providers:</A></TD><TD><textarea name="emu_auproviders" rows="3" class="bt">##EMUAUPROVIDERS##</textarea></TD></TR>
-+			<TR><TD><A>[BISS] Enable date-coded keys:</A></TD><TD><input name="emu_datecodedenabled" type="hidden" value="0"><input name="emu_datecodedenabled" type="checkbox" value="1" ##EMUDATECODEDENABLED##><label></label></TD></TR>
-+			<TR><TD><A>[Drecrypt] Path to ee36.bin:</A></TD><TD><input name="extee36" type="text" maxlength="150" value="##EXTEE36##"></TD></TR>
-+			<TR><TD><A>[Drecrypt] Path to ee56.bin:</A></TD><TD><input name="extee56" type="text" maxlength="150" value="##EXTEE56##"></TD></TR>
-+			<TR><TD><A>[Drecrypt] Center force group:</A></TD><TD><input name="dre36_force_group" class="medium" type="text" maxlength="2" value="##DRE36FORCEGROUP##"></TD></TR>
-+			<TR><TD><A>[Drecrypt] Siberia force group:</A></TD><TD><input name="dre56_force_group" class="medium" type="text" maxlength="2" value="##DRE56FORCEGROUP##"></TD></TR>
