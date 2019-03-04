@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11504)
+--- CMakeLists.txt	(revision 11505)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -108,7 +108,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11504)
+--- Makefile	(revision 11505)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -168,7 +168,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11504)
+--- config.h	(revision 11505)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -181,7 +181,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11504)
+--- config.sh	(revision 11505)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -259,7 +259,7 @@ old mode 100644
 new mode 100755
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11504)
+--- globals.h	(revision 11505)
 +++ globals.h	(working copy)
 @@ -388,7 +388,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -281,7 +281,7 @@ Index: globals.h
  static inline bool caid_is_irdeto(uint16_t caid) { return caid >> 8 == 0x06; }
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11504)
+--- module-dvbapi.c	(revision 11505)
 +++ module-dvbapi.c	(working copy)
 @@ -2415,6 +2415,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
@@ -330,7 +330,7 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-@@ -7271,11 +7285,11 @@
+@@ -7274,11 +7288,11 @@
  				else
  				{
  					demux[i].ECMpids[j].useMultipleIndices = 0;
@@ -5095,7 +5095,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2171 @@
+@@ -0,0 +1,2178 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5602,6 +5602,13 @@ Index: module-emulator-powervu.c
 +
 +static void create_hash(uint8_t *data, int len, uint8_t *hash, int mode)
 +{
++	if ((mode > 0x27) || (mode == 0x0B) || (mode == 0x0C) ||
++		(mode == 0x0D) || (mode == 0x0E) || (mode == 0))
++	{
++		memset(hash, 0, 16);
++		return;
++	}
++
 +	uint8_t dataPadded[64];
 +
 +	pad_data(data, len, dataPadded);
@@ -10531,7 +10538,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,998 @@
+@@ -0,0 +1,999 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -10580,7 +10587,7 @@ Index: module-emulator.c
 +
 +static inline uint32_t get_osemu_version(void)
 +{
-+	return atoi("$Version: 790 $" + 10);
++	return atoi("$Version: 791 $" + 10);
 +}
 +
 +static void set_hexserial_to_version(struct s_reader *rdr)
@@ -11132,6 +11139,7 @@ Index: module-emulator.c
 +	SAFE_MUTEX_LOCK(&emu_key_data_mutex);
 +	if (!powervu_get_hexserials(srvid, hexserials, 32, &count))
 +	{
++		SAFE_MUTEX_UNLOCK(&emu_key_data_mutex);
 +		return CS_ERROR;
 +	}
 +	SAFE_MUTEX_UNLOCK(&emu_key_data_mutex);
@@ -11532,7 +11540,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 11504)
+--- oscam-ecm.c	(revision 11505)
 +++ oscam-ecm.c	(working copy)
 @@ -2305,7 +2305,7 @@
  	}
@@ -11545,7 +11553,7 @@ Index: oscam-ecm.c
  	}
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11504)
+--- oscam.c	(revision 11505)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11590,7 +11598,7 @@ Index: oscam.c
  	coolapi_close_all();
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11504)
+--- webif/config/dvbapi.html	(revision 11505)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -53,7 +53,7 @@
  			</TD>
