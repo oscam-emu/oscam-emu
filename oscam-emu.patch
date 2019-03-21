@@ -270,12 +270,40 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -2457,6 +2457,8 @@
+@@ -988,21 +988,18 @@
+ 	int32_t			(*get_tunemm_filter)(struct s_reader *, struct s_csystem_emm_filter **, uint32_t *);
+ };
+ 
+-#ifdef WITH_EXTENDED_CW
+ typedef struct cw_extendted_t
+ {
++#ifdef WITH_EXTENDED_CW
+ 	uint8_t			mode;
+-	uint8_t			audio[4][16];
+-	uint8_t			data[16];
+-	uint8_t			algo;
+-	uint8_t			algo_mode;
+-} EXTENDED_CW;
++	uint8_t			audio[4][16];					// 4 x odd/even pairs of 8 byte CWs
++	uint8_t			data[16];						// odd/even pair of 8 byte CW or 16 byte IV
++	uint8_t			algo;							// CSA, DES or AES128
++	uint8_t			algo_mode;						// ECB or CBC
+ #else
+-typedef struct cw_extendted_t
+-{
+ 	uint8_t			disabled;
+-} EXTENDED_CW;
+ #endif
++} EXTENDED_CW;
+ 
+ typedef struct ecm_request_t
+ {
+@@ -2457,6 +2454,8 @@
  const char *boxname_get(void);
  static inline bool caid_is_fake(uint16_t caid) { return caid == 0xffff; }
  static inline bool caid_is_biss(uint16_t caid) { return caid >> 8 == 0x26; }
-+static inline bool caid_is_biss_static(uint16_t caid) { return caid == 0x2600 || caid == 0x2602; } // static cw, fake ecm
-+static inline bool caid_is_biss_dynamic(uint16_t caid) { return caid == 0x2610; } // dynamic cw, ecm and emm
++static inline bool caid_is_biss_fixed(uint16_t caid) { return caid == 0x2600 || caid == 0x2602; } // fixed cw, fake ecm
++static inline bool caid_is_biss_dynamic(uint16_t caid) { return caid == 0x2610; } // dynamic cw, real ecm and emm
  static inline bool caid_is_seca(uint16_t caid) { return caid >> 8 == 0x01; }
  static inline bool caid_is_viaccess(uint16_t caid) { return caid >> 8 == 0x05; }
  static inline bool caid_is_irdeto(uint16_t caid) { return caid >> 8 == 0x06; }
@@ -297,7 +325,7 @@ Index: module-dvbapi.c
  		// special treatment: if we asked the cw first without starting a filter,
  		// the cw request will be killed due to no ecmfilter started
 -		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss(demux[demux_id].ECMpids[pid].CAID))
-+		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_static(demux[demux_id].ECMpids[pid].CAID))
++		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_fixed(demux[demux_id].ECMpids[pid].CAID))
  		{
  			int32_t j, n;
 -			er->ecmlen = 5;
@@ -330,12 +358,7 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-@@ -7274,11 +7288,11 @@
- 				else
- 				{
- 					demux[i].ECMpids[j].useMultipleIndices = 0;
--					dvbapi_write_cw(i, er->cw, j, 0, er->cw_ex.algo, er->cw_ex.algo_mode, er->msgid);
-+					dvbapi_write_cw(i, er->cw, j, 0, CA_ALGO_DVBCSA, CA_MODE_CBC, er->msgid); // quick fix - we need to properly initialize the er->cw_ex members
+@@ -7278,7 +7292,7 @@
  				}
  #else
  				cfg.dvbapi_extended_cw_api = 0; // in CSA mode extended_cw_api should be always 0 regardless what user selected!
@@ -1624,7 +1647,7 @@ Index: module-emulator-director.c
 ===================================================================
 --- module-emulator-director.c	(nonexistent)
 +++ module-emulator-director.c	(working copy)
-@@ -0,0 +1,637 @@
+@@ -0,0 +1,642 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -1893,6 +1916,11 @@ Index: module-emulator-director.c
 +
 +				des(dw, ks, 0);
 +				des(dw + 8, ks, 0);
++
++				dw[3] = (dw[0] + dw[1] + dw[2]) & 0xFF;
++				dw[7] = (dw[4] + dw[5] + dw[6]) & 0xFF;
++				dw[11] = (dw[8] + dw[9] + dw[10]) & 0xFF;
++				dw[15] = (dw[12] + dw[13] + dw[14]) & 0xFF;
 +
 +				return EMU_OK;
 +			}
@@ -3891,7 +3919,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,1090 @@
+@@ -0,0 +1,1089 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3899,7 +3927,6 @@ Index: module-emulator-osemu.c
 +#ifdef WITH_EMU
 +
 +#include "oscam-string.h"
-+#include "cscrypt/bn.h"
 +#include "module-emulator-osemu.h"
 +#include "module-emulator-streamserver.h"
 +#include "module-emulator-biss.h"
@@ -4987,8 +5014,8 @@ Index: module-emulator-osemu.h
 --- module-emulator-osemu.h	(nonexistent)
 +++ module-emulator-osemu.h	(working copy)
 @@ -0,0 +1,104 @@
-+#ifndef MODULE_EMULATOR_H_
-+#define MODULE_EMULATOR_H_
++#ifndef MODULE_EMULATOR_OSEMU_H_
++#define MODULE_EMULATOR_OSEMU_H_
 +
 +#ifdef WITH_EMU
 +
@@ -5095,7 +5122,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2178 @@
+@@ -0,0 +1,2183 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5555,6 +5582,7 @@ Index: module-emulator-powervu.c
 +static const uint8_t table1C[] = { 0x03, 0x05, 0x0A, 0x10 };
 +static const uint8_t table1D[] = { 0x03, 0x07, 0x0A, 0x10 };
 +static const uint8_t table1E[] = { 0x01, 0x05, 0x0B, 0x10 };
++static const uint8_t table1F[] = { 0x06, 0x07, 0x0B, 0x10 };
 +
 +static void hash_modes_19_to_27_tables_3(uint8_t *data, uint8_t *hash, const uint8_t *table)
 +{
@@ -5717,6 +5745,10 @@ Index: module-emulator-powervu.c
 +
 +		case 30:
 +			hash_modes_19_to_27_tables_3(dataPadded, hash, table1E);
++			break;
++
++		case 31:
++			hash_modes_19_to_27_tables_3(dataPadded, hash, table1F);
 +			break;
 +
 +		default:
@@ -10587,7 +10619,7 @@ Index: module-emulator.c
 +
 +static inline uint32_t get_osemu_version(void)
 +{
-+	return atoi("$Version: 791 $" + 10);
++	return atoi("$Version: 792 $" + 10);
 +}
 +
 +static void set_hexserial_to_version(struct s_reader *rdr)
@@ -11547,10 +11579,68 @@ Index: oscam-ecm.c
  
  	// checks for odd/even byte
 -	if(!caid_is_biss(er->caid) && !caid_is_fake(er->caid) && get_odd_even(er)==0){
-+	if(!caid_is_biss_static(er->caid) && !caid_is_fake(er->caid) && get_odd_even(er)==0){
++	if(!caid_is_biss_fixed(er->caid) && !caid_is_fake(er->caid) && get_odd_even(er)==0){
  		cs_log_dbg(D_TRACE, "warning: ecm with null odd/even byte from %s", (check_client(er->client)?er->client->account->usr:"-"));
  		er->rc = E_INVALID;
  	}
+@@ -2422,6 +2422,11 @@
+ 			if(!cs_malloc(&ea, sizeof(struct s_ecm_answer)))
+ 				{ goto OUT; }
+ 
++#ifdef WITH_EXTENDED_CW
++			// Correct CSA mode is CBC - default to that instead
++			ea->cw_ex.algo_mode = CW_ALGO_MODE_CBC;
++#endif
++
+ 			er->readers++;
+ 
+ 			ea->reader = rdr;
+Index: oscam-string.c
+===================================================================
+--- oscam-string.c	(revision 11505)
++++ oscam-string.c	(working copy)
+@@ -312,7 +312,7 @@
+ 	return 0;
+ }
+ 
+-uint64_t b2ll(int32_t n, uint8_t *b)
++uint64_t b2ll(int32_t n, const uint8_t *b)
+ {
+ 	int32_t i;
+ 	uint64_t k = 0;
+@@ -346,7 +346,7 @@
+ 	return b;
+ }
+ 
+-void ull2b_buf(uint64_t i, uint8_t *b)
++uint8_t *ull2b_buf(uint64_t i, uint8_t *b)
+ {
+ 	b[0] = (i >> 56) & 0xff;
+ 	b[1] = (i >> 48) & 0xff;
+@@ -356,6 +356,7 @@
+ 	b[5] = (i >> 16) & 0xff;
+ 	b[6] = (i >> 8) & 0xff;
+ 	b[7] = (i) & 0xff;
++	return b;
+ }
+ 
+ uint32_t a2i(char *asc, int32_t bytes)
+Index: oscam-string.h
+===================================================================
+--- oscam-string.h	(revision 11505)
++++ oscam-string.h	(working copy)
+@@ -22,9 +22,9 @@
+ int32_t dyn_word_atob(char *asc);
+ int32_t key_atob_l(char *asc, uint8_t *bin, int32_t l);
+ uint32_t b2i(int32_t n, const uint8_t *b);
+-uint64_t b2ll(int32_t n, uint8_t *b);
++uint64_t b2ll(int32_t n, const uint8_t *b);
+ uint8_t *i2b_buf(int32_t n, uint32_t i, uint8_t *b);
+-void ull2b_buf(uint64_t i, uint8_t *b);
++uint8_t *ull2b_buf(uint64_t i, uint8_t *b);
+ uint32_t a2i(char *asc, int32_t bytes);
+ int32_t boundary(int32_t exp, int32_t n);
+ int32_t array_has_nonzero_byte(uint8_t *value, int32_t length);
 Index: oscam.c
 ===================================================================
 --- oscam.c	(revision 11505)
@@ -11596,6 +11686,22 @@ Index: oscam.c
  	webif_close();
  	azbox_close();
  	coolapi_close_all();
+Index: reader-common.c
+===================================================================
+--- reader-common.c	(revision 11505)
++++ reader-common.c	(working copy)
+@@ -513,6 +513,11 @@
+ 	struct s_ecm_answer ea;
+ 	memset(&ea, 0, sizeof(struct s_ecm_answer));
+ 
++#ifdef WITH_EXTENDED_CW
++	// Correct CSA mode is CBC - default to that instead
++	ea.cw_ex.algo_mode = CW_ALGO_MODE_CBC;
++#endif
++
+ 	cs_ftime(&tps);
+ 	int32_t rc = cardreader_do_ecm(reader, er, &ea);
+ 	cs_ftime(&tpe);
 Index: webif/config/dvbapi.html
 ===================================================================
 --- webif/config/dvbapi.html	(revision 11505)
