@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11505)
+--- CMakeLists.txt	(revision 11507)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -108,7 +108,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11505)
+--- Makefile	(revision 11507)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -168,7 +168,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11505)
+--- config.h	(revision 11507)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -181,7 +181,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11505)
+--- config.sh	(revision 11507)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -241,25 +241,34 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
-@@ -701,7 +709,11 @@
+@@ -701,9 +709,19 @@
  		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
  		if [ "$revision" = "0" ]
  		then
 -			which git > /dev/null 2>&1 && revision=`git log -10 --pretty=%B | grep git-svn-id | head -n 1 | sed -n -e 's/^.*trunk@\([0-9]*\) .*$/\1/p'`
-+			which git > /dev/null 2>&1 && revision=`git describe --abbrev=0 --tags --always | sed -n -e 's/^oscam\(.*\)emu/\1/p'`
-+		fi
-+		if [ -z "$revision" ]
-+		then
 +			which git > /dev/null 2>&1 && revision=`git log -25 --pretty=%B | grep git-svn-id | head -n 1 | sed -n -e 's/^.*trunk@\([0-9]*\) .*$/\1/p'`
  		fi
- 		echo $revision
+-		echo $revision
++		emuversion=`grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'`
++		if [ -z "$emuversion" ]
++		then
++			echo "$revision"
++		else
++			echo "$revision-$emuversion"
++		fi
++		break
++	;;
++	'--emu-version')
++		grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'
  		break
+ 	;;
+ 	'-O'|'--detect-osx-sdk-version')
 Index: git-svn-diff.sh
 old mode 100644
 new mode 100755
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11505)
+--- globals.h	(revision 11507)
 +++ globals.h	(working copy)
 @@ -388,7 +388,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -309,7 +318,7 @@ Index: globals.h
  static inline bool caid_is_irdeto(uint16_t caid) { return caid >> 8 == 0x06; }
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11505)
+--- module-dvbapi.c	(revision 11507)
 +++ module-dvbapi.c	(working copy)
 @@ -2415,6 +2415,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
@@ -358,15 +367,6 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-@@ -7278,7 +7292,7 @@
- 				}
- #else
- 				cfg.dvbapi_extended_cw_api = 0; // in CSA mode extended_cw_api should be always 0 regardless what user selected!
--				dvbapi_write_cw(i, er->cw, j, 0, CA_ALGO_DVBCSA, CA_MODE_ECB, er->msgid);
-+				dvbapi_write_cw(i, er->cw, j, 0, CA_ALGO_DVBCSA, CA_MODE_CBC, er->msgid);
- #endif
- 				break;
- 			}
 Index: module-emulator-biss.c
 ===================================================================
 --- module-emulator-biss.c	(nonexistent)
@@ -5013,11 +5013,14 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(nonexistent)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,104 @@
+@@ -0,0 +1,107 @@
 +#ifndef MODULE_EMULATOR_OSEMU_H_
 +#define MODULE_EMULATOR_OSEMU_H_
 +
 +#ifdef WITH_EMU
++
++// Version info
++#define EMU_VERSION 793
 +
 +#define EMU_MAX_CHAR_KEYNAME 12
 +#define EMU_KEY_FILENAME "SoftCam.Key"
@@ -5122,7 +5125,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2183 @@
+@@ -0,0 +1,2188 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5583,6 +5586,7 @@ Index: module-emulator-powervu.c
 +static const uint8_t table1D[] = { 0x03, 0x07, 0x0A, 0x10 };
 +static const uint8_t table1E[] = { 0x01, 0x05, 0x0B, 0x10 };
 +static const uint8_t table1F[] = { 0x06, 0x07, 0x0B, 0x10 };
++static const uint8_t table20[] = { 0x01, 0x08, 0x0B, 0x10 };
 +
 +static void hash_modes_19_to_27_tables_3(uint8_t *data, uint8_t *hash, const uint8_t *table)
 +{
@@ -5749,6 +5753,10 @@ Index: module-emulator-powervu.c
 +
 +		case 31:
 +			hash_modes_19_to_27_tables_3(dataPadded, hash, table1F);
++			break;
++
++		case 32:
++			hash_modes_19_to_27_tables_3(dataPadded, hash, table20);
 +			break;
 +
 +		default:
@@ -10570,7 +10578,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,999 @@
+@@ -0,0 +1,992 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -10615,17 +10623,10 @@ Index: module-emulator.c
 +static int8_t emu_key_data_mutex_init = 0;
 +pthread_mutex_t emu_key_data_mutex;
 +
-+// Version info
-+
-+static inline uint32_t get_osemu_version(void)
-+{
-+	return atoi("$Version: 792 $" + 10);
-+}
-+
 +static void set_hexserial_to_version(struct s_reader *rdr)
 +{
 +	char cVersion[32];
-+	uint32_t version = get_osemu_version();
++	uint32_t version = EMU_VERSION;
 +	uint8_t hversion[2];
 +	memset(hversion, 0, 2);
 +	snprintf(cVersion, sizeof(cVersion), "%04d", version);
@@ -11566,13 +11567,13 @@ Index: module-emulator.c
 +	}
 +#endif
 +
-+	cs_log("OSCam-Emu version %d", get_osemu_version());
++	cs_log("OSCam-Emu version %d", EMU_VERSION);
 +}
 +
 +#endif // WITH_EMU
 Index: oscam-ecm.c
 ===================================================================
---- oscam-ecm.c	(revision 11505)
+--- oscam-ecm.c	(revision 11507)
 +++ oscam-ecm.c	(working copy)
 @@ -2305,7 +2305,7 @@
  	}
@@ -11583,67 +11584,9 @@ Index: oscam-ecm.c
  		cs_log_dbg(D_TRACE, "warning: ecm with null odd/even byte from %s", (check_client(er->client)?er->client->account->usr:"-"));
  		er->rc = E_INVALID;
  	}
-@@ -2422,6 +2422,11 @@
- 			if(!cs_malloc(&ea, sizeof(struct s_ecm_answer)))
- 				{ goto OUT; }
- 
-+#ifdef WITH_EXTENDED_CW
-+			// Correct CSA mode is CBC - default to that instead
-+			ea->cw_ex.algo_mode = CW_ALGO_MODE_CBC;
-+#endif
-+
- 			er->readers++;
- 
- 			ea->reader = rdr;
-Index: oscam-string.c
-===================================================================
---- oscam-string.c	(revision 11505)
-+++ oscam-string.c	(working copy)
-@@ -312,7 +312,7 @@
- 	return 0;
- }
- 
--uint64_t b2ll(int32_t n, uint8_t *b)
-+uint64_t b2ll(int32_t n, const uint8_t *b)
- {
- 	int32_t i;
- 	uint64_t k = 0;
-@@ -346,7 +346,7 @@
- 	return b;
- }
- 
--void ull2b_buf(uint64_t i, uint8_t *b)
-+uint8_t *ull2b_buf(uint64_t i, uint8_t *b)
- {
- 	b[0] = (i >> 56) & 0xff;
- 	b[1] = (i >> 48) & 0xff;
-@@ -356,6 +356,7 @@
- 	b[5] = (i >> 16) & 0xff;
- 	b[6] = (i >> 8) & 0xff;
- 	b[7] = (i) & 0xff;
-+	return b;
- }
- 
- uint32_t a2i(char *asc, int32_t bytes)
-Index: oscam-string.h
-===================================================================
---- oscam-string.h	(revision 11505)
-+++ oscam-string.h	(working copy)
-@@ -22,9 +22,9 @@
- int32_t dyn_word_atob(char *asc);
- int32_t key_atob_l(char *asc, uint8_t *bin, int32_t l);
- uint32_t b2i(int32_t n, const uint8_t *b);
--uint64_t b2ll(int32_t n, uint8_t *b);
-+uint64_t b2ll(int32_t n, const uint8_t *b);
- uint8_t *i2b_buf(int32_t n, uint32_t i, uint8_t *b);
--void ull2b_buf(uint64_t i, uint8_t *b);
-+uint8_t *ull2b_buf(uint64_t i, uint8_t *b);
- uint32_t a2i(char *asc, int32_t bytes);
- int32_t boundary(int32_t exp, int32_t n);
- int32_t array_has_nonzero_byte(uint8_t *value, int32_t length);
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11505)
+--- oscam.c	(revision 11507)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11686,25 +11629,9 @@ Index: oscam.c
  	webif_close();
  	azbox_close();
  	coolapi_close_all();
-Index: reader-common.c
-===================================================================
---- reader-common.c	(revision 11505)
-+++ reader-common.c	(working copy)
-@@ -513,6 +513,11 @@
- 	struct s_ecm_answer ea;
- 	memset(&ea, 0, sizeof(struct s_ecm_answer));
- 
-+#ifdef WITH_EXTENDED_CW
-+	// Correct CSA mode is CBC - default to that instead
-+	ea.cw_ex.algo_mode = CW_ALGO_MODE_CBC;
-+#endif
-+
- 	cs_ftime(&tps);
- 	int32_t rc = cardreader_do_ecm(reader, er, &ea);
- 	cs_ftime(&tpe);
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11505)
+--- webif/config/dvbapi.html	(revision 11507)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -53,7 +53,7 @@
  			</TD>
