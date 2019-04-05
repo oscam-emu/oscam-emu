@@ -5020,7 +5020,7 @@ Index: module-emulator-osemu.h
 +#ifdef WITH_EMU
 +
 +// Version info
-+#define EMU_VERSION 793
++#define EMU_VERSION 794
 +
 +#define EMU_MAX_CHAR_KEYNAME 12
 +#define EMU_KEY_FILENAME "SoftCam.Key"
@@ -5125,7 +5125,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2188 @@
+@@ -0,0 +1,2436 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5926,6 +5926,200 @@ Index: module-emulator-powervu.c
 +	data[7] = ecmBody[0x27];
 +}
 +
++static void hash_04_add(uint32_t* buffer, int a, int b, int c, int d, int e, int f)
++{
++	uint32_t tmp1 = (buffer[a] & 1) + (buffer[b] & 1);
++	uint32_t tmp2 = (buffer[a] >> 1) + (buffer[b] >> 1) + (tmp1 >> 1);
++
++	buffer[e] = buffer[c] + buffer[d] + (tmp2 >> 31);
++	buffer[f] = tmp2 + tmp2 + (tmp1 & 1);
++}
++
++static void hash_04_shift(uint32_t* buffer, int a, int b, uint8_t shift)
++{
++	uint32_t tmp1 = (buffer[a] >> (32 - shift)) + (buffer[b] << shift);
++	uint32_t tmp2 = (buffer[b] >> (32 - shift)) + (buffer[a] << shift);
++
++	buffer[b] = tmp1;
++	buffer[a] = tmp2;
++}
++
++static void hash_04_xor(uint32_t* buffer, int a, int b, int c, int d)
++{
++	buffer[a] ^= buffer[b];
++	buffer[c] ^= buffer[d];
++}
++
++static void hash_04_swap(uint32_t* buffer, int a, int b)
++{
++	uint32_t tmp = buffer[a];
++
++	buffer[a] = buffer[b];
++	buffer[b] = tmp;
++}
++
++static void hash_04_core(uint32_t* buffer)
++{
++	hash_04_add(buffer, 0, 6, 7, 1, 7, 6);
++	hash_04_shift(buffer, 5, 4, 0x0D);
++	hash_04_xor(buffer, 4, 2, 5, 3);
++	hash_04_swap(buffer, 7, 6);
++	hash_04_add(buffer, 6, 2, 3, 7, 3, 2);
++	hash_04_shift(buffer, 1, 0, 0x10);
++	hash_04_xor(buffer, 0, 4, 1, 5);
++	hash_04_add(buffer, 6, 2, 3, 7, 7, 6);
++	hash_04_shift(buffer, 1, 0, 0x15);
++	hash_04_add(buffer, 6, 0, 1, 7, 1, 0);
++	hash_04_xor(buffer, 2, 4, 3, 5);
++	hash_04_shift(buffer, 5, 4, 0x11);
++	hash_04_xor(buffer, 4, 2, 5, 3);
++	hash_04_swap(buffer, 3, 2);
++}
++
++static void create_hash_mode_04(uint8_t *data, uint8_t * hash)
++{
++	int i, j;
++	uint32_t d0, d1, h0, h1, h2, h3;
++	uint32_t buffer[] =
++	{
++		0x1F253724, 0x3E8136B3, 0x9677CEDF, 0x25B5E75A,
++		0x9494BC16, 0xCFD3FB34, 0xF37C75BB, 0x97D4632E
++	};
++
++	for (j = 0; j < 64; j += 8)
++	{
++		d0 = (data[j + 3] << 24) + (data[j + 2] << 16) + (data[j + 1] << 8) + data[j + 0];
++		d1 = (data[j + 7] << 24) + (data[j + 6] << 16) + (data[j + 5] << 8) + data[j + 4];
++
++		buffer[0] ^= d0;
++		buffer[1] ^= d1;
++
++		for (i = 0; i < 2; i++)
++		{
++			hash_04_core(buffer);
++		}
++
++		buffer[6] ^= d0;
++		buffer[7] ^= d1;
++	}
++
++	buffer[1] ^= 0x40000000;
++	buffer[0] ^= 0x00000000;
++
++	for (i = 0; i < 2; i++)
++	{
++		hash_04_core(buffer);
++	}
++
++	buffer[7] ^= 0x40000000;
++	buffer[6] ^= 0x00000000;
++	buffer[2] ^= 0xEE;
++
++	for (i = 0; i < 4; i++)
++	{
++		hash_04_core(buffer);
++	}
++
++	h0 = buffer[0] ^ buffer[2] ^ buffer[4] ^ buffer[6];
++	h1 = buffer[1] ^ buffer[3] ^ buffer[5] ^ buffer[7];
++
++	hash[0] = (uint8_t)  h0;
++	hash[1] = (uint8_t) (h0 >>  8);
++	hash[2] = (uint8_t) (h0 >> 16);
++	hash[3] = (uint8_t) (h0 >> 24);
++	hash[4] = (uint8_t)  h1;
++	hash[5] = (uint8_t) (h1 >>  8);
++	hash[6] = (uint8_t) (h1 >> 16);
++	hash[7] = (uint8_t) (h1 >> 24);
++
++	buffer[4] ^= 0xDD;
++
++	for (i = 0; i < 4; i++)
++	{
++		hash_04_core(buffer);
++	}
++
++	h2 = buffer[0] ^ buffer[2] ^ buffer[4] ^ buffer[6];
++	h3 = buffer[1] ^ buffer[3] ^ buffer[5] ^ buffer[7];
++
++	hash[8]  = (uint8_t)  h2;
++	hash[9]  = (uint8_t) (h2 >> 8);
++	hash[10] = (uint8_t) (h2 >> 16);
++	hash[11] = (uint8_t) (h2 >> 24);
++	hash[12] = (uint8_t)  h3;
++	hash[13] = (uint8_t) (h3 >> 8);
++	hash[14] = (uint8_t) (h3 >> 16);
++	hash[15] = (uint8_t) (h3 >> 24);
++}
++
++static void create_data_cw_mode_04(uint8_t* seed, int lenSeed, uint8_t* basecw,
++									uint8_t val, uint8_t* ecmBody, uint8_t* data)
++{
++	uint8_t padding[] =
++	{
++		0x18, 0xD6, 0x24, 0xA8, 0xDE, 0x14, 0xD8, 0x30,
++		0x3C, 0xB2, 0x24, 0x54, 0x17, 0x5A, 0x28, 0x61,
++		0xBC, 0xB9, 0x29, 0xAD, 0xA5, 0x13, 0xD4, 0x24,
++		0x6D, 0x61, 0x40, 0xC8, 0xFD, 0x27, 0xD7, 0xFF,
++		0x3E, 0x84, 0x50, 0xC2, 0x47, 0x4C, 0xD5, 0xC5,
++		0xF2, 0x79, 0xAD, 0x02, 0xC5, 0x05, 0x7B, 0xFD,
++		0x60, 0x4A, 0x16, 0xE5, 0xAA, 0x0E, 0x97, 0x1C
++	};
++
++	memcpy(data + 8, padding, 56);
++
++	data[0] = ecmBody[0x0E];
++	data[1] = ecmBody[0x0A];
++	data[2] = ecmBody[0x0C];
++	data[3] = ecmBody[0x04];
++	data[4] = ecmBody[0x10];
++	data[5] = ecmBody[0x08];
++	data[6] = ecmBody[0x05];
++	data[7] = ecmBody[0x0F];
++
++	int idxData = 8, idxSeed = 0, idxBase = 0;
++
++	while (idxBase < 7)
++	{
++		if ((idxBase == 0) || (idxBase == 1) || (idxBase == 2))
++		{
++			data[idxData++] = val;
++		}
++
++		if (idxSeed < lenSeed)
++		{
++			data[idxData++] = seed[idxSeed++];
++		}
++
++		data[idxData++] = basecw[idxBase++];
++	}
++}
++
++static void create_data_unmask_mode_04(uint8_t* ecmBody, uint8_t* data)
++{
++	uint8_t padding[] =
++	{
++		0x0E, 0x4A, 0x85, 0x85, 0xF9, 0xC0, 0xCC, 0x00,
++		0xBA, 0x9B, 0x98, 0x35, 0x4C, 0xD2, 0xC1, 0x6C,
++		0x87, 0x32, 0x9B, 0x82, 0x31, 0x5B, 0x1D, 0xB4,
++		0xB8, 0x98, 0x74, 0xFF, 0x31, 0x66, 0x08, 0x79,
++		0x47, 0xCE, 0x96, 0x4D, 0xE9, 0x52, 0xCF, 0x8F,
++		0xEC, 0x5C, 0x07, 0xBC, 0x09, 0xA2, 0x82, 0x78,
++		0x3D, 0xB9, 0xFF, 0x3F, 0x76, 0x72, 0x6F, 0x9C
++	};
++
++	memcpy(data + 8, padding, 56);
++
++	data[0] = ecmBody[0x17];
++	data[1] = ecmBody[0x2B];
++	data[2] = ecmBody[0x1D];
++	data[3] = ecmBody[0x2D];
++	data[4] = ecmBody[0x0B];
++	data[5] = ecmBody[0x06];
++	data[6] = ecmBody[0x2F];
++	data[7] = ecmBody[0x1E];
++}
++
 +static uint8_t get_mode_cw(uint8_t *extraData)
 +{
 +	uint64_t data = ((uint32_t)extraData[0] << 24) + (extraData[1] << 16) + (extraData[2] << 8) + extraData[3];
@@ -6085,7 +6279,51 @@ Index: module-emulator-powervu.c
 +	}
 +	else if (modeUnmask == 0x04)
 +	{
-+		// Do nothing
++		ecm[startOffset + 0x1E] -= ecm[startOffset + 0x0D];
++		ecm[startOffset + 0x1D] -= ecm[startOffset + 0x07];
++		ecm[startOffset + 0x2B] -= ecm[startOffset + 0x05];
++		ecm[startOffset + 0x2D] -= ecm[startOffset + 0x08];
++		ecm[startOffset + 0x17] -= ecm[startOffset + 0x04];
++		ecm[startOffset + 0x2F] -= ecm[startOffset + 0x0C];
++		ecm[startOffset + 0x06] -= ecm[startOffset + 0x0A];
++		ecm[startOffset + 0x0B] -= ecm[startOffset + 0x09];
++
++		create_data_unmask_mode_04(ecm + startOffset, data);
++		create_hash_mode_04(data, mask);
++
++		// Unmask body
++		ecm[startOffset + 0x04] ^= mask[0x00];
++		ecm[startOffset + 0x05] ^= mask[0x01];
++		ecm[startOffset + 0x07] ^= mask[0x02];
++		ecm[startOffset + 0x08] ^= mask[0x03];
++		ecm[startOffset + 0x09] ^= mask[0x04];
++		ecm[startOffset + 0x0A] ^= mask[0x05];
++		ecm[startOffset + 0x0C] ^= mask[0x06];
++		ecm[startOffset + 0x0D] ^= mask[0x07];
++		ecm[startOffset + 0x0E] ^= mask[0x08];
++		ecm[startOffset + 0x10] ^= mask[0x09];
++		ecm[startOffset + 0x11] ^= mask[0x0A];
++		ecm[startOffset + 0x18] ^= mask[0x0B];
++		ecm[startOffset + 0x1A] ^= mask[0x0C];
++		ecm[startOffset + 0x1B] ^= mask[0x0D];
++		ecm[startOffset + 0x1C] ^= mask[0x0E];
++		ecm[startOffset + 0x1F] ^= mask[0x0F];
++		ecm[startOffset + 0x22] ^= mask[0x00];
++		ecm[startOffset + 0x24] ^= mask[0x01];
++		ecm[startOffset + 0x25] ^= mask[0x02];
++		ecm[startOffset + 0x26] ^= mask[0x03];
++		ecm[startOffset + 0x27] ^= mask[0x04];
++		ecm[startOffset + 0x28] ^= mask[0x05];
++		ecm[startOffset + 0x29] ^= mask[0x06];
++		ecm[startOffset + 0x2A] ^= mask[0x07];
++		ecm[startOffset + 0x2C] ^= mask[0x08];
++		ecm[startOffset + 0x2E] ^= mask[0x09];
++		ecm[startOffset + 0x31] ^= mask[0x0A];
++
++		for (i = 0; i < ecm[9]; i++)
++		{
++			ecm[10 + i] = 0x00;
++		}
 +	}
 +	else
 +	{
@@ -6179,7 +6417,17 @@ Index: module-emulator-powervu.c
 +	}
 +	else if (modeCW == 0x04)
 +	{
-+		// Do nothing
++		create_data_cw_mode_04(seed, lenSeed, baseCw, val, ecmBody, data);
++		create_hash_mode_04(data, hash);
++
++		cw[0] = hash[0x08];
++		cw[1] = hash[0x0F];
++		cw[2] = hash[0x02];
++		cw[3] = hash[0x0A];
++		cw[4] = hash[0x06];
++		cw[5] = hash[0x03];
++		cw[6] = hash[0x09];
++		cw[7] = hash[0x0D];
 +	}
 +	else
 +	{
