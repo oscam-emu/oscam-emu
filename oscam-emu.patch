@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11518)
+--- CMakeLists.txt	(revision 11532)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -108,7 +108,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11518)
+--- Makefile	(revision 11532)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -166,7 +166,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11518)
+--- config.h	(revision 11532)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -179,7 +179,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11518)
+--- config.sh	(revision 11532)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -265,7 +265,7 @@ old mode 100644
 new mode 100755
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11518)
+--- globals.h	(revision 11532)
 +++ globals.h	(working copy)
 @@ -388,7 +388,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -286,9 +286,9 @@ Index: globals.h
  	LLIST			*emmstat;						// emm stats
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11518)
+--- module-dvbapi.c	(revision 11532)
 +++ module-dvbapi.c	(working copy)
-@@ -2584,6 +2584,8 @@
+@@ -2590,6 +2590,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
  	er->pmtpid = demux[demux_id].pmtpid;
  	er->onid   = demux[demux_id].onid;
@@ -297,7 +297,7 @@ Index: module-dvbapi.c
  	er->msgid  = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2631,19 +2633,30 @@
+@@ -2637,19 +2639,30 @@
  		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_fixed(demux[demux_id].ECMpids[pid].CAID))
  		{
  			int32_t j, n;
@@ -335,7 +335,7 @@ Index: module-emulator-biss.c
 ===================================================================
 --- module-emulator-biss.c	(nonexistent)
 +++ module-emulator-biss.c	(working copy)
-@@ -0,0 +1,905 @@
+@@ -0,0 +1,921 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -514,12 +514,12 @@ Index: module-emulator-biss.c
 +	// Extract useful information to append to the "Example key ..." message.
 +	//
 +	// For feeds, the orbital position & frequency are usually embedded in the namespace.
-+	// See https://github.com/openatv/enigma2/blob/master/lib/dvb/frontend.cpp#L496
++	// See https://github.com/OpenPLi/enigma2/blob/develop/lib/dvb/frontend.cpp#L476
 +	// hash = (sat.orbital_position << 16);
 +	// hash |= ((sat.frequency/1000)&0xFFFF)|((sat.polarisation&1) << 15);
 +	//
 +	// If the onid & tsid appear to be a unique DVB identifier, enigma2 strips the frequency
-+	// from our namespace. See https://github.com/openatv/enigma2/blob/master/lib/dvb/scan.cpp#L59
++	// from our namespace. See https://github.com/OpenPLi/enigma2/blob/develop/lib/dvb/scan.cpp#L55
 +	// In that case, our annotation contains the onid:tsid:sid triplet in lieu of frequency.
 +	//
 +	// For the universal case, we print the number of elementary stream pids & pmtpid.
@@ -912,7 +912,7 @@ Index: module-emulator-biss.c
 +
 +	if (payload_checksum != calculated_checksum)
 +	{
-+		cs_log_dbg(D_TRACE, "Checksum mismatch (payload: %08X vs calculated: %08X",
++		cs_log_dbg(D_TRACE, "ECM checksum mismatch (payload: %08X vs calculated: %08X",
 +					payload_checksum, calculated_checksum);
 +		return EMU_CHECKSUM_ERROR;
 +	}
@@ -956,6 +956,7 @@ Index: module-emulator-biss.c
 +	// Decrypt session words
 +	aes_set_key(&aes, (char *)session_key);
 +	aes_cbc_decrypt(&aes, cw_ex->session_word, 16, iv);
++	memcpy(iv, ecm + position, 16); // Set iv again to the correct one
 +	aes_cbc_decrypt(&aes, cw_ex->session_word + 16, 16, iv);
 +
 +	// Delete these cs_log calls when everything is confirmed to work correctly
@@ -993,7 +994,7 @@ Index: module-emulator-biss.c
 +	}
 +}
 +
-+static uint8_t parse_session_data_descriptor(const uint8_t *data, uint16_t esid, uint16_t onid, uint32_t *keysAdded)
++static uint16_t parse_session_data_descriptor(const uint8_t *data, uint16_t esid, uint16_t onid, uint32_t *keysAdded)
 +{
 +	uint8_t descriptor_tag = data[0];
 +	uint8_t descriptor_length = data[1];
@@ -1032,7 +1033,7 @@ Index: module-emulator-biss.c
 +	return 2 + descriptor_length;
 +}
 +
-+static void parse_session_data(const uint8_t *data, RSA *key, uint16_t esid, uint16_t onid, uint32_t *keysAdded)
++static int8_t parse_session_data(const uint8_t *data, RSA *key, uint16_t esid, uint16_t onid, uint32_t *keysAdded)
 +{
 +	// session_data is encrypted with RSA 2048 bit OAEP
 +	// Maximum size of decrypted session_data is less than (256-41) bytes
@@ -1040,14 +1041,18 @@ Index: module-emulator-biss.c
 +
 +	if (RSA_private_decrypt(256, data, session_data, key, RSA_PKCS1_OAEP_PADDING) > 0)
 +	{
++		uint16_t pos = 0;
 +		uint16_t descriptor_length = b2i(2, session_data) & 0x0FFF;
-+		uint8_t pos = 0;
 +
 +		while (pos < descriptor_length)
 +		{
 +			pos += parse_session_data_descriptor(session_data + 2 + pos, esid, onid, keysAdded);
 +		}
++
++		return EMU_OK;
 +	}
++
++	return EMU_NOT_SUPPORTED; // Decryption failed for whatever reason
 +}
 +
 +static int8_t get_rsa_key(struct s_reader *rdr, const uint8_t *ekid, RSA **key)
@@ -1074,6 +1079,8 @@ Index: module-emulator-biss.c
 +	uint16_t entitlement_session_id, original_network_id, descriptor_length;
 +	uint16_t pos, emm_length = SCT_LEN(emm);
 +	uint32_t payload_checksum, calculated_checksum;
++	int8_t result = EMU_NOT_SUPPORTED;
++	char tmp[17];
 +	RSA *key;
 +
 +	// Calculate crc32 checksum and compare against the checksum bytes of the EMM
@@ -1082,7 +1089,7 @@ Index: module-emulator-biss.c
 +
 +	if (payload_checksum != calculated_checksum)
 +	{
-+		cs_log_dbg(D_TRACE, "Checksum mismatch (payload: %08X vs calculated: %08X",
++		cs_log_dbg(D_TRACE, "EMM checksum mismatch (payload: %08X vs calculated: %08X",
 +					payload_checksum, calculated_checksum);
 +		return EMU_CHECKSUM_ERROR;
 +	}
@@ -1098,7 +1105,7 @@ Index: module-emulator-biss.c
 +
 +	if (emm_cipher_type != 0) // EMM payload is not encrypted with RSA_2048_OAEP
 +	{
-+		cs_log_dbg(D_TRACE, "Cipher type %d not supported", emm_cipher_type);
++		cs_log_dbg(D_TRACE, "EMM cipher type %d not supported", emm_cipher_type);
 +		return EMU_NOT_SUPPORTED;
 +	}
 +
@@ -1113,8 +1120,22 @@ Index: module-emulator-biss.c
 +
 +		if (get_rsa_key(rdr, entitlement_key_id, &key)) // Key found
 +		{
++			cs_hexdump(0, entitlement_key_id, 8, tmp, sizeof(tmp));
++			cs_log_dbg(D_TRACE, "RSA key found (ekid: %s)", tmp);
++
 +			// Parse "encrypted_session_data"
-+			parse_session_data(emm + pos, key, entitlement_session_id, original_network_id, keysAdded);
++			result = parse_session_data(emm + pos, key, entitlement_session_id, original_network_id, keysAdded);
++			if (result == EMU_OK)
++			{
++				break; // No need to decrypt again with another key
++			}
++		}
++		else // Multiple ekid's can be present in the EMM - Do not exit just yet
++		{
++			cs_hexdump(0, entitlement_key_id, 8, tmp, sizeof(tmp));
++			cs_log_dbg(D_TRACE, "RSA key not found (ekid: %s)", tmp);
++
++			result = EMU_KEY_NOT_FOUND;
 +		}
 +
 +		pos += 256; // 2048 bits
@@ -1125,7 +1146,7 @@ Index: module-emulator-biss.c
 +		}
 +	}
 +
-+	return EMU_KEY_NOT_FOUND;
++	return result;
 +}
 +
 +static int8_t rsa_key_exists(struct s_reader *rdr, const biss2_rsa_key_t *item)
@@ -1170,8 +1191,7 @@ Index: module-emulator-biss.c
 +		snprintf(tmp, sizeof(tmp), "%sbiss2_private_%02d.pem", emu_keyfile_path, i);
 +		if ((fp_pri = fopen(tmp, "r")) == NULL)
 +		{
-+			// File does not exist
-+			continue;
++			continue; // File does not exist
 +		}
 +
 +		cs_log("Reading RSA key from: biss2_private_%02d.pem", i);
@@ -1230,10 +1250,6 @@ Index: module-emulator-biss.c
 +		{
 +			ll_append(rdr->ll_biss2_rsa_keys, new_item);
 +			count++;
-+
-+			// Each ekid is listed under the reader's entitlements
-+			//cs_hexdump(0, new_item->ekid, 8, tmp, sizeof(tmp));
-+			//cs_log("RSA key stored in memory (EKID: %s)", tmp);
 +		}
 +	}
 +
@@ -1819,12 +1835,12 @@ Index: module-emulator-cryptoworks.c
 +
 +	if (ecmLen < 8)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	if (ecm[7] != ecmLen - 8)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	memset(key, 0, 22);
@@ -1867,7 +1883,7 @@ Index: module-emulator-cryptoworks.c
 +				break;
 +
 +			default:
-+				return 1;
++				return EMU_NOT_SUPPORTED;
 +		}
 +	}
 +
@@ -1875,12 +1891,12 @@ Index: module-emulator-cryptoworks.c
 +
 +	if (!get_key(key, ident, keyIndex, 16, 1))
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
 +	if (!get_key(&key[16], ident, 6, 6, 1))
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
 +	for (i = 8; i + 1 < ecmLen; i += ecm[i + 1] + 2)
@@ -1893,7 +1909,7 @@ Index: module-emulator-cryptoworks.c
 +
 +			if (newEcmLength == 0 || newEcmLength > ecmLen - (i + 2 + 3))
 +			{
-+				return 1;
++				return EMU_NOT_SUPPORTED;
 +			}
 +
 +			ecm[i + 2 + 3] = 0x81;
@@ -1908,7 +1924,7 @@ Index: module-emulator-cryptoworks.c
 +
 +	if (ecmLen - 15 < 1)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	cryptoworks_signature(ecm + 5, ecmLen - 15, key, signature);
@@ -1937,7 +1953,7 @@ Index: module-emulator-cryptoworks.c
 +				}
 +				if (memcmp(&ecm[i + 2], signature, 8))
 +				{
-+					return 6;
++					return EMU_CHECKSUM_ERROR;
 +				}
 +				break;
 +		}
@@ -1951,13 +1967,13 @@ Index: module-emulator-cryptoworks.c
 +				if (i + 2 + ecm[i + 1] <= ecmLen && ecm[i + 1] == 16)
 +				{
 +					memcpy(cw, &ecm[i + 2], 16);
-+					return 0;
++					return EMU_OK;
 +				}
 +				break;
 +		}
 +	}
 +
-+	return 5;
++	return EMU_CW_NOT_FOUND;
 +}
 +
 +#endif // WITH_EMU
@@ -2799,7 +2815,7 @@ Index: module-emulator-irdeto.c
 +
 +	if (ecmLen < 12)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	length = ecm[11];
@@ -2808,7 +2824,7 @@ Index: module-emulator-irdeto.c
 +
 +	if (ecmLen < length + 12)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	key0Ref = 0;
@@ -2880,7 +2896,7 @@ Index: module-emulator-irdeto.c
 +									{
 +										dw[j + 3] = (dw[j] + dw[j + 1] + dw[j + 2]) & 0xFF;
 +									}
-+									return 0;
++									return EMU_OK;
 +								}
 +							}
 +						}
@@ -2891,22 +2907,22 @@ Index: module-emulator-irdeto.c
 +
 +			if (keyIVRef == 0)
 +			{
-+				return 2;
++				return EMU_KEY_NOT_FOUND;
 +			}
 +		}
 +
 +		if (keySeedRef == 0)
 +		{
-+			return 2;
++			return EMU_KEY_NOT_FOUND;
 +		}
 +	}
 +
 +	if (key0Ref == 0)
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
-+	return 1;
++	return EMU_NOT_SUPPORTED;
 +}
 +
 +// Irdeto2 EMM EMU
@@ -3089,7 +3105,7 @@ Index: module-emulator-irdeto.c
 +
 +	if (emmLen < 11)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	if (emm[3] == 0xC3 || emm[3] == 0xCB)
@@ -3108,7 +3124,7 @@ Index: module-emulator-irdeto.c
 +
 +	if (emmLen < length + startOffset)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	keySeedRef = 0;
@@ -3134,14 +3150,14 @@ Index: module-emulator-irdeto.c
 +				{
 +					if (do_emm_type_op(ident, emm, keySeed, keyIV, keyPMK, emmLen, startOffset, length, keysAdded) == 0)
 +					{
-+						return 0;
++						return EMU_OK;
 +					}
 +				}
 +				else
 +				{
 +					if (do_emm_type_pmk(ident, emm, keySeed, keyIV, keyPMK, emmLen, startOffset, length, keysAdded) == 0)
 +					{
-+						return 0;
++						return EMU_OK;
 +					}
 +				}
 +			}
@@ -3156,7 +3172,7 @@ Index: module-emulator-irdeto.c
 +
 +					if (do_emm_type_op(ident, emm, keySeed, keyIV, keyPMK, emmLen, startOffset, length, keysAdded) == 0)
 +					{
-+						return 0;
++						return EMU_OK;
 +					}
 +				}
 +
@@ -3169,7 +3185,7 @@ Index: module-emulator-irdeto.c
 +
 +					if (do_emm_type_op(ident, emm, keySeed, keyIV, keyPMK, emmLen, startOffset, length, keysAdded) == 0)
 +					{
-+						return 0;
++						return EMU_OK;
 +					}
 +				}
 +
@@ -3182,20 +3198,20 @@ Index: module-emulator-irdeto.c
 +
 +					if (do_emm_type_op(ident, emm, keySeed, keyIV, keyPMK, emmLen, startOffset, length, keysAdded) == 0)
 +					{
-+						return 0;
++						return EMU_OK;
 +					}
 +				}
 +			}
 +
 +			if (keyPMK0Ref == 0 && keyPMK1Ref == 0 && keyPMK0ERef == 0 && keyPMK1ERef == 0)
 +			{
-+				return 2;
++				return EMU_KEY_NOT_FOUND;
 +			}
 +		}
 +
 +		if (keyIVRef == 0)
 +		{
-+			return 2;
++			return EMU_KEY_NOT_FOUND;
 +		}
 +	}
 +
@@ -3204,7 +3220,7 @@ Index: module-emulator-irdeto.c
 +		return 2;
 +	}
 +
-+	return 1;
++	return EMU_NOT_SUPPORTED;
 +}
 +
 +int8_t irdeto2_get_hexserial(uint16_t caid, uint8_t *hexserial)
@@ -3270,7 +3286,7 @@ Index: module-emulator-nagravision.c
 ===================================================================
 --- module-emulator-nagravision.c	(nonexistent)
 +++ module-emulator-nagravision.c	(working copy)
-@@ -0,0 +1,377 @@
+@@ -0,0 +1,376 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -3519,7 +3535,7 @@ Index: module-emulator-nagravision.c
 +
 +	if (ecmLen < 8)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	cmdLen = ecm[4] - 5;
@@ -3538,12 +3554,12 @@ Index: module-emulator-nagravision.c
 +
 +	if (cmdLen <= 63 || ecmLen < cmdLen + 10)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	if (!get_key(ideaKey, ident, '0', ideaKeyNr, 1))
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
 +	if (get_key(vKey, ident, 'V', 0, 0))
@@ -3553,22 +3569,21 @@ Index: module-emulator-nagravision.c
 +
 +	if (!get_key(m1Key, ident, 'M', 1, 1))
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
 +	reverse_mem(m1Key, 64);
 +
 +	dec = (uint8_t *)malloc(sizeof(uint8_t) * cmdLen);
-+
 +	if (dec == NULL)
 +	{
-+		return 7;
++		return EMU_OUT_OF_MEMORY;
 +	}
 +
 +	if (!decrypt_ecm(ecm + 9, dec, ideaKey, cmdLen, useVerifyKey ? vKey : 0, m1Key))
 +	{
 +		free(dec);
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	for (i = (dec[14] & 0x10) ? 16 : 20; i < cmdLen && l != 3; )
@@ -3623,12 +3638,12 @@ Index: module-emulator-nagravision.c
 +
 +	if (l != 3)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	if (mecmAlgo > 0)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	identMask = ident & 0xFF00;
@@ -3644,7 +3659,7 @@ Index: module-emulator-nagravision.c
 +		memcpy(dw + 12, &tmp2, 4);
 +	}
 +
-+	return 0;
++	return EMU_OK;
 +}
 +
 +#endif // WITH_EMU
@@ -3667,7 +3682,7 @@ Index: module-emulator-osemu.c
 ===================================================================
 --- module-emulator-osemu.c	(nonexistent)
 +++ module-emulator-osemu.c	(working copy)
-@@ -0,0 +1,993 @@
+@@ -0,0 +1,977 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -4540,36 +4555,38 @@ Index: module-emulator-osemu.c
 +void emu_read_keymemory(struct s_reader *UNUSED(rdr)) { }
 +#endif
 +
-+static const char *get_process_ecm_error_reason(int8_t result)
++static const char *get_error_reason(int8_t result)
 +{
 +	switch (result)
 +	{
-+		case 0: return "No error";
-+		case 1: return "ECM not supported";
-+		case 2: return "Key not found";
-+		case 3: return "Nano80 problem";
-+		case 4: return "Corrupt data";
-+		case 5: return "CW not found";
-+		case 6: return "CW checksum error";
-+		case 7: return "Out of memory";
-+		case 8: return "ECM checksum error";
-+		case 9: return "ICG error";
-+		default: return "Unknown";
++		case EMU_OK:
++			return "No error";
++
++		case EMU_NOT_SUPPORTED:
++			return "Not supported";
++
++		case EMU_KEY_NOT_FOUND:
++			return "Key not found";
++
++		case EMU_KEY_REJECTED:
++			return "ECM key rejected";
++
++		case EMU_CORRUPT_DATA:
++			return "Corrupt data";
++
++		case EMU_CW_NOT_FOUND:
++			return "CW not found";
++
++		case EMU_CHECKSUM_ERROR:
++			return "Checksum error";
++
++		case EMU_OUT_OF_MEMORY:
++			return "Out of memory";
++
++		default:
++			return "Unknown reason";
 +	}
 +}
-+
-+/* Error codes
-+0  OK
-+1  ECM not supported
-+2  Key not found
-+3  Nano80 problem
-+4  Corrupt data
-+5  CW not found
-+6  CW checksum error
-+7  Out of memory
-+8  ECM checksum error
-+9  ICG error
-+*/
 +
 +int8_t emu_process_ecm(struct s_reader *rdr, const ECM_REQUEST *er, uint8_t *cw, EXTENDED_CW *cw_ex)
 +{
@@ -4609,28 +4626,10 @@ Index: module-emulator-osemu.c
 +
 +	if (result != 0)
 +	{
-+		cs_log("ECM failed: %s", get_process_ecm_error_reason(result));
++		cs_log("ECM failed: %s", get_error_reason(result));
 +	}
 +
 +	return result;
-+}
-+
-+static const char *get_process_emm_error_reason(int8_t result)
-+{
-+	switch (result)
-+	{
-+		case 0: return "No error";
-+		case 1: return "EMM not supported";
-+		case 2: return "Key not found";
-+		case 3: return "Nano80 problem";
-+		case 4: return "Corrupt data";
-+		case 5: return "Unknown";
-+		case 6: return "Checksum error";
-+		case 7: return "Out of memory";
-+		case 8: return "EMM checksum error";
-+		case 9: return "Wrong provider";
-+		default: return "Unknown";
-+	}
 +}
 +
 +int8_t emu_process_emm(struct s_reader *rdr, uint16_t caid, const uint8_t *emm, uint32_t *keysAdded)
@@ -4654,7 +4653,7 @@ Index: module-emulator-osemu.c
 +
 +	if (result != 0)
 +	{
-+		cs_log_dbg(D_EMM,"EMM failed: %s", get_process_emm_error_reason(result));
++		cs_log_dbg(D_EMM,"EMM failed: %s", get_error_reason(result));
 +	}
 +
 +	return result;
@@ -4665,14 +4664,14 @@ Index: module-emulator-osemu.h
 ===================================================================
 --- module-emulator-osemu.h	(nonexistent)
 +++ module-emulator-osemu.h	(working copy)
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,96 @@
 +#ifndef MODULE_EMULATOR_OSEMU_H_
 +#define MODULE_EMULATOR_OSEMU_H_
 +
 +#ifdef WITH_EMU
 +
 +// Version info
-+#define EMU_VERSION 796
++#define EMU_VERSION 797
 +
 +#define EMU_MAX_CHAR_KEYNAME 12
 +#define EMU_KEY_FILENAME "SoftCam.Key"
@@ -4685,27 +4684,21 @@ Index: module-emulator-osemu.h
 + *  0 - OK
 + *  1 - ECM / EMM not supported
 + *  2 - ECM / EMM key not found
-+ *  3 - Nano80 error
++ *  3 - ECM key rejected
 + *  4 - Corrupt data
 + *  5 - CW not found
 + *  6 - CW / ECM / EMM checksum error
 + *  7 - Out of memory
-+ *  8 - ICG error
-+ *  9 - Wrong provider
-+ * 10 - ECM key rejected
 +*/
 +
 +#define EMU_OK             0
 +#define EMU_NOT_SUPPORTED  1
 +#define EMU_KEY_NOT_FOUND  2
-+#define EMU_NANO_80_ERROR  3
++#define EMU_KEY_REJECTED   3
 +#define EMU_CORRUPT_DATA   4
 +#define EMU_CW_NOT_FOUND   5
 +#define EMU_CHECKSUM_ERROR 6
 +#define EMU_OUT_OF_MEMORY  7
-+#define EMU_ICG_ERROR      8
-+#define EMU_WRONG_PROVID   9
-+#define EMU_KEY_REJECTED  10
 +
 +typedef struct KeyData KeyData;
 +
@@ -4772,7 +4765,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2549 @@
+@@ -0,0 +1,2554 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5234,6 +5227,7 @@ Index: module-emulator-powervu.c
 +static const uint8_t table1E[] = { 0x01, 0x05, 0x0B, 0x10 };
 +static const uint8_t table1F[] = { 0x06, 0x07, 0x0B, 0x10 };
 +static const uint8_t table20[] = { 0x01, 0x08, 0x0B, 0x10 };
++static const uint8_t table21[] = { 0x01, 0x07, 0x0C, 0x10 };
 +
 +static void hash_modes_19_to_27_tables_3(uint8_t *data, uint8_t *hash, const uint8_t *table)
 +{
@@ -5406,6 +5400,10 @@ Index: module-emulator-powervu.c
 +			hash_modes_19_to_27_tables_3(dataPadded, hash, table20);
 +			break;
 +
++		case 33:
++			hash_modes_19_to_27_tables_3(dataPadded, hash, table21);
++			break;
++
 +		default:
 +			cs_log("A new hash mode [%d] is in use.", mode);
 +			break;
@@ -5573,7 +5571,7 @@ Index: module-emulator-powervu.c
 +	data[7] = ecmBody[0x27];
 +}
 +
-+static void hash_04_add(uint32_t* buffer, int a, int b, int c, int d, int e, int f)
++static void hash_04_add(uint32_t *buffer, int a, int b, int c, int d, int e, int f)
 +{
 +	uint32_t tmp1 = (buffer[a] & 1) + (buffer[b] & 1);
 +	uint32_t tmp2 = (buffer[a] >> 1) + (buffer[b] >> 1) + (tmp1 >> 1);
@@ -5582,7 +5580,7 @@ Index: module-emulator-powervu.c
 +	buffer[f] = tmp2 + tmp2 + (tmp1 & 1);
 +}
 +
-+static void hash_04_shift(uint32_t* buffer, int a, int b, uint8_t shift)
++static void hash_04_shift(uint32_t *buffer, int a, int b, uint8_t shift)
 +{
 +	uint32_t tmp1 = (buffer[a] >> (32 - shift)) + (buffer[b] << shift);
 +	uint32_t tmp2 = (buffer[b] >> (32 - shift)) + (buffer[a] << shift);
@@ -5591,13 +5589,13 @@ Index: module-emulator-powervu.c
 +	buffer[a] = tmp2;
 +}
 +
-+static void hash_04_xor(uint32_t* buffer, int a, int b, int c, int d)
++static void hash_04_xor(uint32_t *buffer, int a, int b, int c, int d)
 +{
 +	buffer[a] ^= buffer[b];
 +	buffer[c] ^= buffer[d];
 +}
 +
-+static void hash_04_swap(uint32_t* buffer, int a, int b)
++static void hash_04_swap(uint32_t *buffer, int a, int b)
 +{
 +	uint32_t tmp = buffer[a];
 +
@@ -5605,7 +5603,7 @@ Index: module-emulator-powervu.c
 +	buffer[b] = tmp;
 +}
 +
-+static void hash_04_core(uint32_t* buffer)
++static void hash_04_core(uint32_t *buffer)
 +{
 +	hash_04_add(buffer, 0, 6, 7, 1, 7, 6);
 +	hash_04_shift(buffer, 5, 4, 0x0D);
@@ -5623,7 +5621,7 @@ Index: module-emulator-powervu.c
 +	hash_04_swap(buffer, 3, 2);
 +}
 +
-+static void create_hash_mode_04(uint8_t *data, uint8_t * hash)
++static void create_hash_mode_04(uint8_t *data, uint8_t *hash)
 +{
 +	int i, j;
 +	uint32_t d0, d1, h0, h1, h2, h3;
@@ -5699,8 +5697,8 @@ Index: module-emulator-powervu.c
 +	hash[15] = (uint8_t) (h3 >> 24);
 +}
 +
-+static void create_data_cw_mode_04(uint8_t* seed, int lenSeed, uint8_t* basecw,
-+									uint8_t val, uint8_t* ecmBody, uint8_t* data)
++static void create_data_cw_mode_04(uint8_t *seed, int lenSeed, uint8_t *basecw,
++									uint8_t val, uint8_t *ecmBody, uint8_t *data)
 +{
 +	uint8_t padding[] =
 +	{
@@ -5742,7 +5740,7 @@ Index: module-emulator-powervu.c
 +	}
 +}
 +
-+static void create_data_unmask_mode_04(uint8_t* ecmBody, uint8_t* data)
++static void create_data_unmask_mode_04(uint8_t *ecmBody, uint8_t *data)
 +{
 +	uint8_t padding[] =
 +	{
@@ -6625,7 +6623,7 @@ Index: module-emulator-powervu.c
 +	char tmpBuffer2[17];
 +
 +	emu_stream_cw_item *cw_item;
-+	int8_t update_global_key = 0, ret = 1;
++	int8_t update_global_key = 0;
 +	int8_t update_global_keys[EMU_STREAM_SERVER_MAX_CONNECTIONS];
 +
 +	memset(update_global_keys, 0, sizeof(update_global_keys));
@@ -7002,7 +7000,7 @@ Index: module-emulator-powervu.c
 +		i += nanoLen;
 +	}
 +
-+	return ret;
++	return EMU_NOT_SUPPORTED;
 +}
 +
 +// PowerVu EMM EMU
@@ -9292,7 +9290,7 @@ Index: module-emulator-viaccess.c
 ===================================================================
 --- module-emulator-viaccess.c	(nonexistent)
 +++ module-emulator-viaccess.c	(working copy)
-@@ -0,0 +1,1165 @@
+@@ -0,0 +1,1183 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -9419,19 +9417,19 @@ Index: module-emulator-viaccess.c
 +
 +	if (ident == 0)
 +	{
-+		return 4;
++		return EMU_CORRUPT_DATA;
 +	}
 +
 +	memset(work_key, 0, 16);
 +
 +	if (!get_key(work_key, ident, '0', desKeyIndex, 8, 1))
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
 +	if (ecmLen < 11)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	data = ecm + 9;
@@ -9471,7 +9469,7 @@ Index: module-emulator-viaccess.c
 +
 +	if (foundData != 3)
 +	{
-+		return 1;
++		return EMU_NOT_SUPPORTED;
 +	}
 +
 +	pH = i = 0;
@@ -9551,10 +9549,10 @@ Index: module-emulator-viaccess.c
 +
 +	if (memcmp(signature, hashbuffer, 8))
 +	{
-+		return 6;
++		return EMU_CHECKSUM_ERROR;
 +	}
 +
-+	return 0;
++	return EMU_OK;
 +}
 +
 +static int8_t via26_process_dw(uint8_t *indata, uint32_t ident, uint8_t desKeyIndex)
@@ -9636,6 +9634,7 @@ Index: module-emulator-viaccess.c
 +		pv2 = T1Key[pv1];
 +		indata[i] = pv2;
 +	}
++
 +	return 0;
 +}
 +
@@ -9647,12 +9646,12 @@ Index: module-emulator-viaccess.c
 +
 +	if (ident == 0)
 +	{
-+		return 4;
++		return EMU_CORRUPT_DATA;
 +	}
 +
 +	if (!get_key(C1, ident, 'C', 1, 8, 1))
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
 +	for (i = 0; i < 2; i++)
@@ -9673,8 +9672,15 @@ Index: module-emulator-viaccess.c
 +		{
 +			dw[i * 8 + j] = tmpData[j] ^ pXorVector[j];
 +		}
++
++		// Fix CW checksum bytes
++		for (j = 3; j < 8; j += 4)
++		{
++			dw[i * 8 + j] = (dw[i * 8 + j - 3] + dw[i * 8 + j - 2] + dw[i * 8 + j - 1]) & 0xFF;
++		}
 +	}
-+	return 0;
++
++	return EMU_OK;
 +}
 +
 +static void via3_core(uint8_t *data, uint8_t Off, uint32_t ident, uint8_t *XorKey, uint8_t *T1Key)
@@ -9932,17 +9938,17 @@ Index: module-emulator-viaccess.c
 +
 +	if (ident == 0)
 +	{
-+		return 4;
++		return EMU_CORRUPT_DATA;
 +	}
 +
 +	if (!get_key(C1, ident, 'C', 1, 8, 1))
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
 +	if (needsAES && !get_key((uint8_t *)aesKey, ident, 'E', aesKeyIndex, 16, 1))
 +	{
-+		return 2;
++		return EMU_KEY_NOT_FOUND;
 +	}
 +
 +	if (aesMode == 0x0D || aesMode == 0x11 || aesMode == 0x15)
@@ -10032,16 +10038,16 @@ Index: module-emulator-viaccess.c
 +
 +		if (!is_valid_dcw(dw) || !is_valid_dcw(dw + 8))
 +		{
-+			return 6;
++			return EMU_CHECKSUM_ERROR;
 +		}
 +	}
 +
-+	return 0;
++	return EMU_OK;
 +}
 +
 +int8_t viaccess_ecm(uint8_t *ecm, uint8_t *dw)
 +{
-+	int8_t doFinalMix = 0, result = 1;
++	int8_t doFinalMix = 0;
 +
 +	uint8_t nanoCmd = 0, nanoLen = 0, version = 0, providerKeyLen = 0;
 +	uint8_t desKeyIndex = 0, aesMode = 0, aesKeyIndex = 0xFF;
@@ -10055,7 +10061,7 @@ Index: module-emulator-viaccess.c
 +
 +		if (i + nanoLen > ecmLen)
 +		{
-+			return 1;
++			return EMU_NOT_SUPPORTED;
 +		}
 +
 +		switch (nanoCmd)
@@ -10149,6 +10155,7 @@ Index: module-emulator-viaccess.c
 +							break;
 +						}
 +					}
++
 +					return via3_decrypt(ecm + i, dw, currentIdent, desKeyIndex, aesKeyIndex, aesMode, doFinalMix);
 +				}
 +				break;
@@ -10156,9 +10163,11 @@ Index: module-emulator-viaccess.c
 +			default:
 +				break;
 +		}
++
 +		i += nanoLen;
 +	}
-+	return result;
++
++	return EMU_NOT_SUPPORTED;
 +}
 +
 +// Viaccess EMM EMU
@@ -10186,7 +10195,7 @@ Index: module-emulator-viaccess.c
 +
 +		if (i + nanoLen > emmLen)
 +		{
-+			return 1;
++			return EMU_NOT_SUPPORTED;
 +		}
 +
 +		switch (nanoCmd)
@@ -10209,7 +10218,7 @@ Index: module-emulator-viaccess.c
 +				}
 +				else
 +				{
-+					return 1;
++					return EMU_NOT_SUPPORTED;
 +				}
 +				break;
 +			}
@@ -10220,6 +10229,7 @@ Index: module-emulator-viaccess.c
 +				{
 +					break;
 +				}
++
 +				emmKeyIndex = emm[i + 1];
 +				break;
 +			}
@@ -10233,7 +10243,7 @@ Index: module-emulator-viaccess.c
 +
 +				if (!get_key(emmKey, provider, 'M', emmKeyIndex, 16, 1))
 +				{
-+					return 2;
++					return EMU_KEY_NOT_FOUND;
 +				}
 +
 +				memset(provName, 0, 17);
@@ -10255,8 +10265,9 @@ Index: module-emulator-viaccess.c
 +					strcmp((char *)provName, "TNTSATPRO") != 0 &&
 +					strcmp((char *)provName, "CSAT V") != 0)
 +				{
-+					return 1;
++					return EMU_NOT_SUPPORTED;
 +				}
++
 +				break;
 +			}
 +
@@ -10278,7 +10289,8 @@ Index: module-emulator-viaccess.c
 +					haveNewD0 = 1;
 +					break;
 +				}
-+				return 0;
++
++				return EMU_OK;
 +			}
 +
 +			case 0xBC:
@@ -10314,7 +10326,7 @@ Index: module-emulator-viaccess.c
 +				tmp = (uint8_t *)malloc(((nanoLen / 16) + 1) * 16 * sizeof(uint8_t));
 +				if (tmp == NULL)
 +				{
-+					return 7;
++					return EMU_OUT_OF_MEMORY;
 +				}
 +
 +				memcpy(tmp, &emm[i], nanoLen);
@@ -10412,6 +10424,7 @@ Index: module-emulator-viaccess.c
 +						default:
 +							break;
 +					}
++
 +					j += subNanoLen;
 +				}
 +				break;
@@ -10423,11 +10436,12 @@ Index: module-emulator-viaccess.c
 +				{
 +					break;
 +				}
++
 +				ui1 = ((emm[i + 2] << 8) | (emm[i + 1] << 16) | (emm[i] << 24) | emm[i + 3]);
 +
 +				if (ccitt32_crc(emm + 3, emmLen - 11) != ui1)
 +				{
-+					return 4;
++					return EMU_CHECKSUM_ERROR;
 +				}
 +
 +				if (haveNewD0)
@@ -10452,9 +10466,11 @@ Index: module-emulator-viaccess.c
 +			default:
 +				break;
 +		}
++
 +		i += nanoLen;
 +	}
-+	return 0;
++
++	return EMU_OK;
 +}
 +
 +#endif // WITH_EMU
@@ -11385,7 +11401,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11518)
+--- oscam.c	(revision 11532)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11430,7 +11446,7 @@ Index: oscam.c
  	coolapi_close_all();
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11518)
+--- webif/config/dvbapi.html	(revision 11532)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -53,7 +53,7 @@
  			</TD>
