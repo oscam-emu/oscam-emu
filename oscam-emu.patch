@@ -7,7 +7,7 @@ Index: .travis.yml
 +script: ./config.sh -E all && make
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11546)
+--- CMakeLists.txt	(revision 11581)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -115,7 +115,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11546)
+--- Makefile	(revision 11581)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -173,7 +173,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11546)
+--- config.h	(revision 11581)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -186,7 +186,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11546)
+--- config.sh	(revision 11581)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -227,10 +227,10 @@ Index: config.sh
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
--	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA_MERLIN && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+-	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA_MERLIN READER_VIDEOGUARD && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 -	enabled_any MODULE_CCCAM READER_NAGRA READER_NAGRA_MERLIN READER_SECA && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 -	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA READER_NAGRA_MERLIN && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
-+	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA_MERLIN WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
++	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA_MERLIN READER_VIDEOGUARD WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 +	enabled_any MODULE_CCCAM READER_NAGRA READER_NAGRA_MERLIN READER_SECA WITH_EMU && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 +	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA READER_NAGRA_MERLIN WITH_EMU && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
@@ -272,7 +272,7 @@ old mode 100644
 new mode 100755
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11546)
+--- globals.h	(revision 11581)
 +++ globals.h	(working copy)
 @@ -388,7 +388,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -283,7 +283,7 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1782,6 +1782,7 @@
+@@ -1792,6 +1792,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -293,9 +293,9 @@ Index: globals.h
  	LLIST			*emmstat;						// emm stats
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11546)
+--- module-dvbapi.c	(revision 11581)
 +++ module-dvbapi.c	(working copy)
-@@ -2633,6 +2633,8 @@
+@@ -2632,6 +2632,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
  	er->pmtpid = demux[demux_id].pmtpid;
  	er->onid   = demux[demux_id].onid;
@@ -304,7 +304,7 @@ Index: module-dvbapi.c
  	er->msgid  = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2680,19 +2682,30 @@
+@@ -2679,19 +2681,30 @@
  		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_fixed(demux[demux_id].ECMpids[pid].CAID))
  		{
  			int32_t j, n;
@@ -4739,7 +4739,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2559 @@
+@@ -0,0 +1,2691 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -6983,10 +6983,101 @@ Index: module-emulator-powervu.c
 +}
 +
 +// PowerVu EMM EMU
++static void create_data_unmask_emm_mode_03(uint8_t *emmBody, uint8_t *data)
++{
++	int i;
++	uint8_t padding[] =
++	{
++		0xB3, 0x60, 0x35, 0xC8, 0x5C, 0x26, 0xC1, 0xD0,
++		0x88, 0x86, 0x57, 0xB6, 0x45, 0xA7, 0xDF, 0x7E,
++		0xF0, 0xA8, 0x49, 0xFB, 0x79, 0x6C, 0xAF, 0xB0
++	};
++
++	memcpy(data + 0x28, padding, 0x18);
++
++	for (i = 0; i < 5; i++)
++	{
++		data[0 + i * 8] = emmBody[0x18 + i * 0x1B];
++		data[1 + i * 8] = emmBody[0x16 + i * 0x1B];
++		data[2 + i * 8] = emmBody[0x07 + i * 0x1B];
++		data[3 + i * 8] = emmBody[0x0B + i * 0x1B];
++		data[4 + i * 8] = emmBody[0x06 + i * 0x1B];
++		data[5 + i * 8] = emmBody[0x19 + i * 0x1B];
++		data[6 + i * 8] = emmBody[0x15 + i * 0x1B];
++		data[7 + i * 8] = emmBody[0x03 + i * 0x1B];
++	}
++}
++
++static uint8_t get_mode_unmask_emm(uint8_t *extraData)
++{
++	uint16_t data = ((uint16_t)extraData[0] << 8) + extraData[1];
++
++	if (data == 0)
++	{
++		return 0x00;
++	}
++
++	switch (data & 0x0881)
++	{
++		case 0x0080:
++		case 0x0881:
++			return 0x01;
++
++		case 0x0001:
++		case 0x0880:
++			return 0x02;
++
++		case 0x0800:
++		case 0x0081:
++			return 0x03;
++
++		case 0x0000:
++		case 0x0801:
++			switch (data & 0x9020)
++			{
++				case 0x8000:
++				case 0x9000:
++					return 0x04;
++
++				case 0x0020:
++				case 0x9020:
++					return 0x05;
++
++				case 0x0000:
++				case 0x1000:
++					return 0x06;
++
++				case 0x1020:
++				case 0x8020:
++					switch (data & 0x2014)
++					{
++						case 0x2004:
++						case 0x2010:
++							return 0x07;
++
++						case 0x0000:
++						case 0x0004:
++							return 0x08;
++
++						case 0x0014:
++						case 0x2014:
++							return 0x09;
++
++						case 0x0010:
++						case 0x2000:
++							return 0x00;
++					}
++					break;
++			}
++			break;
++	}
++	return 0x00;
++}
++
 +static void unmask_emm(uint8_t *emm)
 +{
 +	uint32_t crc, i, l;
-+	uint8_t hashModeEmm, data[30], mask[16];
++	uint8_t hashModeEmm, modeUnmask, data[30], mask[16];
 +
 +	uint8_t sourcePos[] =
 +	{
@@ -7006,19 +7097,60 @@ Index: module-emulator-powervu.c
 +	create_data_ecm_emm(emm, sourcePos, 19, 30, data);
 +
 +	hashModeEmm = emm[8] ^ crc8_calc(data, 30);
++	modeUnmask = get_mode_unmask_emm(emm + 16);
 +
-+	create_hash(data, 30, mask, hashModeEmm);
++	if ((modeUnmask == 0x00) || (modeUnmask > 4))
++	{
++		create_hash(data, 30, mask, hashModeEmm);
++
++		// Unmask Body
++		for (i = 0; i < 30; i++)
++		{
++			emm[19 + destPos[i]] ^= mask[i & 0x0F];
++		}
++	}
++	else if (modeUnmask == 0x03)
++	{
++		for (i = 0; i < 5; i++)
++		{
++			emm[0x13 + 0x03 + i * 0x1B] -= emm[0x13 + 0x0D + i * 0x1B];
++			emm[0x13 + 0x06 + i * 0x1B] -= emm[0x13 + 0x1A + i * 0x1B];
++			emm[0x13 + 0x07 + i * 0x1B] -= emm[0x13 + 0x10 + i * 0x1B];
++			emm[0x13 + 0x0B + i * 0x1B] -= emm[0x13 + 0x17 + i * 0x1B];
++			emm[0x13 + 0x15 + i * 0x1B] -= emm[0x13 + 0x05 + i * 0x1B];
++			emm[0x13 + 0x16 + i * 0x1B] -= emm[0x13 + 0x0F + i * 0x1B];
++			emm[0x13 + 0x18 + i * 0x1B] -= emm[0x13 + 0x14 + i * 0x1B];
++			emm[0x13 + 0x19 + i * 0x1B] -= emm[0x13 + 0x04 + i * 0x1B];
++		}
++
++		create_data_unmask_emm_mode_03(emm + 0x13, data);
++		create_hash_mode_03(data, mask);
++
++		for (i = 0; i < 5; i++)
++		{
++			emm[0x13 + 0x14 + i * 0x1B] ^= mask[0x00];
++			emm[0x13 + 0x0F + i * 0x1B] ^= mask[0x01];
++			emm[0x13 + 0x10 + i * 0x1B] ^= mask[0x02];
++			emm[0x13 + 0x17 + i * 0x1B] ^= mask[0x03];
++			emm[0x13 + 0x1A + i * 0x1B] ^= mask[0x04];
++			emm[0x13 + 0x04 + i * 0x1B] ^= mask[0x05];
++			emm[0x13 + 0x05 + i * 0x1B] ^= mask[0x06];
++			emm[0x13 + 0x0D + i * 0x1B] ^= mask[0x07];
++			emm[0x13 + 0x09 + i * 0x1B] ^= mask[0x08];
++			emm[0x13 + 0x0A + i * 0x1B] ^= mask[0x09];
++			emm[0x13 + 0x0E + i * 0x1B] ^= mask[0x0A];
++			emm[0x13 + 0x11 + i * 0x1B] ^= mask[0x0B];
++			emm[0x13 + 0x12 + i * 0x1B] ^= mask[0x0C];
++			emm[0x13 + 0x13 + i * 0x1B] ^= mask[0x0D];
++			emm[0x13 + 0x08 + i * 0x1B] ^= mask[0x0E];
++			emm[0x13 + 0x0C + i * 0x1B] ^= mask[0x0F];
++		}
++	}
 +
 +	// Fix Header
 +	emm[3] &= 0x0F;
 +	emm[3] |= 0x10;
 +	emm[8] = 0x00;
-+
-+	// Unmask Body
-+	for (i = 0; i < 30; i++)
-+	{
-+		emm[19 + destPos[i]] ^= mask[i & 0x0F];
-+	}
 +
 +	// Fix CRC (optional)
 +	l = (((emm[1] << 8) + emm[2]) & 0xFFF) + 3 - 4;
@@ -7615,14 +7747,6 @@ Index: module-emulator-streamserver.c
 +	uint8_t descriptor_tag = buffer[0], descriptor_length = 0;
 +	uint32_t j, k;
 +
-+	static const char format_identifiers_audio[10][5] =
-+	{
-+		// "HDMV" format identifier is removed
-+		// OSCam does not need to know about Blu-ray
-+		"AC-3", "BSSD", "dmat", "DRA1", "DTS1",
-+		"DTS2", "DTS3", "EAC3", "mlpa", "Opus",
-+	};
-+
 +	if (info_length < 1)
 +	{
 +		return;
@@ -7635,8 +7759,16 @@ Index: module-emulator-streamserver.c
 +
 +		switch (descriptor_tag)
 +		{
-+			case 0x05: // registration descriptor
++			case 0x05: // Registration descriptor
 +			{
++				// "HDMV" format identifier is removed
++				// OSCam does not need to know about Blu-ray
++				const char format_identifiers_audio[10][5] =
++				{
++					"AC-3", "BSSD", "dmat", "DRA1", "DTS1",
++					"DTS2", "DTS3", "EAC3", "mlpa", "Opus",
++				};
++
 +				for (k = 0; k < 10; k++)
 +				{
 +					if (memcmp(buffer + j + 2, format_identifiers_audio[k], 4) == 0)
@@ -7671,6 +7803,7 @@ Index: module-emulator-streamserver.c
 +			case 0x7B: // DTS descriptor (DVB)
 +			case 0x7C: // AAC descriptor (DVB)
 +			case 0x81: // AC-3 descriptor (ATSC)
++			case 0xCC: // Enhanced AC-3 descriptor (ATSC)
 +			{
 +				*type = STREAM_AUDIO;
 +				break;
@@ -7685,6 +7818,7 @@ Index: module-emulator-streamserver.c
 +					case 0x0E: // DTS-HD descriptor (DVB)
 +					case 0x0F: // DTS Neural descriptor (DVB)
 +					case 0x15: // AC-4 descriptor (DVB)
++					case 0x21: // DTS-UHD descriptor (DVB)
 +						*type = STREAM_AUDIO;
 +						break;
 +				}
@@ -7758,16 +7892,16 @@ Index: module-emulator-streamserver.c
 +
 +		switch (stream_type)
 +		{
-+			case 0x01: // MPEG-1 video
-+			case 0x02: // MPEG-1 (constrained parameter), MPEG-2 video
-+			case 0x10: // MPEG-4 video
-+			case 0x1B: // AVC video
-+			case 0x20: // MVC video
-+			case 0x24: // HEVC video
-+			case 0x25: // HEVC video
-+			case 0x42: // Chinese video
-+			case 0xD1: // Dirac video
-+			case 0xEA: // VC-1 video
++			case 0x01:
++			case 0x02:
++			case 0x10:
++			case 0x1B:
++			case 0x20:
++			case 0x24:
++			case 0x25:
++			case 0x42:
++			case 0xD1:
++			case 0xEA:
 +			{
 +				cdata->video_pid = elementary_pid;
 +				cs_log_dbg(D_READER, "Stream client %i found video pid: 0x%04X (%i)",
@@ -7775,13 +7909,14 @@ Index: module-emulator-streamserver.c
 +				break;
 +			}
 +
-+			case 0x03: // MPEG-1 part 3 audio (MP1, MP2, MP3)
-+			case 0x04: // MPEG-2 part 3 audio (MP1, MP2, MP3)
-+			case 0x0F: // MPEG-2 part 7 audio (AAC)
-+			case 0x11: // MPEG-4 part 3 audio (AAC, HE AAC and AAC v2)
-+			case 0x1C: // MPEG-4 part 3 audio (DST, ALS, SLS)
-+			case 0x2D: // MPEG-H part 3 3D audio (main stream)
-+			case 0x2E: // MPEG-H part 3 3D audio (auxiliary stream)
++			case 0x03:
++			case 0x04:
++			case 0x0F:
++			case 0x11:
++			case 0x1C:
++			case 0x2D:
++			case 0x2E:
++			case 0x81:
 +			{
 +				if (cdata->audio_pid_count >= EMU_STREAM_MAX_AUDIO_SUB_TRACKS)
 +				{
@@ -7795,12 +7930,9 @@ Index: module-emulator-streamserver.c
 +				break;
 +			}
 +
-+			case 0x06: // AC-3, Enhanced AC-3, AC-4, DTS, DTS-HD and DTS-UHD audio (DVB)
-+			case 0x81: // AC-3 audio (ATSC)
-+			case 0x87: // Enhanced AC-3 audio (ATSC)
-+			//case 0x88: // DTS-HD audio (ATSC 2.0) /* fixme: has ATSC 2.0 ever been used? */
-+			//case 0x??: // AC-4 audio (ATSC 3.0) /* fixme: add the actual value when it gets published */
-+			//case 0x??: // MPEG-H part 3 3D audio (ATSC 3.0) /* fixme: add the actual value when it gets published */
++			case 0x06:
++			//case 0x81: // some ATSC AC-3 streams do not contain the AC-3 descriptor!
++			case 0x87:
 +			{
 +				uint8_t type = STREAM_UNDEFINED;
 +				ParseDescriptors(data + i + 5, es_info_length, &type);
@@ -11380,7 +11512,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11546)
+--- oscam.c	(revision 11581)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11425,9 +11557,9 @@ Index: oscam.c
  	coolapi_close_all();
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11546)
+--- webif/config/dvbapi.html	(revision 11581)
 +++ webif/config/dvbapi.html	(working copy)
-@@ -55,7 +55,7 @@
+@@ -56,7 +56,7 @@
  			</TD>
  		</TR>
  		<TR><TD><A>Write detected prov name to srvid:</A></TD><TD><input name="write_sdt_prov" type="checkbox" value="1" ##WRITESDTPROVCHECKED##><label></label>
@@ -11436,7 +11568,7 @@ Index: webif/config/dvbapi.html
  			<TD>
  				<select name="extended_cw_api">
  					<option value="0" ##EXTENDEDCWAPISELECTED0##>0 - none (disabled)</option>
-@@ -63,4 +63,4 @@
+@@ -64,4 +64,4 @@
  					<option value="2" ##EXTENDEDCWAPISELECTED2##>2 - OE2.0</option>
  				</select>
  			</TD>
