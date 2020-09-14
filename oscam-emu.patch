@@ -7077,7 +7077,7 @@ Index: module-emulator-powervu.c
 +static void unmask_emm(uint8_t *emm)
 +{
 +	uint32_t crc, i, l;
-+	uint8_t hashModeEmm, modeUnmask, data[30], mask[16];
++	uint8_t hashModeEmm, modeUnmask, data[41], mask[16];
 +
 +	uint8_t sourcePos[] =
 +	{
