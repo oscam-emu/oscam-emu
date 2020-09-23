@@ -1,5 +1,5 @@
---- oscam-svn/CMakeLists.txt	2020-09-23 22:18:25.000000000 +0200
-+++ oscam-svn/CMakeLists.txt	2020-09-23 22:57:35.768431210 +0200
+--- CMakeLists.txt	2020-09-23 22:18:25.000000000 +0200
++++ CMakeLists.txt	2020-09-23 22:57:35.768431210 +0200
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
  		${CMAKE_CURRENT_SOURCE_DIR}/cscrypt
@@ -104,8 +104,8 @@
 +endif (WITH_EMU)
 +
  message (STATUS "")
---- oscam-svn/config.h	2020-09-23 22:18:25.000000000 +0200
-+++ oscam-svn/config.h	2020-09-23 22:57:35.768431210 +0200
+--- config.h	2020-09-23 22:18:25.000000000 +0200
++++ config.h	2020-09-23 22:57:35.768431210 +0200
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
  #define CONFIG_H_
@@ -115,8 +115,8 @@
  #define WEBIF 1
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
---- oscam-svn/config.sh	2020-09-23 22:18:25.000000000 +0200
-+++ oscam-svn/config.sh	2020-09-23 23:00:02.167353804 +0200
+--- config.sh	2020-09-23 22:18:25.000000000 +0200
++++ config.sh	2020-09-23 23:00:02.167353804 +0200
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
@@ -197,8 +197,8 @@
  		break
  	;;
  	'-O'|'--detect-osx-sdk-version')
---- oscam-svn/globals.h	2020-09-23 22:18:25.000000000 +0200
-+++ oscam-svn/globals.h	2020-09-23 22:57:35.772490349 +0200
+--- globals.h	2020-09-23 22:18:25.000000000 +0200
++++ globals.h	2020-09-23 22:57:35.772490349 +0200
 @@ -393,7 +393,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
  
@@ -216,8 +216,8 @@
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
---- oscam-svn/Makefile	2020-09-23 22:18:26.000000000 +0200
-+++ oscam-svn/Makefile	2020-09-23 22:57:35.768431210 +0200
+--- Makefile	2020-09-23 22:18:26.000000000 +0200
++++ Makefile	2020-09-23 22:57:35.768431210 +0200
 @@ -65,6 +65,13 @@
  
  LDFLAGS = -Wl,--gc-sections
@@ -272,8 +272,8 @@
  	@-printf "\
  +-------------------------------------------------------------------------------\n\
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
---- oscam-svn/module-dvbapi.c	2020-09-23 22:18:26.000000000 +0200
-+++ oscam-svn/module-dvbapi.c	2020-09-23 22:57:35.772490349 +0200
+--- module-dvbapi.c	2020-09-23 22:18:26.000000000 +0200
++++ module-dvbapi.c	2020-09-23 22:57:35.772490349 +0200
 @@ -2644,6 +2644,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
  	er->pmtpid = demux[demux_id].pmtpid;
@@ -317,8 +317,8 @@
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
---- oscam-svn/module-emulator-biss.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-biss.c	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-biss.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-biss.c	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,894 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -1214,8 +1214,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-biss.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-biss.h	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-biss.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-biss.h	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,22 @@
 +#ifndef MODULE_EMULATOR_BISS_H
 +#define MODULE_EMULATOR_BISS_H
@@ -1239,8 +1239,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_BISS_H
---- oscam-svn/module-emulator.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator.c	2020-09-23 22:57:35.776549489 +0200
+--- module-emulator.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator.c	2020-09-23 22:57:35.776549489 +0200
 @@ -0,0 +1,904 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -2146,8 +2146,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-cryptoworks.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-cryptoworks.c	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-cryptoworks.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-cryptoworks.c	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,688 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -2837,8 +2837,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-cryptoworks.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-cryptoworks.h	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-cryptoworks.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-cryptoworks.h	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,10 @@
 +#ifndef MODULE_EMULATOR_CRYPTOWORKS_H
 +#define MODULE_EMULATOR_CRYPTOWORKS_H
@@ -2850,8 +2850,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_CRYPTOWORKS_H
---- oscam-svn/module-emulator-director.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-director.c	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-director.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-director.c	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,642 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -3495,8 +3495,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-director.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-director.h	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-director.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-director.h	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,11 @@
 +#ifndef MODULE_EMULATOR_DIRECTOR_H
 +#define MODULE_EMULATOR_DIRECTOR_H
@@ -3509,8 +3509,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_DIRECTOR_H
---- oscam-svn/module-emulator-irdeto.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-irdeto.c	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-irdeto.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-irdeto.c	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,602 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -4114,8 +4114,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-irdeto.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-irdeto.h	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-irdeto.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-irdeto.h	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,15 @@
 +#ifndef MODULE_EMULATOR_IRDETO_H
 +#define MODULE_EMULATOR_IRDETO_H
@@ -4132,8 +4132,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_IRDETO_H
---- oscam-svn/module-emulator-nagravision.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-nagravision.c	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-nagravision.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-nagravision.c	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,376 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -4511,8 +4511,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-nagravision.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-nagravision.h	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-nagravision.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-nagravision.h	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,10 @@
 +#ifndef MODULE_EMULATOR_NAGRAVISION_H
 +#define MODULE_EMULATOR_NAGRAVISION_H
@@ -4524,8 +4524,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_NAGRAVISION_H
---- oscam-svn/module-emulator-osemu.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-osemu.c	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-osemu.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-osemu.c	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,972 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -5499,8 +5499,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-osemu.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-osemu.h	2020-09-23 22:57:35.772490349 +0200
+--- module-emulator-osemu.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-osemu.h	2020-09-23 22:57:35.772490349 +0200
 @@ -0,0 +1,95 @@
 +#ifndef MODULE_EMULATOR_OSEMU_H_
 +#define MODULE_EMULATOR_OSEMU_H_
@@ -5597,8 +5597,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_H_
---- oscam-svn/module-emulator-powervu.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-powervu.c	2020-09-23 22:57:35.776549489 +0200
+--- module-emulator-powervu.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-powervu.c	2020-09-23 22:57:35.776549489 +0200
 @@ -0,0 +1,2691 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -8291,8 +8291,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-powervu.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-powervu.h	2020-09-23 22:57:35.776549489 +0200
+--- module-emulator-powervu.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-powervu.h	2020-09-23 22:57:35.776549489 +0200
 @@ -0,0 +1,59 @@
 +#ifndef MODULE_EMULATOR_POWERVU_H
 +#define MODULE_EMULATOR_POWERVU_H
@@ -8353,8 +8353,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_POWERVU_H
---- oscam-svn/module-emulator-streamserver.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-streamserver.c	2020-09-23 22:57:35.776549489 +0200
+--- module-emulator-streamserver.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-streamserver.c	2020-09-23 22:57:35.776549489 +0200
 @@ -0,0 +1,1802 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -10158,8 +10158,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-streamserver.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-streamserver.h	2020-09-23 22:57:35.776549489 +0200
+--- module-emulator-streamserver.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-streamserver.h	2020-09-23 22:57:35.776549489 +0200
 @@ -0,0 +1,90 @@
 +#ifndef MODULE_EMULATOR_STREAMSERVER_H_
 +#define MODULE_EMULATOR_STREAMSERVER_H_
@@ -10251,8 +10251,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_STREAMSERVER_H_
---- oscam-svn/module-emulator-viaccess.c	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-viaccess.c	2020-09-23 22:57:35.776549489 +0200
+--- module-emulator-viaccess.c	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-viaccess.c	2020-09-23 22:57:35.776549489 +0200
 @@ -0,0 +1,1183 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -11437,8 +11437,8 @@
 +}
 +
 +#endif // WITH_EMU
---- oscam-svn/module-emulator-viaccess.h	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/module-emulator-viaccess.h	2020-09-23 22:57:35.776549489 +0200
+--- module-emulator-viaccess.h	1970-01-01 01:00:00.000000000 +0100
++++ module-emulator-viaccess.h	2020-09-23 22:57:35.776549489 +0200
 @@ -0,0 +1,11 @@
 +#ifndef MODULE_EMULATOR_VIACCESS_H
 +#define MODULE_EMULATOR_VIACCESS_H
@@ -11451,8 +11451,8 @@
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_VIACCESS_H
---- oscam-svn/oscam.c	2020-09-23 22:18:25.000000000 +0200
-+++ oscam-svn/oscam.c	2020-09-23 22:57:35.776549489 +0200
+--- oscam.c	2020-09-23 22:18:25.000000000 +0200
++++ oscam.c	2020-09-23 22:57:35.776549489 +0200
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
  #include "module-gbox.h"
@@ -11494,13 +11494,13 @@
  	webif_close();
  	azbox_close();
  	coolapi_close_all();
---- oscam-svn/.travis.yml	1970-01-01 01:00:00.000000000 +0100
-+++ oscam-svn/.travis.yml	2020-09-23 22:57:35.768431210 +0200
+--- .travis.yml	1970-01-01 01:00:00.000000000 +0100
++++ .travis.yml	2020-09-23 22:57:35.768431210 +0200
 @@ -0,0 +1,2 @@
 +language: cpp
 +script: ./config.sh -E all && make
---- oscam-svn/webif/config/dvbapi.html	2020-09-23 22:18:24.000000000 +0200
-+++ oscam-svn/webif/config/dvbapi.html	2020-09-23 22:57:35.776549489 +0200
+--- webif/config/dvbapi.html	2020-09-23 22:18:24.000000000 +0200
++++ webif/config/dvbapi.html	2020-09-23 22:57:35.776549489 +0200
 @@ -56,7 +56,7 @@
  			</TD>
  		</TR>
