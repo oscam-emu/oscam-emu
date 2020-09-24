@@ -1994,7 +1994,7 @@
 +		if (cfg.emu_stream_source_auth_user && cfg.emu_stream_source_auth_password)
 +		{
 +			snprintf(authtmp, sizeof(authtmp), "%s:%s", cfg.emu_stream_source_auth_user, cfg.emu_stream_source_auth_password);
-+			b64encode(authtmp, strlen(authtmp), &emu_stream_source_auth);
++			b64encode(authtmp, cs_strlen(authtmp), &emu_stream_source_auth);
 +		}
 +		else
 +		{
@@ -4641,7 +4641,7 @@
 +		free(emu_keyfile_path);
 +	}
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	emu_keyfile_path = (char *)malloc(pathLength + 1);
 +	if (emu_keyfile_path == NULL)
 +	{
@@ -4693,12 +4693,12 @@
 +	char line[1200], dateText[100], filename[EMU_KEY_FILENAME_MAX_LEN + 1];
 +	char *path, *filepath, *keyValue;
 +	uint32_t pathLength;
-+	uint8_t fileNameLen = strlen(EMU_KEY_FILENAME);
++	uint8_t fileNameLen = cs_strlen(EMU_KEY_FILENAME);
 +	struct dirent *pDirent;
 +	DIR *pDir;
 +	FILE *file = NULL;
 +
-+	pathLength = strlen(emu_keyfile_path);
++	pathLength = cs_strlen(emu_keyfile_path);
 +	path = (char *)malloc(pathLength + 1);
 +	if (path == NULL)
 +	{
@@ -4706,14 +4706,14 @@
 +	}
 +	cs_strncpy(path, emu_keyfile_path, pathLength + 1);
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	if (pathLength >= fileNameLen && strcasecmp(path + pathLength - fileNameLen, EMU_KEY_FILENAME) == 0)
 +	{
 +		// cut file name
 +		path[pathLength - fileNameLen] = '\0';
 +	}
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	if (path[pathLength - 1] == '/' || path[pathLength - 1] == '\\')
 +	{
 +		// cut trailing /
@@ -4743,7 +4743,7 @@
 +		cs_strncpy(filename, EMU_KEY_FILENAME, sizeof(filename));
 +	}
 +
-+	pathLength = strlen(path) + 1 + strlen(filename) + 1;
++	pathLength = cs_strlen(path) + 1 + cs_strlen(filename) + 1;
 +	filepath = (char *)malloc(pathLength);
 +	if (filepath == NULL)
 +	{
@@ -4787,7 +4787,7 @@
 +
 +	free(keyValue);
 +
-+	fwrite(line, strlen(line), 1, file);
++	fwrite(line, cs_strlen(line), 1, file);
 +	fclose(file);
 +}
 +
@@ -4818,7 +4818,7 @@
 +		}
 +
 +		// All keyNames should have a length of 8 after converting
-+		if (strlen(keyName) != 8)
++		if (cs_strlen(keyName) != 8)
 +		{
 +			cs_log("WARNING: Wrong key format in %s: F %08X %s", EMU_KEY_FILENAME, provider, keyName);
 +			return 0;
@@ -4916,7 +4916,7 @@
 +			newKeyData->identifier = identifier;
 +			newKeyData->provider = provider;
 +
-+			if (strlen(keyName) < EMU_MAX_CHAR_KEYNAME)
++			if (cs_strlen(keyName) < EMU_MAX_CHAR_KEYNAME)
 +			{
 +				cs_strncpy(newKeyData->keyName, keyName, EMU_MAX_CHAR_KEYNAME);
 +			}
@@ -5003,7 +5003,7 @@
 +	KeyDB->EmuKeys[KeyDB->keyCount].identifier = identifier;
 +	KeyDB->EmuKeys[KeyDB->keyCount].provider = provider;
 +
-+	if (strlen(keyName) < EMU_MAX_CHAR_KEYNAME)
++	if (cs_strlen(keyName) < EMU_MAX_CHAR_KEYNAME)
 +	{
 +		cs_strncpy(KeyDB->EmuKeys[KeyDB->keyCount].keyName, keyName, EMU_MAX_CHAR_KEYNAME);
 +	}
@@ -5221,13 +5221,13 @@
 +	char line[1200], keyName[EMU_MAX_CHAR_KEYNAME], keyString[1026], identifier;
 +	char *path, *filepath, filename[EMU_KEY_FILENAME_MAX_LEN + 1];
 +	uint32_t pathLength, provider, keyLength;
-+	uint8_t fileNameLen = strlen(EMU_KEY_FILENAME);
++	uint8_t fileNameLen = cs_strlen(EMU_KEY_FILENAME);
 +	uint8_t *key;
 +	struct dirent *pDirent;
 +	DIR *pDir;
 +	FILE *file = NULL;
 +
-+	pathLength = strlen(opath);
++	pathLength = cs_strlen(opath);
 +	path = (char *)malloc(pathLength + 1);
 +	if (path == NULL)
 +	{
@@ -5235,14 +5235,14 @@
 +	}
 +	cs_strncpy(path, opath, pathLength + 1);
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	if (pathLength >= fileNameLen && strcasecmp(path + pathLength - fileNameLen, EMU_KEY_FILENAME) == 0)
 +	{
 +		// cut file name
 +		path[pathLength - fileNameLen] = '\0';
 +	}
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	if (path[pathLength - 1] == '/' || path[pathLength - 1] == '\\')
 +	{
 +		// cut trailing /
@@ -5274,7 +5274,7 @@
 +		return 0;
 +	}
 +
-+	pathLength = strlen(path) + 1 + strlen(filename) + 1;
++	pathLength = cs_strlen(path) + 1 + cs_strlen(filename) + 1;
 +	filepath = (char *)malloc(pathLength);
 +	if (filepath == NULL)
 +	{
@@ -5302,7 +5302,7 @@
 +			continue;
 +		}
 +
-+		keyLength = strlen(keyString) / 2;
++		keyLength = cs_strlen(keyString) / 2;
 +		key = (uint8_t *)malloc(keyLength);
 +		if (key == NULL)
 +		{
@@ -5310,7 +5310,7 @@
 +			return 0;
 +		}
 +
-+		if (char_to_bin(key, keyString, strlen(keyString))) // Conversion OK
++		if (char_to_bin(key, keyString, cs_strlen(keyString))) // Conversion OK
 +		{
 +			emu_set_key(identifier, provider, keyName, key, keyLength, 0, NULL, rdr);
 +		}
@@ -5360,7 +5360,7 @@
 +			continue;
 +		}
 +
-+		keyLength = strlen(keyString) / 2;
++		keyLength = cs_strlen(keyString) / 2;
 +
 +		key = (uint8_t *)malloc(keyLength);
 +		if (key == NULL)
@@ -5369,7 +5369,7 @@
 +			return;
 +		}
 +
-+		if (char_to_bin(key, keyString, strlen(keyString))) // Conversion OK
++		if (char_to_bin(key, keyString, cs_strlen(keyString))) // Conversion OK
 +		{
 +			emu_set_key(identifier, provider, keyName, key, keyLength, 0, NULL, rdr);
 +		}
@@ -8190,7 +8190,7 @@
 +				continue;
 +			}
 +
-+			length = strlen(KeyDB->EmuKeys[j].keyName);
++			length = cs_strlen(KeyDB->EmuKeys[j].keyName);
 +
 +			if (length < 3)
 +			{
@@ -8256,7 +8256,7 @@
 +			continue;
 +		}
 +
-+		length = strlen(KeyDB->EmuKeys[i].keyName);
++		length = cs_strlen(KeyDB->EmuKeys[i].keyName);
 +
 +		if (length < 3)
 +		{
@@ -9627,7 +9627,7 @@
 +				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port);
 +	}
 +
-+	if (send(streamfd, http_buf, strlen(http_buf), 0) == -1)
++	if (send(streamfd, http_buf, cs_strlen(http_buf), 0) == -1)
 +	{
 +		return -1;
 +	}
@@ -9768,7 +9768,7 @@
 +				conndata->connid, data->srvid, data->tsid, data->onid, data->ens);
 +
 +	snprintf(http_buf, 1024, "HTTP/1.0 200 OK\nConnection: Close\nContent-Type: video/mpeg\nServer: stream_enigma2\n\n");
-+	clientStatus = send(conndata->connfd, http_buf, strlen(http_buf), 0);
++	clientStatus = send(conndata->connfd, http_buf, cs_strlen(http_buf), 0);
 +
 +	data->connid = conndata->connid;
 +	data->caid = NO_CAID_VALUE;
