@@ -7,7 +7,7 @@ Index: .travis.yml
 +script: ./config.sh -E all && make
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11581)
+--- CMakeLists.txt	(revision 11666)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -115,7 +115,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11581)
+--- Makefile	(revision 11666)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -173,7 +173,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11581)
+--- config.h	(revision 11666)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -186,17 +186,17 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11581)
+--- config.sh	(revision 11666)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
-+addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM"
+-addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -25,6 +25,8 @@
+@@ -26,6 +26,8 @@
  # CONFIG_LEDSUPPORT=n
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
@@ -205,7 +205,7 @@ Index: config.sh
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -292,12 +294,15 @@
+@@ -293,13 +295,16 @@
  
  update_deps() {
  	# Calculate dependencies
@@ -217,13 +217,14 @@ Index: config.sh
  	disabled WEBIF && disable_opt WEBIF_JQUERY >/dev/null
  	enabled MODULE_CCCSHARE && enable_opt MODULE_CCCAM >/dev/null
  	enabled_any CARDREADER_DB2COM CARDREADER_MP35 CARDREADER_SC8IN1 CARDREADER_STINGER && enable_opt CARDREADER_PHOENIX >/dev/null
+ 	enabled CS_CACHEEX_AIO && enable_opt CS_CACHEEX >/dev/null
 +	enabled WITH_EMU && enable_opt READER_VIACCESS >/dev/null
 +	enabled WITH_EMU && enable_opt MODULE_NEWCAMD >/dev/null
 +	disabled WITH_EMU && disable_opt WITH_SOFTCAM >/dev/null
  }
  
  list_config() {
-@@ -347,9 +352,9 @@
+@@ -349,9 +354,9 @@
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -236,7 +237,7 @@ Index: config.sh
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -465,6 +470,8 @@
+@@ -468,6 +473,8 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
@@ -245,7 +246,7 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
-@@ -701,9 +708,19 @@
+@@ -704,9 +711,19 @@
  		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
  		if [ "$revision" = "0" ]
  		then
@@ -272,9 +273,9 @@ old mode 100644
 new mode 100755
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11581)
+--- globals.h	(revision 11666)
 +++ globals.h	(working copy)
-@@ -388,7 +388,7 @@
+@@ -393,7 +393,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
  
  // Support for multiple CWs per channel and other encryption algos
@@ -283,7 +284,7 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1792,6 +1792,7 @@
+@@ -1856,6 +1856,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -293,9 +294,9 @@ Index: globals.h
  	LLIST			*emmstat;						// emm stats
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11581)
+--- module-dvbapi.c	(revision 11666)
 +++ module-dvbapi.c	(working copy)
-@@ -2632,6 +2632,8 @@
+@@ -2644,6 +2644,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
  	er->pmtpid = demux[demux_id].pmtpid;
  	er->onid   = demux[demux_id].onid;
@@ -304,7 +305,7 @@ Index: module-dvbapi.c
  	er->msgid  = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2679,19 +2681,30 @@
+@@ -2691,19 +2693,30 @@
  		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_fixed(demux[demux_id].ECMpids[pid].CAID))
  		{
  			int32_t j, n;
@@ -11512,7 +11513,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11581)
+--- oscam.c	(revision 11666)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11526,7 +11527,7 @@ Index: oscam.c
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -427,6 +432,8 @@
+@@ -437,6 +442,8 @@
  		case CLOCK_TYPE_MONOTONIC: write_conf(CLOCKFIX, "Clockfix with monotonic clock"); break;
  	}
  	write_conf(IPV6SUPPORT, "IPv6 support");
@@ -11535,7 +11536,7 @@ Index: oscam.c
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1818,6 +1825,9 @@
+@@ -1834,6 +1841,9 @@
  
  	init_sidtab();
  	init_readerdb();
@@ -11545,7 +11546,7 @@ Index: oscam.c
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
-@@ -1905,6 +1915,9 @@
+@@ -1921,6 +1931,9 @@
  if(!cfg.gsms_dis)
  	{ stop_sms_sender(); }
  #endif
@@ -11557,7 +11558,7 @@ Index: oscam.c
  	coolapi_close_all();
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11581)
+--- webif/config/dvbapi.html	(revision 11666)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -56,7 +56,7 @@
  			</TD>
