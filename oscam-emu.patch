@@ -7,7 +7,7 @@ Index: .travis.yml
 +script: ./config.sh -E all && make
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11666)
+--- CMakeLists.txt	(revision 11684)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -115,7 +115,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11666)
+--- Makefile	(revision 11684)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -173,7 +173,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11666)
+--- config.h	(revision 11684)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -186,7 +186,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11666)
+--- config.sh	(revision 11684)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -228,10 +228,10 @@ Index: config.sh
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
--	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA_MERLIN READER_VIDEOGUARD && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+-	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA READER_NAGRA_MERLIN READER_VIDEOGUARD READER_CONAX && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 -	enabled_any MODULE_CCCAM READER_NAGRA READER_NAGRA_MERLIN READER_SECA && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 -	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA READER_NAGRA_MERLIN && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
-+	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA_MERLIN READER_VIDEOGUARD WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
++	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA READER_NAGRA_MERLIN READER_VIDEOGUARD READER_CONAX WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
 +	enabled_any MODULE_CCCAM READER_NAGRA READER_NAGRA_MERLIN READER_SECA WITH_EMU && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
 +	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA READER_NAGRA_MERLIN WITH_EMU && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
@@ -273,7 +273,7 @@ old mode 100644
 new mode 100755
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11666)
+--- globals.h	(revision 11684)
 +++ globals.h	(working copy)
 @@ -393,7 +393,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -284,7 +284,7 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1856,6 +1856,7 @@
+@@ -1858,6 +1858,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -294,7 +294,7 @@ Index: globals.h
  	LLIST			*emmstat;						// emm stats
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11666)
+--- module-dvbapi.c	(revision 11684)
 +++ module-dvbapi.c	(working copy)
 @@ -2644,6 +2644,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
@@ -343,7 +343,7 @@ Index: module-emulator-biss.c
 ===================================================================
 --- module-emulator-biss.c	(nonexistent)
 +++ module-emulator-biss.c	(working copy)
-@@ -0,0 +1,894 @@
+@@ -0,0 +1,883 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -652,17 +652,6 @@ Index: module-emulator-biss.c
 +	return 0;
 +}
 +
-+static int8_t is_valid_tsid_onid(uint16_t tsid, uint16_t onid)
-+{
-+	// tsid and onid form a valid provider as long as they
-+	// are not 0x0000, or any combination of 0x0001 and 0xFFFF.
-+
-+	if (!tsid || !onid) return 0;
-+	if ((tsid == 0x0001 || tsid == 0xFFFF) && (onid == 0x0001 || onid == 0xFFFF)) return 0;
-+
-+	return 1;
-+}
-+
 +static int8_t get_sw(uint32_t provider, uint8_t *sw, uint8_t sw_length, int8_t dateCoded, int8_t printMsg)
 +{
 +	// If date-coded keys are enabled in the webif, this function evaluates the expiration date
@@ -787,7 +776,7 @@ Index: module-emulator-biss.c
 +			if (get_sw(hash, sw, sw_length, rdr->emu_datecodedenabled, i == 0 ? 2 : 1)) // Do not print "key not found" for frequency off by 1, 2
 +			{
 +				memcpy(sw + sw_length, sw, sw_length);
-+				return 0;
++				return EMU_OK;
 +			}
 +
 +			if (i == 0) // No key found matching our hash: create example SoftCam.Key BISS line for the live log
@@ -810,20 +799,20 @@ Index: module-emulator-biss.c
 +		if (get_sw(hash, sw, sw_length, rdr->emu_datecodedenabled, 2))
 +		{
 +			memcpy(sw + sw_length, sw, sw_length);
-+			return 0;
++			return EMU_OK;
 +		}
 +
 +		// No key found matching our hash: create example SoftCam.Key BISS line for the live log
 +		annotate(tmp_buffer3, sizeof(tmp_buffer3), ecm_copy, ecm_len, hash, 0, rdr->emu_datecodedenabled);
 +	}
 +
-+	// 3. Valid [tsid] [onid] combination
-+	if (is_valid_tsid_onid(tsid, onid))
++	// 3. Valid [tsid] [onid] combination (per enigma2)
++	if (onid != 0 && (onid != 1 || tsid >= 2) && onid < 0xFF00)
 +	{
 +		if (get_sw(tsid << 16 | onid, sw, sw_length, 0, 2))
 +		{
 +			memcpy(sw + sw_length, sw, sw_length);
-+			return 0;
++			return EMU_OK;
 +		}
 +	}
 +
@@ -842,7 +831,7 @@ Index: module-emulator-biss.c
 +		if (get_sw((srvid << 16) | pid, sw, sw_length, 0, 2))
 +		{
 +			memcpy(sw + sw_length, sw, sw_length);
-+			return 0;
++			return EMU_OK;
 +		}
 +	}
 +
@@ -850,7 +839,7 @@ Index: module-emulator-biss.c
 +	if (get_sw((srvid << 16) | ecm_pid, sw, sw_length, 0, 2))
 +	{
 +		memcpy(sw + sw_length, sw, sw_length);
-+		return 0;
++		return EMU_OK;
 +	}
 +
 +	// 6. Default BISS key for events with many feeds sharing the same session word
@@ -860,7 +849,7 @@ Index: module-emulator-biss.c
 +		memcpy(sw + sw_length, sw, sw_length);
 +		cs_hexdump(0, sw, sw_length, tmp_buffer1, sizeof(tmp_buffer1));
 +		cs_log("No specific match found. Using 'All Feeds' key: %s", tmp_buffer1);
-+		return 0;
++		return EMU_OK;
 +	}
 +
 +	// Print example key lines for available hash search methods, if no key is found
@@ -870,7 +859,7 @@ Index: module-emulator-biss.c
 +	// Check if universal hash is common and warn user
 +	if (is_common_hash(hash)) cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
 +
-+	return 2;
++	return EMU_KEY_NOT_FOUND;
 +}
 +
 +static inline int8_t get_ecm_key(uint16_t onid, uint16_t esid, uint8_t parity, uint8_t *key)
@@ -3778,7 +3767,7 @@ Index: module-emulator-osemu.c
 +		free(emu_keyfile_path);
 +	}
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	emu_keyfile_path = (char *)malloc(pathLength + 1);
 +	if (emu_keyfile_path == NULL)
 +	{
@@ -3830,12 +3819,12 @@ Index: module-emulator-osemu.c
 +	char line[1200], dateText[100], filename[EMU_KEY_FILENAME_MAX_LEN + 1];
 +	char *path, *filepath, *keyValue;
 +	uint32_t pathLength;
-+	uint8_t fileNameLen = strlen(EMU_KEY_FILENAME);
++	uint8_t fileNameLen = cs_strlen(EMU_KEY_FILENAME);
 +	struct dirent *pDirent;
 +	DIR *pDir;
 +	FILE *file = NULL;
 +
-+	pathLength = strlen(emu_keyfile_path);
++	pathLength = cs_strlen(emu_keyfile_path);
 +	path = (char *)malloc(pathLength + 1);
 +	if (path == NULL)
 +	{
@@ -3843,14 +3832,14 @@ Index: module-emulator-osemu.c
 +	}
 +	cs_strncpy(path, emu_keyfile_path, pathLength + 1);
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	if (pathLength >= fileNameLen && strcasecmp(path + pathLength - fileNameLen, EMU_KEY_FILENAME) == 0)
 +	{
 +		// cut file name
 +		path[pathLength - fileNameLen] = '\0';
 +	}
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	if (path[pathLength - 1] == '/' || path[pathLength - 1] == '\\')
 +	{
 +		// cut trailing /
@@ -3880,7 +3869,7 @@ Index: module-emulator-osemu.c
 +		cs_strncpy(filename, EMU_KEY_FILENAME, sizeof(filename));
 +	}
 +
-+	pathLength = strlen(path) + 1 + strlen(filename) + 1;
++	pathLength = cs_strlen(path) + 1 + cs_strlen(filename) + 1;
 +	filepath = (char *)malloc(pathLength);
 +	if (filepath == NULL)
 +	{
@@ -3924,7 +3913,7 @@ Index: module-emulator-osemu.c
 +
 +	free(keyValue);
 +
-+	fwrite(line, strlen(line), 1, file);
++	fwrite(line, cs_strlen(line), 1, file);
 +	fclose(file);
 +}
 +
@@ -3955,7 +3944,7 @@ Index: module-emulator-osemu.c
 +		}
 +
 +		// All keyNames should have a length of 8 after converting
-+		if (strlen(keyName) != 8)
++		if (cs_strlen(keyName) != 8)
 +		{
 +			cs_log("WARNING: Wrong key format in %s: F %08X %s", EMU_KEY_FILENAME, provider, keyName);
 +			return 0;
@@ -4053,7 +4042,7 @@ Index: module-emulator-osemu.c
 +			newKeyData->identifier = identifier;
 +			newKeyData->provider = provider;
 +
-+			if (strlen(keyName) < EMU_MAX_CHAR_KEYNAME)
++			if (cs_strlen(keyName) < EMU_MAX_CHAR_KEYNAME)
 +			{
 +				cs_strncpy(newKeyData->keyName, keyName, EMU_MAX_CHAR_KEYNAME);
 +			}
@@ -4140,7 +4129,7 @@ Index: module-emulator-osemu.c
 +	KeyDB->EmuKeys[KeyDB->keyCount].identifier = identifier;
 +	KeyDB->EmuKeys[KeyDB->keyCount].provider = provider;
 +
-+	if (strlen(keyName) < EMU_MAX_CHAR_KEYNAME)
++	if (cs_strlen(keyName) < EMU_MAX_CHAR_KEYNAME)
 +	{
 +		cs_strncpy(KeyDB->EmuKeys[KeyDB->keyCount].keyName, keyName, EMU_MAX_CHAR_KEYNAME);
 +	}
@@ -4358,13 +4347,13 @@ Index: module-emulator-osemu.c
 +	char line[1200], keyName[EMU_MAX_CHAR_KEYNAME], keyString[1026], identifier;
 +	char *path, *filepath, filename[EMU_KEY_FILENAME_MAX_LEN + 1];
 +	uint32_t pathLength, provider, keyLength;
-+	uint8_t fileNameLen = strlen(EMU_KEY_FILENAME);
++	uint8_t fileNameLen = cs_strlen(EMU_KEY_FILENAME);
 +	uint8_t *key;
 +	struct dirent *pDirent;
 +	DIR *pDir;
 +	FILE *file = NULL;
 +
-+	pathLength = strlen(opath);
++	pathLength = cs_strlen(opath);
 +	path = (char *)malloc(pathLength + 1);
 +	if (path == NULL)
 +	{
@@ -4372,14 +4361,14 @@ Index: module-emulator-osemu.c
 +	}
 +	cs_strncpy(path, opath, pathLength + 1);
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	if (pathLength >= fileNameLen && strcasecmp(path + pathLength - fileNameLen, EMU_KEY_FILENAME) == 0)
 +	{
 +		// cut file name
 +		path[pathLength - fileNameLen] = '\0';
 +	}
 +
-+	pathLength = strlen(path);
++	pathLength = cs_strlen(path);
 +	if (path[pathLength - 1] == '/' || path[pathLength - 1] == '\\')
 +	{
 +		// cut trailing /
@@ -4411,7 +4400,7 @@ Index: module-emulator-osemu.c
 +		return 0;
 +	}
 +
-+	pathLength = strlen(path) + 1 + strlen(filename) + 1;
++	pathLength = cs_strlen(path) + 1 + cs_strlen(filename) + 1;
 +	filepath = (char *)malloc(pathLength);
 +	if (filepath == NULL)
 +	{
@@ -4439,7 +4428,7 @@ Index: module-emulator-osemu.c
 +			continue;
 +		}
 +
-+		keyLength = strlen(keyString) / 2;
++		keyLength = cs_strlen(keyString) / 2;
 +		key = (uint8_t *)malloc(keyLength);
 +		if (key == NULL)
 +		{
@@ -4447,7 +4436,7 @@ Index: module-emulator-osemu.c
 +			return 0;
 +		}
 +
-+		if (char_to_bin(key, keyString, strlen(keyString))) // Conversion OK
++		if (char_to_bin(key, keyString, cs_strlen(keyString))) // Conversion OK
 +		{
 +			emu_set_key(identifier, provider, keyName, key, keyLength, 0, NULL, rdr);
 +		}
@@ -4497,7 +4486,7 @@ Index: module-emulator-osemu.c
 +			continue;
 +		}
 +
-+		keyLength = strlen(keyString) / 2;
++		keyLength = cs_strlen(keyString) / 2;
 +
 +		key = (uint8_t *)malloc(keyLength);
 +		if (key == NULL)
@@ -4506,7 +4495,7 @@ Index: module-emulator-osemu.c
 +			return;
 +		}
 +
-+		if (char_to_bin(key, keyString, strlen(keyString))) // Conversion OK
++		if (char_to_bin(key, keyString, cs_strlen(keyString))) // Conversion OK
 +		{
 +			emu_set_key(identifier, provider, keyName, key, keyLength, 0, NULL, rdr);
 +		}
@@ -6994,7 +6983,7 @@ Index: module-emulator-powervu.c
 +		0xF0, 0xA8, 0x49, 0xFB, 0x79, 0x6C, 0xAF, 0xB0
 +	};
 +
-+	memcpy(data + 0x28, padding, 0x18);
++	memcpy(data + 40, padding, 24);
 +
 +	for (i = 0; i < 5; i++)
 +	{
@@ -7078,7 +7067,7 @@ Index: module-emulator-powervu.c
 +static void unmask_emm(uint8_t *emm)
 +{
 +	uint32_t crc, i, l;
-+	uint8_t hashModeEmm, modeUnmask, data[30], mask[16];
++	uint8_t hashModeEmm, modeUnmask, data[64], mask[16];
 +
 +	uint8_t sourcePos[] =
 +	{
@@ -7331,7 +7320,7 @@ Index: module-emulator-powervu.c
 +				continue;
 +			}
 +
-+			length = strlen(KeyDB->EmuKeys[j].keyName);
++			length = cs_strlen(KeyDB->EmuKeys[j].keyName);
 +
 +			if (length < 3)
 +			{
@@ -7397,7 +7386,7 @@ Index: module-emulator-powervu.c
 +			continue;
 +		}
 +
-+		length = strlen(KeyDB->EmuKeys[i].keyName);
++		length = cs_strlen(KeyDB->EmuKeys[i].keyName);
 +
 +		if (length < 3)
 +		{
@@ -8772,7 +8761,7 @@ Index: module-emulator-streamserver.c
 +				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port);
 +	}
 +
-+	if (send(streamfd, http_buf, strlen(http_buf), 0) == -1)
++	if (send(streamfd, http_buf, cs_strlen(http_buf), 0) == -1)
 +	{
 +		return -1;
 +	}
@@ -8913,7 +8902,7 @@ Index: module-emulator-streamserver.c
 +				conndata->connid, data->srvid, data->tsid, data->onid, data->ens);
 +
 +	snprintf(http_buf, 1024, "HTTP/1.0 200 OK\nConnection: Close\nContent-Type: video/mpeg\nServer: stream_enigma2\n\n");
-+	clientStatus = send(conndata->connfd, http_buf, strlen(http_buf), 0);
++	clientStatus = send(conndata->connfd, http_buf, cs_strlen(http_buf), 0);
 +
 +	data->connid = conndata->connid;
 +	data->caid = NO_CAID_VALUE;
@@ -11359,7 +11348,7 @@ Index: module-emulator.c
 +		if (cfg.emu_stream_source_auth_user && cfg.emu_stream_source_auth_password)
 +		{
 +			snprintf(authtmp, sizeof(authtmp), "%s:%s", cfg.emu_stream_source_auth_user, cfg.emu_stream_source_auth_password);
-+			b64encode(authtmp, strlen(authtmp), &emu_stream_source_auth);
++			b64encode(authtmp, cs_strlen(authtmp), &emu_stream_source_auth);
 +		}
 +		else
 +		{
@@ -11513,7 +11502,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11666)
+--- oscam.c	(revision 11684)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11558,7 +11547,7 @@ Index: oscam.c
  	coolapi_close_all();
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11666)
+--- webif/config/dvbapi.html	(revision 11684)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -56,7 +56,7 @@
  			</TD>
