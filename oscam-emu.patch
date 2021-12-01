@@ -1,13 +1,6 @@
-Index: .travis.yml
-===================================================================
---- .travis.yml	(nonexistent)
-+++ .travis.yml	(working copy)
-@@ -0,0 +1,2 @@
-+language: cpp
-+script: ./config.sh -E all && make
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11693)
+--- CMakeLists.txt	(revision 11704)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -115,7 +108,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11693)
+--- Makefile	(revision 11704)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -173,7 +166,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11693)
+--- config.h	(revision 11704)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -186,7 +179,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11693)
+--- config.sh	(revision 11704)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -268,12 +261,9 @@ Index: config.sh
  		break
  	;;
  	'-O'|'--detect-osx-sdk-version')
-Index: git-svn-diff.sh
-old mode 100644
-new mode 100755
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11693)
+--- globals.h	(revision 11704)
 +++ globals.h	(working copy)
 @@ -393,7 +393,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -294,7 +284,7 @@ Index: globals.h
  	LLIST			*emmstat;						// emm stats
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11693)
+--- module-dvbapi.c	(revision 11704)
 +++ module-dvbapi.c	(working copy)
 @@ -2643,6 +2643,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
@@ -11537,7 +11527,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11693)
+--- oscam.c	(revision 11704)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11582,7 +11572,7 @@ Index: oscam.c
  	coolapi_close_all();
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11693)
+--- webif/config/dvbapi.html	(revision 11704)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -56,7 +56,7 @@
  			</TD>
