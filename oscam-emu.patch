@@ -10620,7 +10620,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,904 @@
+@@ -0,0 +1,905 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -11470,13 +11470,14 @@ Index: module-emulator.c
 +		cs_strncpy(rdr->device, emuName, sizeof(emuName));
 +
 +		// CAIDs
-+		ctab = strdup("0500,0604,0E00,1010,1801,2600,2602,2610");
++		ctab = strdup("0500,0604,0D00,0E00,1010,1801,2600,2602,2610");
 +		chk_caidtab(ctab, &rdr->ctab);
 +		NULLFREE(ctab);
 +
 +		// Idents
-+		ftab = strdup("0500:000000,007400,007800,021110,023800;"
++		ftab = strdup("0500:020A00,021110;"
 +					  "0604:000000;"
++					  "0D00:0000C0;"
 +					  "0E00:000000;"
 +					  "1010:000000;"
 +					  "1801:000000,001101,002111,007301;"
