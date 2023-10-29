@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11711)
+--- CMakeLists.txt	(revision 11725)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -108,7 +108,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11711)
+--- Makefile	(revision 11725)
 +++ Makefile	(working copy)
 @@ -65,6 +65,13 @@
  
@@ -124,7 +124,7 @@ Index: Makefile
  # The linker for powerpc have bug that prevents --gc-sections from working
  # Check for the linker version and if it matches disable --gc-sections
  # For more information about the bug see:
-@@ -271,6 +278,30 @@
+@@ -276,6 +283,30 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -155,7 +155,7 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -371,7 +402,7 @@
+@@ -376,7 +407,7 @@
  # starts the compilation.
  all:
  	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
@@ -166,7 +166,7 @@ Index: Makefile
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
 Index: config.h
 ===================================================================
---- config.h	(revision 11711)
+--- config.h	(revision 11725)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -179,7 +179,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11711)
+--- config.sh	(revision 11725)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -263,9 +263,9 @@ Index: config.sh
  	'-O'|'--detect-osx-sdk-version')
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11711)
+--- globals.h	(revision 11725)
 +++ globals.h	(working copy)
-@@ -393,7 +393,7 @@
+@@ -396,7 +396,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
  
  // Support for multiple CWs per channel and other encryption algos
@@ -274,7 +274,7 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1861,6 +1861,7 @@
+@@ -1865,6 +1865,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -284,7 +284,7 @@ Index: globals.h
  	LLIST			*emmstat;						// emm stats
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11711)
+--- module-dvbapi.c	(revision 11725)
 +++ module-dvbapi.c	(working copy)
 @@ -2648,6 +2648,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
@@ -11527,7 +11527,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11711)
+--- oscam.c	(revision 11725)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -11541,7 +11541,7 @@ Index: oscam.c
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -437,6 +442,8 @@
+@@ -439,6 +444,8 @@
  		case CLOCK_TYPE_MONOTONIC: write_conf(CLOCKFIX, "Clockfix with monotonic clock"); break;
  	}
  	write_conf(IPV6SUPPORT, "IPv6 support");
@@ -11550,7 +11550,7 @@ Index: oscam.c
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1834,6 +1841,9 @@
+@@ -1836,6 +1843,9 @@
  
  	init_sidtab();
  	init_readerdb();
@@ -11560,7 +11560,7 @@ Index: oscam.c
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
-@@ -1922,6 +1932,9 @@
+@@ -1924,6 +1934,9 @@
  #ifdef MODULE_GBOX
  	stop_gbx_ticker();
  #endif
@@ -11572,7 +11572,7 @@ Index: oscam.c
  	coolapi_close_all();
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11711)
+--- webif/config/dvbapi.html	(revision 11725)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -56,7 +56,7 @@
  			</TD>
