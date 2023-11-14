@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11725)
+--- CMakeLists.txt	(revision 11726)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -117,7 +117,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11725)
+--- Makefile	(revision 11726)
 +++ Makefile	(working copy)
 @@ -58,13 +58,22 @@
  CC_WARN = -W -Wall -Wshadow -Wredundant-decls -Wstrict-prototypes -Wold-style-definition
@@ -195,7 +195,7 @@ Index: Makefile
  
 Index: config.h
 ===================================================================
---- config.h	(revision 11725)
+--- config.h	(revision 11726)
 +++ config.h	(working copy)
 @@ -1,11 +1,14 @@
  #ifndef CONFIG_H_
@@ -224,7 +224,7 @@ Index: config.h
  //#define MODULE_PANDORA 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11725)
+--- config.sh	(revision 11726)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -310,7 +310,7 @@ Index: config.sh
  	'-O'|'--detect-osx-sdk-version')
 Index: ffdecsa/CMakeLists.txt
 ===================================================================
---- ffdecsa/CMakeLists.txt	(revision 11725)
+--- ffdecsa/CMakeLists.txt	(revision 11726)
 +++ ffdecsa/CMakeLists.txt	(working copy)
 @@ -5,4 +5,15 @@
  
@@ -330,7 +330,7 @@ Index: ffdecsa/CMakeLists.txt
  add_library (${lib_name} STATIC ${ffdecsa_srcs} ${ffdecsa_hdrs})
 Index: ffdecsa/ffdecsa.c
 ===================================================================
---- ffdecsa/ffdecsa.c	(revision 11725)
+--- ffdecsa/ffdecsa.c	(revision 11726)
 +++ ffdecsa/ffdecsa.c	(working copy)
 @@ -24,6 +24,7 @@
  #include <stdlib.h>
@@ -551,7 +551,7 @@ Index: ffdecsa/ffdecsa.c
  void get_control_words(void *keys, unsigned char *even, unsigned char *odd){
 Index: ffdecsa/ffdecsa.h
 ===================================================================
---- ffdecsa/ffdecsa.h	(revision 11725)
+--- ffdecsa/ffdecsa.h	(revision 11726)
 +++ ffdecsa/ffdecsa.h	(working copy)
 @@ -47,9 +47,11 @@
  
@@ -653,9 +653,21 @@ Index: ffdecsa/parallel_128_neon.h
 +#include "fftable.h"
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11725)
+--- globals.h	(revision 11726)
 +++ globals.h	(working copy)
-@@ -396,7 +396,7 @@
+@@ -63,11 +63,6 @@
+ # define WITH_LIBCRYPTO 1
+ #endif
+ 
+-/* For deprecated but still needed cryptography functions:
+- * 10002 corresponds to OpenSSL version 1.0.2*/
+-
+-#define OPENSSL_API_COMPAT 10002
+-
+ #if defined(__CYGWIN__) || defined(__arm__) || defined(__SH4__) || defined(__MIPS__) || defined(__MIPSEL__) || defined(__powerpc__)
+ # define CS_LOGFILE "/dev/tty"
+ #endif
+@@ -401,7 +396,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
  
  // Support for multiple CWs per channel and other encryption algos
@@ -664,7 +676,46 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1865,6 +1865,7 @@
+@@ -411,8 +406,6 @@
+ #define MAX_EMM_SIZE			512
+ #endif
+ 
+-#define MAX_CMD_SIZE 0xff + 5  // maximum value from length byte + command header
+-
+ #ifdef WITH_EMU
+ #define CS_EMMCACHESIZE			1024	// nr of EMMs that EMU reader will cache
+ #else
+@@ -905,7 +898,6 @@
+ struct s_client;
+ struct ecm_request_t;
+ struct emm_packet_t;
+-struct cmd_packet_t;
+ struct s_ecm_answer;
+ struct demux_s;
+ 
+@@ -1012,7 +1004,6 @@
+ 	int32_t			(*do_ecm)(struct s_reader *, const struct ecm_request_t *, struct s_ecm_answer *);
+ 	int32_t			(*do_emm_reassembly)(struct s_reader *, struct s_client *, struct emm_packet_t *); // Returns 1/true if the EMM is ready to be written in the card
+ 	int32_t			(*do_emm)(struct s_reader *, struct emm_packet_t *);
+-	int32_t			(*do_rawcmd)(struct s_reader *, struct cmd_packet_t *);
+ 	void			(*post_process)(struct s_reader *);
+ 	int32_t			(*get_emm_type)(struct emm_packet_t *, struct s_reader *);
+ 	int32_t			(*get_emm_filter)(struct s_reader *, struct s_csystem_emm_filter **, uint32_t *);
+@@ -1541,13 +1532,6 @@
+ 	struct s_client *client;
+ } EMM_PACKET;
+ 
+-typedef struct cmd_packet_t
+-{
+-	uint8_t			cmd[MAX_CMD_SIZE];
+-	int16_t			cmdlen;
+-	struct s_client *client;
+-} CMD_PACKET;
+-
+ struct s_reader										// contains device info, reader info and card info
+ {
+ 	uint8_t			keepalive;
+@@ -1881,6 +1865,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -672,7 +723,7 @@ Index: globals.h
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2572,6 +2573,7 @@
+@@ -2588,6 +2573,7 @@
  static inline bool caid_is_viaccess(uint16_t caid) { return caid >> 8 == 0x05; }
  static inline bool caid_is_irdeto(uint16_t caid) { return caid >> 8 == 0x06; }
  static inline bool caid_is_videoguard(uint16_t caid) { return caid >> 8 == 0x09; }
@@ -682,7 +733,7 @@ Index: globals.h
  static inline bool caid_is_powervu(uint16_t caid) { return caid >> 8 == 0x0E; }
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11725)
+--- module-dvbapi.c	(revision 11726)
 +++ module-dvbapi.c	(working copy)
 @@ -11,6 +11,7 @@
  #include "module-dvbapi-coolapi.h"
@@ -3198,11 +3249,13 @@ Index: module-emulator-icam.h
 ===================================================================
 --- module-emulator-icam.h	(nonexistent)
 +++ module-emulator-icam.h	(working copy)
-@@ -0,0 +1,16 @@
+@@ -0,0 +1,18 @@
 +#ifndef MODULE_EMULATOR_ICAM_H
 +#define MODULE_EMULATOR_ICAM_H
 +
 +#ifdef WITH_EMU
++
++#include "module-emulator-streamserver.h"
 +
 +#ifdef MODULE_RADEGAST
 +void icam_close_radegast_connection(void);
@@ -12274,7 +12327,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: module-radegast.c
 ===================================================================
---- module-radegast.c	(revision 11725)
+--- module-radegast.c	(revision 11726)
 +++ module-radegast.c	(working copy)
 @@ -2,11 +2,13 @@
  
@@ -12302,9 +12355,144 @@ Index: module-radegast.c
  		mbuf[1] = 0x12; // len (overall)
  		mbuf[2] = 0x05; // ACCESS
  		mbuf[3] = 0x10; // len
+Index: module-webif.c
+===================================================================
+--- module-webif.c	(revision 11726)
++++ module-webif.c	(working copy)
+@@ -8413,77 +8413,6 @@
+ 			return tpl_getTpl(vars, "APIERROR");
+ 		}
+ 	}
+-	else if(strcmp(getParam(params, "part"), "sendcmd") == 0)
+-	{
+-		if(strcmp(getParam(params, "label"), ""))
+-		{
+-			struct s_reader *rdr = get_reader_by_label(getParam(params, "label"));
+-			if(rdr)
+-			{
+-				char api_msg[150];
+-				CMD_PACKET *cmd_pack = NULL;
+-				if(!cs_malloc(&cmd_pack, sizeof(CMD_PACKET)))
+-				{
+-					tpl_addVar(vars, TPLADD, "APIERRORMESSAGE", "cs_malloc failed!");
+-					return tpl_getTpl(vars, "APIERROR");
+-				}
+-				struct s_client *webif_client = cur_client();
+-				webif_client->grp = 0xFF;  // access all readers
+-
+-				memset(cmd_pack, '0', sizeof(CMD_PACKET));
+-				cmd_pack->client = webif_client;
+-				cmd_pack->cmdlen = strlen(getParam(params, "cmd")) / 2;
+-
+-				if(cmd_pack->cmdlen > 0 && abs(cmd_pack->cmdlen) <= sizeof(cmd_pack->cmd))
+-				{
+-					if(key_atob_l(getParam(params, "cmd"), cmd_pack->cmd, cmd_pack->cmdlen*2))
+-					{
+-						tpl_addVar(vars, TPLADD, "APIERRORMESSAGE", "'cmd' has not been sent due to wrong value!");
+-						return tpl_getTpl(vars, "APIERROR");
+-					}
+-				}
+-				else
+-				{
+-					if(cmd_pack->cmdlen)
+-					{
+-						snprintf(api_msg, sizeof(api_msg), "Command would exceed %lu bytes!", (long unsigned int)sizeof(cmd_pack->cmd));
+-						tpl_addVar(vars, TPLADD, "APIERRORMESSAGE", api_msg);
+-					}
+-					else
+-					{
+-						tpl_addVar(vars, TPLADD, "APIERRORMESSAGE", "Missing parameter 'cmd'!");
+-					}
+-					return tpl_getTpl(vars, "APIERROR");
+-				}
+-
+-				struct s_client *cl = rdr->client;
+-				if(rdr->enable == 1 && cl && cl->typ == 'r')
+-				{
+-					add_job(cl, ACTION_READER_SENDCMD, cmd_pack, sizeof(CMD_PACKET));
+-					tpl_addVar(vars, TPLADD, "APICONFIRMMESSAGE", "command sent");
+-					return tpl_getTpl(vars, "APICONFIRMATION");
+-				}
+-				else
+-				{
+-					snprintf(api_msg, sizeof(api_msg), "Reader '%s' is not suitable!", xml_encode(vars, rdr->label));
+-					tpl_addVar(vars, TPLADD, "APIERRORMESSAGE", api_msg);
+-					return tpl_getTpl(vars, "APIERROR");
+-				}
+-			}
+-			else
+-			{
+-				//Send Errormessage
+-				tpl_addVar(vars, TPLADD, "APIERRORMESSAGE", "no such reader");
+-				return tpl_getTpl(vars, "APIERROR");
+-			}
+-		}
+-		else
+-		{
+-			//Send Errormessage
+-			tpl_addVar(vars, TPLADD, "APIERRORMESSAGE", "no reader selected");
+-			return tpl_getTpl(vars, "APIERROR");
+-		}
+-	}
+ 	else if(strcmp(getParam(params, "part"), "shutdown") == 0)
+ 	{
+ 		if((strcmp(strtolower(getParam(params, "action")), "restart") == 0) ||
+Index: oscam-work.c
+===================================================================
+--- oscam-work.c	(revision 11726)
++++ oscam-work.c	(working copy)
+@@ -129,7 +129,7 @@
+ 		{ return NULL; }
+ 
+ 	cl->work_mbuf = mbuf; // Track locally allocated data, because some callback may call cs_exit/cs_disconect_client/pthread_exit and then mbuf would be leaked
+-	int32_t n = 0, rc = 0, i, idx, s, dblvl;
++	int32_t n = 0, rc = 0, i, idx, s;
+ 	uint8_t dcw[16];
+ 	int8_t restart_reader = 0;
+ 
+@@ -304,27 +304,6 @@
+ 					reader_do_emm(reader, data->ptr);
+ 					break;
+ 
+-				case ACTION_READER_SENDCMD:
+-					dblvl = cs_dblevel;
+-					cs_dblevel = dblvl | D_READER;
+-					rc = cardreader_do_rawcmd(reader, data->ptr);
+-					cs_log_dbg(D_TRACE, "sendcmd rc: %i, csystem: %s", rc, reader->csystem->desc);
+-					if(rc == -9)
+-					{
+-						CMD_PACKET *cp = data->ptr;
+-						uint8_t response[MAX_CMD_SIZE];
+-						memset(response, 0, sizeof(response));
+-						uint16_t response_length[1] = { 0 };
+-						rc = reader_cmd2icc(reader, cp->cmd, cp->cmdlen, response, response_length);
+-						cs_log_dbg(D_TRACE, "sendcmd rc: %i, len: %i", rc, *response_length);
+-						if (*response_length)
+-						{
+-							cs_log_dump_dbg(D_TRACE, response, *response_length, "sendcmd response:");
+-						}
+-					}
+-					cs_dblevel = dblvl;
+-					break;
+-
+ 				case ACTION_READER_CARDINFO:
+ 					reader_do_card_info(reader);
+ 					break;
+Index: oscam-work.h
+===================================================================
+--- oscam-work.h	(revision 11726)
++++ oscam-work.h	(working copy)
+@@ -19,7 +19,6 @@
+ #ifdef READER_NAGRA_MERLIN
+ 	ACTION_READER_RENEW_SK     = 14,    // wr14
+ #endif
+-	ACTION_READER_SENDCMD      = 15,    // wr15
+ 	// Client actions
+ 	ACTION_CLIENT_UDP          = 22,    // wc22
+ 	ACTION_CLIENT_TCP          = 23,    // wc23
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11725)
+--- oscam.c	(revision 11726)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -12358,9 +12546,205 @@ Index: oscam.c
  	webif_close();
  	azbox_close();
  	coolapi_close_all();
+Index: reader-common.c
+===================================================================
+--- reader-common.c	(revision 11726)
++++ reader-common.c	(working copy)
+@@ -510,17 +510,6 @@
+ 	return (rc);
+ }
+ 
+-int32_t cardreader_do_rawcmd(struct s_reader *reader, CMD_PACKET *cp)
+-{
+-	int32_t rc;
+-	rc = -9;  // means no dedicated support by csystem
+-	if(reader->csystem_active && reader->csystem && reader->csystem->do_rawcmd)
+-	{
+-		rc = reader->csystem->do_rawcmd(reader, cp);
+-	}
+-	return (rc);
+-}
+-
+ void cardreader_process_ecm(struct s_reader *reader, struct s_client *cl, ECM_REQUEST *er)
+ {
+ 	struct timeb tps, tpe;
+Index: reader-common.h
+===================================================================
+--- reader-common.h	(revision 11726)
++++ reader-common.h	(working copy)
+@@ -49,7 +49,6 @@
+ int32_t cardreader_do_checkhealth(struct s_reader *reader);
+ void cardreader_checkhealth(struct s_client *cl, struct s_reader *rdr);
+ int32_t cardreader_do_emm(struct s_reader *reader, EMM_PACKET *ep);
+-int32_t cardreader_do_rawcmd(struct s_reader *reader, CMD_PACKET *cp);
+ void cardreader_process_ecm(struct s_reader *reader, struct s_client *cl, ECM_REQUEST *er);
+ void cardreader_get_card_info(struct s_reader *reader);
+ void cardreader_poll_status(struct s_reader *reader);
+Index: reader-videoguard-common.c
+===================================================================
+--- reader-videoguard-common.c	(revision 11726)
++++ reader-videoguard-common.c	(working copy)
+@@ -208,7 +208,7 @@
+ 			22, 2004, 0, NDS2, "VideoGuard DSMART Turkey" },
+ 
+ 		{ { 0x3F, 0xFF, 0x14, 0x25, 0x03, 0x10, 0x80, 0x54, 0xB0, 0x01, 0x69, 0xFF, 0x4A, 0x50, 0x70, 0x00, 0x00, 0x4B, 0x57, 0x01, 0x00, 0x00 },
+-			22, 2020, 0, NDS2, "VideoGuard Vodafone Germany (098E)" },
++			22, 2004, 0, NDS2, "VideoGuard Vodafone Germany (098E)" },
+ 
+ 		{ { 0x3F, 0xFF, 0x14, 0x25, 0x03, 0x10, 0x80, 0x33, 0xB0, 0x10, 0x69, 0xFF, 0x4A, 0x50, 0x70, 0x00, 0x00, 0x5A, 0x43, 0x01, 0x00, 0x00 },
+ 			22, 2004, 0, NDS2, "VideoGuard totalTV Serbia (091F)" },
+@@ -223,34 +223,34 @@
+ 			22, 2004, 0, NDS2, "VideoGuard Teleclub (09B6)" },
+ 
+ 		{ { 0x3F, 0xFD, 0x11, 0x25, 0x02, 0x50, 0x00, 0x03, 0x33, 0xB0, 0x15, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x03, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7)" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7)" },
+ 
+ 		{ { 0x3F, 0xFD, 0x12, 0x25, 0x02, 0x50, 0x00, 0x03, 0x33, 0xB0, 0x15, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x03, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7) FastMode" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7) FastMode" },
+ 
+ 		{ { 0x3F, 0xFD, 0x13, 0x25, 0x02, 0x50, 0x00, 0x03, 0x33, 0xB0, 0x15, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x03, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7) FastMode" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7) FastMode" },
+ 
+ 		{ { 0x3F, 0xFD, 0x14, 0x25, 0x02, 0x50, 0x00, 0x03, 0x33, 0xB0, 0x15, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x03, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7) FastMode" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7) FastMode" },
+ 
+ 		{ { 0x3F, 0xFD, 0x15, 0x25, 0x02, 0x50, 0x00, 0x03, 0x33, 0xB0, 0x15, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x03, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7) FastMode" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09C7) FastMode" },
+ 
+ 		{ { 0x3F, 0xFD, 0x11, 0x25, 0x02, 0x50, 0x80, 0x0F, 0x47, 0xB0, 0x02, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x00, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF)" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF)" },
+ 
+ 		{ { 0x3F, 0xFD, 0x12, 0x25, 0x02, 0x50, 0x80, 0x0F, 0x47, 0xB0, 0x02, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x00, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF) FastMode" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF) FastMode" },
+ 
+ 		{ { 0x3F, 0xFD, 0x13, 0x25, 0x02, 0x50, 0x80, 0x0F, 0x47, 0xB0, 0x02, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x00, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF) FastMode" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF) FastMode" },
+ 
+ 		{ { 0x3F, 0xFD, 0x14, 0x25, 0x02, 0x50, 0x80, 0x0F, 0x47, 0xB0, 0x02, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x00, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF) FastMode" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF) FastMode" },
+ 
+ 		{ { 0x3F, 0xFD, 0x15, 0x25, 0x02, 0x50, 0x80, 0x0F, 0x47, 0xB0, 0x02, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x00, 0x4B, 0x4C, 0x03 },
+-			21, 2020, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF) FastMode" },
++			21, 2004, 0, NDS2, "VideoGuard Vodafone Germany G02/G09 (09EF) FastMode" },
+ 
+ 		{ { 0x3F, 0x7D, 0x13, 0x25, 0x02, 0x41, 0xB0, 0x03, 0x69, 0xFF, 0x4A, 0x50, 0xF0, 0x80, 0x00, 0x54, 0x37, 0x03 },
+ 			18, 2004, 0, NDS2, "VideoGuard Telecolumbus (09AF)" },
+@@ -990,19 +990,6 @@
+ 	return len;
+ }
+ 
+-int32_t videoguard_do_rawcmd(struct s_reader *reader, CMD_PACKET *cp)
+-{
+-	int32_t rc;
+-	unsigned char cta_res[CTA_RES_LEN];
+-	memset(cta_res, 0, sizeof(cta_res));
+-
+-	reader->last_poll = time(0);  // keep videoguard2_poll_status at bay, because it hurts consecutive commands
+-
+-	rc = do_cmd(reader, cp->cmd, &cp->cmd[5], NULL, cta_res);
+-
+-	return rc;
+-}
+-
+ void rev_date_calc_tm(const uint8_t *Date, struct tm *timeinfo , int32_t base_year)
+ {
+ 	timeinfo->tm_year = Date[0] / 12 + base_year - 1900; // tm year starts at 1900
+Index: reader-videoguard-common.h
+===================================================================
+--- reader-videoguard-common.h	(revision 11726)
++++ reader-videoguard-common.h	(working copy)
+@@ -66,7 +66,6 @@
+ extern int32_t cmd_exists(struct s_reader *reader, const uint8_t *cmd);
+ extern int32_t read_cmd_len(struct s_reader *reader, const uint8_t *cmd);
+ extern int32_t do_cmd(struct s_reader *reader, const uint8_t *ins, const uint8_t *txbuff, uint8_t *rxbuff, uint8_t *cta_res);
+-int32_t videoguard_do_rawcmd(struct s_reader *reader, CMD_PACKET *cp);
+ extern void rev_date_calc_tm(const uint8_t *Date, struct tm *timeinfo , int32_t base_year);
+ extern void set_known_card_info(struct s_reader *reader, const uint8_t *atr, const uint32_t *atr_size);
+ 
+Index: reader-videoguard1.c
+===================================================================
+--- reader-videoguard1.c	(revision 11726)
++++ reader-videoguard1.c	(working copy)
+@@ -360,11 +360,6 @@
+ 	return videoguard_do_emm(reader, ep, 0x48, read_tiers, vg1_do_cmd);
+ }
+ 
+-static int32_t videoguard1_do_rawcmd(struct s_reader *reader, CMD_PACKET *cp)
+-{
+-	return videoguard_do_rawcmd(reader, cp);
+-}
+-
+ static int32_t videoguard1_card_info(struct s_reader *reader)
+ {
+ 	/* info is displayed in init, or when processing info */
+@@ -380,7 +375,6 @@
+ 	.desc           = "videoguard1",
+ 	.caids          = (uint16_t[]){ 0x09, 0 },
+ 	.do_emm         = videoguard1_do_emm,
+-	.do_rawcmd      = videoguard1_do_rawcmd,
+ 	.do_ecm         = videoguard1_do_ecm,
+ 	.card_info      = videoguard1_card_info,
+ 	.card_init      = videoguard1_card_init,
+Index: reader-videoguard12.c
+===================================================================
+--- reader-videoguard12.c	(revision 11726)
++++ reader-videoguard12.c	(working copy)
+@@ -402,11 +402,6 @@
+ 	return videoguard_do_emm(reader, ep, 0x49, read_tiers, vg12_do_cmd);
+ }
+ 
+-static int32_t videoguard12_do_rawcmd(struct s_reader *reader, CMD_PACKET *cp)
+-{
+-	return videoguard_do_rawcmd(reader, cp);
+-}
+-
+ static int32_t videoguard12_card_info(struct s_reader *reader)
+ {
+ 	/* info is displayed in init, or when processing info */
+@@ -422,7 +417,6 @@
+ 	.desc           = "videoguard12",
+ 	.caids          = (uint16_t[]){ 0x09, 0 },
+ 	.do_emm         = videoguard12_do_emm,
+-	.do_rawcmd      = videoguard12_do_rawcmd,
+ 	.do_ecm         = videoguard12_do_ecm,
+ 	.card_info      = videoguard12_card_info,
+ 	.card_init      = videoguard12_card_init,
+Index: reader-videoguard2.c
+===================================================================
+--- reader-videoguard2.c	(revision 11726)
++++ reader-videoguard2.c	(working copy)
+@@ -1568,11 +1568,6 @@
+ 	return videoguard_do_emm(reader, ep, 0xD1, vg2_read_tiers, do_cmd);
+ }
+ 
+-static int32_t videoguard2_do_rawcmd(struct s_reader *reader, CMD_PACKET *cp)
+-{
+-	return videoguard_do_rawcmd(reader, cp);
+-}
+-
+ static int32_t videoguard2_card_info(struct s_reader *reader)
+ {
+ 	// info is displayed in init, or when processing info
+@@ -1601,7 +1596,6 @@
+ 	.desc           = "videoguard2",
+ 	.caids          = (uint16_t[]){ 0x09, 0 },
+ 	.do_emm         = videoguard2_do_emm,
+-	.do_rawcmd      = videoguard2_do_rawcmd,
+ 	.do_ecm         = videoguard2_do_ecm,
+ 	.card_info      = videoguard2_card_info,
+ 	.card_init      = videoguard2_card_init,
 Index: webif/config/dvbapi.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11725)
+--- webif/config/dvbapi.html	(revision 11726)
 +++ webif/config/dvbapi.html	(working copy)
 @@ -56,7 +56,7 @@
  			</TD>
