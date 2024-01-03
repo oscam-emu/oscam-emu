@@ -143,7 +143,7 @@ Index: Makefile
  # The linker for powerpc have bug that prevents --gc-sections from working
  # Check for the linker version and if it matches disable --gc-sections
  # For more information about the bug see:
-@@ -276,6 +285,31 @@
+@@ -270,6 +279,31 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -175,7 +175,7 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -376,7 +410,7 @@
+@@ -370,7 +404,7 @@
  # starts the compilation.
  all:
  	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
@@ -184,7 +184,7 @@ Index: Makefile
  	@-printf "\
  +-------------------------------------------------------------------------------\n\
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
-@@ -423,7 +457,7 @@
+@@ -417,7 +451,7 @@
  	$(Q)$(CC) $(STD_DEFS) $(CC_OPTS) $(CC_WARN) $(CFLAGS) -c $< -o $@
  
  $(OBJDIR)/%.o: %.c Makefile
@@ -212,8 +212,8 @@ Index: config.h
 +#define WITH_SSL 1
  #if defined(__linux__) || defined(__CYGWIN__)
  #define HAVE_DVBAPI 1
- #endif
-@@ -31,7 +34,7 @@
+ //#define WITH_EXTENDED_CW 1
+@@ -32,7 +35,7 @@
  #define MODULE_CCCAM 1
  #define MODULE_CCCSHARE 1
  #define MODULE_GBOX 1
@@ -229,12 +229,12 @@ Index: config.sh
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
-+addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM WITH_ARM_NEON"
+-addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM WITH_ARM_NEON"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -26,6 +26,9 @@
+@@ -27,6 +27,9 @@
  # CONFIG_LEDSUPPORT=n
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
@@ -244,7 +244,7 @@ Index: config.sh
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -293,13 +296,16 @@
+@@ -294,13 +297,16 @@
  
  update_deps() {
  	# Calculate dependencies
@@ -263,7 +263,7 @@ Index: config.sh
  }
  
  list_config() {
-@@ -349,9 +355,9 @@
+@@ -350,9 +356,9 @@
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -276,7 +276,7 @@ Index: config.sh
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -468,6 +474,9 @@
+@@ -470,6 +476,9 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
@@ -286,7 +286,7 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
-@@ -704,9 +713,19 @@
+@@ -706,9 +715,19 @@
  		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
  		if [ "$revision" = "0" ]
  		then
@@ -664,7 +664,7 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1881,6 +1881,7 @@
+@@ -1882,6 +1882,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -672,7 +672,7 @@ Index: globals.h
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2588,6 +2589,7 @@
+@@ -2589,6 +2590,7 @@
  static inline bool caid_is_viaccess(uint16_t caid) { return caid >> 8 == 0x05; }
  static inline bool caid_is_irdeto(uint16_t caid) { return caid >> 8 == 0x06; }
  static inline bool caid_is_videoguard(uint16_t caid) { return caid >> 8 == 0x09; }
@@ -735,7 +735,7 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-@@ -7837,7 +7851,13 @@
+@@ -7856,7 +7870,13 @@
  		delayer(er, delay);
  
  #ifdef WITH_EMU
@@ -12360,23 +12360,3 @@ Index: oscam.c
  	webif_close();
  	azbox_close();
  	coolapi_close_all();
-Index: webif/config/dvbapi.html
-===================================================================
---- webif/config/dvbapi.html	(revision 11726)
-+++ webif/config/dvbapi.html	(working copy)
-@@ -56,7 +56,7 @@
- 			</TD>
- 		</TR>
- 		<TR><TD><A>Write detected prov name to srvid:</A></TD><TD><input name="write_sdt_prov" type="checkbox" value="1" ##WRITESDTPROVCHECKED##><label></label>
--		<!-- <TR><TD><A>API for extended CWs</A></TD>
-+		<TR><TD><A>API for extended CWs</A></TD>
- 			<TD>
- 				<select name="extended_cw_api">
- 					<option value="0" ##EXTENDEDCWAPISELECTED0##>0 - none (disabled)</option>
-@@ -64,4 +64,4 @@
- 					<option value="2" ##EXTENDEDCWAPISELECTED2##>2 - OE2.0</option>
- 				</select>
- 			</TD>
--		</TR> -->
-+		</TR>
-\ No newline at end of file
