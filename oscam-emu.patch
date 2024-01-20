@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11726)
+--- CMakeLists.txt	(revision 11731)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -117,7 +117,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11726)
+--- Makefile	(revision 11731)
 +++ Makefile	(working copy)
 @@ -58,13 +58,22 @@
  CC_WARN = -W -Wall -Wshadow -Wredundant-decls -Wstrict-prototypes -Wold-style-definition
@@ -143,7 +143,7 @@ Index: Makefile
  # The linker for powerpc have bug that prevents --gc-sections from working
  # Check for the linker version and if it matches disable --gc-sections
  # For more information about the bug see:
-@@ -276,6 +285,31 @@
+@@ -270,6 +279,31 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -175,7 +175,7 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -376,7 +410,7 @@
+@@ -370,7 +404,7 @@
  # starts the compilation.
  all:
  	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
@@ -184,7 +184,7 @@ Index: Makefile
  	@-printf "\
  +-------------------------------------------------------------------------------\n\
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
-@@ -423,7 +457,7 @@
+@@ -417,7 +451,7 @@
  	$(Q)$(CC) $(STD_DEFS) $(CC_OPTS) $(CC_WARN) $(CFLAGS) -c $< -o $@
  
  $(OBJDIR)/%.o: %.c Makefile
@@ -195,9 +195,9 @@ Index: Makefile
  
 Index: config.h
 ===================================================================
---- config.h	(revision 11726)
+--- config.h	(revision 11731)
 +++ config.h	(working copy)
-@@ -1,11 +1,14 @@
+@@ -1,12 +1,15 @@
  #ifndef CONFIG_H_
  #define CONFIG_H_
  
@@ -212,8 +212,9 @@ Index: config.h
 +#define WITH_SSL 1
  #if defined(__linux__) || defined(__CYGWIN__)
  #define HAVE_DVBAPI 1
+ //#define WITH_EXTENDED_CW
  #endif
-@@ -31,7 +34,7 @@
+@@ -32,7 +35,7 @@
  #define MODULE_CCCAM 1
  #define MODULE_CCCSHARE 1
  #define MODULE_GBOX 1
@@ -224,17 +225,17 @@ Index: config.h
  //#define MODULE_PANDORA 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11726)
+--- config.sh	(revision 11731)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
-+addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM WITH_ARM_NEON"
+-addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM WITH_ARM_NEON"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -26,6 +26,9 @@
+@@ -27,6 +27,9 @@
  # CONFIG_LEDSUPPORT=n
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
@@ -244,7 +245,7 @@ Index: config.sh
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -293,13 +296,16 @@
+@@ -294,13 +297,16 @@
  
  update_deps() {
  	# Calculate dependencies
@@ -263,7 +264,7 @@ Index: config.sh
  }
  
  list_config() {
-@@ -349,9 +355,9 @@
+@@ -350,9 +356,9 @@
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -276,7 +277,7 @@ Index: config.sh
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -468,6 +474,9 @@
+@@ -470,6 +476,9 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
@@ -286,7 +287,7 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
-@@ -704,9 +713,19 @@
+@@ -706,9 +715,19 @@
  		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
  		if [ "$revision" = "0" ]
  		then
@@ -310,7 +311,7 @@ Index: config.sh
  	'-O'|'--detect-osx-sdk-version')
 Index: ffdecsa/CMakeLists.txt
 ===================================================================
---- ffdecsa/CMakeLists.txt	(revision 11726)
+--- ffdecsa/CMakeLists.txt	(revision 11731)
 +++ ffdecsa/CMakeLists.txt	(working copy)
 @@ -5,4 +5,15 @@
  
@@ -330,7 +331,7 @@ Index: ffdecsa/CMakeLists.txt
  add_library (${lib_name} STATIC ${ffdecsa_srcs} ${ffdecsa_hdrs})
 Index: ffdecsa/ffdecsa.c
 ===================================================================
---- ffdecsa/ffdecsa.c	(revision 11726)
+--- ffdecsa/ffdecsa.c	(revision 11731)
 +++ ffdecsa/ffdecsa.c	(working copy)
 @@ -24,6 +24,7 @@
  #include <stdlib.h>
@@ -551,7 +552,7 @@ Index: ffdecsa/ffdecsa.c
  void get_control_words(void *keys, unsigned char *even, unsigned char *odd){
 Index: ffdecsa/ffdecsa.h
 ===================================================================
---- ffdecsa/ffdecsa.h	(revision 11726)
+--- ffdecsa/ffdecsa.h	(revision 11731)
 +++ ffdecsa/ffdecsa.h	(working copy)
 @@ -47,9 +47,11 @@
  
@@ -653,7 +654,7 @@ Index: ffdecsa/parallel_128_neon.h
 +#include "fftable.h"
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11726)
+--- globals.h	(revision 11731)
 +++ globals.h	(working copy)
 @@ -401,7 +401,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -664,7 +665,7 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1881,6 +1881,7 @@
+@@ -1882,6 +1882,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -672,7 +673,7 @@ Index: globals.h
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2588,6 +2589,7 @@
+@@ -2589,6 +2590,7 @@
  static inline bool caid_is_viaccess(uint16_t caid) { return caid >> 8 == 0x05; }
  static inline bool caid_is_irdeto(uint16_t caid) { return caid >> 8 == 0x06; }
  static inline bool caid_is_videoguard(uint16_t caid) { return caid >> 8 == 0x09; }
@@ -682,7 +683,7 @@ Index: globals.h
  static inline bool caid_is_powervu(uint16_t caid) { return caid >> 8 == 0x0E; }
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11726)
+--- module-dvbapi.c	(revision 11731)
 +++ module-dvbapi.c	(working copy)
 @@ -11,6 +11,7 @@
  #include "module-dvbapi-coolapi.h"
@@ -735,7 +736,7 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-@@ -7837,7 +7851,13 @@
+@@ -7856,7 +7870,13 @@
  		delayer(er, delay);
  
  #ifdef WITH_EMU
@@ -2377,7 +2378,7 @@ Index: module-emulator-director.c
 ===================================================================
 --- module-emulator-director.c	(nonexistent)
 +++ module-emulator-director.c	(working copy)
-@@ -0,0 +1,642 @@
+@@ -0,0 +1,644 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -2860,8 +2861,10 @@ Index: module-emulator-director.c
 +
 +						des_set_key(emmKey, ks);
 +						des(tagData + 4 + 5, ks, 0);
++						uint8_t ecmKeyChk[1] = { 0 };
++						memcpy(ecmKeyChk, tagData + 4 + 5 + 7, 1);
 +
-+						if ((tagData + 4 + 5 + 7) != 0x00) // check if key looks valid (last byte 0x00)
++						if (ecmKeyChk[0] != 0x00) // check if key looks valid (last byte 0x00)
 +						{
 +							cs_log_dbg(D_READER, "Key rejected from EMM (looks invalid)");
 +							return EMU_KEY_REJECTED;
@@ -3064,11 +3067,11 @@ Index: module-emulator-icam.c
 +
 +static bool connect_to_radegast(void)
 +{
-+	struct sockaddr_in cservaddr;
++	struct SOCKADDR cservaddr;
 +
 +	if (gRadegastFd == 0)
 +	{
-+		gRadegastFd = socket(AF_INET, SOCK_STREAM, 0);
++		gRadegastFd = socket(DEFAULT_AF, SOCK_STREAM, 0);
 +	}
 +
 +	if (gRadegastFd < 0)
@@ -3081,9 +3084,9 @@ Index: module-emulator-icam.c
 +	fcntl(gRadegastFd, F_SETFL, flags | O_NONBLOCK);
 +
 +	bzero(&cservaddr, sizeof(cservaddr));
-+	cservaddr.sin_family = AF_INET;
++	SIN_GET_FAMILY(cservaddr) = DEFAULT_AF;
 +	SIN_GET_ADDR(cservaddr) = cfg.rad_srvip;
-+	cservaddr.sin_port = htons(cfg.rad_port);
++	SIN_GET_PORT(cservaddr) = htons(cfg.rad_port);
 +
 +	connect(gRadegastFd,(struct sockaddr *)&cservaddr, sizeof(cservaddr));
 +	return true;
@@ -3337,7 +3340,7 @@ Index: module-emulator-irdeto.c
 +static int8_t calculate_hash(const uint8_t *key, const uint8_t *iv, const uint8_t *data, int32_t len)
 +{
 +	int32_t l, y;
-+	uint8_t cbuff[8];
++	uint8_t cbuff[32];
 +	uint32_t ks1[32], ks2[32];
 +
 +	des_set_key(key, ks1);
@@ -8106,7 +8109,7 @@ Index: module-emulator-streamserver.c
 ===================================================================
 --- module-emulator-streamserver.c	(nonexistent)
 +++ module-emulator-streamserver.c	(working copy)
-@@ -0,0 +1,1955 @@
+@@ -0,0 +1,1959 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -8130,6 +8133,10 @@ Index: module-emulator-streamserver.c
 +#define STREAM_AUDIO     0x02
 +#define STREAM_SUBTITLE  0x03
 +#define STREAM_TELETEXT  0x04
++
++#ifndef POLLRDHUP
++#define POLLRDHUP 0x200
++#endif
 +
 +extern int32_t exit_oscam;
 +
@@ -9426,20 +9433,20 @@ Index: module-emulator-streamserver.c
 +
 +static int32_t connect_to_stream(char *http_buf, int32_t http_buf_len, char *stream_path)
 +{
-+	struct sockaddr_in cservaddr;
++	struct SOCKADDR cservaddr;
 +	IN_ADDR_T in_addr;
 +
-+	int32_t streamfd = socket(AF_INET, SOCK_STREAM, 0);
++	int32_t streamfd = socket(DEFAULT_AF, SOCK_STREAM, 0);
 +	if (streamfd == -1)
 +	{
 +		return -1;
 +	}
 +
 +	bzero(&cservaddr, sizeof(cservaddr));
-+	cservaddr.sin_family = AF_INET;
++	SIN_GET_FAMILY(cservaddr) = DEFAULT_AF;
 +	cs_resolve(emu_stream_source_host, &in_addr, NULL, NULL);
 +	SIN_GET_ADDR(cservaddr) = in_addr;
-+	cservaddr.sin_port = htons(emu_stream_source_port);
++	SIN_GET_PORT(cservaddr) = htons(emu_stream_source_port);
 +
 +	if (connect(streamfd, (struct sockaddr *)&cservaddr, sizeof(cservaddr)) == -1)
 +	{
@@ -11548,7 +11555,7 @@ Index: module-emulator.c
 +	itr = ll_iter_create(rdr->ll_biss2_rsa_keys);
 +	while ((item = ll_iter_next(&itr)))
 +	{
-+		emu_add_entitlement(rdr, 0x2610, 0, item->ekid, "RSAPRI", 8, 0);
++		emu_add_entitlement(rdr, 0x2610, 0, item->ekid, "RSAPRI  ", 8, 0);
 +	}
 +}
 +
@@ -12276,7 +12283,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: module-radegast.c
 ===================================================================
---- module-radegast.c	(revision 11726)
+--- module-radegast.c	(revision 11731)
 +++ module-radegast.c	(working copy)
 @@ -2,11 +2,13 @@
  
@@ -12306,7 +12313,7 @@ Index: module-radegast.c
  		mbuf[3] = 0x10; // len
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11726)
+--- oscam.c	(revision 11731)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
@@ -12360,23 +12367,4 @@ Index: oscam.c
  	webif_close();
  	azbox_close();
  	coolapi_close_all();
-Index: webif/config/dvbapi.html
-===================================================================
---- webif/config/dvbapi.html	(revision 11726)
-+++ webif/config/dvbapi.html	(working copy)
-@@ -56,7 +56,7 @@
- 			</TD>
- 		</TR>
- 		<TR><TD><A>Write detected prov name to srvid:</A></TD><TD><input name="write_sdt_prov" type="checkbox" value="1" ##WRITESDTPROVCHECKED##><label></label>
--		<!-- <TR><TD><A>API for extended CWs</A></TD>
-+		<TR><TD><A>API for extended CWs</A></TD>
- 			<TD>
- 				<select name="extended_cw_api">
- 					<option value="0" ##EXTENDEDCWAPISELECTED0##>0 - none (disabled)</option>
-@@ -64,4 +64,4 @@
- 					<option value="2" ##EXTENDEDCWAPISELECTED2##>2 - OE2.0</option>
- 				</select>
- 			</TD>
--		</TR> -->
-+		</TR>
 \ No newline at end of file
