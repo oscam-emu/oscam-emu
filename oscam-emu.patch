@@ -559,7 +559,7 @@ Index: ffdecsa/ffdecsa.c
 +#endif
  
  //-----block main function
-@@ -395,7 +497,7 @@
+@@ -395,7 +499,7 @@
  
    roff=GROUP_PARALLELISM*56;
  
@@ -568,7 +568,7 @@ Index: ffdecsa/ffdecsa.c
  #ifndef FASTTRASP1
    for(g=0;g<count;g++){
      // Init registers 
-@@ -476,7 +578,7 @@
+@@ -476,7 +580,7 @@
  #endif
    }
  
@@ -577,7 +577,7 @@ Index: ffdecsa/ffdecsa.c
  #ifndef FASTTRASP2
    for(g=0;g<count;g++){
      // Copy results
-@@ -552,6 +654,34 @@
+@@ -552,6 +656,34 @@
    }
  }
  
@@ -612,7 +612,7 @@ Index: ffdecsa/ffdecsa.c
  void set_control_words(void *keys, const unsigned char *ev, const unsigned char *od){
    schedule_key(&((struct csa_keys_t *)keys)->even,ev);
    schedule_key(&((struct csa_keys_t *)keys)->odd,od);
-@@ -561,10 +691,18 @@
+@@ -561,10 +693,18 @@
    schedule_key(&((struct csa_keys_t *)keys)->even,pk);
  }
  
