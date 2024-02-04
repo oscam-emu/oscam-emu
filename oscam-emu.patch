@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11731)
+--- CMakeLists.txt	(revision 11732)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -117,7 +117,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11731)
+--- Makefile	(revision 11732)
 +++ Makefile	(working copy)
 @@ -58,13 +58,22 @@
  CC_WARN = -W -Wall -Wshadow -Wredundant-decls -Wstrict-prototypes -Wold-style-definition
@@ -195,7 +195,7 @@ Index: Makefile
  
 Index: config.h
 ===================================================================
---- config.h	(revision 11731)
+--- config.h	(revision 11732)
 +++ config.h	(working copy)
 @@ -1,12 +1,15 @@
  #ifndef CONFIG_H_
@@ -225,7 +225,7 @@ Index: config.h
  //#define MODULE_PANDORA 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11731)
+--- config.sh	(revision 11732)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -311,7 +311,7 @@ Index: config.sh
  	'-O'|'--detect-osx-sdk-version')
 Index: ffdecsa/CMakeLists.txt
 ===================================================================
---- ffdecsa/CMakeLists.txt	(revision 11731)
+--- ffdecsa/CMakeLists.txt	(revision 11732)
 +++ ffdecsa/CMakeLists.txt	(working copy)
 @@ -5,4 +5,15 @@
  
@@ -331,7 +331,7 @@ Index: ffdecsa/CMakeLists.txt
  add_library (${lib_name} STATIC ${ffdecsa_srcs} ${ffdecsa_hdrs})
 Index: ffdecsa/ffdecsa.c
 ===================================================================
---- ffdecsa/ffdecsa.c	(revision 11731)
+--- ffdecsa/ffdecsa.c	(revision 11732)
 +++ ffdecsa/ffdecsa.c	(working copy)
 @@ -24,6 +24,7 @@
  #include <stdlib.h>
@@ -381,7 +381,7 @@ Index: ffdecsa/ffdecsa.c
  #else
  #error "unknown/undefined parallel mode"
  #endif
-@@ -278,6 +290,96 @@
+@@ -278,85 +290,177 @@
  
  }
  
@@ -477,7 +477,88 @@ Index: ffdecsa/ffdecsa.c
 +
  //-----block utils
  
++#if 0
  static inline __attribute__((always_inline)) void trasp_N_8 (unsigned char *in,unsigned char* out,int count){
+   int *ri=(int *)in;
+   int *ibi=(int *)out;
+   int j,i,k,g;
+   // copy and first step
+   for(g=0;g<count;g++){
+     ri[g]=ibi[2*g];
+     ri[GROUP_PARALLELISM+g]=ibi[2*g+1];
+   }
+ //dump_mem("NE1 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
+ // now 01230123
+ #define INTS_PER_ROW (GROUP_PARALLELISM/8*2)
+   for(j=0;j<8;j+=4){
+     for(i=0;i<2;i++){
+       for(k=0;k<INTS_PER_ROW;k++){
+         unsigned int t,b;
+         t=ri[INTS_PER_ROW*(j+i)+k];
+         b=ri[INTS_PER_ROW*(j+i+2)+k];
+         ri[INTS_PER_ROW*(j+i)+k]=     (t&0x0000ffff)      | ((b           )<<16);
+         ri[INTS_PER_ROW*(j+i+2)+k]=  ((t           )>>16) |  (b&0xffff0000) ;
+       }
+     }
+   }
+ //dump_mem("NE2 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
+ // now 01010101
+   for(j=0;j<8;j+=2){
+     for(i=0;i<1;i++){
+       for(k=0;k<INTS_PER_ROW;k++){
+         unsigned int t,b;
+         t=ri[INTS_PER_ROW*(j+i)+k];
+         b=ri[INTS_PER_ROW*(j+i+1)+k];
+         ri[INTS_PER_ROW*(j+i)+k]=     (t&0x00ff00ff)     | ((b&0x00ff00ff)<<8);
+         ri[INTS_PER_ROW*(j+i+1)+k]=  ((t&0xff00ff00)>>8) |  (b&0xff00ff00);
+       }
+     }
+   }
+ //dump_mem("NE3 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
+ // now 00000000
+ }
+ 
+ static inline __attribute__((always_inline)) void trasp_8_N (unsigned char *in,unsigned char* out,int count){
+   int *ri=(int *)in;
+   int *bdi=(int *)out;
+   int j,i,k,g;
+ #define INTS_PER_ROW (GROUP_PARALLELISM/8*2)
+ //dump_mem("NE1 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
+ // now 00000000
+   for(j=0;j<8;j+=2){
+     for(i=0;i<1;i++){
+       for(k=0;k<INTS_PER_ROW;k++){
+         unsigned int t,b;
+         t=ri[INTS_PER_ROW*(j+i)+k];
+         b=ri[INTS_PER_ROW*(j+i+1)+k];
+         ri[INTS_PER_ROW*(j+i)+k]=     (t&0x00ff00ff)     | ((b&0x00ff00ff)<<8);
+         ri[INTS_PER_ROW*(j+i+1)+k]=  ((t&0xff00ff00)>>8) |  (b&0xff00ff00);
+       }
+     }
+   }
+ //dump_mem("NE2 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
+ // now 01010101
+   for(j=0;j<8;j+=4){
+     for(i=0;i<2;i++){
+       for(k=0;k<INTS_PER_ROW;k++){
+         unsigned int t,b;
+         t=ri[INTS_PER_ROW*(j+i)+k];
+         b=ri[INTS_PER_ROW*(j+i+2)+k];
+         ri[INTS_PER_ROW*(j+i)+k]=     (t&0x0000ffff)      | ((b           )<<16);
+         ri[INTS_PER_ROW*(j+i+2)+k]=  ((t           )>>16) |  (b&0xffff0000) ;
+       }
+     }
+   }
+ //dump_mem("NE3 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
+ // now 01230123
+   for(g=0;g<count;g++){
+     bdi[2*g]=ri[g];
+     bdi[2*g+1]=ri[GROUP_PARALLELISM+g];
+   }
+ }
++#endif
+ 
+ //-----block main function
 @@ -395,7 +497,7 @@
  
    roff=GROUP_PARALLELISM*56;
@@ -552,7 +633,7 @@ Index: ffdecsa/ffdecsa.c
  void get_control_words(void *keys, unsigned char *even, unsigned char *odd){
 Index: ffdecsa/ffdecsa.h
 ===================================================================
---- ffdecsa/ffdecsa.h	(revision 11731)
+--- ffdecsa/ffdecsa.h	(revision 11732)
 +++ ffdecsa/ffdecsa.h	(working copy)
 @@ -47,9 +47,11 @@
  
@@ -654,7 +735,7 @@ Index: ffdecsa/parallel_128_neon.h
 +#include "fftable.h"
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11731)
+--- globals.h	(revision 11732)
 +++ globals.h	(working copy)
 @@ -401,7 +401,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -683,7 +764,7 @@ Index: globals.h
  static inline bool caid_is_powervu(uint16_t caid) { return caid >> 8 == 0x0E; }
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11731)
+--- module-dvbapi.c	(revision 11732)
 +++ module-dvbapi.c	(working copy)
 @@ -11,6 +11,7 @@
  #include "module-dvbapi-coolapi.h"
@@ -12283,7 +12364,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: module-radegast.c
 ===================================================================
---- module-radegast.c	(revision 11731)
+--- module-radegast.c	(revision 11732)
 +++ module-radegast.c	(working copy)
 @@ -2,11 +2,13 @@
  
@@ -12313,7 +12394,7 @@ Index: module-radegast.c
  		mbuf[3] = 0x10; // len
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11731)
+--- oscam.c	(revision 11732)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,11 @@
  #include "reader-common.h"
