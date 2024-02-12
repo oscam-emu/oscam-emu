@@ -175,7 +175,7 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -370,7 +404,7 @@
+@@ -369,7 +403,7 @@
  # starts the compilation.
  all:
  	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
@@ -184,7 +184,7 @@ Index: Makefile
  	@-printf "\
  +-------------------------------------------------------------------------------\n\
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
-@@ -417,7 +451,7 @@
+@@ -416,7 +450,7 @@
  	$(Q)$(CC) $(STD_DEFS) $(CC_OPTS) $(CC_WARN) $(CFLAGS) -c $< -o $@
  
  $(OBJDIR)/%.o: %.c Makefile
@@ -212,7 +212,7 @@ Index: config.h
 +#define WITH_SSL 1
  #if defined(__linux__) || defined(__CYGWIN__)
  #define HAVE_DVBAPI 1
-@@ -32,7 +35,7 @@
+@@ -31,7 +34,7 @@
  #define MODULE_CCCAM 1
  #define MODULE_CCCSHARE 1
  #define MODULE_GBOX 1
@@ -228,12 +228,12 @@ Index: config.sh
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
-+addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM WITH_ARM_NEON"
+-addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM WITH_ARM_NEON"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -27,6 +27,9 @@
+@@ -26,6 +26,9 @@
  # CONFIG_LEDSUPPORT=n
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
@@ -243,7 +243,7 @@ Index: config.sh
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -294,13 +297,16 @@
+@@ -293,13 +296,16 @@
  
  update_deps() {
  	# Calculate dependencies
@@ -262,7 +262,7 @@ Index: config.sh
  }
  
  list_config() {
-@@ -350,9 +356,9 @@
+@@ -349,9 +355,9 @@
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -275,7 +275,7 @@ Index: config.sh
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -470,6 +476,9 @@
+@@ -468,6 +474,9 @@
  		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
@@ -285,7 +285,7 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
-@@ -706,9 +715,19 @@
+@@ -704,9 +713,19 @@
  		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
  		if [ "$revision" = "0" ]
  		then
@@ -12395,7 +12395,7 @@ Index: oscam.c
 ===================================================================
 --- oscam.c	(revision 11732)
 +++ oscam.c	(working copy)
-@@ -41,6 +41,11 @@
+@@ -40,6 +40,11 @@
  #include "reader-common.h"
  #include "module-gbox.h"
  
@@ -12407,7 +12407,7 @@ Index: oscam.c
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -419,6 +424,10 @@
+@@ -417,6 +422,10 @@
  		write_conf(WITH_STAPI5, "DVB API with STAPI5 support");
  		write_conf(WITH_NEUTRINO, "DVB API with NEUTRINO support");
  		write_conf(READ_SDT_CHARSETS, "DVB API read-sdt charsets");
@@ -12416,9 +12416,9 @@ Index: oscam.c
 +			write_conf(true, "DVB API with ICAM v9 stream relay support");
 +		}
  	}
- 	write_conf(IRDETO_GUESSING, "Irdeto guessing");
  	write_conf(CS_ANTICASC, "Anti-cascading support");
-@@ -439,6 +448,8 @@
+ 	write_conf(WITH_DEBUG, "Debug mode");
+@@ -436,6 +445,8 @@
  		case CLOCK_TYPE_MONOTONIC: write_conf(CLOCKFIX, "Clockfix with monotonic clock"); break;
  	}
  	write_conf(IPV6SUPPORT, "IPv6 support");
@@ -12427,7 +12427,7 @@ Index: oscam.c
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1836,6 +1847,9 @@
+@@ -1833,6 +1844,9 @@
  
  	init_sidtab();
  	init_readerdb();
@@ -12437,7 +12437,7 @@ Index: oscam.c
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
-@@ -1924,6 +1938,9 @@
+@@ -1918,6 +1932,9 @@
  #ifdef MODULE_GBOX
  	stop_gbx_ticker();
  #endif
