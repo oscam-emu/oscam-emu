@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11733)
+--- CMakeLists.txt	(revision 11734)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -117,7 +117,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11733)
+--- Makefile	(revision 11734)
 +++ Makefile	(working copy)
 @@ -58,13 +58,22 @@
  CC_WARN = -W -Wall -Wshadow -Wredundant-decls -Wstrict-prototypes -Wold-style-definition
@@ -195,7 +195,7 @@ Index: Makefile
  
 Index: config.h
 ===================================================================
---- config.h	(revision 11733)
+--- config.h	(revision 11734)
 +++ config.h	(working copy)
 @@ -2,4 +2,7 @@
  #define CONFIG_H_
@@ -223,7 +223,7 @@ Index: config.h
  //#define MODULE_PANDORA 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11733)
+--- config.sh	(revision 11734)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -309,7 +309,7 @@ Index: config.sh
  	'-O'|'--detect-osx-sdk-version')
 Index: ffdecsa/CMakeLists.txt
 ===================================================================
---- ffdecsa/CMakeLists.txt	(revision 11733)
+--- ffdecsa/CMakeLists.txt	(revision 11734)
 +++ ffdecsa/CMakeLists.txt	(working copy)
 @@ -5,4 +5,15 @@
  
@@ -329,7 +329,7 @@ Index: ffdecsa/CMakeLists.txt
  add_library (${lib_name} STATIC ${ffdecsa_srcs} ${ffdecsa_hdrs})
 Index: ffdecsa/ffdecsa.c
 ===================================================================
---- ffdecsa/ffdecsa.c	(revision 11733)
+--- ffdecsa/ffdecsa.c	(revision 11734)
 +++ ffdecsa/ffdecsa.c	(working copy)
 @@ -24,6 +24,7 @@
  #include <stdlib.h>
@@ -632,7 +632,7 @@ Index: ffdecsa/ffdecsa.c
  void get_control_words(void *keys, unsigned char *even, unsigned char *odd){
 Index: ffdecsa/ffdecsa.h
 ===================================================================
---- ffdecsa/ffdecsa.h	(revision 11733)
+--- ffdecsa/ffdecsa.h	(revision 11734)
 +++ ffdecsa/ffdecsa.h	(working copy)
 @@ -47,9 +47,11 @@
  
@@ -734,7 +734,7 @@ Index: ffdecsa/parallel_128_neon.h
 +#include "fftable.h"
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11733)
+--- globals.h	(revision 11734)
 +++ globals.h	(working copy)
 @@ -401,7 +401,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -763,7 +763,7 @@ Index: globals.h
  static inline bool caid_is_powervu(uint16_t caid) { return caid >> 8 == 0x0E; }
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11733)
+--- module-dvbapi.c	(revision 11734)
 +++ module-dvbapi.c	(working copy)
 @@ -11,6 +11,7 @@
  #include "module-dvbapi-coolapi.h"
@@ -12363,7 +12363,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: module-radegast.c
 ===================================================================
---- module-radegast.c	(revision 11733)
+--- module-radegast.c	(revision 11734)
 +++ module-radegast.c	(working copy)
 @@ -2,11 +2,13 @@
  
@@ -12393,7 +12393,7 @@ Index: module-radegast.c
  		mbuf[3] = 0x10; // len
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11733)
+--- oscam.c	(revision 11734)
 +++ oscam.c	(working copy)
 @@ -40,6 +40,11 @@
  #include "reader-common.h"
