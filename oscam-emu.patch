@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11726)
+--- CMakeLists.txt	(revision 11742)
 +++ CMakeLists.txt	(working copy)
 @@ -101,6 +101,7 @@
  		${CMAKE_CURRENT_SOURCE_DIR}/csctapi
@@ -18,7 +18,7 @@ Index: CMakeLists.txt
  		${OPTIONAL_INCLUDE_DIR}
  		)
  endif (OSCamOperatingSystem MATCHES "Windows/Cygwin")
-@@ -420,6 +422,22 @@
+@@ -453,6 +455,22 @@
  # Manage config.h based on command line parameters
  # Manipulate config file based on given parameters and read unset parameters
  
@@ -41,7 +41,7 @@ Index: CMakeLists.txt
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
  string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
  
-@@ -449,6 +467,7 @@
+@@ -482,6 +500,7 @@
  add_subdirectory (csctapi)
  add_subdirectory (minilzo)
  add_subdirectory (cscrypt)
@@ -49,7 +49,7 @@ Index: CMakeLists.txt
  
  #----------------------- file groups ------------------------------
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --enabled MODULE_CAMD33 OUTPUT_VARIABLE CAMD33 OUTPUT_STRIP_TRAILING_WHITESPACE)
-@@ -498,7 +517,7 @@
+@@ -531,7 +550,7 @@
  
  set (exe_name "oscam")
  add_executable (${exe_name} ${exe_srcs} ${exe_hdrs})
@@ -58,34 +58,13 @@ Index: CMakeLists.txt
  if(HAVE_LIBRT AND HAVE_LIBUSB)
  	if (LIBUSBDIR)
  		set (libusb_link "imp_libusb")
-@@ -653,6 +672,11 @@
- execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine COMMAND tr -d '\n' OUTPUT_VARIABLE CS_TARGET)
- add_definitions ("-D'CS_TARGET=\"${CS_TARGET}\"'")
- #----------------------- global compile and link options ------------------------------
-+#enable sse2 on x86
-+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse -msse2 -msse3")
-+endif (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-+
- # disable warning about unused but set variables in gcc 4.6+
- if (CMAKE_COMPILER_IS_GNUCC)
- 	execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-@@ -660,7 +684,7 @@
- 	list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
- 	list(GET GCC_VERSION_COMPONENTS 0 GCC_MINOR)
- 	add_definitions ("-W -Wall ")
--	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
-+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3 -pipe -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer -fno-schedule-insns")
- 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")
- 	set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -ggdb")
- 	set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
-@@ -735,7 +759,22 @@
+@@ -789,8 +808,23 @@
  	endif (HAVE_LIBUSB)
  endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
  
 -#--------------------------------------------------------------------------------
 +#-------------------------------------------------------------------------------
-+
+ 
 +if (NOT OSCamOperatingSystem MATCHES "Mac OS X")
 +if (NOT DEFINED ENV{ANDROID_NDK})
 +if (NOT DEFINED ENV{ANDROID_STANDALONE_TOOLCHAIN})
@@ -100,12 +79,13 @@ Index: CMakeLists.txt
 +endif (NOT DEFINED ENV{ANDROID_STANDALONE_TOOLCHAIN})
 +endif (NOT DEFINED ENV{ANDROID_NDK})
 +endif (NOT OSCamOperatingSystem MATCHES "Mac OS X")
- 
++
  #----------------------- installation -----------------------------
  
-@@ -825,4 +864,11 @@
- 	endif(STATICLIBUSB AND NOT LIBUSBDIR)
- endif (HAVE_LIBUSB)
+ file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
+@@ -897,4 +931,11 @@
+ 	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
+ endif (HAVE_LIBDVBCSA)
  
 +if (WITH_EMU)
 +	message (STATUS "  Compile with EMU support")
@@ -117,43 +97,17 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11726)
+--- Makefile	(revision 11742)
 +++ Makefile	(working copy)
-@@ -58,13 +58,22 @@
- CC_WARN = -W -Wall -Wshadow -Wredundant-decls -Wstrict-prototypes -Wold-style-definition
- 
- # Compiler optimizations
--CC_OPTS = -O2 -ggdb -pipe -ffunction-sections -fdata-sections
-+CC_OPTS = -O3 -ggdb -pipe -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer -fno-schedule-insns
- 
- CC = $(CROSS_DIR)$(CROSS)gcc
- STRIP = $(CROSS_DIR)$(CROSS)strip
- 
- LDFLAGS = -Wl,--gc-sections
- 
-+TARGETHELP := $(shell $(CC) --target-help 2>&1)
-+ifneq (,$(findstring sse2,$(TARGETHELP)))
-+override CFLAGS += -fexpensive-optimizations -mmmx -msse -msse2 -msse3
-+else ifneq (,$(findstring neon,$(TARGETHELP)))
-+override CFLAGS += -fexpensive-optimizations -mfpu=neon
-+else
-+override CFLAGS += -fexpensive-optimizations
-+endif
-+
- # The linker for powerpc have bug that prevents --gc-sections from working
- # Check for the linker version and if it matches disable --gc-sections
- # For more information about the bug see:
-@@ -276,6 +285,31 @@
+@@ -294,6 +294,29 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-osemu.c
-+SRC-$(CONFIG_WITH_EMU) += module-emulator-streamserver.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-biss.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-cryptoworks.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-director.c
-+SRC-$(CONFIG_WITH_EMU) += module-emulator-icam.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-irdeto.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-nagravision.c
 +SRC-$(CONFIG_WITH_EMU) += module-emulator-powervu.c
@@ -175,7 +129,7 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-@@ -376,7 +410,7 @@
+@@ -394,7 +417,7 @@
  # starts the compilation.
  all:
  	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
@@ -184,67 +138,50 @@ Index: Makefile
  	@-printf "\
  +-------------------------------------------------------------------------------\n\
  | OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
-@@ -423,7 +457,7 @@
- 	$(Q)$(CC) $(STD_DEFS) $(CC_OPTS) $(CC_WARN) $(CFLAGS) -c $< -o $@
- 
- $(OBJDIR)/%.o: %.c Makefile
--	@$(CC) -MP -MM -MT $@ -o $(subst .o,.d,$@) $<
-+	@$(CC) $(CFLAGS) -MP -MM -MT $@ -o $(subst .o,.d,$@) $<
- 	$(SAY) "CC	$<"
- 	$(Q)$(CC) $(STD_DEFS) $(CC_OPTS) $(CC_WARN) $(CFLAGS) -c $< -o $@
- 
 Index: config.h
 ===================================================================
---- config.h	(revision 11726)
+--- config.h	(revision 11742)
 +++ config.h	(working copy)
-@@ -1,11 +1,14 @@
+@@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
  #define CONFIG_H_
  
 +#define WITH_EMU 1
 +#define WITH_SOFTCAM 1
-+#define WITH_ARM_NEON 1
  #define WEBIF 1
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
- //#define TOUCH 1
--//#define WITH_SSL 1
-+#define WITH_SSL 1
- #if defined(__linux__) || defined(__CYGWIN__)
- #define HAVE_DVBAPI 1
- #endif
-@@ -31,7 +34,7 @@
- #define MODULE_CCCAM 1
- #define MODULE_CCCSHARE 1
- #define MODULE_GBOX 1
--//#define MODULE_RADEGAST 1
-+#define MODULE_RADEGAST 1
- //#define MODULE_SERIAL 1
+@@ -37,7 +39,7 @@
  //#define MODULE_CONSTCW 1
  //#define MODULE_PANDORA 1
+ //#define MODULE_GHTTP 1
+-//#define MODULE_SCAM 1
++#define MODULE_SCAM 1
+ //#define MODULE_STREAMRELAY 1
+ 
+ #define WITH_CARDREADER 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11726)
+--- config.sh	(revision 11742)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT"
-+addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_EMU WITH_SOFTCAM WITH_ARM_NEON"
- protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
+-addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON WITH_EMU WITH_SOFTCAM"
+ protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP MODULE_STREAMRELAY"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -26,6 +26,9 @@
- # CONFIG_LEDSUPPORT=n
+@@ -27,6 +27,8 @@
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
+ # CONFIG_WITH_ARM_NEON=n
 +CONFIG_WITH_EMU=y
 +CONFIG_WITH_SOFTCAM=y
-+CONFIG_WITH_ARM_NEON=y
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -293,13 +296,16 @@
+@@ -295,13 +297,16 @@
  
  update_deps() {
  	# Calculate dependencies
@@ -263,7 +200,7 @@ Index: config.sh
  }
  
  list_config() {
-@@ -349,9 +355,9 @@
+@@ -351,9 +356,9 @@
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -276,17 +213,16 @@ Index: config.sh
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -468,6 +474,9 @@
- 		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
+@@ -471,6 +476,8 @@
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
+ 		WITH_ARM_NEON		"ARM NEON (SIMD/MPE) support"			$(check_test "WITH_ARM_NEON") \
 +		WITH_EMU			"Emulator support"						$(check_test "WITH_EMU") \
 +		WITH_SOFTCAM		"Built-in SoftCam.Key"					$(check_test "WITH_SOFTCAM") \
-+		WITH_ARM_NEON		"ARM Neon Support"						$(check_test "WITH_ARM_NEON") \
  		2> ${tempfile}
  
  	opt=${?}
-@@ -704,9 +713,19 @@
+@@ -708,11 +715,21 @@
  		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
  		if [ "$revision" = "0" ]
  		then
@@ -301,118 +237,618 @@ Index: config.sh
 +		else
 +			echo "$revision-$emuversion"
 +		fi
-+		break
-+	;;
-+	'--emu-version')
-+		grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'
  		break
  	;;
++	'--emu-version')
++		grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'
++		break
++	;;
  	'-O'|'--detect-osx-sdk-version')
+ 		shift
+ 		OSX_VER=${1:-10.10}
 Index: ffdecsa/CMakeLists.txt
 ===================================================================
---- ffdecsa/CMakeLists.txt	(revision 11726)
+--- ffdecsa/CMakeLists.txt	(nonexistent)
 +++ ffdecsa/CMakeLists.txt	(working copy)
-@@ -5,4 +5,15 @@
- 
- set (lib_name "ffdecsa")
- 
-+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse -msse2 -msse3")
-+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(ARM)")
-+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon")
-+    set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -mfpu=neon")
-+endif (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+@@ -0,0 +1,8 @@
++project (ffdecsa)
 +
-+if (CMAKE_COMPILER_IS_GNUCC)
-+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3 -pipe -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer -fno-schedule-insns")
-+endif (CMAKE_COMPILER_IS_GNUCC)
++file (GLOB ffdecsa_srcs "ffdecsa.c")
++file (GLOB ffdecsa_hdrs "*.h")
 +
- add_library (${lib_name} STATIC ${ffdecsa_srcs} ${ffdecsa_hdrs})
++set (lib_name "ffdecsa")
++
++add_library (${lib_name} STATIC ${ffdecsa_srcs} ${ffdecsa_hdrs})
+Index: ffdecsa/COPYING
+===================================================================
+--- ffdecsa/COPYING	(nonexistent)
++++ ffdecsa/COPYING	(working copy)
+@@ -0,0 +1,339 @@
++		    GNU GENERAL PUBLIC LICENSE
++		       Version 2, June 1991
++
++ Copyright (C) 1989, 1991 Free Software Foundation, Inc.
++                          675 Mass Ave, Cambridge, MA 02139, USA
++ Everyone is permitted to copy and distribute verbatim copies
++ of this license document, but changing it is not allowed.
++
++			    Preamble
++
++  The licenses for most software are designed to take away your
++freedom to share and change it.  By contrast, the GNU General Public
++License is intended to guarantee your freedom to share and change free
++software--to make sure the software is free for all its users.  This
++General Public License applies to most of the Free Software
++Foundation's software and to any other program whose authors commit to
++using it.  (Some other Free Software Foundation software is covered by
++the GNU Library General Public License instead.)  You can apply it to
++your programs, too.
++
++  When we speak of free software, we are referring to freedom, not
++price.  Our General Public Licenses are designed to make sure that you
++have the freedom to distribute copies of free software (and charge for
++this service if you wish), that you receive source code or can get it
++if you want it, that you can change the software or use pieces of it
++in new free programs; and that you know you can do these things.
++
++  To protect your rights, we need to make restrictions that forbid
++anyone to deny you these rights or to ask you to surrender the rights.
++These restrictions translate to certain responsibilities for you if you
++distribute copies of the software, or if you modify it.
++
++  For example, if you distribute copies of such a program, whether
++gratis or for a fee, you must give the recipients all the rights that
++you have.  You must make sure that they, too, receive or can get the
++source code.  And you must show them these terms so they know their
++rights.
++
++  We protect your rights with two steps: (1) copyright the software, and
++(2) offer you this license which gives you legal permission to copy,
++distribute and/or modify the software.
++
++  Also, for each author's protection and ours, we want to make certain
++that everyone understands that there is no warranty for this free
++software.  If the software is modified by someone else and passed on, we
++want its recipients to know that what they have is not the original, so
++that any problems introduced by others will not reflect on the original
++authors' reputations.
++
++  Finally, any free program is threatened constantly by software
++patents.  We wish to avoid the danger that redistributors of a free
++program will individually obtain patent licenses, in effect making the
++program proprietary.  To prevent this, we have made it clear that any
++patent must be licensed for everyone's free use or not licensed at all.
++
++  The precise terms and conditions for copying, distribution and
++modification follow.
++
++		    GNU GENERAL PUBLIC LICENSE
++   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
++
++  0. This License applies to any program or other work which contains
++a notice placed by the copyright holder saying it may be distributed
++under the terms of this General Public License.  The "Program", below,
++refers to any such program or work, and a "work based on the Program"
++means either the Program or any derivative work under copyright law:
++that is to say, a work containing the Program or a portion of it,
++either verbatim or with modifications and/or translated into another
++language.  (Hereinafter, translation is included without limitation in
++the term "modification".)  Each licensee is addressed as "you".
++
++Activities other than copying, distribution and modification are not
++covered by this License; they are outside its scope.  The act of
++running the Program is not restricted, and the output from the Program
++is covered only if its contents constitute a work based on the
++Program (independent of having been made by running the Program).
++Whether that is true depends on what the Program does.
++
++  1. You may copy and distribute verbatim copies of the Program's
++source code as you receive it, in any medium, provided that you
++conspicuously and appropriately publish on each copy an appropriate
++copyright notice and disclaimer of warranty; keep intact all the
++notices that refer to this License and to the absence of any warranty;
++and give any other recipients of the Program a copy of this License
++along with the Program.
++
++You may charge a fee for the physical act of transferring a copy, and
++you may at your option offer warranty protection in exchange for a fee.
++
++  2. You may modify your copy or copies of the Program or any portion
++of it, thus forming a work based on the Program, and copy and
++distribute such modifications or work under the terms of Section 1
++above, provided that you also meet all of these conditions:
++
++    a) You must cause the modified files to carry prominent notices
++    stating that you changed the files and the date of any change.
++
++    b) You must cause any work that you distribute or publish, that in
++    whole or in part contains or is derived from the Program or any
++    part thereof, to be licensed as a whole at no charge to all third
++    parties under the terms of this License.
++
++    c) If the modified program normally reads commands interactively
++    when run, you must cause it, when started running for such
++    interactive use in the most ordinary way, to print or display an
++    announcement including an appropriate copyright notice and a
++    notice that there is no warranty (or else, saying that you provide
++    a warranty) and that users may redistribute the program under
++    these conditions, and telling the user how to view a copy of this
++    License.  (Exception: if the Program itself is interactive but
++    does not normally print such an announcement, your work based on
++    the Program is not required to print an announcement.)
++
++These requirements apply to the modified work as a whole.  If
++identifiable sections of that work are not derived from the Program,
++and can be reasonably considered independent and separate works in
++themselves, then this License, and its terms, do not apply to those
++sections when you distribute them as separate works.  But when you
++distribute the same sections as part of a whole which is a work based
++on the Program, the distribution of the whole must be on the terms of
++this License, whose permissions for other licensees extend to the
++entire whole, and thus to each and every part regardless of who wrote it.
++
++Thus, it is not the intent of this section to claim rights or contest
++your rights to work written entirely by you; rather, the intent is to
++exercise the right to control the distribution of derivative or
++collective works based on the Program.
++
++In addition, mere aggregation of another work not based on the Program
++with the Program (or with a work based on the Program) on a volume of
++a storage or distribution medium does not bring the other work under
++the scope of this License.
++
++  3. You may copy and distribute the Program (or a work based on it,
++under Section 2) in object code or executable form under the terms of
++Sections 1 and 2 above provided that you also do one of the following:
++
++    a) Accompany it with the complete corresponding machine-readable
++    source code, which must be distributed under the terms of Sections
++    1 and 2 above on a medium customarily used for software interchange; or,
++
++    b) Accompany it with a written offer, valid for at least three
++    years, to give any third party, for a charge no more than your
++    cost of physically performing source distribution, a complete
++    machine-readable copy of the corresponding source code, to be
++    distributed under the terms of Sections 1 and 2 above on a medium
++    customarily used for software interchange; or,
++
++    c) Accompany it with the information you received as to the offer
++    to distribute corresponding source code.  (This alternative is
++    allowed only for noncommercial distribution and only if you
++    received the program in object code or executable form with such
++    an offer, in accord with Subsection b above.)
++
++The source code for a work means the preferred form of the work for
++making modifications to it.  For an executable work, complete source
++code means all the source code for all modules it contains, plus any
++associated interface definition files, plus the scripts used to
++control compilation and installation of the executable.  However, as a
++special exception, the source code distributed need not include
++anything that is normally distributed (in either source or binary
++form) with the major components (compiler, kernel, and so on) of the
++operating system on which the executable runs, unless that component
++itself accompanies the executable.
++
++If distribution of executable or object code is made by offering
++access to copy from a designated place, then offering equivalent
++access to copy the source code from the same place counts as
++distribution of the source code, even though third parties are not
++compelled to copy the source along with the object code.
++
++  4. You may not copy, modify, sublicense, or distribute the Program
++except as expressly provided under this License.  Any attempt
++otherwise to copy, modify, sublicense or distribute the Program is
++void, and will automatically terminate your rights under this License.
++However, parties who have received copies, or rights, from you under
++this License will not have their licenses terminated so long as such
++parties remain in full compliance.
++
++  5. You are not required to accept this License, since you have not
++signed it.  However, nothing else grants you permission to modify or
++distribute the Program or its derivative works.  These actions are
++prohibited by law if you do not accept this License.  Therefore, by
++modifying or distributing the Program (or any work based on the
++Program), you indicate your acceptance of this License to do so, and
++all its terms and conditions for copying, distributing or modifying
++the Program or works based on it.
++
++  6. Each time you redistribute the Program (or any work based on the
++Program), the recipient automatically receives a license from the
++original licensor to copy, distribute or modify the Program subject to
++these terms and conditions.  You may not impose any further
++restrictions on the recipients' exercise of the rights granted herein.
++You are not responsible for enforcing compliance by third parties to
++this License.
++
++  7. If, as a consequence of a court judgment or allegation of patent
++infringement or for any other reason (not limited to patent issues),
++conditions are imposed on you (whether by court order, agreement or
++otherwise) that contradict the conditions of this License, they do not
++excuse you from the conditions of this License.  If you cannot
++distribute so as to satisfy simultaneously your obligations under this
++License and any other pertinent obligations, then as a consequence you
++may not distribute the Program at all.  For example, if a patent
++license would not permit royalty-free redistribution of the Program by
++all those who receive copies directly or indirectly through you, then
++the only way you could satisfy both it and this License would be to
++refrain entirely from distribution of the Program.
++
++If any portion of this section is held invalid or unenforceable under
++any particular circumstance, the balance of the section is intended to
++apply and the section as a whole is intended to apply in other
++circumstances.
++
++It is not the purpose of this section to induce you to infringe any
++patents or other property right claims or to contest validity of any
++such claims; this section has the sole purpose of protecting the
++integrity of the free software distribution system, which is
++implemented by public license practices.  Many people have made
++generous contributions to the wide range of software distributed
++through that system in reliance on consistent application of that
++system; it is up to the author/donor to decide if he or she is willing
++to distribute software through any other system and a licensee cannot
++impose that choice.
++
++This section is intended to make thoroughly clear what is believed to
++be a consequence of the rest of this License.
++
++  8. If the distribution and/or use of the Program is restricted in
++certain countries either by patents or by copyrighted interfaces, the
++original copyright holder who places the Program under this License
++may add an explicit geographical distribution limitation excluding
++those countries, so that distribution is permitted only in or among
++countries not thus excluded.  In such case, this License incorporates
++the limitation as if written in the body of this License.
++
++  9. The Free Software Foundation may publish revised and/or new versions
++of the General Public License from time to time.  Such new versions will
++be similar in spirit to the present version, but may differ in detail to
++address new problems or concerns.
++
++Each version is given a distinguishing version number.  If the Program
++specifies a version number of this License which applies to it and "any
++later version", you have the option of following the terms and conditions
++either of that version or of any later version published by the Free
++Software Foundation.  If the Program does not specify a version number of
++this License, you may choose any version ever published by the Free Software
++Foundation.
++
++  10. If you wish to incorporate parts of the Program into other free
++programs whose distribution conditions are different, write to the author
++to ask for permission.  For software which is copyrighted by the Free
++Software Foundation, write to the Free Software Foundation; we sometimes
++make exceptions for this.  Our decision will be guided by the two goals
++of preserving the free status of all derivatives of our free software and
++of promoting the sharing and reuse of software generally.
++
++			    NO WARRANTY
++
++  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
++FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN
++OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
++PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
++OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS
++TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE
++PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,
++REPAIR OR CORRECTION.
++
++  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
++WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
++REDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,
++INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING
++OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED
++TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY
++YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
++PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE
++POSSIBILITY OF SUCH DAMAGES.
++
++		     END OF TERMS AND CONDITIONS
++
++	Appendix: How to Apply These Terms to Your New Programs
++
++  If you develop a new program, and you want it to be of the greatest
++possible use to the public, the best way to achieve this is to make it
++free software which everyone can redistribute and change under these terms.
++
++  To do so, attach the following notices to the program.  It is safest
++to attach them to the start of each source file to most effectively
++convey the exclusion of warranty; and each file should have at least
++the "copyright" line and a pointer to where the full notice is found.
++
++    <one line to give the program's name and a brief idea of what it does.>
++    Copyright (C) 19yy  <name of author>
++
++    This program is free software; you can redistribute it and/or modify
++    it under the terms of the GNU General Public License as published by
++    the Free Software Foundation; either version 2 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU General Public License for more details.
++
++    You should have received a copy of the GNU General Public License
++    along with this program; if not, write to the Free Software
++    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++
++Also add information on how to contact you by electronic and paper mail.
++
++If the program is interactive, make it output a short notice like this
++when it starts in an interactive mode:
++
++    Gnomovision version 69, Copyright (C) 19yy name of author
++    Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
++    This is free software, and you are welcome to redistribute it
++    under certain conditions; type `show c' for details.
++
++The hypothetical commands `show w' and `show c' should show the appropriate
++parts of the General Public License.  Of course, the commands you use may
++be called something other than `show w' and `show c'; they could even be
++mouse-clicks or menu items--whatever suits your program.
++
++You should also get your employer (if you work as a programmer) or your
++school, if any, to sign a "copyright disclaimer" for the program, if
++necessary.  Here is a sample; alter the names:
++
++  Yoyodyne, Inc., hereby disclaims all copyright interest in the program
++  `Gnomovision' (which makes passes at compilers) written by James Hacker.
++
++  <signature of Ty Coon>, 1 April 1989
++  Ty Coon, President of Vice
++
++This General Public License does not permit incorporating your program into
++proprietary programs.  If your program is a subroutine library, you may
++consider it more useful to permit linking proprietary applications with the
++library.  If this is what you want to do, use the GNU Library General
++Public License instead of this License.
+Index: ffdecsa/Makefile
+===================================================================
+--- ffdecsa/Makefile	(nonexistent)
++++ ffdecsa/Makefile	(working copy)
+@@ -0,0 +1,2 @@
++parent:
++	@$(MAKE) --no-print-directory -C ..
 Index: ffdecsa/ffdecsa.c
 ===================================================================
---- ffdecsa/ffdecsa.c	(revision 11726)
+--- ffdecsa/ffdecsa.c	(nonexistent)
 +++ ffdecsa/ffdecsa.c	(working copy)
-@@ -24,6 +24,7 @@
- #include <stdlib.h>
- 
- #include "ffdecsa.h"
-+#include "../config.h"
- 
- #ifndef NULL
- #define NULL 0
-@@ -53,6 +54,7 @@
- #define PARALLEL_128_2MMX    1284
- #define PARALLEL_128_SSE     1285
- #define PARALLEL_128_SSE2    1286
-+#define PARALLEL_128_NEON    1287
- 
- //////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
- #ifndef PARALLEL_MODE
-@@ -61,13 +63,21 @@
- #define PARALLEL_MODE PARALLEL_128_SSE2
- 
- #elif defined(__mips__) || defined(__mips) || defined(__MIPS__)
--#define PARALLEL_MODE PARALLEL_64_LONG
-+//#define PARALLEL_MODE PARALLEL_64_LONG
+@@ -0,0 +1,928 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++
++#include <sys/types.h>
++#include <string.h>
++#include <stdio.h>
++#include <stdlib.h>
++
++#include "ffdecsa.h"
++
++#ifndef NULL
++#define NULL 0
++#endif
++
++//#define DEBUG
++#ifdef DEBUG
++#define DBG(a) a
++#else
++#define DBG(a)
++#endif
++
++//// parallelization stuff, large speed differences are possible
++// possible choices
++#define PARALLEL_32_4CHAR     320
++#define PARALLEL_32_4CHARA    321
++#define PARALLEL_32_INT       322
++#define PARALLEL_64_8CHAR     640
++#define PARALLEL_64_8CHARA    641
++#define PARALLEL_64_2INT      642
++#define PARALLEL_64_LONG      643
++#define PARALLEL_64_MMX       644
++#define PARALLEL_128_16CHAR  1280
++#define PARALLEL_128_16CHARA 1281
++#define PARALLEL_128_4INT    1282
++#define PARALLEL_128_2LONG   1283
++#define PARALLEL_128_2MMX    1284
++#define PARALLEL_128_SSE     1285
++#define PARALLEL_128_SSE2    1286
++
++//////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
++#ifndef PARALLEL_MODE
++
++#if defined(__x86_64__) || defined(_M_X64)
++#define PARALLEL_MODE PARALLEL_128_SSE2
++
++#elif defined(__mips__) || defined(__mips) || defined(__MIPS__)
++#define PARALLEL_MODE PARALLEL_64_LONG
++
++#elif defined(__sh__) || defined(__SH4__)
 +#define PARALLEL_MODE PARALLEL_32_INT
- 
- #elif defined(__sh__) || defined(__SH4__)
- #define PARALLEL_MODE PARALLEL_32_INT
- #define COPY_UNALIGNED_PKT
- #define MEMALIGN_VAL 4
- 
-+#elif defined(__arm__)
-+#ifdef WITH_ARM_NEON
-+#define PARALLEL_MODE PARALLEL_128_NEON
++#define COPY_UNALIGNED_PKT
++#define MEMALIGN_VAL 4
++
 +#else
 +#define PARALLEL_MODE PARALLEL_32_INT
 +#endif
 +
- #else
- #define PARALLEL_MODE PARALLEL_32_INT
- #endif
-@@ -107,6 +117,8 @@
- #include "parallel_128_sse.h"
- #elif PARALLEL_MODE==PARALLEL_128_SSE2
- #include "parallel_128_sse2.h"
-+#elif PARALLEL_MODE==PARALLEL_128_NEON
-+#include "parallel_128_neon.h"
- #else
- #error "unknown/undefined parallel mode"
- #endif
-@@ -278,6 +290,96 @@
- 
- }
- 
-+static void key_schedule_block_ecm(
++#endif
++//////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
++
++#include "parallel_generic.h"
++//// conditionals
++#if PARALLEL_MODE==PARALLEL_32_4CHAR
++#include "parallel_032_4char.h"
++#elif PARALLEL_MODE==PARALLEL_32_4CHARA
++#include "parallel_032_4charA.h"
++#elif PARALLEL_MODE==PARALLEL_32_INT
++#include "parallel_032_int.h"
++#elif PARALLEL_MODE==PARALLEL_64_8CHAR
++#include "parallel_064_8char.h"
++#elif PARALLEL_MODE==PARALLEL_64_8CHARA
++#include "parallel_064_8charA.h"
++#elif PARALLEL_MODE==PARALLEL_64_2INT
++#include "parallel_064_2int.h"
++#elif PARALLEL_MODE==PARALLEL_64_LONG
++#include "parallel_064_long.h"
++#elif PARALLEL_MODE==PARALLEL_64_MMX
++#include "parallel_064_mmx.h"
++#elif PARALLEL_MODE==PARALLEL_128_16CHAR
++#include "parallel_128_16char.h"
++#elif PARALLEL_MODE==PARALLEL_128_16CHARA
++#include "parallel_128_16charA.h"
++#elif PARALLEL_MODE==PARALLEL_128_4INT
++#include "parallel_128_4int.h"
++#elif PARALLEL_MODE==PARALLEL_128_2LONG
++#include "parallel_128_2long.h"
++#elif PARALLEL_MODE==PARALLEL_128_2MMX
++#include "parallel_128_2mmx.h"
++#elif PARALLEL_MODE==PARALLEL_128_SSE
++#include "parallel_128_sse.h"
++#elif PARALLEL_MODE==PARALLEL_128_SSE2
++#include "parallel_128_sse2.h"
++#else
++#error "unknown/undefined parallel mode"
++#endif
++
++// stuff depending on conditionals
++
++#define BYTES_PER_GROUP (GROUP_PARALLELISM/8)
++#define BYPG BYTES_PER_GROUP
++#define BITS_PER_GROUP GROUP_PARALLELISM
++#define BIPG BITS_PER_GROUP
++
++// platform specific
++
++#ifdef __arm__
++#if !defined(MEMALIGN_VAL) || MEMALIGN_VAL<4
++#undef MEMALIGN_VAL
++#define MEMALIGN_VAL 4
++#endif
++#define COPY_UNALIGNED_PKT
++#endif
++
++//
++
++#ifndef MALLOC
++#define MALLOC(X) malloc(X)
++#endif
++#ifndef FREE
++#define FREE(X) free(X)
++#endif
++#ifdef MEMALIGN_VAL
++#define MEMALIGN __attribute__((aligned(MEMALIGN_VAL)))
++#else
++#define MEMALIGN
++#endif
++
++//// debug tool
++
++#ifdef DEBUG
++static void dump_mem(const char *string, const unsigned char *p, int len, int linelen){
++  int i;
++  for(i=0;i<len;i++){
++    if(i%linelen==0&&i) fprintf(stderr,"\n");
++    if(i%linelen==0) fprintf(stderr,"%s %08x:",string,i);
++    else{
++      if(i%8==0) fprintf(stderr," ");
++      if(i%4==0) fprintf(stderr," ");
++    }
++    fprintf(stderr," %02x",p[i]);
++  }
++  if(i%linelen==0) fprintf(stderr,"\n");
++}
++#endif
++
++//////////////////////////////////////////////////////////////////////////////////
++
++struct csa_key_t{
++	unsigned char ck[8];
++// used by stream
++        int iA[8];  // iA[0] is for A1, iA[7] is for A8
++        int iB[8];  // iB[0] is for B1, iB[7] is for B8
++// used by stream (group)
++        MEMALIGN group ck_g[8][8]; // [byte][bit:0=LSB,7=MSB]
++        MEMALIGN group iA_g[8][4]; // [0 for A1][0 for LSB]
++        MEMALIGN group iB_g[8][4]; // [0 for B1][0 for LSB]
++// used by block
++	unsigned char kk[56];
++// used by block (group)
++	MEMALIGN batch kkmulti[56]; // many times the same byte in every batch
++};
++
++struct csa_keys_t{
++  struct csa_key_t even;
++  struct csa_key_t odd;
++};
++
++//-----stream cypher
++
++//-----key schedule for stream decypher
++static void key_schedule_stream(
++  unsigned char *ck,    // [In]  ck[0]-ck[7]   8 bytes   | Key.
++  int *iA,              // [Out] iA[0]-iA[7]   8 nibbles | Key schedule.
++  int *iB)              // [Out] iB[0]-iB[7]   8 nibbles | Key schedule.
++{
++    iA[0]=(ck[0]>>4)&0xf;
++    iA[1]=(ck[0]   )&0xf;
++    iA[2]=(ck[1]>>4)&0xf;
++    iA[3]=(ck[1]   )&0xf;
++    iA[4]=(ck[2]>>4)&0xf;
++    iA[5]=(ck[2]   )&0xf;
++    iA[6]=(ck[3]>>4)&0xf;
++    iA[7]=(ck[3]   )&0xf;
++    iB[0]=(ck[4]>>4)&0xf;
++    iB[1]=(ck[4]   )&0xf;
++    iB[2]=(ck[5]>>4)&0xf;
++    iB[3]=(ck[5]   )&0xf;
++    iB[4]=(ck[6]>>4)&0xf;
++    iB[5]=(ck[6]   )&0xf;
++    iB[6]=(ck[7]>>4)&0xf;
++    iB[7]=(ck[7]   )&0xf;
++}
++
++//----- stream main function
++
++#define STREAM_INIT
++#include "stream.c"
++#undef STREAM_INIT
++
++#define STREAM_NORMAL
++#include "stream.c"
++#undef STREAM_NORMAL
++
++
++//-----block decypher
++
++//-----key schedule for block decypher
++
++static void key_schedule_block(
 +  unsigned char *ck,    // [In]  ck[0]-ck[7]   8 bytes | Key.
-+  unsigned char *kk,    // [Out] kk[0]-kk[55] 56 bytes | Key schedule.
-+  unsigned char ecm)    // ecm
++  unsigned char *kk)    // [Out] kk[0]-kk[55] 56 bytes | Key schedule.
 +{
 +  static const unsigned char key_perm[0x40] = {
 +    0x12,0x24,0x09,0x07,0x2A,0x31,0x1D,0x15, 0x1C,0x36,0x3E,0x32,0x13,0x21,0x3B,0x40,
 +    0x18,0x14,0x25,0x27,0x02,0x35,0x1B,0x01, 0x22,0x04,0x0D,0x0E,0x39,0x28,0x1A,0x29,
 +    0x33,0x23,0x34,0x0C,0x16,0x30,0x1E,0x3A, 0x2D,0x1F,0x08,0x19,0x17,0x2F,0x3D,0x11,
 +    0x3C,0x05,0x38,0x2B,0x0B,0x06,0x0A,0x2C, 0x20,0x3F,0x2E,0x0F,0x03,0x26,0x10,0x37,
-+  };
-+
-+  static const unsigned char ecm_perm[0x100] = {
-+    0x00,0x02,0x80,0x82,0x20,0x22,0xa0,0xa2, 0x04,0x06,0x84,0x86,0x24,0x26,0xa4,0xa6,
-+    0x40,0x42,0xc0,0xc2,0x60,0x62,0xe0,0xe2, 0x44,0x46,0xc4,0xc6,0x64,0x66,0xe4,0xe6,
-+    0x01,0x03,0x81,0x83,0x21,0x23,0xa1,0xa3, 0x05,0x07,0x85,0x87,0x25,0x27,0xa5,0xa7,
-+    0x41,0x43,0xc1,0xc3,0x61,0x63,0xe1,0xe3, 0x45,0x47,0xc5,0xc7,0x65,0x67,0xe5,0xe7,
-+    0x08,0x0a,0x88,0x8a,0x28,0x2a,0xa8,0xaa, 0x0c,0x0e,0x8c,0x8e,0x2c,0x2e,0xac,0xae,
-+    0x48,0x4a,0xc8,0xca,0x68,0x6a,0xe8,0xea, 0x4c,0x4e,0xcc,0xce,0x6c,0x6e,0xec,0xee,
-+    0x09,0x0b,0x89,0x8b,0x29,0x2b,0xa9,0xab, 0x0d,0x0f,0x8d,0x8f,0x2d,0x2f,0xad,0xaf,
-+    0x49,0x4b,0xc9,0xcb,0x69,0x6b,0xe9,0xeb, 0x4d,0x4f,0xcd,0xcf,0x6d,0x6f,0xed,0xef,
-+    0x10,0x12,0x90,0x92,0x30,0x32,0xb0,0xb2, 0x14,0x16,0x94,0x96,0x34,0x36,0xb4,0xb6,
-+    0x50,0x52,0xd0,0xd2,0x70,0x72,0xf0,0xf2, 0x54,0x56,0xd4,0xd6,0x74,0x76,0xf4,0xf6,
-+    0x11,0x13,0x91,0x93,0x31,0x33,0xb1,0xb3, 0x15,0x17,0x95,0x97,0x35,0x37,0xb5,0xb7,
-+    0x51,0x53,0xd1,0xd3,0x71,0x73,0xf1,0xf3, 0x55,0x57,0xd5,0xd7,0x75,0x77,0xf5,0xf7,
-+    0x18,0x1a,0x98,0x9a,0x38,0x3a,0xb8,0xba, 0x1c,0x1e,0x9c,0x9e,0x3c,0x3e,0xbc,0xbe,
-+    0x58,0x5a,0xd8,0xda,0x78,0x7a,0xf8,0xfa, 0x5c,0x5e,0xdc,0xde,0x7c,0x7e,0xfc,0xfe,
-+    0x19,0x1b,0x99,0x9b,0x39,0x3b,0xb9,0xbb, 0x1d,0x1f,0x9d,0x9f,0x3d,0x3f,0xbd,0xbf,
-+    0x59,0x5b,0xd9,0xdb,0x79,0x7b,0xf9,0xfb, 0x5d,0x5f,0xdd,0xdf,0x7d,0x7f,0xfd,0xff
 +  };
 +
 +  int i,j,k;
@@ -424,29 +860,14 @@ Index: ffdecsa/ffdecsa.c
 +  // 56 key bytes kk(55)..kk(0) by key schedule from ck
 +
 +  // kb(6,0) .. kb(6,7) = ck(0) .. ck(7)
-+  if (ecm == 4)
-+  {
-+     kb[6][0] = ecm_perm[ck[0]];
-+     kb[6][1] = ck[1];
-+     kb[6][2] = ck[2];
-+     kb[6][3] = ck[3];
-+     kb[6][4] = ecm_perm[ck[4]];
-+     kb[6][5] = ck[5];
-+     kb[6][6] = ck[6];
-+     kb[6][7] = ck[7];
-+  }
-+  else
-+  {
-+     kb[6][0] = ck[0];
-+     kb[6][1] = ck[1];
-+     kb[6][2] = ck[2];
-+     kb[6][3] = ck[3];
-+     kb[6][4] = ck[4];
-+     kb[6][5] = ck[5];
-+     kb[6][6] = ck[6];
-+     kb[6][7] = ck[7];
-+  }
-+
++  kb[6][0] = ck[0];
++  kb[6][1] = ck[1];
++  kb[6][2] = ck[2];
++  kb[6][3] = ck[3];
++  kb[6][4] = ck[4];
++  kb[6][5] = ck[5];
++  kb[6][6] = ck[6];
++  kb[6][7] = ck[7];
 +
 +  // calculate kb[5] .. kb[0]
 +  for(i=5; i>=0; i--){
@@ -474,32 +895,255 @@ Index: ffdecsa/ffdecsa.c
 +
 +}
 +
- //-----block utils
- 
- static inline __attribute__((always_inline)) void trasp_N_8 (unsigned char *in,unsigned char* out,int count){
-@@ -395,7 +497,7 @@
- 
-   roff=GROUP_PARALLELISM*56;
- 
--#define FASTTRASP1
-+//#define FASTTRASP1
- #ifndef FASTTRASP1
-   for(g=0;g<count;g++){
-     // Init registers 
-@@ -476,7 +578,7 @@
- #endif
-   }
- 
--#define FASTTRASP2
-+//#define FASTTRASP2
- #ifndef FASTTRASP2
-   for(g=0;g<count;g++){
-     // Copy results
-@@ -552,6 +654,34 @@
-   }
- }
- 
-+static void schedule_key_ecm(struct csa_key_t *key, const unsigned char *pk, const unsigned char ecm){
++//-----block utils
++
++#if 0
++static inline __attribute__((always_inline)) void trasp_N_8 (unsigned char *in,unsigned char* out,int count){
++  int *ri=(int *)in;
++  int *ibi=(int *)out;
++  int j,i,k,g;
++  // copy and first step
++  for(g=0;g<count;g++){
++    ri[g]=ibi[2*g];
++    ri[GROUP_PARALLELISM+g]=ibi[2*g+1];
++  }
++//dump_mem("NE1 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
++// now 01230123
++#define INTS_PER_ROW (GROUP_PARALLELISM/8*2)
++  for(j=0;j<8;j+=4){
++    for(i=0;i<2;i++){
++      for(k=0;k<INTS_PER_ROW;k++){
++        unsigned int t,b;
++        t=ri[INTS_PER_ROW*(j+i)+k];
++        b=ri[INTS_PER_ROW*(j+i+2)+k];
++        ri[INTS_PER_ROW*(j+i)+k]=     (t&0x0000ffff)      | ((b           )<<16);
++        ri[INTS_PER_ROW*(j+i+2)+k]=  ((t           )>>16) |  (b&0xffff0000) ;
++      }
++    }
++  }
++//dump_mem("NE2 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
++// now 01010101
++  for(j=0;j<8;j+=2){
++    for(i=0;i<1;i++){
++      for(k=0;k<INTS_PER_ROW;k++){
++        unsigned int t,b;
++        t=ri[INTS_PER_ROW*(j+i)+k];
++        b=ri[INTS_PER_ROW*(j+i+1)+k];
++        ri[INTS_PER_ROW*(j+i)+k]=     (t&0x00ff00ff)     | ((b&0x00ff00ff)<<8);
++        ri[INTS_PER_ROW*(j+i+1)+k]=  ((t&0xff00ff00)>>8) |  (b&0xff00ff00);
++      }
++    }
++  }
++//dump_mem("NE3 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
++// now 00000000
++}
++
++static inline __attribute__((always_inline)) void trasp_8_N (unsigned char *in,unsigned char* out,int count){
++  int *ri=(int *)in;
++  int *bdi=(int *)out;
++  int j,i,k,g;
++#define INTS_PER_ROW (GROUP_PARALLELISM/8*2)
++//dump_mem("NE1 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
++// now 00000000
++  for(j=0;j<8;j+=2){
++    for(i=0;i<1;i++){
++      for(k=0;k<INTS_PER_ROW;k++){
++        unsigned int t,b;
++        t=ri[INTS_PER_ROW*(j+i)+k];
++        b=ri[INTS_PER_ROW*(j+i+1)+k];
++        ri[INTS_PER_ROW*(j+i)+k]=     (t&0x00ff00ff)     | ((b&0x00ff00ff)<<8);
++        ri[INTS_PER_ROW*(j+i+1)+k]=  ((t&0xff00ff00)>>8) |  (b&0xff00ff00);
++      }
++    }
++  }
++//dump_mem("NE2 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
++// now 01010101
++  for(j=0;j<8;j+=4){
++    for(i=0;i<2;i++){
++      for(k=0;k<INTS_PER_ROW;k++){
++        unsigned int t,b;
++        t=ri[INTS_PER_ROW*(j+i)+k];
++        b=ri[INTS_PER_ROW*(j+i+2)+k];
++        ri[INTS_PER_ROW*(j+i)+k]=     (t&0x0000ffff)      | ((b           )<<16);
++        ri[INTS_PER_ROW*(j+i+2)+k]=  ((t           )>>16) |  (b&0xffff0000) ;
++      }
++    }
++  }
++//dump_mem("NE3 r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
++// now 01230123
++  for(g=0;g<count;g++){
++    bdi[2*g]=ri[g];
++    bdi[2*g+1]=ri[GROUP_PARALLELISM+g];
++  }
++}
++#endif
++
++//-----block main function
++
++// block group
++static void block_decypher_group(
++  batch *kkmulti,       // [In]  kkmulti[0]-kkmulti[55] 56 batches | Key schedule (each batch has repeated equal bytes).
++  unsigned char *ib,    // [In]  (ib0,ib1,...ib7)...x32 32*8 bytes | Initialization vector.
++  unsigned char *bd,    // [Out] (bd0,bd1,...bd7)...x32 32*8 bytes | Block decipher.
++  int count)
++{
++  // int is faster than unsigned char. apparently not
++  static const unsigned char block_sbox[0x100] = {
++    0x3A,0xEA,0x68,0xFE,0x33,0xE9,0x88,0x1A, 0x83,0xCF,0xE1,0x7F,0xBA,0xE2,0x38,0x12,
++    0xE8,0x27,0x61,0x95,0x0C,0x36,0xE5,0x70, 0xA2,0x06,0x82,0x7C,0x17,0xA3,0x26,0x49,
++    0xBE,0x7A,0x6D,0x47,0xC1,0x51,0x8F,0xF3, 0xCC,0x5B,0x67,0xBD,0xCD,0x18,0x08,0xC9,
++    0xFF,0x69,0xEF,0x03,0x4E,0x48,0x4A,0x84, 0x3F,0xB4,0x10,0x04,0xDC,0xF5,0x5C,0xC6,
++    0x16,0xAB,0xAC,0x4C,0xF1,0x6A,0x2F,0x3C, 0x3B,0xD4,0xD5,0x94,0xD0,0xC4,0x63,0x62,
++    0x71,0xA1,0xF9,0x4F,0x2E,0xAA,0xC5,0x56, 0xE3,0x39,0x93,0xCE,0x65,0x64,0xE4,0x58,
++    0x6C,0x19,0x42,0x79,0xDD,0xEE,0x96,0xF6, 0x8A,0xEC,0x1E,0x85,0x53,0x45,0xDE,0xBB,
++    0x7E,0x0A,0x9A,0x13,0x2A,0x9D,0xC2,0x5E, 0x5A,0x1F,0x32,0x35,0x9C,0xA8,0x73,0x30,
++
++    0x29,0x3D,0xE7,0x92,0x87,0x1B,0x2B,0x4B, 0xA5,0x57,0x97,0x40,0x15,0xE6,0xBC,0x0E,
++    0xEB,0xC3,0x34,0x2D,0xB8,0x44,0x25,0xA4, 0x1C,0xC7,0x23,0xED,0x90,0x6E,0x50,0x00,
++    0x99,0x9E,0x4D,0xD9,0xDA,0x8D,0x6F,0x5F, 0x3E,0xD7,0x21,0x74,0x86,0xDF,0x6B,0x05,
++    0x8E,0x5D,0x37,0x11,0xD2,0x28,0x75,0xD6, 0xA7,0x77,0x24,0xBF,0xF0,0xB0,0x02,0xB7,
++    0xF8,0xFC,0x81,0x09,0xB1,0x01,0x76,0x91, 0x7D,0x0F,0xC8,0xA0,0xF2,0xCB,0x78,0x60,
++    0xD1,0xF7,0xE0,0xB5,0x98,0x22,0xB3,0x20, 0x1D,0xA6,0xDB,0x7B,0x59,0x9F,0xAE,0x31,
++    0xFB,0xD3,0xB6,0xCA,0x43,0x72,0x07,0xF4, 0xD8,0x41,0x14,0x55,0x0D,0x54,0x8B,0xB9,
++    0xAD,0x46,0x0B,0xAF,0x80,0x52,0x2C,0xFA, 0x8C,0x89,0x66,0xFD,0xB2,0xA9,0x9B,0xC0,
++  };
++  MEMALIGN unsigned char r[GROUP_PARALLELISM*(8+56)];  /* 56 because we will move back in memory while looping */
++  MEMALIGN unsigned char sbox_in[GROUP_PARALLELISM],sbox_out[GROUP_PARALLELISM],perm_out[GROUP_PARALLELISM];
++  int roff;
++  int i,g,count_all=GROUP_PARALLELISM;
++
++  roff=GROUP_PARALLELISM*56;
++
++#define FASTTRASP1
++#ifndef FASTTRASP1
++  for(g=0;g<count;g++){
++    // Init registers 
++    int j;
++    for(j=0;j<8;j++){
++      r[roff+GROUP_PARALLELISM*j+g]=ib[8*g+j];
++    }
++  }
++#else
++  trasp_N_8((unsigned char *)&r[roff],(unsigned char *)ib,count);
++#endif
++//dump_mem("OLD r[roff]",&r[roff],GROUP_PARALLELISM*8,GROUP_PARALLELISM);
++
++  // loop over kk[55]..kk[0]
++  for(i=55;i>=0;i--){
++    {
++      MEMALIGN batch tkkmulti=kkmulti[i];
++      batch *si=(batch *)sbox_in;
++      batch *r6_N=(batch *)(r+roff+GROUP_PARALLELISM*6);
++      for(g=0;g<count_all/BYTES_PER_BATCH;g++){
++        si[g]=B_FFXOR(tkkmulti,r6_N[g]);              //FIXME: introduce FASTBATCH?
++      }
++    }
++
++    // table lookup, this works on only one byte at a time
++    // most difficult part of all
++    // - can't be parallelized
++    // - can't be synthetized through boolean terms (8 input bits are too many)
++    for(g=0;g<count_all;g++){
++      sbox_out[g]=block_sbox[sbox_in[g]];
++    }
++
++    // bit permutation
++    {
++      unsigned char *po=(unsigned char *)perm_out;
++      unsigned char *so=(unsigned char *)sbox_out;
++//dump_mem("pre perm ",(unsigned char *)so,GROUP_PARALLELISM,GROUP_PARALLELISM);
++      for(g=0;g<count_all;g+=BYTES_PER_BATCH){
++        MEMALIGN batch in,out;
++        in=*(batch *)&so[g];
++
++        out=B_FFOR(
++	    B_FFOR(
++	    B_FFOR(
++	    B_FFOR(
++	    B_FFOR(
++	           B_FFSH8L(B_FFAND(in,B_FFN_ALL_29()),1),
++	           B_FFSH8L(B_FFAND(in,B_FFN_ALL_02()),6)),
++	           B_FFSH8L(B_FFAND(in,B_FFN_ALL_04()),3)),
++	           B_FFSH8R(B_FFAND(in,B_FFN_ALL_10()),2)),
++	           B_FFSH8R(B_FFAND(in,B_FFN_ALL_40()),6)),
++	           B_FFSH8R(B_FFAND(in,B_FFN_ALL_80()),4));
++
++        *(batch *)&po[g]=out;
++      }
++//dump_mem("post perm",(unsigned char *)po,GROUP_PARALLELISM,GROUP_PARALLELISM);
++    }
++
++    roff-=GROUP_PARALLELISM; /* virtual shift of registers */
++
++#if 0
++/* one by one */
++    for(g=0;g<count_all;g++){
++      r[roff+GROUP_PARALLELISM*0+g]=r[roff+GROUP_PARALLELISM*8+g]^sbox_out[g];
++      r[roff+GROUP_PARALLELISM*6+g]^=perm_out[g];
++      r[roff+GROUP_PARALLELISM*4+g]^=r[roff+GROUP_PARALLELISM*0+g];
++      r[roff+GROUP_PARALLELISM*3+g]^=r[roff+GROUP_PARALLELISM*0+g];
++      r[roff+GROUP_PARALLELISM*2+g]^=r[roff+GROUP_PARALLELISM*0+g];
++    }
++#else
++    for(g=0;g<count_all;g+=BEST_SPAN){
++      XOR_BEST_BY(&r[roff+GROUP_PARALLELISM*0+g],&r[roff+GROUP_PARALLELISM*8+g],&sbox_out[g]);
++      XOREQ_BEST_BY(&r[roff+GROUP_PARALLELISM*6+g],&perm_out[g]);
++      XOREQ_BEST_BY(&r[roff+GROUP_PARALLELISM*4+g],&r[roff+GROUP_PARALLELISM*0+g]);
++      XOREQ_BEST_BY(&r[roff+GROUP_PARALLELISM*3+g],&r[roff+GROUP_PARALLELISM*0+g]);
++      XOREQ_BEST_BY(&r[roff+GROUP_PARALLELISM*2+g],&r[roff+GROUP_PARALLELISM*0+g]);
++    }
++#endif
++  }
++
++#define FASTTRASP2
++#ifndef FASTTRASP2
++  for(g=0;g<count;g++){
++    // Copy results
++    int j;
++    for(j=0;j<8;j++){
++      bd[8*g+j]=r[roff+GROUP_PARALLELISM*j+g];
++    }
++  }
++#else
++  trasp_8_N((unsigned char *)&r[roff],(unsigned char *)bd,count);
++#endif
++}
++
++//-----------------------------------EXTERNAL INTERFACE
++
++//-----get internal parallelism
++
++int get_internal_parallelism(void){
++  return GROUP_PARALLELISM;
++}
++
++//-----get suggested cluster size
++
++int get_suggested_cluster_size(void){
++  int r;
++  r=GROUP_PARALLELISM+GROUP_PARALLELISM/10;
++  if(r<GROUP_PARALLELISM+5) r=GROUP_PARALLELISM+5;
++  return r;
++}
++
++//-----key structure
++
++void *get_key_struct(void){
++  struct csa_keys_t *keys=(struct csa_keys_t *)MALLOC(sizeof(struct csa_keys_t));
++  if(keys) {
++    static const unsigned char pk[8] = { 0,0,0,0,0,0,0,0 };
++    set_control_words(keys,pk,pk);
++    }
++  return keys;
++}
++
++void free_key_struct(void *keys){
++  return FREE(keys);
++}
++
++//-----set control words
++
++static void schedule_key(struct csa_key_t *key, const unsigned char *pk){
 +  // could be made faster, but is not run often
 +  int bi,by;
 +  int i,j;
@@ -519,7 +1163,7 @@ Index: ffdecsa/ffdecsa.c
 +    }
 +  }
 +// precalculations for block
-+  key_schedule_block_ecm(key->ck,key->kk,ecm);
++  key_schedule_block(key->ck,key->kk);
 +  for(i=0;i<56;i++){
 +    for(j=0;j<BYTES_PER_BATCH;j++){
 +      *(((unsigned char *)&key->kkmulti[i])+j)=key->kk[i];
@@ -527,49 +1171,450 @@ Index: ffdecsa/ffdecsa.c
 +  }
 +}
 +
- void set_control_words(void *keys, const unsigned char *ev, const unsigned char *od){
-   schedule_key(&((struct csa_keys_t *)keys)->even,ev);
-   schedule_key(&((struct csa_keys_t *)keys)->odd,od);
-@@ -561,10 +691,18 @@
-   schedule_key(&((struct csa_keys_t *)keys)->even,pk);
- }
- 
-+void set_even_control_word_ecm(void *keys, const unsigned char *pk, const unsigned char ecm){
-+  schedule_key_ecm(&((struct csa_keys_t *)keys)->even,pk,ecm);
++void set_control_words(void *keys, const unsigned char *ev, const unsigned char *od){
++  schedule_key(&((struct csa_keys_t *)keys)->even,ev);
++  schedule_key(&((struct csa_keys_t *)keys)->odd,od);
 +}
 +
- void set_odd_control_word(void *keys, const unsigned char *pk){
-   schedule_key(&((struct csa_keys_t *)keys)->odd,pk);
- }
- 
-+void set_odd_control_word_ecm(void *keys, const unsigned char *pk, const unsigned char ecm){
-+  schedule_key_ecm(&((struct csa_keys_t *)keys)->odd,pk,ecm);
++void set_even_control_word(void *keys, const unsigned char *pk){
++  schedule_key(&((struct csa_keys_t *)keys)->even,pk);
 +}
 +
- //-----get control words
- 
- void get_control_words(void *keys, unsigned char *even, unsigned char *odd){
++void set_odd_control_word(void *keys, const unsigned char *pk){
++  schedule_key(&((struct csa_keys_t *)keys)->odd,pk);
++}
++
++//-----get control words
++
++void get_control_words(void *keys, unsigned char *even, unsigned char *odd){
++  memcpy(even,&((struct csa_keys_t *)keys)->even.ck,8);
++  memcpy(odd,&((struct csa_keys_t *)keys)->odd.ck,8);
++}
++
++//----- decrypt
++
++int decrypt_packets(void *keys, unsigned char **cluster){
++  // statistics, currently unused
++  int stat_no_scramble=0;
++  int stat_reserved=0;
++  int stat_decrypted[2]={0,0};
++  int stat_decrypted_mini=0;
++  unsigned char **clst;
++  unsigned char **clst2;
++  int grouped;
++  int group_ev_od;
++  int advanced;
++  int can_advance;
++  unsigned char *g_pkt[GROUP_PARALLELISM];
++  int g_len[GROUP_PARALLELISM];
++  int g_offset[GROUP_PARALLELISM];
++  int g_n[GROUP_PARALLELISM];
++  int g_residue[GROUP_PARALLELISM];
++  unsigned char *pkt;
++  int xc0,ev_od,len,offset,n,residue;
++  struct csa_key_t* k;
++  int i,j,iter,g;
++  int t23,tsmall;
++  int alive[24];
++//icc craziness  int pad1=0; //////////align! FIXME
++  unsigned char *encp[GROUP_PARALLELISM];
++  MEMALIGN unsigned char stream_in[GROUP_PARALLELISM*8];
++  MEMALIGN unsigned char stream_out[GROUP_PARALLELISM*8];
++  MEMALIGN unsigned char ib[GROUP_PARALLELISM*8];
++  MEMALIGN unsigned char block_out[GROUP_PARALLELISM*8];
++#ifdef COPY_UNALIGNED_PKT
++  unsigned char *unaligned[GROUP_PARALLELISM];
++  MEMALIGN unsigned char alignedBuff[GROUP_PARALLELISM][188];
++#endif
++  struct stream_regs regs;
++
++//icc craziness  i=(int)&pad1;//////////align!!! FIXME
++
++  // build a list of packets to be processed
++  clst=cluster;
++  grouped=0;
++  advanced=0;
++  can_advance=1;
++  group_ev_od=-1; // silence incorrect compiler warning
++  pkt=*clst;
++  do{ // find a new packet
++    if(grouped==GROUP_PARALLELISM){
++      // full
++      break;
++    }
++    if(pkt==NULL){
++      // no more ranges
++      break;
++    }
++    if(pkt>=*(clst+1)){
++      // out of this range, try next
++      clst++;clst++;
++      pkt=*clst;
++      continue;
++    }
++
++    do{ // handle this packet
++      xc0=pkt[3]&0xc0;
++      DBG(fprintf(stderr,"   exam pkt=%p, xc0=%02x, can_adv=%i\n",pkt,xc0,can_advance));
++      if(xc0==0x00){
++        DBG(fprintf(stderr,"skip clear pkt %p (can_advance is %i)\n",pkt,can_advance));
++        advanced+=can_advance;
++        stat_no_scramble++;
++        break;
++      }
++      if(xc0==0x40){
++        DBG(fprintf(stderr,"skip reserved pkt %p (can_advance is %i)\n",pkt,can_advance));
++        advanced+=can_advance;
++        stat_reserved++;
++        break;
++      }
++      if(xc0==0x80||xc0==0xc0){ // encrypted
++        ev_od=(xc0&0x40)>>6; // 0 even, 1 odd
++        if(grouped==0) group_ev_od=ev_od; // this group will be all even (or odd)
++        if(group_ev_od==ev_od){ // could be added to group
++          pkt[3]&=0x3f;  // consider it decrypted now
++          if(pkt[3]&0x20){ // incomplete packet
++            offset=4+pkt[4]+1;
++            len=188-offset;
++            n=len>>3;
++            residue=len-(n<<3);
++            if(n==0){ // decrypted==encrypted!
++              DBG(fprintf(stderr,"DECRYPTED MINI! (can_advance is %i)\n",can_advance));
++              advanced+=can_advance;
++              stat_decrypted_mini++;
++              break; // this doesn't need more processing
++            }
++          }else{
++            len=184;
++            offset=4;
++            n=23;
++            residue=0;
++          }
++          g_pkt[grouped]=pkt;
++          g_len[grouped]=len;
++          g_offset[grouped]=offset;
++          g_n[grouped]=n;
++          g_residue[grouped]=residue;
++          DBG(fprintf(stderr,"%2i: eo=%i pkt=%p len=%03i n=%2i residue=%i\n",grouped,ev_od,pkt,len,n,residue));
++          grouped++;
++          advanced+=can_advance;
++          stat_decrypted[ev_od]++;
++        }
++        else{
++          can_advance=0;
++          DBG(fprintf(stderr,"skip pkt %p and can_advance set to 0\n",pkt));
++          break; // skip and go on
++        }
++      }
++    } while(0);
++
++    if(can_advance){
++      // move range start forward
++      *clst+=188;
++    }
++    // next packet, if there is one
++    pkt+=188;
++  } while(1);
++  DBG(fprintf(stderr,"-- result: grouped %i pkts, advanced %i pkts\n",grouped,advanced));
++
++  // delete empty ranges and compact list
++  clst2=cluster;
++  for(clst=cluster;*clst!=NULL;clst+=2){
++    // if not empty
++    if(*clst<*(clst+1)){
++      // it will remain 
++      *clst2=*clst;
++      *(clst2+1)=*(clst+1);
++      clst2+=2;
++    }
++  }
++  *clst2=NULL;
++
++  if(grouped==0){
++    // no processing needed
++    return advanced;
++  }
++
++  //  sort them, longest payload first
++  //  we expect many n=23 packets and a few n<23
++  DBG(fprintf(stderr,"PRESORTING\n"));
++  for(i=0;i<grouped;i++){
++    DBG(fprintf(stderr,"%2i of %2i: pkt=%p len=%03i n=%2i residue=%i\n",i,grouped,g_pkt[i],g_len[i],g_n[i],g_residue[i]));
++    }
++  // grouped is always <= GROUP_PARALLELISM
++
++#define g_swap(a,b) \
++    pkt=g_pkt[a]; \
++    g_pkt[a]=g_pkt[b]; \
++    g_pkt[b]=pkt; \
++\
++    len=g_len[a]; \
++    g_len[a]=g_len[b]; \
++    g_len[b]=len; \
++\
++    offset=g_offset[a]; \
++    g_offset[a]=g_offset[b]; \
++    g_offset[b]=offset; \
++\
++    n=g_n[a]; \
++    g_n[a]=g_n[b]; \
++    g_n[b]=n; \
++\
++    residue=g_residue[a]; \
++    g_residue[a]=g_residue[b]; \
++    g_residue[b]=residue;
++
++  // step 1: move n=23 packets before small packets
++  t23=0;
++  tsmall=grouped-1;
++  for(;;){
++    for(;t23<grouped;t23++){
++      if(g_n[t23]!=23) break;
++    }
++DBG(fprintf(stderr,"t23 after for =%i\n",t23));
++    
++    for(;tsmall>=0;tsmall--){
++      if(g_n[tsmall]==23) break;
++    }
++DBG(fprintf(stderr,"tsmall after for =%i\n",tsmall));
++    
++    if(tsmall-t23<1) break;
++    
++DBG(fprintf(stderr,"swap t23=%i,tsmall=%i\n",t23,tsmall));
++
++    g_swap(t23,tsmall);
++
++    t23++;
++    tsmall--;
++DBG(fprintf(stderr,"new t23=%i,tsmall=%i\n\n",t23,tsmall));
++  }
++  DBG(fprintf(stderr,"packets with n=23, t23=%i   grouped=%i\n",t23,grouped));
++  DBG(fprintf(stderr,"MIDSORTING\n"));
++  for(i=0;i<grouped;i++){
++    DBG(fprintf(stderr,"%2i of %2i: pkt=%p len=%03i n=%2i residue=%i\n",i,grouped,g_pkt[i],g_len[i],g_n[i],g_residue[i]));
++    }
++
++  // step 2: sort small packets in decreasing order of n (bubble sort is enough)
++  for(i=t23;i<grouped;i++){
++    for(j=i+1;j<grouped;j++){
++      if(g_n[j]>g_n[i]){
++        g_swap(i,j);
++      }
++    }
++  }
++  DBG(fprintf(stderr,"POSTSORTING\n"));
++  for(i=0;i<grouped;i++){
++    DBG(fprintf(stderr,"%2i of %2i: pkt=%p len=%03i n=%2i residue=%i\n",i,grouped,g_pkt[i],g_len[i],g_n[i],g_residue[i]));
++    }
++
++  // we need to know how many packets need 23 iterations, how many 22...
++  for(i=0;i<=23;i++){
++    alive[i]=0;
++  }
++  // count
++  alive[23-1]=t23;
++  for(i=t23;i<grouped;i++){
++    alive[g_n[i]-1]++;
++  }
++  // integrate
++  for(i=22;i>=0;i--){
++    alive[i]+=alive[i+1];
++  }
++  DBG(fprintf(stderr,"ALIVE\n"));
++  for(i=0;i<=23;i++){
++    DBG(fprintf(stderr,"alive%2i=%i\n",i,alive[i]));
++    }
++
++  // choose key
++  if(group_ev_od==0){
++    k=&((struct csa_keys_t *)keys)->even;
++  }
++  else{
++    k=&((struct csa_keys_t *)keys)->odd;
++  }
++
++  //INIT
++//#define INITIALIZE_UNUSED_INPUT
++#ifdef INITIALIZE_UNUSED_INPUT
++// unnecessary zeroing.
++// without this, we operate on uninitialized memory
++// when grouped<GROUP_PARALLELISM, but it's not a problem,
++// as final results will be discarded.
++// random data makes debugging sessions difficult.
++  for(j=0;j<GROUP_PARALLELISM*8;j++) stream_in[j]=0;
++DBG(fprintf(stderr,"--- WARNING: you could gain speed by not initializing unused memory ---\n"));
++#else
++DBG(fprintf(stderr,"--- WARNING: DEBUGGING IS MORE DIFFICULT WHEN PROCESSING RANDOM DATA CHANGING AT EVERY RUN! ---\n"));
++#endif
++
++  for(g=0;g<grouped;g++){
++    encp[g]=g_pkt[g];
++    DBG(fprintf(stderr,"header[%i]=%p (%02x)\n",g,encp[g],*(encp[g])));
++    encp[g]+=g_offset[g]; // skip header
++#ifdef COPY_UNALIGNED_PKT
++    if(((int)encp[g])&0x03) {
++      memcpy(alignedBuff[g],encp[g],g_len[g]);
++      unaligned[g]=encp[g];
++      encp[g]=alignedBuff[g];
++      }
++    else unaligned[g]=0;
++#endif
++    FFTABLEIN(stream_in,g,encp[g]);
++  }
++//dump_mem("stream_in",stream_in,GROUP_PARALLELISM*8,BYPG);
++
++
++  // ITER 0
++DBG(fprintf(stderr,">>>>>ITER 0\n"));
++  iter=0;
++  stream_cypher_group_init(&regs,k->iA_g,k->iB_g,stream_in);
++  // fill first ib
++  for(g=0;g<alive[iter];g++){
++    COPY_8_BY(ib+8*g,encp[g]);
++  }
++DBG(dump_mem("IB ",ib,8*alive[iter],8));
++  // ITER 1..N-1
++  for (iter=1;iter<23&&alive[iter-1]>0;iter++){
++DBG(fprintf(stderr,">>>>>ITER %i\n",iter));
++    // alive and just dead packets: calc block
++    block_decypher_group(k->kkmulti,ib,block_out,alive[iter-1]);
++DBG(dump_mem("BLO_ib ",block_out,8*alive[iter-1],8));
++    // all packets (dead too): calc stream
++    stream_cypher_group_normal(&regs,stream_out);
++//dump_mem("stream_out",stream_out,GROUP_PARALLELISM*8,BYPG);
++
++    // alive packets: calc ib
++    for(g=0;g<alive[iter];g++){
++      FFTABLEOUT(ib+8*g,stream_out,g);
++DBG(dump_mem("stream_out_ib ",ib+8*g,8,8));
++// XOREQ8BY gcc bug? 2x4 ok, 8 ko    UPDATE: result ok but speed 1-2% slower (!!!???)
++#if 1
++      XOREQ_4_BY(ib+8*g,encp[g]+8);
++      XOREQ_4_BY(ib+8*g+4,encp[g]+8+4);
++#else
++      XOREQ_8_BY(ib+8*g,encp[g]+8);
++#endif
++DBG(dump_mem("after_stream_xor_ib ",ib+8*g,8,8));
++    }
++    // alive packets: decrypt data
++    for(g=0;g<alive[iter];g++){
++DBG(dump_mem("before_ib_decrypt_data ",encp[g],8,8));
++      XOR_8_BY(encp[g],ib+8*g,block_out+8*g);
++DBG(dump_mem("after_ib_decrypt_data ",encp[g],8,8));
++    }
++    // just dead packets: write decrypted data
++    for(g=alive[iter];g<alive[iter-1];g++){
++DBG(dump_mem("jd_before_ib_decrypt_data ",encp[g],8,8));
++      COPY_8_BY(encp[g],block_out+8*g);
++DBG(dump_mem("jd_after_ib_decrypt_data ",encp[g],8,8));
++    }
++    // just dead packets: decrypt residue
++    for(g=alive[iter];g<alive[iter-1];g++){
++DBG(dump_mem("jd_before_decrypt_residue ",encp[g]+8,g_residue[g],g_residue[g]));
++      FFTABLEOUTXORNBY(g_residue[g],encp[g]+8,stream_out,g);
++DBG(dump_mem("jd_after_decrypt_residue ",encp[g]+8,g_residue[g],g_residue[g]));
++    }
++    // alive packets: pointers++
++    for(g=0;g<alive[iter];g++) encp[g]+=8;
++  };
++  // ITER N
++DBG(fprintf(stderr,">>>>>ITER 23\n"));
++  iter=23;
++  // calc block
++  block_decypher_group(k->kkmulti,ib,block_out,alive[iter-1]);
++DBG(dump_mem("23BLO_ib ",block_out,8*alive[iter-1],8));
++  // just dead packets: write decrypted data
++  for(g=alive[iter];g<alive[iter-1];g++){
++DBG(dump_mem("23jd_before_ib_decrypt_data ",encp[g],8,8));
++    COPY_8_BY(encp[g],block_out+8*g);
++DBG(dump_mem("23jd_after_ib_decrypt_data ",encp[g],8,8));
++  }
++  // no residue possible
++  // so do nothing
++
++  DBG(fprintf(stderr,"returning advanced=%i\n",advanced));
++
++#ifdef COPY_UNALIGNED_PKT
++  for(g=0;g<grouped;g++)
++    if(unaligned[g]) memcpy(unaligned[g],alignedBuff[g],g_len[g]);
++#endif
++
++  M_EMPTY(); // restore CPU multimedia state
++
++  return advanced;
++}
 Index: ffdecsa/ffdecsa.h
 ===================================================================
---- ffdecsa/ffdecsa.h	(revision 11726)
+--- ffdecsa/ffdecsa.h	(nonexistent)
 +++ ffdecsa/ffdecsa.h	(working copy)
-@@ -47,9 +47,11 @@
- 
- // -- set even control word, 8 bytes
- void set_even_control_word(void *keys, const unsigned char *even);
-+void set_even_control_word_ecm(void *keys, const unsigned char *even, const unsigned char ecm);
- 
- // -- set odd control word, 8 bytes
- void set_odd_control_word(void *keys, const unsigned char *odd);
-+void set_odd_control_word_ecm(void *keys, const unsigned char *odd, const unsigned char ecm);
- 
- // -- get control words, 8 bytes each
- //void get_control_words(void *keys, unsigned char *even, unsigned char *odd);
-Index: ffdecsa/parallel_128_neon.h
+@@ -0,0 +1,62 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++
++#ifndef FFDECSA_H
++#define FFDECSA_H
++
++//----- public interface
++
++// -- how many packets can be decrypted at the same time
++// This is an info about internal decryption parallelism.
++// You should try to call decrypt_packets with more packets than the number
++// returned here for performance reasons (use get_suggested_cluster_size to know
++// how many).
++int get_internal_parallelism(void);
++
++// -- how many packets you should have in a cluster when calling decrypt_packets
++// This is a suggestion to achieve optimal performance; typically a little
++// higher than what get_internal_parallelism returns.
++// Passing less packets could slow down the decryption.
++// Passing more packets is never bad (if you don't spend a lot of time building
++// the list).
++int get_suggested_cluster_size(void);
++
++// -- alloc & free the key structure
++void *get_key_struct(void);
++void free_key_struct(void *keys);
++
++// -- set control words, 8 bytes each
++void set_control_words(void *keys, const unsigned char *even, const unsigned char *odd);
++
++// -- set even control word, 8 bytes
++void set_even_control_word(void *keys, const unsigned char *even);
++
++// -- set odd control word, 8 bytes
++void set_odd_control_word(void *keys, const unsigned char *odd);
++
++// -- get control words, 8 bytes each
++//void get_control_words(void *keys, unsigned char *even, unsigned char *odd);
++
++// -- decrypt many TS packets
++// This interface is a bit complicated because it is designed for maximum speed.
++// Please read doc/how_to_use.txt.
++int decrypt_packets(void *keys, unsigned char **cluster);
++
++#endif
+Index: ffdecsa/fftable.h
 ===================================================================
---- ffdecsa/parallel_128_neon.h	(nonexistent)
-+++ ffdecsa/parallel_128_neon.h	(working copy)
-@@ -0,0 +1,81 @@
+--- ffdecsa/fftable.h	(nonexistent)
++++ ffdecsa/fftable.h	(working copy)
+@@ -0,0 +1,56 @@
 +/* FFdecsa -- fast decsa algorithm
 + *
 + * Copyright (C) 2007 Dark Avenger
@@ -590,27 +1635,193 @@ Index: ffdecsa/parallel_128_neon.h
 + * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 + */
 +
-+# include <arm_neon.h>
++#ifndef FFTABLE_H
++#define FFTABLE_H
++
++inline static void FFTABLEIN(unsigned char *tab, int g, unsigned char *data)
++{
++#if 0
++  *(((int *)tab)+2*g)=*((int *)data);
++  *(((int *)tab)+2*g+1)=*(((int *)data)+1);
++#else
++  *(((long long *)tab)+g)=*((long long *)data);
++#endif
++}
++
++inline static void FFTABLEOUT(unsigned char *data, unsigned char *tab, int g)
++{
++#if 1
++  *((int *)data)=*(((int *)tab)+2*g);
++  *(((int *)data)+1)=*(((int *)tab)+2*g+1);
++#else
++  *((long long *)data)=*(((long long *)tab)+g);
++#endif
++}
++
++inline static void FFTABLEOUTXORNBY(int n, unsigned char *data, unsigned char *tab, int g)
++{
++  int j;
++  for(j=0;j<n;j++) *(data+j)^=*(tab+8*g+j);
++}
++
++#undef XOREQ_BEST_BY
++inline static void XOREQ_BEST_BY(unsigned char *d, unsigned char *s)
++{
++	XOR_BEST_BY(d, d, s);
++}
++
++#endif //FFTABLE_H 
+Index: ffdecsa/parallel_032_int.h
+===================================================================
+--- ffdecsa/parallel_032_int.h	(nonexistent)
++++ ffdecsa/parallel_032_int.h	(working copy)
+@@ -0,0 +1,55 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include "parallel_std_def.h"
++
++typedef unsigned int group;
++#define GROUP_PARALLELISM 32
++#define FF0()      0x0
++#define FF1()      0xffffffff
++
++/* 64 rows of 32 bits */
++
++inline static void FFTABLEIN(unsigned char *tab, int g, unsigned char *data){
++  *(((int *)tab)+g)=*((int *)data);
++  *(((int *)tab)+32+g)=*(((int *)data)+1);
++}
++
++inline static void FFTABLEOUT(unsigned char *data, unsigned char *tab, int g){
++  *((int *)data)=*(((int *)tab)+g);
++  *(((int *)data)+1)=*(((int *)tab)+32+g);
++}
++
++inline static void FFTABLEOUTXORNBY(int n, unsigned char *data, unsigned char *tab, int g){
++  int j;
++  for(j=0;j<n;j++){
++    *(data+j)^=*(tab+4*(g+(j>=4?32-1:0))+j);
++  }
++}
++
++typedef unsigned int batch;
++#define BYTES_PER_BATCH 4
++#define B_FFN_ALL_29() 0x29292929
++#define B_FFN_ALL_02() 0x02020202
++#define B_FFN_ALL_04() 0x04040404
++#define B_FFN_ALL_10() 0x10101010
++#define B_FFN_ALL_40() 0x40404040
++#define B_FFN_ALL_80() 0x80808080
++
++#define M_EMPTY()
+Index: ffdecsa/parallel_064_long.h
+===================================================================
+--- ffdecsa/parallel_064_long.h	(nonexistent)
++++ ffdecsa/parallel_064_long.h	(working copy)
+@@ -0,0 +1,39 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2007 Dark Avenger
++ *               2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include "parallel_std_def.h"
++
++typedef unsigned long long group;
++#define GROUP_PARALLELISM 64
++#define FF0() 0x0ULL
++#define FF1() 0xffffffffffffffffULL
++
++typedef unsigned long long batch;
++#define BYTES_PER_BATCH 8
++#define B_FFN_ALL_29() 0x2929292929292929ULL
++#define B_FFN_ALL_02() 0x0202020202020202ULL
++#define B_FFN_ALL_04() 0x0404040404040404ULL
++#define B_FFN_ALL_10() 0x1010101010101010ULL
++#define B_FFN_ALL_40() 0x4040404040404040ULL
++#define B_FFN_ALL_80() 0x8080808080808080ULL
++
++#define M_EMPTY()
++
++#include "fftable.h"
+Index: ffdecsa/parallel_128_sse2.h
+===================================================================
+--- ffdecsa/parallel_128_sse2.h	(nonexistent)
++++ ffdecsa/parallel_128_sse2.h	(working copy)
+@@ -0,0 +1,82 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2007 Dark Avenger
++ *               2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include <emmintrin.h>
 +
 +#define MEMALIGN_VAL 16
 +
 +union __u128i {
 +	unsigned int u[4];
-+	uint64x2_t v;
++	__m128i v;
 +};
 +
 +static const union __u128i ff0 = {{0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U}};
 +static const union __u128i ff1 = {{0xffffffffU, 0xffffffffU, 0xffffffffU, 0xffffffffU}};
 +
-+typedef uint64x2_t group;
++typedef __m128i group;
 +#define GROUP_PARALLELISM 128
 +#define FF0() ff0.v
 +#define FF1() ff1.v
-+#define FFAND(a,b) vandq_u64((a),(b))
-+#define FFOR(a,b)  vorrq_u64((a),(b))
-+#define FFXOR(a,b) veorq_u64((a),(b))
-+#define FFNOT(a)   vreinterpretq_u64_u8(vmvnq_u8(vreinterpretq_u8_u64(a)))
-+
++#define FFAND(a,b) _mm_and_si128((a),(b))
++#define FFOR(a,b)  _mm_or_si128((a),(b))
++#define FFXOR(a,b) _mm_xor_si128((a),(b))
++#define FFNOT(a)   _mm_xor_si128((a),FF1())
++#define MALLOC(X)  _mm_malloc(X,16)
++#define FREE(X)    _mm_free(X)
 +
 +/* BATCH */
 +
@@ -621,7 +1832,7 @@ Index: ffdecsa/parallel_128_neon.h
 +static const union __u128i ff40 = {{0x40404040U, 0x40404040U, 0x40404040U, 0x40404040U}};
 +static const union __u128i ff80 = {{0x80808080U, 0x80808080U, 0x80808080U, 0x80808080U}};
 +
-+typedef uint64x2_t batch;
++typedef __m128i batch;
 +#define BYTES_PER_BATCH 16
 +#define B_FFN_ALL_29() ff29.v
 +#define B_FFN_ALL_02() ff02.v
@@ -633,8 +1844,8 @@ Index: ffdecsa/parallel_128_neon.h
 +#define B_FFAND(a,b) FFAND(a,b)
 +#define B_FFOR(a,b)  FFOR(a,b)
 +#define B_FFXOR(a,b) FFXOR(a,b)
-+#define B_FFSH8L(a,n) vshlq_n_u64((a),(n))
-+#define B_FFSH8R(a,n) vshrq_n_u64((a),(n))
++#define B_FFSH8L(a,n) _mm_slli_epi64((a),(n))
++#define B_FFSH8R(a,n) _mm_srli_epi64((a),(n))
 +
 +#define M_EMPTY()
 +
@@ -644,16 +1855,1068 @@ Index: ffdecsa/parallel_128_neon.h
 +#undef XOR_BEST_BY
 +inline static void XOR_BEST_BY(unsigned char *d, unsigned char *s1, unsigned char *s2)
 +{
-+	uint64x2_t vs1 = vld1q_u64((uint64_t*)s1);
-+	uint64x2_t vs2 = vld1q_u64((uint64_t*)s2);
-+	vs1 = veorq_u64(vs1, vs2);
-+	vst1q_u64((uint64_t*)d, vs1);
++	__m128i vs1 = _mm_load_si128((__m128i*)s1);
++	__m128i vs2 = _mm_load_si128((__m128i*)s2);
++	vs1 = _mm_xor_si128(vs1, vs2);
++	_mm_store_si128((__m128i*)d, vs1);
 +}
 +
 +#include "fftable.h"
+Index: ffdecsa/parallel_generic.h
+===================================================================
+--- ffdecsa/parallel_generic.h	(nonexistent)
++++ ffdecsa/parallel_generic.h	(working copy)
+@@ -0,0 +1,102 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++
++
++#if 0
++//// generics
++#define COPY4BY(d,s)     do{ int *pd=(int *)(d), *ps=(int *)(s); \
++                             *pd = *ps; }while(0)
++#define COPY8BY(d,s)     do{ long long int *pd=(long long int *)(d), *ps=(long long int *)(s); \
++                             *pd = *ps; }while(0)
++#define COPY16BY(d,s)    do{ long long int *pd=(long long int *)(d), *ps=(long long int *)(s); \
++                             *pd = *ps; \
++			     *(pd+1) = *(ps+1); }while(0)
++#define COPY32BY(d,s)    do{ long long int *pd=(long long int *)(d), *ps=(long long int *)(s); \
++                             *pd = *ps; \
++			     *(pd+1) = *(ps+1) \
++			     *(pd+2) = *(ps+2) \
++			     *(pd+3) = *(ps+3); }while(0)
++#define XOR4BY(d,s1,s2)  do{ int *pd=(int *)(d), *ps1=(int *)(s1), *ps2=(int *)(s2); \
++                             *pd = *ps1  ^ *ps2; }while(0)
++#define XOR8BY(d,s1,s2)  do{ long long int *pd=(long long int *)(d), *ps1=(long long int *)(s1), *ps2=(long long int *)(s2); \
++                             *pd = *ps1  ^ *ps2; }while(0)
++#define XOR16BY(d,s1,s2) do{ long long int *pd=(long long int *)(d), *ps1=(long long int *)(s1), *ps2=(long long int *)(s2); \
++                             *pd = *ps1  ^ *ps2; \
++                             *(pd+8) = *(ps1+8)  ^ *(ps2+8); }while(0)
++#define XOR32BY(d,s1,s2) do{ long long int *pd=(long long int *)(d), *ps1=(long long int *)(s1), *ps2=(long long int *)(s2); \
++                             *pd = *ps1  ^ *ps2; \
++                             *(pd+1) = *(ps1+1)  ^ *(ps2+1); \
++                             *(pd+2) = *(ps1+2)  ^ *(ps2+2); \
++                             *(pd+3) = *(ps1+3)  ^ *(ps2+3); }while(0)
++#define XOR32BV(d,s1,s2) do{ int *const pd=(int *const)(d), *ps1=(const int *const)(s1), *ps2=(const int *const)(s2); \
++                             int z; \
++			     for(z=0;z<8;z++){ \
++                               pd[z]=ps1[z]^ps2[z]; \
++			     } \
++                           }while(0)
++#define XOREQ4BY(d,s)    do{ int *pd=(int *)(d), *ps=(int *)(s); \
++                             *pd ^= *ps; }while(0)
++#define XOREQ8BY(d,s)    do{ long long int *pd=(long long int *)(d), *ps=(long long int *)(s); \
++                             *pd ^= *ps; }while(0)
++#define XOREQ16BY(d,s)   do{ long long int *pd=(long long int *)(d), *ps=(long long int *)(s); \
++                             *pd ^= *ps; \
++			     *(pd+1) ^=*(ps+1); }while(0)
++#define XOREQ32BY(d,s)   do{ long long int *pd=(long long int *)(d), *ps=(long long int *)(s); \
++                             *pd ^= *ps; \
++			     *(pd+1) ^=*(ps+1); \
++			     *(pd+2) ^=*(ps+2); \
++			     *(pd+3) ^=*(ps+3); }while(0)
++#define XOREQ32BY4(d,s)  do{ int *pd=(int *)(d), *ps=(int *)(s); \
++                             *pd ^= *ps; \
++			     *(pd+1) ^=*(ps+1); \
++			     *(pd+2) ^=*(ps+2); \
++			     *(pd+3) ^=*(ps+3); \
++			     *(pd+4) ^=*(ps+4); \
++			     *(pd+5) ^=*(ps+5); \
++			     *(pd+6) ^=*(ps+6); \
++			     *(pd+7) ^=*(ps+7); }while(0)
++#define XOREQ32BV(d,s)   do{ unsigned char *pd=(unsigned char *)(d), *ps=(unsigned char *)(s); \
++                             int z; \
++			     for(z=0;z<32;z++){ \
++                               pd[z]^=ps[z]; \
++			     } \
++                           }while(0)
++
++#else
++#define XOR_4_BY(d,s1,s2)    do{ int *pd=(int *)(d), *ps1=(int *)(s1), *ps2=(int *)(s2); \
++                               *pd = *ps1  ^ *ps2; }while(0)
++#define XOR_8_BY(d,s1,s2)    do{ long long int *pd=(long long int *)(d), *ps1=(long long int *)(s1), *ps2=(long long int *)(s2); \
++                               *pd = *ps1  ^ *ps2; }while(0)
++#define XOREQ_4_BY(d,s)      do{ int *pd=(int *)(d), *ps=(int *)(s); \
++                               *pd ^= *ps; }while(0)
++#define XOREQ_8_BY(d,s)      do{ long long int *pd=(long long int *)(d), *ps=(long long int *)(s); \
++                               *pd ^= *ps; }while(0)
++#define COPY_4_BY(d,s)       do{ int *pd=(int *)(d), *ps=(int *)(s); \
++                               *pd = *ps; }while(0)
++#define COPY_8_BY(d,s)       do{ long long int *pd=(long long int *)(d), *ps=(long long int *)(s); \
++                               *pd = *ps; }while(0)
++
++#define BEST_SPAN            8
++#define XOR_BEST_BY(d,s1,s2) do{ XOR_8_BY(d,s1,s2); }while(0);
++#define XOREQ_BEST_BY(d,s)   do{ XOREQ_8_BY(d,s); }while(0);
++#define COPY_BEST_BY(d,s)    do{ COPY_8_BY(d,s); }while(0);
++
++#define END_MM             do{ }while(0);
++#endif
+Index: ffdecsa/parallel_std_def.h
+===================================================================
+--- ffdecsa/parallel_std_def.h	(nonexistent)
++++ ffdecsa/parallel_std_def.h	(working copy)
+@@ -0,0 +1,29 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#define FFXOR(a,b) ((a)^(b))
++#define FFAND(a,b) ((a)&(b))
++#define FFOR(a,b)  ((a)|(b))
++#define FFNOT(a)   (~(a))
++
++#define B_FFAND(a,b) ((a)&(b))
++#define B_FFOR(a,b)  ((a)|(b))
++#define B_FFXOR(a,b) ((a)^(b))
++#define B_FFSH8L(a,n) ((a)<<(n))
++#define B_FFSH8R(a,n) ((a)>>(n))
+Index: ffdecsa/stream.c
+===================================================================
+--- ffdecsa/stream.c	(nonexistent)
++++ ffdecsa/stream.c	(working copy)
+@@ -0,0 +1,906 @@
++/* FFdecsa -- fast decsa algorithm
++ *
++ * Copyright (C) 2003-2004  fatih89r
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++
++
++// define statics only once, when STREAM_INIT
++#ifdef STREAM_INIT
++struct stream_regs {
++  group A[32+10][4]; // 32 because we will move back (virtual shift register)
++  group B[32+10][4]; // 32 because we will move back (virtual shift register)
++  group X[4];
++  group Y[4];
++  group Z[4];
++  group D[4];
++  group E[4];
++  group F[4];
++  group p;
++  group q;
++  group r;
++  };
++
++static inline void trasp64_32_88ccw(unsigned char *data){
++/* 64 rows of 32 bits transposition (bytes transp. - 8x8 rotate counterclockwise)*/
++#define row ((unsigned int *)data)
++  int i,j;
++  for(j=0;j<64;j+=32){
++    unsigned int t,b;
++    for(i=0;i<16;i++){
++      t=row[j+i];
++      b=row[j+16+i];
++      row[j+i]   = (t&0x0000ffff)      | ((b           )<<16);
++      row[j+16+i]=((t           )>>16) |  (b&0xffff0000) ;
++    }
++  }
++  for(j=0;j<64;j+=16){
++    unsigned int t,b;
++    for(i=0;i<8;i++){
++      t=row[j+i];
++      b=row[j+8+i];
++      row[j+i]   = (t&0x00ff00ff)     | ((b&0x00ff00ff)<<8);
++      row[j+8+i] =((t&0xff00ff00)>>8) |  (b&0xff00ff00);
++    }
++  }
++  for(j=0;j<64;j+=8){
++    unsigned int t,b;
++    for(i=0;i<4;i++){
++      t=row[j+i];
++      b=row[j+4+i];
++      row[j+i]   =((t&0x0f0f0f0f)<<4) |  (b&0x0f0f0f0f);
++      row[j+4+i] = (t&0xf0f0f0f0)     | ((b&0xf0f0f0f0)>>4);
++    }
++  }
++  for(j=0;j<64;j+=4){
++    unsigned int t,b;
++    for(i=0;i<2;i++){
++      t=row[j+i];
++      b=row[j+2+i];
++      row[j+i]   =((t&0x33333333)<<2) |  (b&0x33333333);
++      row[j+2+i] = (t&0xcccccccc)     | ((b&0xcccccccc)>>2);
++    }
++  }
++  for(j=0;j<64;j+=2){
++    unsigned int t,b;
++    for(i=0;i<1;i++){
++      t=row[j+i];
++      b=row[j+1+i];
++      row[j+i]   =((t&0x55555555)<<1) |  (b&0x55555555);
++      row[j+1+i] = (t&0xaaaaaaaa)     | ((b&0xaaaaaaaa)>>1);
++    }
++  }
++#undef row
++}
++
++static inline void trasp64_32_88cw(unsigned char *data){
++/* 64 rows of 32 bits transposition (bytes transp. - 8x8 rotate clockwise)*/
++#define row ((unsigned int *)data)
++  int i,j;
++  for(j=0;j<64;j+=32){
++    unsigned int t,b;
++    for(i=0;i<16;i++){
++      t=row[j+i];
++      b=row[j+16+i];
++      row[j+i]   = (t&0x0000ffff)      | ((b           )<<16);
++      row[j+16+i]=((t           )>>16) |  (b&0xffff0000) ;
++    }
++  }
++  for(j=0;j<64;j+=16){
++    unsigned int t,b;
++    for(i=0;i<8;i++){
++      t=row[j+i];
++      b=row[j+8+i];
++      row[j+i]   = (t&0x00ff00ff)     | ((b&0x00ff00ff)<<8);
++      row[j+8+i] =((t&0xff00ff00)>>8) |  (b&0xff00ff00);
++    }
++  }
++  for(j=0;j<64;j+=8){
++    unsigned int t,b;
++    for(i=0;i<4;i++){
++      t=row[j+i];
++      b=row[j+4+i];
++      row[j+i]  =((t&0xf0f0f0f0)>>4) |   (b&0xf0f0f0f0);
++      row[j+4+i]= (t&0x0f0f0f0f)     |  ((b&0x0f0f0f0f)<<4);
++    }
++  }
++  for(j=0;j<64;j+=4){
++    unsigned int t,b;
++    for(i=0;i<2;i++){
++      t=row[j+i];
++      b=row[j+2+i];
++      row[j+i]  =((t&0xcccccccc)>>2) |  (b&0xcccccccc);
++      row[j+2+i]= (t&0x33333333)     | ((b&0x33333333)<<2);
++    }
++  }
++  for(j=0;j<64;j+=2){
++    unsigned int t,b;
++    for(i=0;i<1;i++){
++      t=row[j+i];
++      b=row[j+1+i];
++      row[j+i]  =((t&0xaaaaaaaa)>>1) |  (b&0xaaaaaaaa);
++      row[j+1+i]= (t&0x55555555)     | ((b&0x55555555)<<1);
++    }
++  }
++#undef row
++}
++
++//64-64----------------------------------------------------------
++static inline void trasp64_64_88ccw(unsigned char *data){
++/* 64 rows of 64 bits transposition (bytes transp. - 8x8 rotate counterclockwise)*/
++#define row ((unsigned long long int *)data)
++  int i,j;
++  for(j=0;j<64;j+=64){
++    unsigned long long int t,b;
++    for(i=0;i<32;i++){
++      t=row[j+i];
++      b=row[j+32+i];
++      row[j+i]   = (t&0x00000000ffffffffULL)      | ((b                      )<<32);
++      row[j+32+i]=((t                      )>>32) |  (b&0xffffffff00000000ULL) ;
++    }
++  }
++  for(j=0;j<64;j+=32){
++    unsigned long long int t,b;
++    for(i=0;i<16;i++){
++      t=row[j+i];
++      b=row[j+16+i];
++      row[j+i]   = (t&0x0000ffff0000ffffULL)      | ((b&0x0000ffff0000ffffULL)<<16);
++      row[j+16+i]=((t&0xffff0000ffff0000ULL)>>16) |  (b&0xffff0000ffff0000ULL) ;
++    }
++  }
++  for(j=0;j<64;j+=16){
++    unsigned long long int t,b;
++    for(i=0;i<8;i++){
++      t=row[j+i];
++      b=row[j+8+i];
++      row[j+i]   = (t&0x00ff00ff00ff00ffULL)     | ((b&0x00ff00ff00ff00ffULL)<<8);
++      row[j+8+i] =((t&0xff00ff00ff00ff00ULL)>>8) |  (b&0xff00ff00ff00ff00ULL);
++    }
++  }
++  for(j=0;j<64;j+=8){
++    unsigned long long int t,b;
++    for(i=0;i<4;i++){
++      t=row[j+i];
++      b=row[j+4+i];
++      row[j+i]   =((t&0x0f0f0f0f0f0f0f0fULL)<<4) |  (b&0x0f0f0f0f0f0f0f0fULL);
++      row[j+4+i] = (t&0xf0f0f0f0f0f0f0f0ULL)     | ((b&0xf0f0f0f0f0f0f0f0ULL)>>4);
++    }
++  }
++  for(j=0;j<64;j+=4){
++    unsigned long long int t,b;
++    for(i=0;i<2;i++){
++      t=row[j+i];
++      b=row[j+2+i];
++      row[j+i]   =((t&0x3333333333333333ULL)<<2) |  (b&0x3333333333333333ULL);
++      row[j+2+i] = (t&0xccccccccccccccccULL)     | ((b&0xccccccccccccccccULL)>>2);
++    }
++  }
++  for(j=0;j<64;j+=2){
++    unsigned long long int t,b;
++    for(i=0;i<1;i++){
++      t=row[j+i];
++      b=row[j+1+i];
++      row[j+i]   =((t&0x5555555555555555ULL)<<1) |  (b&0x5555555555555555ULL);
++      row[j+1+i] = (t&0xaaaaaaaaaaaaaaaaULL)     | ((b&0xaaaaaaaaaaaaaaaaULL)>>1);
++    }
++  }
++#undef row
++}
++
++static inline void trasp64_64_88cw(unsigned char *data){
++/* 64 rows of 64 bits transposition (bytes transp. - 8x8 rotate clockwise)*/
++#define row ((unsigned long long int *)data)
++  int i,j;
++  for(j=0;j<64;j+=64){
++    unsigned long long int t,b;
++    for(i=0;i<32;i++){
++      t=row[j+i];
++      b=row[j+32+i];
++      row[j+i]   = (t&0x00000000ffffffffULL)      | ((b                      )<<32);
++      row[j+32+i]=((t                      )>>32) |  (b&0xffffffff00000000ULL) ;
++    }
++  }
++  for(j=0;j<64;j+=32){
++    unsigned long long int t,b;
++    for(i=0;i<16;i++){
++      t=row[j+i];
++      b=row[j+16+i];
++      row[j+i]   = (t&0x0000ffff0000ffffULL)      | ((b&0x0000ffff0000ffffULL)<<16);
++      row[j+16+i]=((t&0xffff0000ffff0000ULL)>>16) |  (b&0xffff0000ffff0000ULL) ;
++    }
++  }
++  for(j=0;j<64;j+=16){
++    unsigned long long int t,b;
++    for(i=0;i<8;i++){
++      t=row[j+i];
++      b=row[j+8+i];
++      row[j+i]   = (t&0x00ff00ff00ff00ffULL)     | ((b&0x00ff00ff00ff00ffULL)<<8);
++      row[j+8+i] =((t&0xff00ff00ff00ff00ULL)>>8) |  (b&0xff00ff00ff00ff00ULL);
++    }
++  }
++  for(j=0;j<64;j+=8){
++    unsigned long long int t,b;
++    for(i=0;i<4;i++){
++      t=row[j+i];
++      b=row[j+4+i];
++      row[j+i]   =((t&0xf0f0f0f0f0f0f0f0ULL)>>4) |   (b&0xf0f0f0f0f0f0f0f0ULL);
++      row[j+4+i] = (t&0x0f0f0f0f0f0f0f0fULL)     |  ((b&0x0f0f0f0f0f0f0f0fULL)<<4);
++    }
++  }
++  for(j=0;j<64;j+=4){
++    unsigned long long int t,b;
++    for(i=0;i<2;i++){
++      t=row[j+i];
++      b=row[j+2+i];
++      row[j+i]   =((t&0xccccccccccccccccULL)>>2) |  (b&0xccccccccccccccccULL);
++      row[j+2+i] = (t&0x3333333333333333ULL)     | ((b&0x3333333333333333ULL)<<2);
++    }
++  }
++  for(j=0;j<64;j+=2){
++    unsigned long long int t,b;
++    for(i=0;i<1;i++){
++      t=row[j+i];
++      b=row[j+1+i];
++      row[j+i]   =((t&0xaaaaaaaaaaaaaaaaULL)>>1) |  (b&0xaaaaaaaaaaaaaaaaULL);
++      row[j+1+i] = (t&0x5555555555555555ULL)     | ((b&0x5555555555555555ULL)<<1);
++    }
++  }
++#undef row
++}
++
++//64-128----------------------------------------------------------
++static inline void trasp64_128_88ccw(unsigned char *data){
++/* 64 rows of 128 bits transposition (bytes transp. - 8x8 rotate counterclockwise)*/
++#define halfrow ((unsigned long long int *)data)
++  int i,j;
++  for(j=0;j<64;j+=64){
++    unsigned long long int t,b;
++    for(i=0;i<32;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+32+i)];
++      halfrow[2*(j+i)]   = (t&0x00000000ffffffffULL)      | ((b                      )<<32);
++      halfrow[2*(j+32+i)]=((t                      )>>32) |  (b&0xffffffff00000000ULL) ;
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+32+i)+1];
++      halfrow[2*(j+i)+1]   = (t&0x00000000ffffffffULL)      | ((b                      )<<32);
++      halfrow[2*(j+32+i)+1]=((t                      )>>32) |  (b&0xffffffff00000000ULL) ;
++    }
++  }
++  for(j=0;j<64;j+=32){
++    unsigned long long int t,b;
++    for(i=0;i<16;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+16+i)];
++      halfrow[2*(j+i)]   = (t&0x0000ffff0000ffffULL)      | ((b&0x0000ffff0000ffffULL)<<16);
++      halfrow[2*(j+16+i)]=((t&0xffff0000ffff0000ULL)>>16) |  (b&0xffff0000ffff0000ULL) ;
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+16+i)+1];
++      halfrow[2*(j+i)+1]   = (t&0x0000ffff0000ffffULL)      | ((b&0x0000ffff0000ffffULL)<<16);
++      halfrow[2*(j+16+i)+1]=((t&0xffff0000ffff0000ULL)>>16) |  (b&0xffff0000ffff0000ULL) ;
++    }
++  }
++  for(j=0;j<64;j+=16){
++    unsigned long long int t,b;
++    for(i=0;i<8;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+8+i)];
++      halfrow[2*(j+i)]   = (t&0x00ff00ff00ff00ffULL)     | ((b&0x00ff00ff00ff00ffULL)<<8);
++      halfrow[2*(j+8+i)] =((t&0xff00ff00ff00ff00ULL)>>8) |  (b&0xff00ff00ff00ff00ULL);
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+8+i)+1];
++      halfrow[2*(j+i)+1]   = (t&0x00ff00ff00ff00ffULL)     | ((b&0x00ff00ff00ff00ffULL)<<8);
++      halfrow[2*(j+8+i)+1] =((t&0xff00ff00ff00ff00ULL)>>8) |  (b&0xff00ff00ff00ff00ULL);
++    }
++  }
++  for(j=0;j<64;j+=8){
++    unsigned long long int t,b;
++    for(i=0;i<4;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+4+i)];
++      halfrow[2*(j+i)]   =((t&0x0f0f0f0f0f0f0f0fULL)<<4) |  (b&0x0f0f0f0f0f0f0f0fULL);
++      halfrow[2*(j+4+i)] = (t&0xf0f0f0f0f0f0f0f0ULL)     | ((b&0xf0f0f0f0f0f0f0f0ULL)>>4);
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+4+i)+1];
++      halfrow[2*(j+i)+1]   =((t&0x0f0f0f0f0f0f0f0fULL)<<4) |  (b&0x0f0f0f0f0f0f0f0fULL);
++      halfrow[2*(j+4+i)+1] = (t&0xf0f0f0f0f0f0f0f0ULL)     | ((b&0xf0f0f0f0f0f0f0f0ULL)>>4);
++    }
++  }
++  for(j=0;j<64;j+=4){
++    unsigned long long int t,b;
++    for(i=0;i<2;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+2+i)];
++      halfrow[2*(j+i)]   =((t&0x3333333333333333ULL)<<2) |  (b&0x3333333333333333ULL);
++      halfrow[2*(j+2+i)] = (t&0xccccccccccccccccULL)     | ((b&0xccccccccccccccccULL)>>2);
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+2+i)+1];
++      halfrow[2*(j+i)+1]   =((t&0x3333333333333333ULL)<<2) |  (b&0x3333333333333333ULL);
++      halfrow[2*(j+2+i)+1] = (t&0xccccccccccccccccULL)     | ((b&0xccccccccccccccccULL)>>2);
++    }
++  }
++  for(j=0;j<64;j+=2){
++    unsigned long long int t,b;
++    for(i=0;i<1;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+1+i)];
++      halfrow[2*(j+i)]   =((t&0x5555555555555555ULL)<<1) |  (b&0x5555555555555555ULL);
++      halfrow[2*(j+1+i)] = (t&0xaaaaaaaaaaaaaaaaULL)     | ((b&0xaaaaaaaaaaaaaaaaULL)>>1);
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+1+i)+1];
++      halfrow[2*(j+i)+1]   =((t&0x5555555555555555ULL)<<1) |  (b&0x5555555555555555ULL);
++      halfrow[2*(j+1+i)+1] = (t&0xaaaaaaaaaaaaaaaaULL)     | ((b&0xaaaaaaaaaaaaaaaaULL)>>1);
++    }
++  }
++#undef halfrow
++}
++
++static inline void trasp64_128_88cw(unsigned char *data){
++/* 64 rows of 128 bits transposition (bytes transp. - 8x8 rotate clockwise)*/
++#define halfrow ((unsigned long long int *)data)
++  int i,j;
++  for(j=0;j<64;j+=64){
++    unsigned long long int t,b;
++    for(i=0;i<32;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+32+i)];
++      halfrow[2*(j+i)]   = (t&0x00000000ffffffffULL)      | ((b                      )<<32);
++      halfrow[2*(j+32+i)]=((t                      )>>32) |  (b&0xffffffff00000000ULL) ;
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+32+i)+1];
++      halfrow[2*(j+i)+1]   = (t&0x00000000ffffffffULL)      | ((b                      )<<32);
++      halfrow[2*(j+32+i)+1]=((t                      )>>32) |  (b&0xffffffff00000000ULL) ;
++    }
++  }
++  for(j=0;j<64;j+=32){
++    unsigned long long int t,b;
++    for(i=0;i<16;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+16+i)];
++      halfrow[2*(j+i)]   = (t&0x0000ffff0000ffffULL)      | ((b&0x0000ffff0000ffffULL)<<16);
++      halfrow[2*(j+16+i)]=((t&0xffff0000ffff0000ULL)>>16) |  (b&0xffff0000ffff0000ULL) ;
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+16+i)+1];
++      halfrow[2*(j+i)+1]   = (t&0x0000ffff0000ffffULL)      | ((b&0x0000ffff0000ffffULL)<<16);
++      halfrow[2*(j+16+i)+1]=((t&0xffff0000ffff0000ULL)>>16) |  (b&0xffff0000ffff0000ULL) ;
++    }
++  }
++  for(j=0;j<64;j+=16){
++    unsigned long long int t,b;
++    for(i=0;i<8;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+8+i)];
++      halfrow[2*(j+i)]   = (t&0x00ff00ff00ff00ffULL)     | ((b&0x00ff00ff00ff00ffULL)<<8);
++      halfrow[2*(j+8+i)] =((t&0xff00ff00ff00ff00ULL)>>8) |  (b&0xff00ff00ff00ff00ULL);
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+8+i)+1];
++      halfrow[2*(j+i)+1]   = (t&0x00ff00ff00ff00ffULL)     | ((b&0x00ff00ff00ff00ffULL)<<8);
++      halfrow[2*(j+8+i)+1] =((t&0xff00ff00ff00ff00ULL)>>8) |  (b&0xff00ff00ff00ff00ULL);
++    }
++  }
++  for(j=0;j<64;j+=8){
++    unsigned long long int t,b;
++    for(i=0;i<4;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+4+i)];
++      halfrow[2*(j+i)]   =((t&0xf0f0f0f0f0f0f0f0ULL)>>4) |   (b&0xf0f0f0f0f0f0f0f0ULL);
++      halfrow[2*(j+4+i)] = (t&0x0f0f0f0f0f0f0f0fULL)     |  ((b&0x0f0f0f0f0f0f0f0fULL)<<4);
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+4+i)+1];
++      halfrow[2*(j+i)+1]   =((t&0xf0f0f0f0f0f0f0f0ULL)>>4) |   (b&0xf0f0f0f0f0f0f0f0ULL);
++      halfrow[2*(j+4+i)+1] = (t&0x0f0f0f0f0f0f0f0fULL)     |  ((b&0x0f0f0f0f0f0f0f0fULL)<<4);
++    }
++  }
++  for(j=0;j<64;j+=4){
++    unsigned long long int t,b;
++    for(i=0;i<2;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+2+i)];
++      halfrow[2*(j+i)]   =((t&0xccccccccccccccccULL)>>2) |  (b&0xccccccccccccccccULL);
++      halfrow[2*(j+2+i)] = (t&0x3333333333333333ULL)     | ((b&0x3333333333333333ULL)<<2);
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+2+i)+1];
++      halfrow[2*(j+i)+1]   =((t&0xccccccccccccccccULL)>>2) |  (b&0xccccccccccccccccULL);
++      halfrow[2*(j+2+i)+1] = (t&0x3333333333333333ULL)     | ((b&0x3333333333333333ULL)<<2);
++    }
++  }
++  for(j=0;j<64;j+=2){
++    unsigned long long int t,b;
++    for(i=0;i<1;i++){
++      t=halfrow[2*(j+i)];
++      b=halfrow[2*(j+1+i)];
++      halfrow[2*(j+i)]   =((t&0xaaaaaaaaaaaaaaaaULL)>>1) |  (b&0xaaaaaaaaaaaaaaaaULL);
++      halfrow[2*(j+1+i)] = (t&0x5555555555555555ULL)     | ((b&0x5555555555555555ULL)<<1);
++      t=halfrow[2*(j+i)+1];
++      b=halfrow[2*(j+1+i)+1];
++      halfrow[2*(j+i)+1]   =((t&0xaaaaaaaaaaaaaaaaULL)>>1) |  (b&0xaaaaaaaaaaaaaaaaULL);
++      halfrow[2*(j+1+i)+1] = (t&0x5555555555555555ULL)     | ((b&0x5555555555555555ULL)<<1);
++    }
++  }
++#undef halfrow
++}
++#endif
++
++
++#ifdef STREAM_INIT
++void stream_cypher_group_init(
++  struct stream_regs *regs,
++  group         iA[8][4], // [In]  iA00,iA01,...iA73 32 groups  | Derived from key.
++  group         iB[8][4], // [In]  iB00,iB01,...iB73 32 groups  | Derived from key.
++  unsigned char *sb)      // [In]  (SB0,SB1,...SB7)...x32 32*8 bytes | Extra input.
++#endif
++#ifdef STREAM_NORMAL
++void stream_cypher_group_normal(
++  struct stream_regs *regs,
++  unsigned char *cb)    // [Out] (CB0,CB1,...CB7)...x32 32*8 bytes | Output.
++#endif
++{
++#ifdef STREAM_INIT
++  group in1[4];
++  group in2[4];
++#endif
++  group extra_B[4];
++  group fa,fb,fc,fd,fe;
++  group s1a,s1b,s2a,s2b,s3a,s3b,s4a,s4b,s5a,s5b,s6a,s6b,s7a,s7b;
++  group next_E[4];
++  group tmp0,tmp1,tmp2,tmp3,tmp4;
++#ifdef STREAM_INIT
++  group *sb_g=(group *)sb;
++#endif
++#ifdef STREAM_NORMAL
++  group *cb_g=(group *)cb;
++#endif
++  int aboff;
++  int i,j,k,b;
++  int dbg;
++
++#ifdef STREAM_INIT
++  DBG(fprintf(stderr,":::::::::: BEGIN STREAM INIT\n"));
++#endif
++#ifdef STREAM_NORMAL
++  DBG(fprintf(stderr,":::::::::: BEGIN STREAM NORMAL\n"));
++#endif
++#ifdef STREAM_INIT
++for(j=0;j<64;j++){
++  DBG(fprintf(stderr,"precall prerot stream_in[%2i]=",j));
++  DBG(dump_mem("",sb+BYPG*j,BYPG,BYPG));
++}
++
++DBG(dump_mem("stream_prerot ",sb,GROUP_PARALLELISM*8,BYPG));
++#if GROUP_PARALLELISM==32
++trasp64_32_88ccw(sb);
++#endif
++#if GROUP_PARALLELISM==64
++trasp64_64_88ccw(sb);
++#endif
++#if GROUP_PARALLELISM==128
++trasp64_128_88ccw(sb);
++#endif
++DBG(dump_mem("stream_postrot",sb,GROUP_PARALLELISM*8,BYPG));
++
++for(j=0;j<64;j++){
++  DBG(fprintf(stderr,"precall stream_in[%2i]=",j));
++  DBG(dump_mem("",sb+BYPG*j,BYPG,BYPG));
++}
++#endif
++
++  aboff=32;
++
++#ifdef STREAM_INIT
++  // load first 32 bits of ck into A[aboff+0]..A[aboff+7]
++  // load last  32 bits of ck into B[aboff+0]..B[aboff+7]
++  // all other regs = 0
++  for(i=0;i<8;i++){
++    for(b=0;b<4;b++){
++DBG(fprintf(stderr,"dbg from iA A[%i][%i]=",i,b));
++DBG(dump_mem("",(unsigned char *)&iA[i][b],BYPG,BYPG));
++DBG(fprintf(stderr,"                                       dbg from iB B[%i][%i]=",i,b));
++DBG(dump_mem("",(unsigned char *)&iB[i][b],BYPG,BYPG));
++      regs->A[aboff+i][b]=iA[i][b];
++      regs->B[aboff+i][b]=iB[i][b];
++    }
++  }
++  for(b=0;b<4;b++){
++    regs->A[aboff+8][b]=FF0();
++    regs->A[aboff+9][b]=FF0();
++    regs->B[aboff+8][b]=FF0();
++    regs->B[aboff+9][b]=FF0();
++  }
++  for(b=0;b<4;b++){
++    regs->X[b]=FF0();
++    regs->Y[b]=FF0();
++    regs->Z[b]=FF0();
++    regs->D[b]=FF0();
++    regs->E[b]=FF0();
++    regs->F[b]=FF0();
++  }
++  regs->p=FF0();
++  regs->q=FF0();
++  regs->r=FF0();
++#endif
++
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"dbg A0[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->A[aboff+0][dbg],BYPG,BYPG));
++  DBG(fprintf(stderr,"dbg B0[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->B[aboff+0][dbg],BYPG,BYPG));
++}
++
++////////////////////////////////////////////////////////////////////////////////
++
++  // EXTERNAL LOOP - 8 bytes per operation
++  for(i=0;i<8;i++){
++
++    DBG(fprintf(stderr,"--BEGIN EXTERNAL LOOP %i\n",i));
++
++#ifdef STREAM_INIT
++    for(b=0;b<4;b++){
++      in1[b]=sb_g[8*i+4+b];
++      in2[b]=sb_g[8*i+b];
++    }
++#endif
++
++    // INTERNAL LOOP - 2 bits per iteration
++    for(j=0; j<4; j++){
++
++      DBG(fprintf(stderr,"---BEGIN INTERNAL LOOP %i (EXT %i, INT %i)\n",j,i,j));
++
++      // from A0..A9, 35 bits are selected as inputs to 7 s-boxes
++      // 5 bits input per s-box, 2 bits output per s-box
++
++      // we can select bits with zero masking and shifting operations
++      // and synthetize s-boxes with optimized boolean functions.
++      // this is the actual reason we do all the crazy transposition
++      // stuff to switch between normal and bit slice representations.
++      // this code really flies.
++
++      fe=regs->A[aboff+3][0];fa=regs->A[aboff+0][2];fb=regs->A[aboff+5][1];fc=regs->A[aboff+6][3];fd=regs->A[aboff+8][0];
++/* 1000 1110  1110 0001   : lev  7: */ //tmp0=( fa^( fb^( ( ( ( fa|fb )^fc )|( fc^fd ) )^ALL_ONES ) ) );
++/* 1110 0010  0011 0011   : lev  6: */ //tmp1=( ( fa|fb )^( ( fc&( fa|( fb^fd ) ) )^ALL_ONES ) );
++/* 0011 0110  1000 1101   : lev  5: */ //tmp2=( fa^( ( fb&fd )^( ( fa&fd )|fc ) ) );
++/* 0101 0101  1001 0011   : lev  5: */ //tmp3=( ( fa&fc )^( fa^( ( fa&fb )|fd ) ) );
++/* 1000 1110  1110 0001   : lev  7: */ tmp0=FFXOR(fa,FFXOR(fb,FFXOR(FFOR(FFXOR(FFOR(fa,fb),fc),FFXOR(fc,fd)),FF1())));
++/* 1110 0010  0011 0011   : lev  6: */ tmp1=FFXOR(FFOR(fa,fb),FFXOR(FFAND(fc,FFOR(fa,FFXOR(fb,fd))),FF1()));
++/* 0011 0110  1000 1101   : lev  5: */ tmp2=FFXOR(fa,FFXOR(FFAND(fb,fd),FFOR(FFAND(fa,fd),fc)));
++/* 0101 0101  1001 0011   : lev  5: */ tmp3=FFXOR(FFAND(fa,fc),FFXOR(fa,FFOR(FFAND(fa,fb),fd)));
++      s1a=FFXOR(tmp0,FFAND(fe,tmp1));
++      s1b=FFXOR(tmp2,FFAND(fe,tmp3));
++//dump_mem("s1as1b-fe",&fe,BYPG,BYPG);
++//dump_mem("s1as1b-fa",&fa,BYPG,BYPG);
++//dump_mem("s1as1b-fb",&fb,BYPG,BYPG);
++//dump_mem("s1as1b-fc",&fc,BYPG,BYPG);
++//dump_mem("s1as1b-fd",&fd,BYPG,BYPG);
++
++      fe=regs->A[aboff+1][1];fa=regs->A[aboff+2][2];fb=regs->A[aboff+5][3];fc=regs->A[aboff+6][0];fd=regs->A[aboff+8][1];
++/* 1001 1110  0110 0001   : lev  6: */ //tmp0=( fa^( ( fb&( fc|fd ) )^( fc^( fd^ALL_ONES ) ) ) );
++/* 0000 0011  0111 1011   : lev  5: */ //tmp1=( ( fa&( fb^fd ) )|( ( fa|fb )&fc ) );
++/* 1100 0110  1101 0010   : lev  6: */ //tmp2=( ( fb&fd )^( ( fa&fd )|( fb^( fc^ALL_ONES ) ) ) );
++/* 0001 1110  1111 0101   : lev  5: */ //tmp3=( ( fa&fd )|( fa^( fb^( fc&fd ) ) ) );
++/* 1001 1110  0110 0001   : lev  6: */ tmp0=FFXOR(fa,FFXOR(FFAND(fb,FFOR(fc,fd)),FFXOR(fc,FFXOR(fd,FF1()))));
++/* 0000 0011  0111 1011   : lev  5: */ tmp1=FFOR(FFAND(fa,FFXOR(fb,fd)),FFAND(FFOR(fa,fb),fc));
++/* 1100 0110  1101 0010   : lev  6: */ tmp2=FFXOR(FFAND(fb,fd),FFOR(FFAND(fa,fd),FFXOR(fb,FFXOR(fc,FF1()))));
++/* 0001 1110  1111 0101   : lev  5: */ tmp3=FFOR(FFAND(fa,fd),FFXOR(fa,FFXOR(fb,FFAND(fc,fd))));
++      s2a=FFXOR(tmp0,FFAND(fe,tmp1));
++      s2b=FFXOR(tmp2,FFAND(fe,tmp3));
++
++      fe=regs->A[aboff+0][3];fa=regs->A[aboff+1][0];fb=regs->A[aboff+4][1];fc=regs->A[aboff+4][3];fd=regs->A[aboff+5][2];
++/* 0100 1011  1001 0110   : lev  5: */ //tmp0=( fa^( fb^( ( fc&( fa|fd ) )^fd ) ) );
++/* 1101 0101  1000 1100   : lev  7: */ //tmp1=( ( fa&fc )^( ( fa^fd )|( ( fb|fc )^( fd^ALL_ONES ) ) ) );
++/* 0010 0111  1101 1000   : lev  4: */ //tmp2=( fa^( ( ( fb^fc )&fd )^fc ) );
++/* 1111 1111  1111 1111   : lev  0: */ //tmp3=ALL_ONES;
++/* 0100 1011  1001 0110   : lev  5: */ tmp0=FFXOR(fa,FFXOR(fb,FFXOR(FFAND(fc,FFOR(fa,fd)),fd)));
++/* 1101 0101  1000 1100   : lev  7: */ tmp1=FFXOR(FFAND(fa,fc),FFOR(FFXOR(fa,fd),FFXOR(FFOR(fb,fc),FFXOR(fd,FF1()))));
++/* 0010 0111  1101 1000   : lev  4: */ tmp2=FFXOR(fa,FFXOR(FFAND(FFXOR(fb,fc),fd),fc));
++/* 1111 1111  1111 1111   : lev  0: */ tmp3=FF1();
++      s3a=FFXOR(tmp0,FFAND(FFNOT(fe),tmp1));
++      s3b=FFXOR(tmp2,FFAND(fe,tmp3));
++
++      fe=regs->A[aboff+2][3];fa=regs->A[aboff+0][1];fb=regs->A[aboff+1][3];fc=regs->A[aboff+3][2];fd=regs->A[aboff+7][0];
++/* 1011 0101  0100 1001   : lev  7: */ //tmp0=( fa^( ( fc&( fa^fd ) )|( fb^( fc|( fd^ALL_ONES ) ) ) ) );
++/* 0010 1101  0110 0110   : lev  6: */ //tmp1=( ( fa&fb )^( fb^( ( ( fa|fc )&fd )^fc ) ) );
++/* 0110 0111  1101 0000   : lev  7: */ //tmp2=( fa^( ( fb&fc )|( ( ( fa&( fb^fd ) )|fc )^fd ) ) );
++/* 1111 1111  1111 1111   : lev  0: */ //tmp3=ALL_ONES;
++/* 1011 0101  0100 1001   : lev  7: */ tmp0=FFXOR(fa,FFOR(FFAND(fc,FFXOR(fa,fd)),FFXOR(fb,FFOR(fc,FFXOR(fd,FF1())))));
++/* 0010 1101  0110 0110   : lev  6: */ tmp1=FFXOR(FFAND(fa,fb),FFXOR(fb,FFXOR(FFAND(FFOR(fa,fc),fd),fc)));
++/* 0110 0111  1101 0000   : lev  7: */ tmp2=FFXOR(fa,FFOR(FFAND(fb,fc),FFXOR(FFOR(FFAND(fa,FFXOR(fb,fd)),fc),fd)));
++/* 1111 1111  1111 1111   : lev  0: */ tmp3=FF1();
++      s4a=FFXOR(tmp0,FFAND(fe,FFXOR(tmp1,tmp0)));
++      s4b=FFXOR(FFXOR(s4a,tmp2),FFAND(fe,tmp3));
++
++      fe=regs->A[aboff+4][2];fa=regs->A[aboff+3][3];fb=regs->A[aboff+5][0];fc=regs->A[aboff+7][1];fd=regs->A[aboff+8][2];
++/* 1000 1111  0011 0010   : lev  7: */ //tmp0=( ( ( fa&( fb|fc ) )^fb )|( ( ( fa^fc )|fd )^ALL_ONES ) );
++/* 0110 1011  0000 1011   : lev  6: */ //tmp1=( fb^( ( fc^fd )&( fc^( fb|( fa^fd ) ) ) ) );
++/* 0001 1010  0111 1001   : lev  6: */ //tmp2=( ( fa&fc )^( fb^( ( fb|( fa^fc ) )&fd ) ) );
++/* 0101 1101  1101 0101   : lev  4: */ //tmp3=( ( ( fa^fb )&( fc^ALL_ONES ) )|fd );
++/* 1000 1111  0011 0010   : lev  7: */ tmp0=FFOR(FFXOR(FFAND(fa,FFOR(fb,fc)),fb),FFXOR(FFOR(FFXOR(fa,fc),fd),FF1()));
++/* 0110 1011  0000 1011   : lev  6: */ tmp1=FFXOR(fb,FFAND(FFXOR(fc,fd),FFXOR(fc,FFOR(fb,FFXOR(fa,fd)))));
++/* 0001 1010  0111 1001   : lev  6: */ tmp2=FFXOR(FFAND(fa,fc),FFXOR(fb,FFAND(FFOR(fb,FFXOR(fa,fc)),fd)));
++/* 0101 1101  1101 0101   : lev  4: */ tmp3=FFOR(FFAND(FFXOR(fa,fb),FFXOR(fc,FF1())),fd);
++      s5a=FFXOR(tmp0,FFAND(fe,tmp1));
++      s5b=FFXOR(tmp2,FFAND(fe,tmp3));
++
++      fe=regs->A[aboff+2][1];fa=regs->A[aboff+3][1];fb=regs->A[aboff+4][0];fc=regs->A[aboff+6][2];fd=regs->A[aboff+8][3];
++/* 0011 0110  0010 1101   : lev  6: */ //tmp0=( ( ( fa&fc )&fd )^( ( fb&( fa|fd ) )^fc ) );
++/* 1110 1110  1011 1011   : lev  3: */ //tmp1=( ( ( fa^fc )&fd )^ALL_ONES );
++/* 0101 1000  0110 0111   : lev  6: */ //tmp2=( ( fa&( fb|fc ) )^( fb^( ( fb&fc )|fd ) ) );
++/* 0001 0011  0000 0001   : lev  5: */ //tmp3=( fc&( ( fa&( fb^fd ) )^( fb|fd ) ) );
++/* 0011 0110  0010 1101   : lev  6: */ tmp0=FFXOR(FFAND(FFAND(fa,fc),fd),FFXOR(FFAND(fb,FFOR(fa,fd)),fc));
++/* 1110 1110  1011 1011   : lev  3: */ tmp1=FFXOR(FFAND(FFXOR(fa,fc),fd),FF1());
++/* 0101 1000  0110 0111   : lev  6: */ tmp2=FFXOR(FFAND(fa,FFOR(fb,fc)),FFXOR(fb,FFOR(FFAND(fb,fc),fd)));
++/* 0001 0011  0000 0001   : lev  5: */ tmp3=FFAND(fc,FFXOR(FFAND(fa,FFXOR(fb,fd)),FFOR(fb,fd)));
++      s6a=FFXOR(tmp0,FFAND(fe,tmp1));
++      s6b=FFXOR(tmp2,FFAND(fe,tmp3));
++
++      fe=regs->A[aboff+1][2];fa=regs->A[aboff+2][0];fb=regs->A[aboff+6][1];fc=regs->A[aboff+7][2];fd=regs->A[aboff+7][3];
++/* 0111 1000  1001 0110   : lev  5: */ //tmp0=( fb^( ( fc&fd )|( fa^( fc^fd ) ) ) );
++/* 0100 1001  0101 1011   : lev  6: */ //tmp1=( ( fb|fd )&( ( fa&fc )|( fb^( fc^fd ) ) ) );
++/* 0100 1001  1011 1001   : lev  5: */ //tmp2=( ( fa|fb )^( ( fc&( fb|fd ) )^fd ) );
++/* 1111 1111  1101 1101   : lev  3: */ //tmp3=( fd|( ( fa&fc )^ALL_ONES ) );
++/* 0111 1000  1001 0110   : lev  5: */ tmp0=FFXOR(fb,FFOR(FFAND(fc,fd),FFXOR(fa,FFXOR(fc,fd))));
++/* 0100 1001  0101 1011   : lev  6: */ tmp1=FFAND(FFOR(fb,fd),FFOR(FFAND(fa,fc),FFXOR(fb,FFXOR(fc,fd))));
++/* 0100 1001  1011 1001   : lev  5: */ tmp2=FFXOR(FFOR(fa,fb),FFXOR(FFAND(fc,FFOR(fb,fd)),fd));
++/* 1111 1111  1101 1101   : lev  3: */ tmp3=FFOR(fd,FFXOR(FFAND(fa,fc),FF1()));
++      s7a=FFXOR(tmp0,FFAND(fe,tmp1));
++      s7b=FFXOR(tmp2,FFAND(fe,tmp3));
++
++
++/*
++      we have just done this:
++      
++      int sbox1[0x20] = {2,0,1,1,2,3,3,0, 3,2,2,0,1,1,0,3, 0,3,3,0,2,2,1,1, 2,2,0,3,1,1,3,0};
++      int sbox2[0x20] = {3,1,0,2,2,3,3,0, 1,3,2,1,0,0,1,2, 3,1,0,3,3,2,0,2, 0,0,1,2,2,1,3,1};
++      int sbox3[0x20] = {2,0,1,2,2,3,3,1, 1,1,0,3,3,0,2,0, 1,3,0,1,3,0,2,2, 2,0,1,2,0,3,3,1};
++      int sbox4[0x20] = {3,1,2,3,0,2,1,2, 1,2,0,1,3,0,0,3, 1,0,3,1,2,3,0,3, 0,3,2,0,1,2,2,1};
++      int sbox5[0x20] = {2,0,0,1,3,2,3,2, 0,1,3,3,1,0,2,1, 2,3,2,0,0,3,1,1, 1,0,3,2,3,1,0,2};
++      int sbox6[0x20] = {0,1,2,3,1,2,2,0, 0,1,3,0,2,3,1,3, 2,3,0,2,3,0,1,1, 2,1,1,2,0,3,3,0};
++      int sbox7[0x20] = {0,3,2,2,3,0,0,1, 3,0,1,3,1,2,2,1, 1,0,3,3,0,1,1,2, 2,3,1,0,2,3,0,2};
++
++      s12 = sbox1[ (((A3>>0)&1)<<4) | (((A0>>2)&1)<<3) | (((A5>>1)&1)<<2) | (((A6>>3)&1)<<1) | (((A8>>0)&1)<<0) ]
++           |sbox2[ (((A1>>1)&1)<<4) | (((A2>>2)&1)<<3) | (((A5>>3)&1)<<2) | (((A6>>0)&1)<<1) | (((A8>>1)&1)<<0) ];
++      s34 = sbox3[ (((A0>>3)&1)<<4) | (((A1>>0)&1)<<3) | (((A4>>1)&1)<<2) | (((A4>>3)&1)<<1) | (((A5>>2)&1)<<0) ]
++           |sbox4[ (((A2>>3)&1)<<4) | (((A0>>1)&1)<<3) | (((A1>>3)&1)<<2) | (((A3>>2)&1)<<1) | (((A7>>0)&1)<<0) ];
++      s56 = sbox5[ (((A4>>2)&1)<<4) | (((A3>>3)&1)<<3) | (((A5>>0)&1)<<2) | (((A7>>1)&1)<<1) | (((A8>>2)&1)<<0) ]
++           |sbox6[ (((A2>>1)&1)<<4) | (((A3>>1)&1)<<3) | (((A4>>0)&1)<<2) | (((A6>>2)&1)<<1) | (((A8>>3)&1)<<0) ];
++      s7 =  sbox7[ (((A1>>2)&1)<<4) | (((A2>>0)&1)<<3) | (((A6>>1)&1)<<2) | (((A7>>2)&1)<<1) | (((A7>>3)&1)<<0) ];
++*/
++
++      // use 4x4 xor to produce extra nibble for T3
++
++      extra_B[3]=FFXOR(FFXOR(FFXOR(regs->B[aboff+2][0],regs->B[aboff+5][1]),regs->B[aboff+6][2]),regs->B[aboff+8][3]);
++      extra_B[2]=FFXOR(FFXOR(FFXOR(regs->B[aboff+5][0],regs->B[aboff+7][1]),regs->B[aboff+2][3]),regs->B[aboff+3][2]);
++      extra_B[1]=FFXOR(FFXOR(FFXOR(regs->B[aboff+4][3],regs->B[aboff+7][2]),regs->B[aboff+3][0]),regs->B[aboff+4][1]);
++      extra_B[0]=FFXOR(FFXOR(FFXOR(regs->B[aboff+8][2],regs->B[aboff+5][3]),regs->B[aboff+2][1]),regs->B[aboff+7][0]);
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"extra_B[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&extra_B[dbg],BYPG,BYPG));
++}
++
++      // T1 = xor all inputs
++      // in1, in2, D are only used in T1 during initialisation, not generation
++      for(b=0;b<4;b++){
++        regs->A[aboff-1][b]=FFXOR(regs->A[aboff+9][b],regs->X[b]);
++      }
++
++#ifdef STREAM_INIT
++      for(b=0;b<4;b++){
++        regs->A[aboff-1][b]=FFXOR(FFXOR(regs->A[aboff-1][b],regs->D[b]),((j % 2) ? in2[b] : in1[b]));
++      }
++#endif
++
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"next_A0[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->A[aboff-1][dbg],BYPG,BYPG));
++}
++
++      // T2 =  xor all inputs
++      // in1, in2 are only used in T1 during initialisation, not generation
++      // if p=0, use this, if p=1, rotate the result left
++      for(b=0;b<4;b++){
++        regs->B[aboff-1][b]=FFXOR(FFXOR(regs->B[aboff+6][b],regs->B[aboff+9][b]),regs->Y[b]);
++      }
++
++#ifdef STREAM_INIT
++      for(b=0;b<4;b++){
++        regs->B[aboff-1][b]=FFXOR(regs->B[aboff-1][b],((j % 2) ? in1[b] : in2[b]));
++      }
++#endif
++
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"next_B0[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->B[aboff-1][dbg],BYPG,BYPG));
++}
++
++      // if p=1, rotate left (yes, this is what we're doing)
++      tmp3=regs->B[aboff-1][3];
++      regs->B[aboff-1][3]=FFXOR(regs->B[aboff-1][3],FFAND(FFXOR(regs->B[aboff-1][3],regs->B[aboff-1][2]),regs->p));
++      regs->B[aboff-1][2]=FFXOR(regs->B[aboff-1][2],FFAND(FFXOR(regs->B[aboff-1][2],regs->B[aboff-1][1]),regs->p));
++      regs->B[aboff-1][1]=FFXOR(regs->B[aboff-1][1],FFAND(FFXOR(regs->B[aboff-1][1],regs->B[aboff-1][0]),regs->p));
++      regs->B[aboff-1][0]=FFXOR(regs->B[aboff-1][0],FFAND(FFXOR(regs->B[aboff-1][0],tmp3),regs->p));
++
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"next_B0[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->B[aboff-1][dbg],BYPG,BYPG));
++}
++
++      // T3 = xor all inputs
++      for(b=0;b<4;b++){
++        regs->D[b]=FFXOR(FFXOR(regs->E[b],regs->Z[b]),extra_B[b]);
++      }
++
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"D[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->D[dbg],BYPG,BYPG));
++}
++
++      // T4 = sum, carry of Z + E + r
++      for(b=0;b<4;b++){
++        next_E[b]=regs->F[b];
++      }
++
++      tmp0=FFXOR(regs->Z[0],regs->E[0]);
++      tmp1=FFAND(regs->Z[0],regs->E[0]);
++      regs->F[0]=FFXOR(regs->E[0],FFAND(regs->q,FFXOR(regs->Z[0],regs->r)));
++      tmp3=FFAND(tmp0,regs->r);
++      tmp4=FFOR(tmp1,tmp3);
++
++      tmp0=FFXOR(regs->Z[1],regs->E[1]);
++      tmp1=FFAND(regs->Z[1],regs->E[1]);
++      regs->F[1]=FFXOR(regs->E[1],FFAND(regs->q,FFXOR(regs->Z[1],tmp4)));
++      tmp3=FFAND(tmp0,tmp4);
++      tmp4=FFOR(tmp1,tmp3);
++
++      tmp0=FFXOR(regs->Z[2],regs->E[2]);
++      tmp1=FFAND(regs->Z[2],regs->E[2]);
++      regs->F[2]=FFXOR(regs->E[2],FFAND(regs->q,FFXOR(regs->Z[2],tmp4)));
++      tmp3=FFAND(tmp0,tmp4);
++      tmp4=FFOR(tmp1,tmp3);
++
++      tmp0=FFXOR(regs->Z[3],regs->E[3]);
++      tmp1=FFAND(regs->Z[3],regs->E[3]);
++      regs->F[3]=FFXOR(regs->E[3],FFAND(regs->q,FFXOR(regs->Z[3],tmp4)));
++      tmp3=FFAND(tmp0,tmp4);
++      regs->r=FFXOR(regs->r,FFAND(regs->q,FFXOR(FFOR(tmp1,tmp3),regs->r))); // ultimate carry
++
++/*
++      we have just done this: (believe it or not)
++      
++      if (q) {
++        F = Z + E + r;
++        r = (F >> 4) & 1;
++        F = F & 0x0f;
++      }
++      else {
++          F = E;
++      }
++*/
++      for(b=0;b<4;b++){
++        regs->E[b]=next_E[b];
++      }
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"F[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->F[dbg],BYPG,BYPG));
++}
++DBG(fprintf(stderr,"r="));
++DBG(dump_mem("",(unsigned char *)&regs->r,BYPG,BYPG));
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"E[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->E[dbg],BYPG,BYPG));
++}
++
++      // this simple instruction is virtually shifting all the shift registers
++      aboff--;
++
++/*
++      we've just done this:
++
++      A9=A8;A8=A7;A7=A6;A6=A5;A5=A4;A4=A3;A3=A2;A2=A1;A1=A0;A0=next_A0;
++      B9=B8;B8=B7;B7=B6;B6=B5;B5=B4;B4=B3;B3=B2;B2=B1;B1=B0;B0=next_B0;
++*/
++
++      regs->X[0]=s1a;
++      regs->X[1]=s2a;
++      regs->X[2]=s3b;
++      regs->X[3]=s4b;
++      regs->Y[0]=s3a;
++      regs->Y[1]=s4a;
++      regs->Y[2]=s5b;
++      regs->Y[3]=s6b;
++      regs->Z[0]=s5a;
++      regs->Z[1]=s6a;
++      regs->Z[2]=s1b;
++      regs->Z[3]=s2b;
++      regs->p=s7a;
++      regs->q=s7b;
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"X[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->X[dbg],BYPG,BYPG));
++}
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"Y[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->Y[dbg],BYPG,BYPG));
++}
++for(dbg=0;dbg<4;dbg++){
++  DBG(fprintf(stderr,"Z[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&regs->Z[dbg],BYPG,BYPG));
++}
++DBG(fprintf(stderr,"p="));
++DBG(dump_mem("",(unsigned char *)&regs->p,BYPG,BYPG));
++DBG(fprintf(stderr,"q="));
++DBG(dump_mem("",(unsigned char *)&regs->q,BYPG,BYPG));
++
++#ifdef STREAM_NORMAL
++      // require 4 loops per output byte
++      // 2 output bits are a function of the 4 bits of D
++      // xor 2 by 2
++      cb_g[8*i+7-2*j]=FFXOR(regs->D[2],regs->D[3]);
++      cb_g[8*i+6-2*j]=FFXOR(regs->D[0],regs->D[1]);
++for(dbg=0;dbg<8;dbg++){
++  DBG(fprintf(stderr,"op[%i]=",dbg));
++  DBG(dump_mem("",(unsigned char *)&cb_g[8*i+dbg],BYPG,BYPG));
++}
++#endif
++
++DBG(fprintf(stderr,"---END INTERNAL LOOP\n"));
++
++    } // INTERNAL LOOP
++
++DBG(fprintf(stderr,"--END EXTERNAL LOOP\n"));
++
++  } // EXTERNAL LOOP
++
++  // move 32 steps forward, ready for next call
++  for(k=0;k<10;k++){
++    for(b=0;b<4;b++){
++DBG(fprintf(stderr,"moving forward AB k=%i b=%i\n",k,b));
++      regs->A[32+k][b]=regs->A[k][b];
++      regs->B[32+k][b]=regs->B[k][b];
++    }
++  }
++
++
++////////////////////////////////////////////////////////////////////////////////
++
++#ifdef STREAM_NORMAL
++for(j=0;j<64;j++){
++  DBG(fprintf(stderr,"postcall prerot cb[%2i]=",j));
++  DBG(dump_mem("",(unsigned char *)(cb+BYPG*j),BYPG,BYPG));
++}
++
++#if GROUP_PARALLELISM==32
++trasp64_32_88cw(cb);
++#endif
++#if GROUP_PARALLELISM==64
++trasp64_64_88cw(cb);
++#endif
++#if GROUP_PARALLELISM==128
++trasp64_128_88cw(cb);
++#endif
++
++for(j=0;j<64;j++){
++  DBG(fprintf(stderr,"postcall postrot cb[%2i]=",j));
++  DBG(dump_mem("",(unsigned char *)(cb+BYPG*j),BYPG,BYPG));
++}
++#endif
++
++#ifdef STREAM_INIT
++  DBG(fprintf(stderr,":::::::::: END STREAM INIT\n"));
++#endif
++#ifdef STREAM_NORMAL
++  DBG(fprintf(stderr,":::::::::: END STREAM NORMAL\n"));
++#endif
++
++}
++
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11726)
+--- globals.h	(revision 11742)
 +++ globals.h	(working copy)
 @@ -401,7 +401,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -664,7 +2927,7 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1881,6 +1881,7 @@
+@@ -1945,6 +1945,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -672,27 +2935,23 @@ Index: globals.h
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2588,6 +2589,7 @@
- static inline bool caid_is_viaccess(uint16_t caid) { return caid >> 8 == 0x05; }
- static inline bool caid_is_irdeto(uint16_t caid) { return caid >> 8 == 0x06; }
- static inline bool caid_is_videoguard(uint16_t caid) { return caid >> 8 == 0x09; }
-+static inline bool caid_is_icam(uint16_t caid) { return caid == 0x098C || caid == 0x098D || caid == 0x09C4; }
- static inline bool caid_is_conax(uint16_t caid) { return caid >> 8 == 0x0B; }
- static inline bool caid_is_cryptoworks(uint16_t caid) { return caid >> 8 == 0x0D; }
- static inline bool caid_is_powervu(uint16_t caid) { return caid >> 8 == 0x0E; }
+@@ -2471,6 +2472,11 @@
+ #endif
+ #endif
+ 
++#ifdef WITH_EMU
++	uint32_t		emu_stream_ecm_delay;
++	int8_t			emu_stream_emm_enabled;
++#endif
++
+ 	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
+ 	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
+ 
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11726)
+--- module-dvbapi.c	(revision 11742)
 +++ module-dvbapi.c	(working copy)
-@@ -11,6 +11,7 @@
- #include "module-dvbapi-coolapi.h"
- #include "module-dvbapi-stapi.h"
- #include "module-dvbapi-chancache.h"
-+#include "module-emulator-streamserver.h"
- #include "module-stat.h"
- #include "oscam-chk.h"
- #include "oscam-client.h"
-@@ -2648,6 +2649,8 @@
+@@ -2657,6 +2657,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
  	er->pmtpid = demux[demux_id].pmtpid;
  	er->onid   = demux[demux_id].onid;
@@ -701,7 +2960,7 @@ Index: module-dvbapi.c
  	er->msgid  = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2695,19 +2698,30 @@
+@@ -2704,13 +2706,14 @@
  		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_fixed(demux[demux_id].ECMpids[pid].CAID))
  		{
  			int32_t j, n;
@@ -719,6 +2978,7 @@ Index: module-dvbapi.c
  			{
  				i2b_buf(2, demux[demux_id].STREAMpids[j], er->ecm + n);
  				er->ecm[2] += 2;
+@@ -2717,6 +2720,16 @@
  				er->ecmlen += 2;
  			}
  
@@ -735,21 +2995,6 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-@@ -7837,7 +7851,13 @@
- 		delayer(er, delay);
- 
- #ifdef WITH_EMU
--		if(!chk_ctab_ex(er->caid, &cfg.emu_stream_relay_ctab) || !cfg.emu_stream_relay_enabled)
-+		bool set_dvbapi_cw = true;
-+		if(chk_ctab_ex(er->caid, &cfg.emu_stream_relay_ctab) && cfg.emu_stream_relay_enabled)
-+		{
-+			// streamserver set cw
-+			set_dvbapi_cw = !stream_write_cw(er);
-+		}
-+		if(set_dvbapi_cw)
- #endif
- 		switch(selected_api)
- 		{
 Index: module-emulator-biss.c
 ===================================================================
 --- module-emulator-biss.c	(nonexistent)
@@ -2377,7 +4622,7 @@ Index: module-emulator-director.c
 ===================================================================
 --- module-emulator-director.c	(nonexistent)
 +++ module-emulator-director.c	(working copy)
-@@ -0,0 +1,642 @@
+@@ -0,0 +1,644 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -2860,8 +5105,10 @@ Index: module-emulator-director.c
 +
 +						des_set_key(emmKey, ks);
 +						des(tagData + 4 + 5, ks, 0);
++						uint8_t ecmKeyChk[1] = { 0 };
++						memcpy(ecmKeyChk, tagData + 4 + 5 + 7, 1);
 +
-+						if ((tagData + 4 + 5 + 7) != 0x00) // check if key looks valid (last byte 0x00)
++						if (ecmKeyChk[0] != 0x00) // check if key looks valid (last byte 0x00)
 +						{
 +							cs_log_dbg(D_READER, "Key rejected from EMM (looks invalid)");
 +							return EMU_KEY_REJECTED;
@@ -3036,187 +5283,6 @@ Index: module-emulator-director.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_DIRECTOR_H
-Index: module-emulator-icam.c
-===================================================================
---- module-emulator-icam.c	(nonexistent)
-+++ module-emulator-icam.c	(working copy)
-@@ -0,0 +1,153 @@
-+#define MODULE_LOG_PREFIX "emu"
-+
-+#include "globals.h"
-+
-+#ifdef WITH_EMU
-+
-+#include "ffdecsa/ffdecsa.h"
-+#include "module-emulator-icam.h"
-+#include "module-emulator-streamserver.h"
-+#include "oscam-chk.h"
-+#include "oscam-client.h"
-+#include "oscam-ecm.h"
-+#include "oscam-net.h"
-+
-+#ifdef MODULE_RADEGAST
-+static int32_t gRadegastFd = 0;
-+static uint8_t gLast_ecm_paket[EMU_STREAM_SERVER_MAX_CONNECTIONS][8];
-+#endif
-+
-+#ifdef MODULE_RADEGAST
-+
-+static bool connect_to_radegast(void)
-+{
-+	struct sockaddr_in cservaddr;
-+
-+	if (gRadegastFd == 0)
-+	{
-+		gRadegastFd = socket(AF_INET, SOCK_STREAM, 0);
-+	}
-+
-+	if (gRadegastFd < 0)
-+	{
-+		gRadegastFd = 0;
-+		return false;
-+	}
-+
-+	int32_t flags = fcntl(gRadegastFd, F_GETFL);
-+	fcntl(gRadegastFd, F_SETFL, flags | O_NONBLOCK);
-+
-+	bzero(&cservaddr, sizeof(cservaddr));
-+	cservaddr.sin_family = AF_INET;
-+	SIN_GET_ADDR(cservaddr) = cfg.rad_srvip;
-+	cservaddr.sin_port = htons(cfg.rad_port);
-+
-+	connect(gRadegastFd,(struct sockaddr *)&cservaddr, sizeof(cservaddr));
-+	return true;
-+}
-+
-+static bool send_to_radegast(uint8_t* data, int len)
-+{
-+	if (send(gRadegastFd, data, len, 0) < 0)
-+	{
-+		cs_log("send_to_radegast: Send failure");
-+		return false;
-+	}
-+	return true;
-+}
-+
-+void icam_close_radegast_connection(void)
-+{
-+	close(gRadegastFd);
-+	gRadegastFd = 0;
-+}
-+
-+void icam_reset(int32_t connid)
-+{
-+	memset(gLast_ecm_paket[connid], 0, 8);
-+}
-+
-+void icam_ecm(emu_stream_client_data *cdata)
-+{
-+	uint16_t section_length = SCT_LEN(cdata->ecm_data);
-+	uint16_t packet_len;
-+	static uint8_t header_len = 2;
-+	static uint8_t payload_static_len = 12;
-+
-+	if (memcmp(gLast_ecm_paket[cdata->connid], cdata->ecm_data, 8) != 0)
-+	{
-+		memcpy(gLast_ecm_paket[cdata->connid], cdata->ecm_data, 8);
-+
-+		if (gRadegastFd <= 0)
-+		{
-+			connect_to_radegast();
-+		}
-+
-+		packet_len = header_len + payload_static_len + section_length;
-+		uint8_t outgoing_data[packet_len];
-+		outgoing_data[0] = 1;
-+		outgoing_data[1] = payload_static_len + section_length;
-+		outgoing_data[2] = 10; // caid
-+		outgoing_data[3] = 2;
-+		outgoing_data[4] = cdata->caid >> 8;
-+		outgoing_data[5] = cdata->caid & 0xFF;
-+		outgoing_data[6] = 9; // srvid
-+		outgoing_data[7] = 4;
-+		outgoing_data[8] = cdata->srvid & 0xFF;
-+		outgoing_data[10] = cdata->srvid >> 8;
-+		outgoing_data[12] = 3;
-+		outgoing_data[13] = section_length;
-+
-+		memcpy(outgoing_data + header_len + payload_static_len, cdata->ecm_data, section_length);
-+
-+		if (!send_to_radegast(outgoing_data, packet_len))
-+		{
-+			icam_close_radegast_connection();
-+
-+			if (connect_to_radegast())
-+			{
-+				send_to_radegast(outgoing_data, packet_len);
-+			}
-+		}
-+	}
-+}
-+
-+#endif // MODULE_RADEGAST
-+
-+void icam_write_cw(ECM_REQUEST *er, int32_t connid)
-+{
-+	SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[connid]);
-+
-+	if (emu_fixed_key_data[connid].icam_csa_ks == NULL)
-+	{
-+		emu_fixed_key_data[connid].icam_csa_ks = get_key_struct();
-+	}
-+
-+	bool icam = (er->ecm[2] - er->ecm[4]) == 4;
-+
-+	if (er->ecm[0] == 0x80)
-+	{
-+		if (icam)
-+		{
-+			set_even_control_word_ecm(emu_fixed_key_data[connid].icam_csa_ks, er->cw, er->ecm[0x15]);
-+		}
-+		else
-+		{
-+			set_even_control_word(emu_fixed_key_data[connid].icam_csa_ks, er->cw);
-+		}
-+	}
-+	else if (icam)
-+	{
-+		set_odd_control_word_ecm(emu_fixed_key_data[connid].icam_csa_ks, er->cw + 8, er->ecm[0x15]);
-+	}
-+	else
-+	{
-+		set_odd_control_word(emu_fixed_key_data[connid].icam_csa_ks, er->cw + 8);
-+	}
-+
-+	emu_fixed_key_data[connid].icam_csa_used = 1;
-+
-+	SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[connid]);
-+}
-+
-+#endif // WITH_EMU
-Index: module-emulator-icam.h
-===================================================================
---- module-emulator-icam.h	(nonexistent)
-+++ module-emulator-icam.h	(working copy)
-@@ -0,0 +1,18 @@
-+#ifndef MODULE_EMULATOR_ICAM_H
-+#define MODULE_EMULATOR_ICAM_H
-+
-+#ifdef WITH_EMU
-+
-+#include "module-emulator-streamserver.h"
-+
-+#ifdef MODULE_RADEGAST
-+void icam_close_radegast_connection(void);
-+void icam_reset(int32_t connid);
-+void icam_ecm(emu_stream_client_data *cdata);
-+#endif // MODULE_RADEGAST
-+
-+void icam_write_cw(ECM_REQUEST *er, int32_t connid);
-+
-+#endif // WITH_EMU
-+
-+#endif // MODULE_EMULATOR_ICAM_H
 Index: module-emulator-irdeto.c
 ===================================================================
 --- module-emulator-irdeto.c	(nonexistent)
@@ -3337,7 +5403,7 @@ Index: module-emulator-irdeto.c
 +static int8_t calculate_hash(const uint8_t *key, const uint8_t *iv, const uint8_t *data, int32_t len)
 +{
 +	int32_t l, y;
-+	uint8_t cbuff[8];
++	uint8_t cbuff[32];
 +	uint32_t ks1[32], ks2[32];
 +
 +	des_set_key(key, ks1);
@@ -4253,7 +6319,7 @@ Index: module-emulator-osemu.c
 +
 +#include "oscam-string.h"
 +#include "module-emulator-osemu.h"
-+#include "module-emulator-streamserver.h"
++#include "module-emulator.h"
 +#include "module-emulator-biss.h"
 +#include "module-emulator-cryptoworks.h"
 +#include "module-emulator-director.h"
@@ -5228,7 +7294,7 @@ Index: module-emulator-osemu.h
 +#ifdef WITH_EMU
 +
 +// Version info
-+#define EMU_VERSION 799
++#define EMU_VERSION 798
 +
 +#define EMU_MAX_CHAR_KEYNAME 12
 +#define EMU_KEY_FILENAME "SoftCam.Key"
@@ -5321,7 +7387,7 @@ Index: module-emulator-powervu.c
 ===================================================================
 --- module-emulator-powervu.c	(nonexistent)
 +++ module-emulator-powervu.c	(working copy)
-@@ -0,0 +1,2716 @@
+@@ -0,0 +1,2722 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -5331,10 +7397,16 @@ Index: module-emulator-powervu.c
 +#include "cscrypt/des.h"
 +#include "ffdecsa/ffdecsa.h"
 +#include "module-emulator-osemu.h"
-+#include "module-emulator-streamserver.h"
++#include "module-emulator.h"
 +#include "module-emulator-powervu.h"
 +#include "oscam-string.h"
 +#include "oscam-time.h"
++
++pthread_mutex_t emu_fixed_key_srvid_mutex;
++uint16_t emu_stream_cur_srvid[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++int8_t stream_server_has_ecm[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++
++LLIST *ll_emu_stream_delayed_keys[EMU_STREAM_SERVER_MAX_CONNECTIONS];
 +
 +static inline uint8_t get_bit(uint8_t byte, uint8_t bitnb)
 +{
@@ -8102,2064 +10174,6 @@ Index: module-emulator-powervu.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_POWERVU_H
-Index: module-emulator-streamserver.c
-===================================================================
---- module-emulator-streamserver.c	(nonexistent)
-+++ module-emulator-streamserver.c	(working copy)
-@@ -0,0 +1,1955 @@
-+#define MODULE_LOG_PREFIX "emu"
-+
-+#include "globals.h"
-+
-+#ifdef WITH_EMU
-+
-+#include "cscrypt/des.h"
-+#include "ffdecsa/ffdecsa.h"
-+#include "module-emulator-osemu.h"
-+#include "module-emulator-streamserver.h"
-+#include "module-emulator-icam.h"
-+#include "module-emulator-powervu.h"
-+#include "oscam-config.h"
-+#include "oscam-net.h"
-+#include "oscam-string.h"
-+#include "oscam-time.h"
-+#include "oscam-chk.h"
-+
-+#define STREAM_UNDEFINED 0x00
-+#define STREAM_VIDEO     0x01
-+#define STREAM_AUDIO     0x02
-+#define STREAM_SUBTITLE  0x03
-+#define STREAM_TELETEXT  0x04
-+
-+extern int32_t exit_oscam;
-+
-+typedef struct
-+{
-+	int32_t connfd;
-+	int32_t connid;
-+} emu_stream_client_conn_data;
-+
-+int8_t stream_server_thread_init = 0;
-+char emu_stream_source_host[256] = {"127.0.0.1"};
-+int32_t emu_stream_source_port = 8001;
-+char *emu_stream_source_auth = NULL;
-+int32_t emu_stream_relay_port = 17999;
-+int8_t emu_stream_emm_enabled = 0;
-+uint32_t cluster_size = 50;
-+
-+static uint8_t emu_stream_server_mutex_init = 0;
-+static pthread_mutex_t emu_stream_server_mutex;
-+static int32_t glistenfd, gconncount = 0, gconnfd[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+
-+pthread_mutex_t emu_fixed_key_srvid_mutex;
-+uint16_t emu_stream_cur_srvid[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+int8_t stream_server_has_ecm[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+
-+pthread_mutex_t emu_fixed_key_data_mutex[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+emu_stream_client_key_data emu_fixed_key_data[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+LLIST *ll_emu_stream_delayed_keys[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+
-+static void SearchTsPackets(uint8_t *buf, uint32_t bufLength, uint16_t *packetSize, uint16_t *startOffset)
-+{
-+	uint32_t i;
-+
-+	(*packetSize) = 0;
-+	(*startOffset) = 0;
-+
-+	for (i = 0; i < bufLength; i++)
-+	{
-+		if (buf[i] == 0x47)
-+		{
-+			// if three packets align, probably safe to assume correct size
-+			if ((buf[i + 188] == 0x47) & (buf[i + 376] == 0x47))
-+			{
-+				(*packetSize) = 188;
-+				(*startOffset) = i;
-+				return;
-+			}
-+			else if ((buf[i + 204] == 0x47) & (buf[i + 408] == 0x47))
-+			{
-+				(*packetSize) = 204;
-+				(*startOffset) = i;
-+				return;
-+			}
-+			else if ((buf[i + 208] == 0x47) & (buf[i + 416] == 0x47))
-+			{
-+				(*packetSize) = 208;
-+				(*startOffset) = i;
-+				return;
-+			}
-+		}
-+	}
-+}
-+
-+typedef void (*ts_data_callback)(emu_stream_client_data *cdata);
-+
-+static void ParseTsData(uint8_t table_id, uint8_t table_mask, uint8_t min_table_length, int8_t *flag,
-+						uint8_t *data, uint16_t data_length, uint16_t *data_pos, int8_t payloadStart,
-+						uint8_t *buf, int32_t len, ts_data_callback func, emu_stream_client_data *cdata)
-+{
-+	int8_t found_start = 0;
-+	int32_t free_data_length, copySize, i;
-+	uint16_t section_length, offset = 0;
-+
-+	if (len < 1)
-+	{
-+		return;
-+	}
-+
-+	if (*flag == 0 && !payloadStart)
-+	{
-+		return;
-+	}
-+
-+	if (*flag == 0)
-+	{
-+		*data_pos = 0;
-+		offset = 1 + buf[0];
-+	}
-+	else if (payloadStart)
-+	{
-+		offset = 1;
-+	}
-+
-+	if (len - offset < 1)
-+	{
-+		return;
-+	}
-+
-+	free_data_length = data_length - *data_pos;
-+	copySize = (len - offset) > free_data_length ? free_data_length : (len - offset);
-+
-+	memcpy(data + (*data_pos), buf + offset, copySize);
-+	(*data_pos) += copySize;
-+
-+	found_start = 0;
-+	for (i = 0; i < *data_pos; i++)
-+	{
-+		if ((data[i] & table_mask) == table_id)
-+		{
-+			if (i != 0)
-+			{
-+				if ((*data_pos) - i > i)
-+				{
-+					memmove(data, &data[i], (*data_pos) - i);
-+				}
-+				else
-+				{
-+					memcpy(data, &data[i], (*data_pos) - i);
-+				}
-+
-+				*data_pos -= i;
-+			}
-+			found_start = 1;
-+			break;
-+		}
-+	}
-+
-+	if (!found_start)
-+	{
-+		*flag = 0;
-+		return;
-+	}
-+
-+	*flag = 2;
-+
-+	if (*data_pos < 3)
-+	{
-+		return;
-+	}
-+
-+	section_length = SCT_LEN(data);
-+
-+	if (section_length > data_length || section_length < min_table_length)
-+	{
-+		*flag = 0;
-+		return;
-+	}
-+
-+	if ((*data_pos) < section_length)
-+	{
-+		return;
-+	}
-+
-+	func(cdata);
-+
-+	found_start = 0;
-+	for (i = section_length; i < *data_pos; i++)
-+	{
-+		if ((data[i] & table_mask) == table_id)
-+		{
-+			if ((*data_pos) - i > i)
-+			{
-+				memmove(data, &data[i], (*data_pos) - i);
-+			}
-+			else
-+			{
-+				memcpy(data, &data[i], (*data_pos) - i);
-+			}
-+
-+			*data_pos -= i;
-+			found_start = 1;
-+			break;
-+		}
-+	}
-+
-+	if (!found_start)
-+	{
-+		*data_pos = 0;
-+	}
-+
-+	*flag = 1;
-+}
-+
-+static void ParsePatData(emu_stream_client_data *cdata)
-+{
-+	int32_t i;
-+	uint8_t *data = cdata->pat_data;
-+	uint16_t srvid, section_length = SCT_LEN(data);
-+
-+	for (i = 8; i + 7 < section_length; i += 4)
-+	{
-+		srvid = b2i(2, data + i);
-+		if (srvid == 0)
-+		{
-+			continue;
-+		}
-+
-+		if (cdata->srvid == srvid)
-+		{
-+			cdata->pmt_pid = b2i(2, data + i + 2) & 0x1FFF;
-+			cs_log_dbg(D_READER, "Stream client %i found pmt pid: 0x%04X (%i)",
-+						cdata->connid, cdata->pmt_pid, cdata->pmt_pid);
-+			break;
-+		}
-+	}
-+}
-+
-+static int8_t stream_client_get_caid(emu_stream_client_data *cdata)
-+{
-+	uint32_t tmp1 = (cdata->srvid << 16) | cdata->pmt_pid;
-+	uint8_t tmp2[2];
-+
-+	if (emu_find_key('A', tmp1, 0, "FAKE", tmp2, 2, 0, 0, 0, NULL))
-+	{
-+		cdata->caid = b2i(2, tmp2);
-+		return 1;
-+	}
-+	return 0;
-+}
-+
-+static void ParseDescriptors(uint8_t *buffer, uint16_t info_length, uint8_t *type)
-+{
-+	uint8_t descriptor_tag = buffer[0], descriptor_length = 0;
-+	uint32_t j, k;
-+
-+	if (info_length < 1)
-+	{
-+		return;
-+	}
-+
-+	for (j = 0; j + 1 < info_length; j += descriptor_length + 2)
-+	{
-+		descriptor_tag = buffer[j];
-+		descriptor_length = buffer[j + 1];
-+
-+		switch (descriptor_tag)
-+		{
-+			case 0x05: // Registration descriptor
-+			{
-+				// "HDMV" format identifier is removed
-+				// OSCam does not need to know about Blu-ray
-+				const char format_identifiers_audio[10][5] =
-+				{
-+					"AC-3", "BSSD", "dmat", "DRA1", "DTS1",
-+					"DTS2", "DTS3", "EAC3", "mlpa", "Opus",
-+				};
-+
-+				for (k = 0; k < 10; k++)
-+				{
-+					if (memcmp(buffer + j + 2, format_identifiers_audio[k], 4) == 0)
-+					{
-+						*type = STREAM_AUDIO;
-+						break;
-+					}
-+				}
-+				break;
-+			}
-+
-+			//case 0x09: // CA descriptor
-+			//{
-+			//	break;
-+			//}
-+
-+			case 0x46: // VBI teletext descriptor (DVB)
-+			case 0x56: // teletext descriptor (DVB)
-+			{
-+				*type = STREAM_TELETEXT;
-+				break;
-+			}
-+
-+			case 0x59: // subtitling descriptor (DVB)
-+			{
-+				*type = STREAM_SUBTITLE;
-+				break;
-+			}
-+
-+			case 0x6A: // AC-3 descriptor (DVB)
-+			case 0x7A: // enhanced AC-3 descriptor (DVB)
-+			case 0x7B: // DTS descriptor (DVB)
-+			case 0x7C: // AAC descriptor (DVB)
-+			case 0x81: // AC-3 descriptor (ATSC)
-+			case 0xCC: // Enhanced AC-3 descriptor (ATSC)
-+			{
-+				*type = STREAM_AUDIO;
-+				break;
-+			}
-+
-+			case 0x7F: // extension descriptor (DVB)
-+			{
-+				uint8_t extension_descriptor_tag = buffer[j + 2];
-+
-+				switch (extension_descriptor_tag)
-+				{
-+					case 0x0E: // DTS-HD descriptor (DVB)
-+					case 0x0F: // DTS Neural descriptor (DVB)
-+					case 0x15: // AC-4 descriptor (DVB)
-+						*type = STREAM_AUDIO;
-+						break;
-+
-+					case 0x20: // TTML subtitling descriptor (DVB)
-+						*type = STREAM_SUBTITLE;
-+						break;
-+
-+					default:
-+						*type = STREAM_UNDEFINED;
-+						break;
-+				}
-+				break;
-+			}
-+
-+			default:
-+				break;
-+		}
-+	}
-+}
-+
-+static void ParsePmtData(emu_stream_client_data *cdata)
-+{
-+	int32_t i;
-+	uint8_t *data = cdata->pmt_data;
-+	uint8_t descriptor_tag = 0, descriptor_length = 0, stream_type;
-+	uint16_t program_info_length = 0, es_info_length = 0, elementary_pid, caid;
-+	uint16_t section_length = SCT_LEN(data);
-+
-+	cdata->pcr_pid = b2i(2, data + 8) & 0x1FFF;
-+	if (cdata->pcr_pid != 0x1FFF)
-+	{
-+		cs_log_dbg(D_READER, "Stream client %i found pcr pid: 0x%04X (%i)",
-+					cdata->connid, cdata->pcr_pid, cdata->pcr_pid);
-+	}
-+
-+	program_info_length = b2i(2, data + 10) & 0xFFF;
-+
-+	if (12 + program_info_length >= section_length)
-+	{
-+		return;
-+	}
-+
-+	// parse program descriptors (we are looking only for CA descriptor here)
-+	for (i = 12; i + 1 < 12 + program_info_length; i += descriptor_length + 2)
-+	{
-+		descriptor_tag = data[i];
-+		descriptor_length = data[i + 1];
-+
-+		if (descriptor_length < 1)
-+		{
-+			break;
-+		}
-+
-+		if (i + 1 + descriptor_length >= 12 + program_info_length)
-+		{
-+			break;
-+		}
-+
-+		if (descriptor_tag == 0x09 && descriptor_length >= 4)
-+		{
-+			caid = b2i(2, data + i + 2);
-+
-+			if (chk_ctab_ex(caid, &cfg.emu_stream_relay_ctab) && (caid_is_powervu(caid) || caid == 0xA101 || caid_is_icam(caid))) // add all supported caids here
-+			{
-+				if (cdata->caid == NO_CAID_VALUE)
-+				{
-+					cdata->caid = caid;
-+				}
-+				cdata->ecm_pid = b2i(2, data + i + 4) & 0x1FFF;
-+				cs_log_dbg(D_READER, "Stream client %i found ecm pid: 0x%04X (%i)",
-+							cdata->connid, cdata->ecm_pid, cdata->ecm_pid);
-+				break;
-+			}
-+		}
-+	}
-+
-+	for (i = 12 + program_info_length; i + 4 < section_length; i += 5 + es_info_length)
-+	{
-+		stream_type = data[i];
-+		elementary_pid = b2i(2, data + i + 1) & 0x1FFF;
-+		es_info_length = b2i(2, data + i + 3) & 0xFFF;
-+
-+		switch (stream_type)
-+		{
-+			case 0x01:
-+			case 0x02:
-+			case 0x10:
-+			case 0x1B:
-+			case 0x20:
-+			case 0x24:
-+			case 0x25:
-+			case 0x42:
-+			case 0xD1:
-+			case 0xEA:
-+			{
-+				cdata->video_pid = elementary_pid;
-+				cs_log_dbg(D_READER, "Stream client %i found video pid: 0x%04X (%i)",
-+							cdata->connid, elementary_pid, elementary_pid);
-+				break;
-+			}
-+
-+			case 0x03:
-+			case 0x04:
-+			case 0x0F:
-+			case 0x11:
-+			case 0x1C:
-+			case 0x2D:
-+			case 0x2E:
-+			case 0x81:
-+			{
-+				if (cdata->audio_pid_count >= EMU_STREAM_MAX_AUDIO_SUB_TRACKS)
-+				{
-+					continue;
-+				}
-+
-+				cdata->audio_pids[cdata->audio_pid_count] = elementary_pid;
-+				cdata->audio_pid_count++;
-+				cs_log_dbg(D_READER, "Stream client %i found audio pid: 0x%04X (%i)",
-+							cdata->connid, elementary_pid, elementary_pid);
-+				break;
-+			}
-+
-+			case 0x06:
-+			//case 0x81: // some ATSC AC-3 streams do not contain the AC-3 descriptor!
-+			case 0x87:
-+			{
-+				uint8_t type = STREAM_UNDEFINED;
-+				ParseDescriptors(data + i + 5, es_info_length, &type);
-+
-+				if (type == STREAM_AUDIO)
-+				{
-+					if (cdata->audio_pid_count >= EMU_STREAM_MAX_AUDIO_SUB_TRACKS)
-+					{
-+						continue;
-+					}
-+
-+					cdata->audio_pids[cdata->audio_pid_count] = elementary_pid;
-+					cdata->audio_pid_count++;
-+					cs_log_dbg(D_READER, "Stream client %i found audio pid: 0x%04X (%i)",
-+								cdata->connid, elementary_pid, elementary_pid);
-+				}
-+				else if (type == STREAM_TELETEXT)
-+				{
-+					cdata->teletext_pid = elementary_pid;
-+					cs_log_dbg(D_READER, "Stream client %i found teletext pid: 0x%04X (%i)",
-+								cdata->connid, elementary_pid, elementary_pid);
-+				}
-+				break;
-+			}
-+		}
-+	}
-+
-+	// If we haven't found a CAID for this service,
-+	// search the keyDB for a fake one
-+	if (cdata->caid == NO_CAID_VALUE && stream_client_get_caid(cdata) == 1)
-+	{
-+		cs_log_dbg(D_READER, "Stream client %i found fake caid: 0x%04X (%i)",
-+					cdata->connid, cdata->caid, cdata->caid);
-+	}
-+}
-+
-+static void ParseCatData(emu_stream_client_data *cdata)
-+{
-+	uint8_t *data = cdata->cat_data;
-+	uint32_t i;
-+
-+	for (i = 8; i < (b2i(2, data + 1) & 0xFFF) - 1; i += data[i + 1] + 2)
-+	{
-+		if (data[i] != 0x09)
-+		{
-+			continue;
-+		}
-+
-+		uint16_t caid = b2i(2, data + i + 2);
-+
-+		if (caid_is_powervu(caid)) // add all supported caids here
-+		{
-+			if (cdata->caid == NO_CAID_VALUE)
-+			{
-+				cdata->caid = caid;
-+			}
-+			cdata->emm_pid = b2i(2, data + i + 4) & 0x1FFF;;
-+			cs_log_dbg(D_READER, "Stream client %i found emm pid: 0x%04X (%i)",
-+						cdata->connid, cdata->emm_pid, cdata->emm_pid);
-+			break;
-+		}
-+	}
-+}
-+
-+static void ParseEmmData(emu_stream_client_data *cdata)
-+{
-+	uint32_t keysAdded = 0;
-+
-+	emu_process_emm(NULL, cdata->caid, cdata->emm_data, &keysAdded);
-+
-+	if (keysAdded)
-+	{
-+		//refresh_entitlements(rdr);
-+		cs_log("Stream client %i found %i keys", cdata->connid, keysAdded);
-+	}
-+}
-+
-+static void ParseEcmData(emu_stream_client_data *cdata)
-+{
-+	uint8_t *data = cdata->ecm_data;
-+	uint8_t dcw[16];
-+	uint16_t section_length = SCT_LEN(data);
-+
-+	if (section_length < 11)
-+	{
-+		return;
-+	}
-+
-+	if (caid_is_powervu(cdata->caid))
-+	{
-+		if (data[11] > cdata->ecm_nb || (cdata->ecm_nb == 255 && data[11] == 0) || ((cdata->ecm_nb - data[11]) > 5))
-+		{
-+			cdata->ecm_nb = data[11];
-+			powervu_ecm(data, dcw, NULL, cdata->srvid, cdata->caid, cdata->tsid, cdata->onid, cdata->ens, &cdata->key);
-+		}
-+	}
-+#ifdef MODULE_RADEGAST
-+	else if (caid_is_icam(cdata->caid))
-+	{
-+		icam_ecm(cdata);
-+	}
-+#endif // MODULE_RADEGAST
-+	//else if () // All other caids
-+	//{
-+		//emu_process_ecm();
-+	//}
-+}
-+
-+static void ParseTsPackets(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
-+{
-+	uint8_t payloadStart;
-+	uint16_t pid, offset;
-+	uint32_t i, tsHeader;
-+
-+	for (i = 0; i < bufLength; i += packetSize)
-+	{
-+		tsHeader = b2i(4, stream_buf + i);
-+		pid = (tsHeader & 0x1FFF00) >> 8;
-+		payloadStart = (tsHeader & 0x400000) >> 22;
-+
-+		if (tsHeader & 0x20)
-+		{
-+			offset = 4 + stream_buf[i + 4] + 1;
-+		}
-+		else
-+		{
-+			offset = 4;
-+		}
-+
-+		if (packetSize - offset < 1)
-+		{
-+			continue;
-+		}
-+
-+		if (pid == 0x0000 && data->have_pat_data != 1) // Search the PAT for the PMT pid
-+		{
-+			ParseTsData(0x00, 0xFF, 16, &data->have_pat_data, data->pat_data, sizeof(data->pat_data),
-+						&data->pat_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParsePatData, data);
-+			continue;
-+		}
-+
-+		if (pid == data->pmt_pid && data->have_pmt_data != 1) // Search the PMT for PCR, ECM, Video and Audio pids
-+		{
-+			ParseTsData(0x02, 0xFF, 21, &data->have_pmt_data, data->pmt_data, sizeof(data->pmt_data),
-+						&data->pmt_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParsePmtData, data);
-+			continue;
-+		}
-+
-+		// We have bot PAT and PMT data - No need to search the rest of the packets
-+		if (data->have_pat_data == 1 && data->have_pmt_data == 1)
-+		{
-+			break;
-+		}
-+	}
-+}
-+
-+static void DescrambleTsPacketsPowervu(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
-+{
-+	int8_t oddKeyUsed;
-+
-+	uint8_t scramblingControl, payloadStart, oddeven;
-+	uint8_t *pdata, *packetClusterV[256];
-+	uint8_t *packetClusterA[EMU_STREAM_MAX_AUDIO_SUB_TRACKS][64]; // separate cluster arrays for video and each audio track
-+	uint16_t pid, offset;
-+	uint32_t i, j, k, tsHeader;
-+	uint32_t scrambled_packets = 0, scrambled_packetsA[EMU_STREAM_MAX_AUDIO_SUB_TRACKS] = { 0 };
-+	uint32_t *deskey;
-+	uint32_t cs = 0; // video cluster start
-+	uint32_t ce = 1; // video cluster end
-+	uint32_t csa[EMU_STREAM_MAX_AUDIO_SUB_TRACKS] = { 0 }; // cluster index for audio tracks
-+
-+	void *csakeyA[EMU_STREAM_MAX_AUDIO_SUB_TRACKS] = { 0 };
-+	void *csakeyV = 0;
-+	emu_stream_client_key_data *keydata;
-+
-+	packetClusterV[0] = NULL;
-+
-+	for (i = 0; i < bufLength; i += packetSize)
-+	{
-+		tsHeader = b2i(4, stream_buf + i);
-+		pid = (tsHeader & 0x1FFF00) >> 8;
-+		scramblingControl = tsHeader & 0xC0;
-+		payloadStart = (tsHeader & 0x400000) >> 22;
-+
-+		if (tsHeader & 0x20)
-+		{
-+			offset = 4 + stream_buf[i + 4] + 1;
-+		}
-+		else
-+		{
-+			offset = 4;
-+		}
-+
-+		if (packetSize - offset < 1)
-+		{
-+			continue;
-+		}
-+
-+		if (emu_stream_emm_enabled && pid == 0x0001 && data->have_cat_data != 1) // Search the CAT for EMM pids
-+		{
-+			// set to null pid
-+			stream_buf[i + 1] |= 0x1F;
-+			stream_buf[i + 2] = 0xFF;
-+
-+			ParseTsData(0x01, 0xFF, 8, &data->have_cat_data, data->cat_data, sizeof(data->cat_data),
-+						&data->cat_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseCatData, data);
-+			continue;
-+		}
-+
-+		if (emu_stream_emm_enabled && data->emm_pid && pid == data->emm_pid) // Process the EMM data
-+		{
-+			// set to null pid
-+			stream_buf[i + 1] |= 0x1F;
-+			stream_buf[i + 2] = 0xFF;
-+
-+			ParseTsData(0x80, 0xF0, 3, &data->have_emm_data, data->emm_data, sizeof(data->emm_data),
-+						&data->emm_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseEmmData, data);
-+			continue;
-+		}
-+
-+		if (data->ecm_pid && pid == data->ecm_pid) // Process the ECM data
-+		{
-+			stream_server_has_ecm[data->connid] = 1;
-+
-+			// set to null pid
-+			stream_buf[i + 1] |= 0x1F;
-+			stream_buf[i + 2] = 0xFF;
-+
-+			ParseTsData(0x80, 0xFE, 3, &data->have_ecm_data, data->ecm_data, sizeof(data->ecm_data),
-+						&data->ecm_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseEcmData, data);
-+			continue;
-+		}
-+
-+		if (scramblingControl == 0)
-+		{
-+			continue;
-+		}
-+
-+		if (!(stream_buf[i + 3] & 0x10))
-+		{
-+			stream_buf[i + 3] &= 0x3F;
-+			continue;
-+		}
-+
-+		oddKeyUsed = scramblingControl == 0xC0 ? 1 : 0;
-+
-+		if (!stream_server_has_ecm[data->connid])
-+		{
-+			keydata = &emu_fixed_key_data[data->connid];
-+			SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[data->connid]);
-+			data->key.pvu_csa_used = keydata->pvu_csa_used;
-+		}
-+		else
-+		{
-+			keydata = &data->key;
-+		}
-+
-+		if (keydata->pvu_csa_used)
-+		{
-+			oddeven = scramblingControl; // for detecting odd/even switch
-+
-+			if (pid == data->video_pid) // start with video pid, since it is most dominant
-+			{
-+				csakeyV = keydata->pvu_csa_ks[PVU_CW_VID];
-+
-+				if (csakeyV != NULL)
-+				{
-+					cs = 0;
-+					ce = 1;
-+					packetClusterV[cs] = stream_buf + i; // set first cluster start
-+					packetClusterV[ce] = stream_buf + i + packetSize - 1;
-+					scrambled_packets = 1;
-+
-+					// Now iterate through the rest of the packets and create clusters for batch decryption
-+					for (j = i + packetSize; j < bufLength; j += packetSize)
-+					{
-+						tsHeader = b2i(4, stream_buf + j);
-+						pid = (tsHeader & 0x1FFF00) >> 8;
-+
-+						if (pid == data->video_pid)
-+						{
-+							if (oddeven != (tsHeader & 0xC0)) // changed key so stop adding clusters
-+							{
-+								break;
-+							}
-+
-+							if (cs > ce) // First video packet for each cluster
-+							{
-+								packetClusterV[cs] = stream_buf + j;
-+								ce = cs + 1;
-+							}
-+
-+							scrambled_packets++;
-+						}
-+						else
-+						{
-+							if (cs < ce) // First non-video packet - need to set end of video cluster
-+							{
-+								packetClusterV[ce] = stream_buf + j - 1;
-+								cs = ce + 1;
-+							}
-+
-+							if ((tsHeader & 0xC0) == 0)
-+							{
-+								continue;
-+							}
-+
-+							if (oddeven != (tsHeader & 0xC0)) // changed key so stop adding clusters
-+							{
-+								j = bufLength; // to break out of outer loop also
-+								break;
-+							}
-+
-+							// Check for audio tracks and create single packet clusters
-+							for (k = 0; k < data->audio_pid_count; k++)
-+							{
-+								if (pid == data->audio_pids[k])
-+								{
-+									packetClusterA[k][csa[k]] = stream_buf + j;
-+									csa[k]++;
-+									packetClusterA[k][csa[k]] = stream_buf + j + packetSize - 1;
-+									csa[k]++;
-+									scrambled_packetsA[k]++;
-+								}
-+							}
-+						}
-+					}
-+
-+					if (cs > ce) // last packet was not a video packet, so set null for end of all clusters
-+					{
-+						packetClusterV[cs] = NULL;
-+					}
-+					else
-+					{
-+						// last packet was a video packet, so set end of cluster to end of last packet
-+						if (scrambled_packets > 1)
-+						{
-+							packetClusterV[ce] = stream_buf + j - 1;
-+						}
-+
-+						packetClusterV[ce + 1] = NULL; // add null to end of cluster list
-+					}
-+
-+					while (j >= cluster_size)
-+					{
-+						j = decrypt_packets(csakeyV, packetClusterV);
-+					}
-+
-+					for (k = 0; k < data->audio_pid_count; k++)
-+					{
-+						// if audio track has scrambled packets, set null to mark end and decrypt
-+						if (scrambled_packetsA[k])
-+						{
-+							csakeyA[k] = keydata->pvu_csa_ks[PVU_CW_A1 + k];
-+							packetClusterA[k][csa[k]] = NULL;
-+							decrypt_packets(csakeyA[k], packetClusterA[k]);
-+							csa[k] = 0;
-+							scrambled_packetsA[k] = 0;
-+						}
-+					}
-+				}
-+			}
-+			else
-+			{
-+				for (j = 0; j < data->audio_pid_count; j++)
-+				{
-+					if (pid == data->audio_pids[j])
-+					{
-+						csakeyA[0] = keydata->pvu_csa_ks[PVU_CW_A1 + j];
-+					}
-+				}
-+
-+				if (csakeyA[0] != NULL)
-+				{
-+					packetClusterA[0][0] = stream_buf + i;
-+					packetClusterA[0][1] = stream_buf + i + packetSize - 1;
-+					packetClusterA[0][2] = NULL;
-+					decrypt_packets(csakeyA[0], packetClusterA[0]);
-+				}
-+			}
-+		}
-+		else
-+		{
-+			deskey = NULL;
-+
-+			if (pid == data->video_pid)
-+			{
-+				deskey = keydata->pvu_des_ks[PVU_CW_VID][oddKeyUsed];
-+			}
-+			else
-+			{
-+				for (j = 0; j < data->audio_pid_count; j++)
-+				{
-+					if (pid == data->audio_pids[j])
-+					{
-+						deskey = keydata->pvu_des_ks[PVU_CW_A1 + j][oddKeyUsed];
-+					}
-+				}
-+			}
-+
-+			if (deskey == NULL)
-+			{
-+				deskey = keydata->pvu_des_ks[PVU_CW_HSD][oddKeyUsed];
-+			}
-+
-+			for (j = offset; j + 7 < 188; j += 8)
-+			{
-+				pdata = stream_buf + i + j;
-+				des(pdata, deskey, 0);
-+			}
-+
-+			stream_buf[i + 3] &= 0x3F;
-+		}
-+
-+		if (!stream_server_has_ecm[data->connid])
-+		{
-+			SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[data->connid]);
-+		}
-+	}
-+}
-+
-+static void DescrambleTsPacketsRosscrypt1(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
-+{
-+	int8_t is_av_pid;
-+	int32_t j;
-+
-+	uint8_t scramblingControl;
-+	uint16_t pid, offset;
-+	uint32_t i, tsHeader;
-+
-+	for (i = 0; i < bufLength; i += packetSize)
-+	{
-+		tsHeader = b2i(4, stream_buf + i);
-+		pid = (tsHeader & 0x1FFF00) >> 8;
-+		scramblingControl = tsHeader & 0xC0;
-+
-+		if (tsHeader & 0x20)
-+		{
-+			offset = 4 + stream_buf[i + 4] + 1;
-+		}
-+		else
-+		{
-+			offset = 4;
-+		}
-+
-+		if (packetSize - offset < 1)
-+		{
-+			continue;
-+		}
-+
-+		if (scramblingControl == 0)
-+		{
-+			continue;
-+		}
-+
-+		if (!(stream_buf[i + 3] & 0x10))
-+		{
-+			stream_buf[i + 3] &= 0x3F;
-+			continue;
-+		}
-+
-+		is_av_pid = 0;
-+
-+		if (pid == data->video_pid)
-+		{
-+			is_av_pid = 1;
-+		}
-+		else
-+		{
-+			for (j = 0; j < data->audio_pid_count; j++)
-+			{
-+				if (pid == data->audio_pids[j])
-+				{
-+					is_av_pid = 1;
-+					break;
-+				}
-+			}
-+		}
-+
-+		if (is_av_pid)
-+		{
-+			static uint8_t dyn_key[184];
-+			static uint8_t last_packet[184];
-+
-+			// Reset key on channel change
-+			if (data->reset_key_data == 1)
-+			{
-+				memset(dyn_key, 0x00, 184);
-+				memset(last_packet, 0x00, 184);
-+				data->reset_key_data = 0;
-+			}
-+
-+			if (memcmp(last_packet, stream_buf + i + 4, 184) == 0)
-+			{
-+				if (memcmp(dyn_key, stream_buf + i + 4, 184) != 0)
-+				{
-+					memcpy(dyn_key, stream_buf + i + 4, 184);
-+				}
-+			}
-+			else
-+			{
-+				memcpy(last_packet, stream_buf + i + 4, 184);
-+			}
-+
-+			for (j = 0; j < 184; j++)
-+			{
-+				stream_buf[i + 4 + j] ^= dyn_key[j];
-+			}
-+
-+			stream_buf[i + 3] &= 0x3F;
-+		}
-+	}
-+}
-+
-+static void DescrambleTsPacketsCompel(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
-+{
-+	int8_t is_pes_pid; // any PES pid
-+	int32_t j;
-+	const int8_t limit = 4;
-+
-+	uint8_t scramblingControl;
-+	uint16_t pid, offset;
-+	uint32_t i, tsHeader;
-+
-+	for (i = 0; i < bufLength; i += packetSize)
-+	{
-+		tsHeader = b2i(4, stream_buf + i);
-+		pid = (tsHeader & 0x1FFF00) >> 8;
-+		scramblingControl = tsHeader & 0xC0;
-+
-+		if (tsHeader & 0x20)
-+		{
-+			offset = 4 + stream_buf[i + 4] + 1;
-+		}
-+		else
-+		{
-+			offset = 4;
-+		}
-+
-+		if (packetSize - offset < 1)
-+		{
-+			continue;
-+		}
-+
-+		if (scramblingControl == 0)
-+		{
-+			continue;
-+		}
-+
-+		if (!(stream_buf[i + 3] & 0x10))
-+		{
-+			stream_buf[i + 3] &= 0x3F;
-+			continue;
-+		}
-+
-+		is_pes_pid = 0;
-+
-+		if (pid == data->video_pid)
-+		{
-+			is_pes_pid = 1;
-+		}
-+		else if (pid == data->teletext_pid)
-+		{
-+			is_pes_pid = 1;
-+		}
-+		else
-+		{
-+			for (j = 0; j < data->audio_pid_count; j++)
-+			{
-+				if (pid == data->audio_pids[j])
-+				{
-+					is_pes_pid = 1;
-+					break;
-+				}
-+			}
-+		}
-+
-+		if (is_pes_pid)
-+		{
-+			static uint8_t dyn_key[184];
-+			static uint8_t found_key_bytes[184];
-+			static uint8_t found_key_bytes_count = 8;
-+			static uint8_t lastScramblingControl = 0xFF;
-+
-+			int8_t matches00 = 0;
-+			int8_t matchesFF = 0;
-+			int8_t last00_was_good = 0;
-+			int8_t lastFF_was_good = 0;
-+
-+			// Reset key when scrambling control changes from odd to even
-+			// and vice versa (every ~53 seconds) or when we change channel
-+			if (lastScramblingControl != scramblingControl)
-+			{
-+				memset(dyn_key, 0x00, 184);
-+				memset(found_key_bytes, 0, 184);
-+				found_key_bytes_count = 8;
-+				lastScramblingControl = scramblingControl;
-+
-+				//cs_log_dbg(D_READER, "resetting key data (scrambling control: %02X)", scramblingControl);
-+			}
-+
-+			for (j = 8; j < 184; j++)
-+			{
-+				if (found_key_bytes_count == 184)
-+				{
-+					break;
-+				}
-+
-+				if (stream_buf[i + 4 + j] == 0x00)
-+				{
-+					last00_was_good = 1;
-+					matches00++;
-+
-+					if (matches00 > limit && found_key_bytes[j] == 0)
-+					{
-+						dyn_key[j] = 0x00;
-+						found_key_bytes[j] = 1;
-+						found_key_bytes_count++;
-+					}
-+				}
-+				else if (stream_buf[i + 4 + j] == 0x3F)
-+				{
-+					last00_was_good = 1;
-+					matches00++;
-+
-+					if (matches00 > limit && found_key_bytes[j] == 0)
-+					{
-+						dyn_key[j] = 0x3F;
-+						found_key_bytes[j] = 1;
-+						found_key_bytes_count++;
-+					}
-+				}
-+				else
-+				{
-+					if (last00_was_good == 1)
-+					{
-+						last00_was_good = 0;
-+						matches00--;
-+					}
-+					else
-+					{
-+						matches00 -= 2;
-+					}
-+
-+					if (matches00 < 0)
-+					{
-+						matches00 = 0;
-+					}
-+				}
-+
-+				if (stream_buf[i + 4 + j] == 0xC0)
-+				{
-+					lastFF_was_good = 1;
-+					matchesFF++;
-+
-+					if (matchesFF > limit && found_key_bytes[j] == 0)
-+					{
-+						dyn_key[j] = 0x3F;
-+						found_key_bytes[j] = 1;
-+						found_key_bytes_count++;
-+					}
-+				}
-+				else if (stream_buf[i + 4 + j] == 0xFF)
-+				{
-+					lastFF_was_good = 1;
-+					matchesFF++;
-+
-+					if (matchesFF > limit && found_key_bytes[j] == 0)
-+					{
-+						dyn_key[j] = 0x00;
-+						found_key_bytes[j] = 1;
-+						found_key_bytes_count++;
-+					}
-+				}
-+				else
-+				{
-+					if (lastFF_was_good == 1)
-+					{
-+						lastFF_was_good = 0;
-+						matchesFF--;
-+					}
-+					else
-+					{
-+						matchesFF -= 2;
-+					}
-+
-+					if (matchesFF < 0)
-+					{
-+						matchesFF = 0;
-+					}
-+				}
-+			}
-+
-+			for (j = 183; j >= 8; j--)
-+			{
-+				if (found_key_bytes_count == 184)
-+				{
-+					break;
-+				}
-+
-+				if (stream_buf[i + 4 + j] == 0x00)
-+				{
-+					last00_was_good = 1;
-+					matches00++;
-+
-+					if (matches00 > limit && found_key_bytes[j] == 0)
-+					{
-+						dyn_key[j] = 0x00;
-+						found_key_bytes[j] = 1;
-+						found_key_bytes_count++;
-+					}
-+				}
-+				else if (stream_buf[i + 4 + j] == 0x3F)
-+				{
-+					last00_was_good = 1;
-+					matches00++;
-+
-+					if (matches00 > limit && found_key_bytes[j] == 0)
-+					{
-+						dyn_key[j] = 0x3F;
-+						found_key_bytes[j] = 1;
-+						found_key_bytes_count++;
-+					}
-+				}
-+				else
-+				{
-+					if (last00_was_good == 1)
-+					{
-+						last00_was_good = 0;
-+						matches00--;
-+					}
-+					else
-+					{
-+						matches00 -= 2;
-+					}
-+
-+					if (matches00 < 0)
-+					{
-+						matches00 = 0;
-+					}
-+				}
-+
-+				if (stream_buf[i + 4 + j] == 0xC0)
-+				{
-+					lastFF_was_good = 1;
-+					matchesFF++;
-+
-+					if (matchesFF > limit && found_key_bytes[j] == 0)
-+					{
-+						dyn_key[j] = 0x3F;
-+						found_key_bytes[j] = 1;
-+						found_key_bytes_count++;
-+					}
-+				}
-+				else if (stream_buf[i + 4 + j] == 0xFF)
-+				{
-+					lastFF_was_good = 1;
-+					matchesFF++;
-+
-+					if (matchesFF > limit && found_key_bytes[j] == 0)
-+					{
-+						dyn_key[j] = 0x00;
-+						found_key_bytes[j] = 1;
-+						found_key_bytes_count++;
-+					}
-+				}
-+				else
-+				{
-+					if (lastFF_was_good == 1)
-+					{
-+						lastFF_was_good = 0;
-+						matchesFF--;
-+					}
-+					else
-+					{
-+						matchesFF -= 2;
-+					}
-+
-+					if (matchesFF < 0)
-+					{
-+						matchesFF = 0;
-+					}
-+				}
-+			}
-+
-+			for (j = 8; j < 184; j++)
-+			{
-+				stream_buf[i + 4 + j] ^= dyn_key[j];
-+			}
-+		}
-+
-+		stream_buf[i + 3] &= 0x3F; // Clear scrambling bits
-+	}
-+}
-+
-+static void DescrambleTsPacketsICam(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
-+{
-+	uint8_t *packetCluster[4];
-+	uint8_t scrambled_packets = 0, scramblingControl;
-+	uint32_t i, tsHeader;
-+	int8_t odd_even = -1, odd_even_count = 1;
-+
-+	for (i = 0; i < bufLength; i += packetSize)
-+	{
-+		tsHeader = b2i(4, stream_buf + i);
-+		scramblingControl = (tsHeader & 0xC0) >> 6;
-+
-+#ifdef MODULE_RADEGAST
-+		uint16_t pid, offset, payloadStart;
-+
-+		pid = (tsHeader & 0x1FFF00) >> 8;
-+		payloadStart = (tsHeader & 0x400000) >> 22;
-+
-+		if (tsHeader & 0x20)
-+		{
-+			offset = 4 + stream_buf[i + 4] + 1;
-+		}
-+		else
-+		{
-+			offset = 4;
-+		}
-+
-+		if (data->ecm_pid && pid == data->ecm_pid) // Process the ECM data
-+		{
-+			stream_server_has_ecm[data->connid] = 1;
-+			data->key.icam_csa_used = emu_fixed_key_data[data->connid].icam_csa_used;
-+
-+			ParseTsData(0x80, 0xFE, 3, &data->have_ecm_data, data->ecm_data, sizeof(data->ecm_data),
-+						&data->ecm_data_pos, payloadStart, stream_buf + i + offset, packetSize - offset, ParseEcmData, data);
-+		}
-+#endif // MODULE_RADEGAST
-+
-+		if (scramblingControl == 0)
-+		{
-+			continue;
-+		}
-+
-+		scrambled_packets++;
-+		scramblingControl &= 0x1;
-+
-+		if (odd_even == -1)
-+		{
-+			odd_even = scramblingControl;
-+		}
-+
-+		if (odd_even != scramblingControl)
-+		{
-+			odd_even_count++;
-+			odd_even = scramblingControl;
-+		}
-+	}
-+
-+	if (scrambled_packets == 0)
-+		return;
-+
-+	SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[data->connid]);
-+
-+	if (emu_fixed_key_data[data->connid].icam_csa_used && emu_fixed_key_data[data->connid].icam_csa_ks != NULL)
-+	{
-+		packetCluster[0] = stream_buf;
-+		packetCluster[1] = stream_buf + bufLength;
-+		packetCluster[2] = NULL;
-+
-+		decrypt_packets(emu_fixed_key_data[data->connid].icam_csa_ks, packetCluster);
-+		if (odd_even_count > 1) // odd and even packets together cannot be decrypted in one step
-+		{
-+			decrypt_packets(emu_fixed_key_data[data->connid].icam_csa_ks, packetCluster);
-+		}
-+	}
-+
-+	SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[data->connid]);
-+}
-+
-+static int32_t connect_to_stream(char *http_buf, int32_t http_buf_len, char *stream_path)
-+{
-+	struct sockaddr_in cservaddr;
-+	IN_ADDR_T in_addr;
-+
-+	int32_t streamfd = socket(AF_INET, SOCK_STREAM, 0);
-+	if (streamfd == -1)
-+	{
-+		return -1;
-+	}
-+
-+	bzero(&cservaddr, sizeof(cservaddr));
-+	cservaddr.sin_family = AF_INET;
-+	cs_resolve(emu_stream_source_host, &in_addr, NULL, NULL);
-+	SIN_GET_ADDR(cservaddr) = in_addr;
-+	cservaddr.sin_port = htons(emu_stream_source_port);
-+
-+	if (connect(streamfd, (struct sockaddr *)&cservaddr, sizeof(cservaddr)) == -1)
-+	{
-+		return -1;
-+	}
-+
-+	if (emu_stream_source_auth)
-+	{
-+		snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
-+				"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0\n"
-+				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n"
-+				"Accept-Language: en-US\n"
-+				"Authorization: Basic %s\n"
-+				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port, emu_stream_source_auth);
-+	}
-+	else
-+	{
-+		snprintf(http_buf, http_buf_len, "GET %s HTTP/1.1\nHost: %s:%u\n"
-+				"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0\n"
-+				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n"
-+				"Accept-Language: en-US\n"
-+				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port);
-+	}
-+
-+	if (send(streamfd, http_buf, cs_strlen(http_buf), 0) == -1)
-+	{
-+		return -1;
-+	}
-+
-+	fcntl(streamfd, F_SETFL, fcntl(streamfd, F_GETFL) | O_NONBLOCK);
-+
-+	return streamfd;
-+}
-+
-+static void stream_client_disconnect(emu_stream_client_conn_data *conndata)
-+{
-+	int32_t i;
-+
-+	SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
-+	emu_stream_cur_srvid[conndata->connid] = NO_SRVID_VALUE;
-+	stream_server_has_ecm[conndata->connid] = 0;
-+	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
-+
-+	SAFE_MUTEX_LOCK(&emu_stream_server_mutex);
-+	for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
-+	{
-+		if (gconnfd[i] == conndata->connfd)
-+		{
-+			gconnfd[i] = -1;
-+			gconncount--;
-+		}
-+	}
-+	SAFE_MUTEX_UNLOCK(&emu_stream_server_mutex);
-+
-+	shutdown(conndata->connfd, 2);
-+	close(conndata->connfd);
-+
-+	cs_log("Stream client %i disconnected",conndata->connid);
-+
-+	NULLFREE(conndata);
-+}
-+
-+static void *stream_client_handler(void *arg)
-+{
-+	emu_stream_client_conn_data *conndata = (emu_stream_client_conn_data *)arg;
-+	emu_stream_client_data *data;
-+
-+	char *http_buf, stream_path[255], stream_path_copy[255];
-+	char *saveptr, *token, http_version[4];
-+
-+	int8_t streamConnectErrorCount = 0, streamDataErrorCount = 0;
-+	int32_t bytesRead = 0, http_status_code = 0;
-+	int32_t clientStatus, streamStatus, streamfd;
-+	int32_t cur_dvb_buffer_size, cur_dvb_buffer_wait, i;
-+
-+	uint8_t *stream_buf;
-+	uint16_t packetCount = 0, packetSize = 0, startOffset = 0;
-+	uint32_t remainingDataPos, remainingDataLength, tmp_pids[4];
-+
-+	struct pollfd pfd[2];
-+	int ret;
-+
-+	cs_log("Stream client %i connected", conndata->connid);
-+
-+	if (!cs_malloc(&http_buf, 1024))
-+	{
-+		stream_client_disconnect(conndata);
-+		return NULL;
-+	}
-+
-+	if (!cs_malloc(&stream_buf, EMU_DVB_BUFFER_SIZE))
-+	{
-+		NULLFREE(http_buf);
-+		stream_client_disconnect(conndata);
-+		return NULL;
-+	}
-+
-+	if (!cs_malloc(&data, sizeof(emu_stream_client_data)))
-+	{
-+		NULLFREE(http_buf);
-+		NULLFREE(stream_buf);
-+		stream_client_disconnect(conndata);
-+		return NULL;
-+	}
-+
-+	clientStatus = recv(conndata->connfd, http_buf, 1024, 0);
-+	if (clientStatus < 1)
-+	{
-+		NULLFREE(http_buf);
-+		NULLFREE(stream_buf);
-+		NULLFREE(data);
-+		stream_client_disconnect(conndata);
-+		return NULL;
-+	}
-+
-+	http_buf[1023] = '\0';
-+	if (sscanf(http_buf, "GET %254s ", stream_path) < 1)
-+	{
-+		NULLFREE(http_buf);
-+		NULLFREE(stream_buf);
-+		NULLFREE(data);
-+		stream_client_disconnect(conndata);
-+		return NULL;
-+	}
-+
-+	cs_strncpy(stream_path_copy, stream_path, sizeof(stream_path));
-+
-+	token = strtok_r(stream_path_copy, ":", &saveptr); // token 0
-+	for (i = 1; token != NULL && i < 7; i++) // tokens 1 to 6
-+	{
-+		token = strtok_r(NULL, ":", &saveptr);
-+		if (token == NULL)
-+		{
-+			break;
-+		}
-+
-+		if (i >= 3) // We olny need token 3 (srvid), 4 (tsid), 5 (onid) and 6 (ens)
-+		{
-+			if (sscanf(token, "%x", &tmp_pids[i - 3]) != 1)
-+			{
-+				tmp_pids[i - 3] = 0;
-+			}
-+		}
-+	}
-+
-+	data->srvid = tmp_pids[0] & 0xFFFF;
-+	data->tsid = tmp_pids[1] & 0xFFFF;
-+	data->onid = tmp_pids[2] & 0xFFFF;
-+	data->ens = tmp_pids[3];
-+
-+	if (data->srvid == 0) // We didn't get a srvid - Exit
-+	{
-+		NULLFREE(http_buf);
-+		NULLFREE(stream_buf);
-+		NULLFREE(data);
-+		stream_client_disconnect(conndata);
-+		return NULL;
-+	}
-+
-+	SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
-+	emu_stream_cur_srvid[conndata->connid] = data->srvid;
-+	stream_server_has_ecm[conndata->connid] = 0;
-+	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
-+
-+	cs_log("Stream client %i request %s", conndata->connid, stream_path);
-+
-+	cs_log_dbg(D_READER, "Stream client %i received srvid: %04X tsid: %04X onid: %04X ens: %08X",
-+				conndata->connid, data->srvid, data->tsid, data->onid, data->ens);
-+
-+	snprintf(http_buf, 1024, "HTTP/1.0 200 OK\nConnection: Close\nContent-Type: video/mpeg\nServer: stream_enigma2\n\n");
-+	clientStatus = send(conndata->connfd, http_buf, cs_strlen(http_buf), 0);
-+
-+	data->connid = conndata->connid;
-+	data->caid = NO_CAID_VALUE;
-+	data->have_pat_data = 0;
-+	data->have_pmt_data = 0;
-+	data->have_cat_data = 0;
-+	data->have_ecm_data = 0;
-+	data->have_emm_data = 0;
-+	data->reset_key_data = 1;
-+
-+	while (!exit_oscam && clientStatus != -1 && streamConnectErrorCount < 3
-+			&& streamDataErrorCount < 15)
-+	{
-+		streamfd = connect_to_stream(http_buf, 1024, stream_path);
-+		if (streamfd == -1)
-+		{
-+			cs_log("WARNING: stream client %i cannot connect to stream source", conndata->connid);
-+			streamConnectErrorCount++;
-+			cs_sleepms(500);
-+			continue;
-+		}
-+
-+		streamStatus = 0;
-+		bytesRead = 0;
-+
-+		while (!exit_oscam && clientStatus != -1 && streamStatus != -1
-+				&& streamConnectErrorCount < 3 && streamDataErrorCount < 15)
-+		{
-+			if (data->key.pvu_csa_used)
-+			{
-+				cur_dvb_buffer_size = EMU_DVB_BUFFER_SIZE_CSA;
-+				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_CSA;
-+			}
-+			else if (emu_fixed_key_data[conndata->connid].icam_csa_used)
-+			{
-+				cur_dvb_buffer_size = 188 * cluster_size;
-+				cur_dvb_buffer_wait = 188 * (cluster_size - 3);
-+			}
-+			else
-+			{
-+				cur_dvb_buffer_size = EMU_DVB_BUFFER_SIZE_DES;
-+				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_DES;
-+			}
-+
-+			pfd[0].fd = streamfd;
-+			pfd[0].events = POLLIN | POLLRDHUP | POLLHUP;
-+			pfd[1].fd = conndata->connfd;
-+			pfd[1].events = POLLRDHUP | POLLHUP;
-+
-+			ret = poll(pfd, 2, 2000);
-+
-+			if (ret < 0) // poll error
-+			{
-+				cs_log("WARNING: stream client %i error receiving data from stream source", conndata->connid);
-+				streamConnectErrorCount++;
-+				cs_sleepms(100);
-+				break;
-+			}
-+			else if (ret == 0) // timeout
-+			{
-+				cs_log("WARNING: stream client %i no data from stream source", conndata->connid);
-+				streamDataErrorCount++; // 2 sec timeout * 15 = 30 seconds no data -> close
-+				continue;
-+			}
-+			else
-+			{
-+				if (pfd[0].revents & POLLIN) // new incoming data
-+				{
-+					streamStatus = recv(streamfd, stream_buf + bytesRead, cur_dvb_buffer_size - bytesRead, MSG_DONTWAIT);
-+				}
-+
-+				if ((pfd[0].revents & POLLHUP) || (pfd[0].revents & POLLRDHUP)) // incoming connection closed
-+				{
-+					cs_log("WARNING: stream client %i - stream source closed connection", conndata->connid);
-+					streamConnectErrorCount++;
-+					cs_sleepms(100);
-+					break;
-+				}
-+
-+				if ((pfd[1].revents & POLLHUP) || (pfd[1].revents & POLLRDHUP)) // outgoing connection was closed -> e.g. user zapped to other channel
-+				{
-+					clientStatus = -1;
-+					break;
-+				}
-+			}
-+
-+			if (streamStatus < cur_dvb_buffer_size - bytesRead) // probably just received header but no stream
-+			{
-+				if (!bytesRead && streamStatus > 13 &&
-+					sscanf((const char*)stream_buf, "HTTP/%3s %d ", http_version , &http_status_code) == 2 &&
-+					http_status_code != 200)
-+				{
-+					cs_log("ERROR: stream client %i got %d response from stream source", conndata->connid, http_status_code);
-+					streamConnectErrorCount++;
-+					cs_sleepms(100);
-+					break;
-+				}
-+				else
-+				{
-+					cs_log_dbg(0, "WARNING: stream client %i non-full buffer from stream source", conndata->connid);
-+					streamDataErrorCount++;
-+					cs_sleepms(100);
-+				}
-+			}
-+			else
-+			{
-+				streamDataErrorCount = 0;
-+			}
-+
-+			streamConnectErrorCount = 0;
-+			bytesRead += streamStatus;
-+
-+			if (bytesRead >= cur_dvb_buffer_wait)
-+			{
-+				startOffset = 0;
-+
-+				// only search if not starting on ts packet or unknown packet size
-+				if (stream_buf[0] != 0x47 || packetSize == 0)
-+				{
-+					SearchTsPackets(stream_buf, bytesRead, &packetSize, &startOffset);
-+				}
-+
-+				if (packetSize == 0)
-+				{
-+					bytesRead = 0;
-+				}
-+				else
-+				{
-+					packetCount = ((bytesRead - startOffset) / packetSize);
-+
-+					// We have both PAT and PMT data - We can start descrambling
-+					if (data->have_pat_data == 1 && data->have_pmt_data == 1)
-+					{
-+						if (chk_ctab_ex(data->caid, &cfg.emu_stream_relay_ctab))
-+						{
-+							if (caid_is_powervu(data->caid))
-+							{
-+								DescrambleTsPacketsPowervu(data, stream_buf + startOffset, packetCount * packetSize, packetSize);
-+							}
-+							else if (data->caid == 0xA101) // Rosscrypt1
-+							{
-+								DescrambleTsPacketsRosscrypt1(data, stream_buf + startOffset, packetCount * packetSize, packetSize);
-+							}
-+							else if (data->caid == NO_CAID_VALUE) // Compel
-+							{
-+								DescrambleTsPacketsCompel(data, stream_buf + startOffset, packetCount * packetSize, packetSize);
-+							}
-+							else if (caid_is_icam(data->caid)) // ICAM
-+							{
-+								DescrambleTsPacketsICam(data, stream_buf + startOffset, packetCount * packetSize, packetSize);
-+							}
-+						}
-+						else
-+						{
-+							cs_log_dbg(D_READER, "Stream client %i caid %04X not enabled in stream relay config",
-+										conndata->connid, data->caid);
-+						}
-+					}
-+					else // Search PAT and PMT packets for service information
-+					{
-+						ParseTsPackets(data, stream_buf + startOffset, packetCount * packetSize, packetSize);
-+					}
-+
-+					clientStatus = send(conndata->connfd, stream_buf + startOffset, packetCount * packetSize, 0);
-+
-+					remainingDataPos = startOffset + (packetCount * packetSize);
-+					remainingDataLength = bytesRead - remainingDataPos;
-+
-+					if (remainingDataPos < remainingDataLength)
-+					{
-+						memmove(stream_buf, stream_buf + remainingDataPos, remainingDataLength);
-+					}
-+					else
-+					{
-+						memcpy(stream_buf, stream_buf + remainingDataPos, remainingDataLength);
-+					}
-+
-+					bytesRead = remainingDataLength;
-+				}
-+			}
-+		}
-+
-+		close(streamfd);
-+	}
-+
-+	NULLFREE(http_buf);
-+	NULLFREE(stream_buf);
-+
-+	for (i = 0; i < 8; i++)
-+	{
-+		if (data->key.pvu_csa_ks[i])
-+		{
-+			free_key_struct(data->key.pvu_csa_ks[i]);
-+		}
-+	}
-+
-+	if (data->key.icam_csa_ks)
-+	{
-+		free_key_struct(data->key.icam_csa_ks);
-+	}
-+#ifdef MODULE_RADEGAST
-+	icam_reset(data->connid);
-+#endif
-+
-+	NULLFREE(data);
-+
-+	stream_client_disconnect(conndata);
-+	return NULL;
-+}
-+
-+void *stream_server(void *UNUSED(a))
-+{
-+	struct sockaddr_in servaddr, cliaddr;
-+	socklen_t clilen;
-+	int32_t connfd, reuse = 1, i;
-+	int8_t connaccepted;
-+	emu_stream_client_conn_data *conndata;
-+
-+	cluster_size = get_internal_parallelism();
-+	cs_log("INFO: FFDecsa parallel mode = %d", cluster_size);
-+
-+	if (!emu_stream_server_mutex_init)
-+	{
-+		SAFE_MUTEX_INIT(&emu_stream_server_mutex, NULL);
-+		emu_stream_server_mutex_init = 1;
-+	}
-+
-+	SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
-+	for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
-+	{
-+		emu_stream_cur_srvid[i] = NO_SRVID_VALUE;
-+		stream_server_has_ecm[i] = 0;
-+	}
-+	SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
-+
-+	for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
-+	{
-+		gconnfd[i] = -1;
-+	}
-+
-+	glistenfd = socket(AF_INET, SOCK_STREAM, 0);
-+	if (glistenfd == -1)
-+	{
-+		cs_log("ERROR: cannot create stream server socket");
-+		return NULL;
-+	}
-+
-+	bzero(&servaddr,sizeof(servaddr));
-+	servaddr.sin_family = AF_INET;
-+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-+	servaddr.sin_port = htons(emu_stream_relay_port);
-+	setsockopt(glistenfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
-+
-+	if (bind(glistenfd,(struct sockaddr *)&servaddr, sizeof(servaddr)) == -1)
-+	{
-+		cs_log("ERROR: cannot bind to stream server socket");
-+		close(glistenfd);
-+		return NULL;
-+	}
-+
-+	if (listen(glistenfd, 3) == -1)
-+	{
-+		cs_log("ERROR: cannot listen to stream server socket");
-+		close(glistenfd);
-+		return NULL;
-+	}
-+
-+	while (!exit_oscam)
-+	{
-+		clilen = sizeof(cliaddr);
-+		connfd = accept(glistenfd,(struct sockaddr *)&cliaddr, &clilen);
-+
-+		if (connfd == -1)
-+		{
-+			cs_log("ERROR: accept() failed");
-+			break;
-+		}
-+
-+		connaccepted = 0;
-+
-+		if (cs_malloc(&conndata, sizeof(emu_stream_client_conn_data)))
-+		{
-+			SAFE_MUTEX_LOCK(&emu_stream_server_mutex);
-+			if (gconncount < EMU_STREAM_SERVER_MAX_CONNECTIONS)
-+			{
-+				for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
-+				{
-+					if (gconnfd[i] == -1)
-+					{
-+						gconnfd[i] = connfd;
-+						gconncount++;
-+						connaccepted = 1;
-+
-+						conndata->connfd = connfd;
-+						conndata->connid = i;
-+
-+						break;
-+					}
-+				}
-+			}
-+			SAFE_MUTEX_UNLOCK(&emu_stream_server_mutex);
-+		}
-+
-+		if (connaccepted)
-+		{
-+			int on = 1;
-+			if (setsockopt(connfd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
-+			{
-+				cs_log("ERROR: stream client %i setsockopt() failed for TCP_NODELAY", conndata->connid);
-+			}
-+
-+			start_thread("emu stream client", stream_client_handler, (void*)conndata, NULL, 1, 0);
-+		}
-+		else
-+		{
-+			shutdown(connfd, 2);
-+			close(connfd);
-+			cs_log("ERROR: stream server client dropped because of too many connections (%i)", EMU_STREAM_SERVER_MAX_CONNECTIONS);
-+		}
-+
-+		cs_sleepms(20);
-+	}
-+
-+	close(glistenfd);
-+
-+	return NULL;
-+}
-+
-+void *stream_key_delayer(void *UNUSED(arg))
-+{
-+	int32_t i, j;
-+	emu_stream_client_key_data *cdata;
-+	LL_ITER it;
-+	emu_stream_cw_item *item;
-+	struct timeb t_now;
-+
-+	while (!exit_oscam)
-+	{
-+		cs_ftime(&t_now);
-+
-+		for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
-+		{
-+			it = ll_iter_create(ll_emu_stream_delayed_keys[i]);
-+
-+			while ((item = ll_iter_next(&it)))
-+			{
-+				if (comp_timeb(&t_now, &item->write_time) < 0)
-+				{
-+					break;
-+				}
-+
-+				SAFE_MUTEX_LOCK(&emu_fixed_key_data_mutex[i]);
-+
-+				cdata = &emu_fixed_key_data[i];
-+
-+				for (j = 0; j < 8; j++)
-+				{
-+					if (item->csa_used)
-+					{
-+						if (cdata->pvu_csa_ks[j] == NULL)
-+						{
-+							cdata->pvu_csa_ks[j] = get_key_struct();
-+						}
-+
-+						if (item->is_even)
-+						{
-+							set_even_control_word(cdata->pvu_csa_ks[j], item->cw[j]);
-+						}
-+						else
-+						{
-+							set_odd_control_word(cdata->pvu_csa_ks[j], item->cw[j]);
-+						}
-+
-+						cdata->pvu_csa_used = 1;
-+					}
-+					else
-+					{
-+						if (item->is_even)
-+						{
-+							des_set_key(item->cw[j], cdata->pvu_des_ks[j][0]);
-+						}
-+						else
-+						{
-+							des_set_key(item->cw[j], cdata->pvu_des_ks[j][1]);
-+						}
-+
-+						cdata->pvu_csa_used = 0;
-+					}
-+				}
-+				SAFE_MUTEX_UNLOCK(&emu_fixed_key_data_mutex[i]);
-+
-+				ll_iter_remove_data(&it);
-+			}
-+		}
-+
-+		cs_sleepms(25);
-+	}
-+
-+	return NULL;
-+}
-+
-+void stop_stream_server(void)
-+{
-+	int32_t i;
-+
-+	SAFE_MUTEX_LOCK(&emu_stream_server_mutex);
-+	for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
-+	{
-+		if (gconnfd[i] != -1)
-+		{
-+			shutdown(gconnfd[i], 2);
-+			close(gconnfd[i]);
-+			gconnfd[i] = -1;
-+		}
-+	}
-+
-+	gconncount = 0;
-+	SAFE_MUTEX_UNLOCK(&emu_stream_server_mutex);
-+
-+#ifdef MODULE_RADEGAST
-+	icam_close_radegast_connection();
-+#endif
-+
-+	shutdown(glistenfd, 2);
-+	close(glistenfd);
-+}
-+
-+bool stream_write_cw(ECM_REQUEST *er)
-+{
-+	int32_t i;
-+
-+	if (caid_is_icam(er->caid))
-+	{
-+		bool cw_written = false;
-+		//SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
-+		for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
-+		{
-+			if (emu_stream_cur_srvid[i] == er->srvid)
-+			{
-+				icam_write_cw(er, i);
-+				cw_written = true;
-+				// don't return as there might be more connections for the same channel (e.g. recordings)
-+			}
-+		}
-+		//SAFE_MUTEX_UNLOCK(&emu_fixed_key_srvid_mutex);
-+		return cw_written;
-+	}
-+	return true;
-+}
-+
-+#endif // WITH_EMU
-Index: module-emulator-streamserver.h
-===================================================================
---- module-emulator-streamserver.h	(nonexistent)
-+++ module-emulator-streamserver.h	(working copy)
-@@ -0,0 +1,93 @@
-+#ifndef MODULE_EMULATOR_STREAMSERVER_H_
-+#define MODULE_EMULATOR_STREAMSERVER_H_
-+
-+#ifdef WITH_EMU
-+
-+#define EMU_STREAM_SERVER_MAX_CONNECTIONS 8
-+#define EMU_STREAM_MAX_AUDIO_SUB_TRACKS 16
-+
-+#define EMU_DVB_MAX_TS_PACKETS 278
-+#define EMU_DVB_BUFFER_SIZE_CSA 188*EMU_DVB_MAX_TS_PACKETS
-+#define EMU_DVB_BUFFER_WAIT_CSA 188*(EMU_DVB_MAX_TS_PACKETS-128)
-+#define EMU_DVB_BUFFER_SIZE_DES 188*32
-+#define EMU_DVB_BUFFER_WAIT_DES 188*29
-+#define EMU_DVB_BUFFER_SIZE EMU_DVB_BUFFER_SIZE_CSA
-+
-+typedef struct
-+{
-+	uint32_t pvu_des_ks[8][2][32];
-+	int8_t pvu_csa_used;
-+	void* pvu_csa_ks[8];
-+	int8_t icam_csa_used;
-+	uint32_t* icam_csa_ks;
-+} emu_stream_client_key_data;
-+
-+typedef struct
-+{
-+	int32_t connid;
-+	int8_t have_cat_data;
-+	int8_t have_pat_data;
-+	int8_t have_pmt_data;
-+	int8_t have_ecm_data;
-+	int8_t have_emm_data;
-+	int8_t reset_key_data;
-+	uint8_t cat_data[1024+208];
-+	uint8_t pat_data[1024+208];
-+	uint8_t pmt_data[1024+208];
-+	uint8_t ecm_data[1024+208];
-+	uint8_t emm_data[1024+208];
-+	uint16_t cat_data_pos;
-+	uint16_t pat_data_pos;
-+	uint16_t pmt_data_pos;
-+	uint16_t ecm_data_pos;
-+	uint16_t emm_data_pos;
-+	uint16_t srvid;
-+	uint16_t caid;
-+	uint16_t tsid;
-+	uint16_t onid;
-+	uint32_t ens;
-+	uint16_t pmt_pid;
-+	uint16_t ecm_pid;
-+	uint16_t emm_pid;
-+	uint16_t video_pid;
-+	uint16_t teletext_pid;
-+	uint16_t pcr_pid;
-+	uint16_t audio_pids[EMU_STREAM_MAX_AUDIO_SUB_TRACKS];
-+	uint8_t audio_pid_count;
-+	int16_t ecm_nb;
-+	emu_stream_client_key_data key;
-+} emu_stream_client_data;
-+
-+extern char emu_stream_source_host[256];
-+extern int32_t emu_stream_source_port;
-+extern char *emu_stream_source_auth;
-+extern int32_t emu_stream_relay_port;
-+extern int8_t emu_stream_emm_enabled;
-+
-+extern int8_t stream_server_thread_init;
-+
-+void *stream_server(void *a);
-+void stop_stream_server(void);
-+
-+typedef struct
-+{
-+	struct timeb write_time;
-+	int8_t csa_used;
-+	int8_t is_even;
-+	uint8_t cw[8][8];
-+} emu_stream_cw_item;
-+
-+extern pthread_mutex_t emu_fixed_key_srvid_mutex;
-+extern uint16_t emu_stream_cur_srvid[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+extern int8_t stream_server_has_ecm[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+
-+extern pthread_mutex_t emu_fixed_key_data_mutex[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+extern emu_stream_client_key_data emu_fixed_key_data[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+extern LLIST *ll_emu_stream_delayed_keys[EMU_STREAM_SERVER_MAX_CONNECTIONS];
-+
-+void *stream_key_delayer(void *arg);
-+bool stream_write_cw(ECM_REQUEST *er);
-+
-+#endif // WITH_EMU
-+
-+#endif // MODULE_EMULATOR_STREAMSERVER_H_
 Index: module-emulator-viaccess.c
 ===================================================================
 --- module-emulator-viaccess.c	(nonexistent)
@@ -11368,7 +11382,7 @@ Index: module-emulator.c
 ===================================================================
 --- module-emulator.c	(nonexistent)
 +++ module-emulator.c	(working copy)
-@@ -0,0 +1,905 @@
+@@ -0,0 +1,868 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
 +#include "globals.h"
@@ -11376,7 +11390,7 @@ Index: module-emulator.c
 +#ifdef WITH_EMU
 +
 +#include "module-emulator-osemu.h"
-+#include "module-emulator-streamserver.h"
++#include "module-emulator.h"
 +#include "module-emulator-biss.h"
 +#include "module-emulator-irdeto.h"
 +#include "module-emulator-powervu.h"
@@ -12095,43 +12109,6 @@ Index: module-emulator.c
 +
 +static int32_t emu_reader_init(struct s_reader *UNUSED(reader))
 +{
-+	int32_t i;
-+	char authtmp[128];
-+
-+	if (cfg.emu_stream_relay_enabled && (stream_server_thread_init == 0))
-+	{
-+		stream_server_thread_init = 1;
-+		SAFE_MUTEX_INIT(&emu_fixed_key_srvid_mutex, NULL);
-+
-+		for (i = 0; i < EMU_STREAM_SERVER_MAX_CONNECTIONS; i++)
-+		{
-+			SAFE_MUTEX_INIT(&emu_fixed_key_data_mutex[i], NULL);
-+			ll_emu_stream_delayed_keys[i] = ll_create("ll_emu_stream_delayed_keys");
-+			memset(&emu_fixed_key_data[i], 0, sizeof(emu_stream_client_key_data));
-+		}
-+
-+		start_thread("stream_key_delayer", stream_key_delayer, NULL, NULL, 1, 1);
-+		cs_log("Stream key delayer initialized");
-+
-+		cs_strncpy(emu_stream_source_host, cfg.emu_stream_source_host, sizeof(emu_stream_source_host));
-+		emu_stream_source_port = cfg.emu_stream_source_port;
-+		emu_stream_relay_port = cfg.emu_stream_relay_port;
-+		emu_stream_emm_enabled = cfg.emu_stream_emm_enabled;
-+
-+		if (cfg.emu_stream_source_auth_user && cfg.emu_stream_source_auth_password)
-+		{
-+			snprintf(authtmp, sizeof(authtmp), "%s:%s", cfg.emu_stream_source_auth_user, cfg.emu_stream_source_auth_password);
-+			b64encode(authtmp, cs_strlen(authtmp), &emu_stream_source_auth);
-+		}
-+		else
-+		{
-+			NULLFREE(emu_stream_source_auth);
-+		}
-+
-+		start_thread("stream_server", stream_server, NULL, NULL, 1, 1);
-+		cs_log("Stream relay server initialized");
-+	}
-+
 +	// Initialize mutex for exclusive access to key database and key file
 +	if (!emu_key_data_mutex_init)
 +	{
@@ -12274,109 +12251,189 @@ Index: module-emulator.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-radegast.c
+Index: module-emulator.h
 ===================================================================
---- module-radegast.c	(revision 11726)
-+++ module-radegast.c	(working copy)
-@@ -2,11 +2,13 @@
- 
- #include "globals.h"
- #ifdef MODULE_RADEGAST
-+#include "oscam-chk.h"
- #include "oscam-client.h"
- #include "oscam-ecm.h"
- #include "oscam-net.h"
- #include "oscam-string.h"
- #include "oscam-reader.h"
-+#include "module-emulator-streamserver.h"
- 
- static int32_t radegast_connect(void);
- 
-@@ -86,6 +88,11 @@
- 	mbuf[0] = 0x02; // DCW
- 	if(er->rc < E_NOTFOUND)
- 	{
-+		if(chk_ctab_ex(er->caid, &cfg.emu_stream_relay_ctab) && cfg.emu_stream_relay_enabled)
-+		{
-+			stream_write_cw(er);
-+		}
+--- module-emulator.h	(nonexistent)
++++ module-emulator.h	(working copy)
+@@ -0,0 +1,75 @@
++#ifndef MODULE_EMULATOR_H_
++#define MODULE_EMULATOR_H_
 +
- 		mbuf[1] = 0x12; // len (overall)
- 		mbuf[2] = 0x05; // ACCESS
- 		mbuf[3] = 0x10; // len
++#ifdef WITH_EMU
++
++#define EMU_STREAM_SERVER_MAX_CONNECTIONS 8
++#define EMU_STREAM_MAX_AUDIO_SUB_TRACKS 16
++
++#define EMU_DVB_MAX_TS_PACKETS 278
++#define EMU_DVB_BUFFER_SIZE_CSA 188*EMU_DVB_MAX_TS_PACKETS
++#define EMU_DVB_BUFFER_WAIT_CSA 188*(EMU_DVB_MAX_TS_PACKETS-128)
++#define EMU_DVB_BUFFER_SIZE_DES 188*32
++#define EMU_DVB_BUFFER_WAIT_DES 188*29
++#define EMU_DVB_BUFFER_SIZE EMU_DVB_BUFFER_SIZE_CSA
++
++typedef struct
++{
++	uint32_t pvu_des_ks[8][2][32];
++	int8_t pvu_csa_used;
++	void* pvu_csa_ks[8];
++} emu_stream_client_key_data;
++
++typedef struct
++{
++	int32_t connid;
++	int8_t have_cat_data;
++	int8_t have_pat_data;
++	int8_t have_pmt_data;
++	int8_t have_ecm_data;
++	int8_t have_emm_data;
++	int8_t reset_key_data;
++	uint8_t cat_data[1024+208];
++	uint8_t pat_data[1024+208];
++	uint8_t pmt_data[1024+208];
++	uint8_t ecm_data[1024+208];
++	uint8_t emm_data[1024+208];
++	uint16_t cat_data_pos;
++	uint16_t pat_data_pos;
++	uint16_t pmt_data_pos;
++	uint16_t ecm_data_pos;
++	uint16_t emm_data_pos;
++	uint16_t srvid;
++	uint16_t caid;
++	uint16_t tsid;
++	uint16_t onid;
++	uint32_t ens;
++	uint16_t pmt_pid;
++	uint16_t ecm_pid;
++	uint16_t emm_pid;
++	uint16_t video_pid;
++	uint16_t teletext_pid;
++	uint16_t pcr_pid;
++	uint16_t audio_pids[EMU_STREAM_MAX_AUDIO_SUB_TRACKS];
++	uint8_t audio_pid_count;
++	int16_t ecm_nb;
++	emu_stream_client_key_data key;
++} emu_stream_client_data;
++
++typedef struct
++{
++	struct timeb write_time;
++	int8_t csa_used;
++	int8_t is_even;
++	uint8_t cw[8][8];
++} emu_stream_cw_item;
++
++extern pthread_mutex_t emu_fixed_key_srvid_mutex;
++extern uint16_t emu_stream_cur_srvid[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++extern int8_t stream_server_has_ecm[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++
++extern LLIST *ll_emu_stream_delayed_keys[EMU_STREAM_SERVER_MAX_CONNECTIONS];
++
++#endif // WITH_EMU
++
++#endif // MODULE_EMULATOR_H_
+Index: module-webif.c
+===================================================================
+--- module-webif.c	(revision 11742)
++++ module-webif.c	(working copy)
+@@ -1318,7 +1319,9 @@
+ #endif
+ 	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.stream_relay_port);
+ 	tpl_printf(vars, TPLADD, "STREAM_RELAY_BUFFER_TIME", "%d", cfg.stream_relay_buffer_time);
+-
++#ifdef WITH_EMU
++	tpl_printf(vars, TPLADD, "ESTREAM_ECM_DELAY", "%d", cfg.emu_stream_ecm_delay);
++#endif
+ 	tpl_printf(vars, TPLADD, "TMP", "STREAMRELAYENABLEDSELECTED%d", cfg.stream_relay_enabled);
+ 	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
+ 
+@@ -1330,6 +1333,7 @@
+ }
+ #endif
+ 
++
+ #ifdef MODULE_CCCAM
+ static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams *params)
+ {
+@@ -2730,7 +2734,6 @@
+ 		for(i = 0; i < len ; i++)
+ 			{ tpl_printf(vars, TPLAPPEND, "BOXKEY", "%02X", rdr->boxkey[i]); }
+ 	}
+-
+ #ifdef READER_CONAX
+ 	// CWPK Key
+ 	len = rdr->cwpk_mod_length;
+Index: oscam-config-global.c
+===================================================================
+--- oscam-config-global.c	(revision 11742)
++++ oscam-config-global.c	(working copy)
+@@ -928,6 +928,9 @@
+ 	DEF_OPT_INT32("stream_relay_port"         , OFS(stream_relay_port),           17999),
+ 	DEF_OPT_INT8("stream_relay_enabled"       , OFS(stream_relay_enabled),        0),
+ 	DEF_OPT_UINT32("stream_relay_buffer_time" , OFS(stream_relay_buffer_time),    0),
++#ifdef WITH_EMU
++	DEF_OPT_UINT32("emu_stream_ecm_delay"     , OFS(emu_stream_ecm_delay),        600),
++#endif
+ 	DEF_OPT_FUNC("stream_relay_ctab"          , OFS(stream_relay_ctab),           check_caidtab_fn),
+ 	DEF_LAST_OPT
+ };
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11726)
+--- oscam.c	(revision 11742)
 +++ oscam.c	(working copy)
-@@ -41,6 +41,11 @@
+@@ -41,6 +41,10 @@
  #include "reader-common.h"
  #include "module-gbox.h"
  
 +#ifdef WITH_EMU
 +	void add_emu_reader(void);
-+	void stop_stream_server(void);
 +#endif
 +
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -419,6 +424,10 @@
- 		write_conf(WITH_STAPI5, "DVB API with STAPI5 support");
- 		write_conf(WITH_NEUTRINO, "DVB API with NEUTRINO support");
- 		write_conf(READ_SDT_CHARSETS, "DVB API read-sdt charsets");
-+		if(config_enabled(WITH_EMU))
-+		{
-+			write_conf(true, "DVB API with ICAM v9 stream relay support");
-+		}
- 	}
- 	write_conf(IRDETO_GUESSING, "Irdeto guessing");
- 	write_conf(CS_ANTICASC, "Anti-cascading support");
-@@ -439,6 +448,8 @@
- 		case CLOCK_TYPE_MONOTONIC: write_conf(CLOCKFIX, "Clockfix with monotonic clock"); break;
- 	}
- 	write_conf(IPV6SUPPORT, "IPv6 support");
+@@ -446,6 +454,8 @@
+ #else
+ 	fprintf(fp, "%-40s %s\n", "ARM NEON (SIMD/MPE) support:", "not supported!");
+ #endif
 +	write_conf(WITH_EMU, "Emulator support");
 +	write_conf(WITH_SOFTCAM, "Built-in SoftCam.Key");
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1836,6 +1847,9 @@
- 
- 	init_sidtab();
- 	init_readerdb();
+@@ -1847,6 +1857,9 @@
+ #ifdef MODULE_STREAMRELAY
+ 	init_stream_server();
+ #endif
 +#ifdef WITH_EMU
 +	add_emu_reader();
 +#endif
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
-@@ -1924,6 +1938,9 @@
- #ifdef MODULE_GBOX
- 	stop_gbx_ticker();
- #endif
-+#ifdef WITH_EMU
-+	stop_stream_server();
-+#endif
- 	webif_close();
- 	azbox_close();
- 	coolapi_close_all();
-Index: webif/config/dvbapi.html
+Index: webif/config/streamrelay.html
 ===================================================================
---- webif/config/dvbapi.html	(revision 11726)
-+++ webif/config/dvbapi.html	(working copy)
-@@ -56,7 +56,7 @@
- 			</TD>
- 		</TR>
- 		<TR><TD><A>Write detected prov name to srvid:</A></TD><TD><input name="write_sdt_prov" type="checkbox" value="1" ##WRITESDTPROVCHECKED##><label></label>
--		<!-- <TR><TD><A>API for extended CWs</A></TD>
-+		<TR><TD><A>API for extended CWs</A></TD>
- 			<TD>
- 				<select name="extended_cw_api">
- 					<option value="0" ##EXTENDEDCWAPISELECTED0##>0 - none (disabled)</option>
-@@ -64,4 +64,4 @@
- 					<option value="2" ##EXTENDEDCWAPISELECTED2##>2 - OE2.0</option>
- 				</select>
- 			</TD>
--		</TR> -->
-+		</TR>
-\ No newline at end of file
+--- webif/config/streamrelay.html	(revision 11742)
++++ webif/config/streamrelay.html	(working copy)
+@@ -17,3 +17,4 @@
+ ##TPLSTREAMCLIENTSOURCEHOST##
+ 			<TR><TD><A>Relay Port:</A></TD><TD><input name="stream_relay_port" class="short" type="text" maxlength="5" value="##STREAM_RELAY_PORT##"></TD></TR>
+ 			<TR><TD><A>Relay Buffer Time:</A></TD><TD><input name="stream_relay_buffer_time" class="short" type="text" maxlength="5" value="##STREAM_RELAY_BUFFER_TIME##"><label> ms (delay for stream processing)</label></TD></TR>
++##TPLSTREAMEMUSETTINGS##
+Index: webif/config/streamrelay_emusettings.html
+===================================================================
+--- webif/config/streamrelay_emusettings.html	(nonexistent)
++++ webif/config/streamrelay_emusettings.html	(working copy)
+@@ -0,0 +1 @@
++			<TR><TD><A>ECM fix delay:</A></TD><TD><input name="emu_stream_ecm_delay" class="short" type="text" maxlength="5" value="##ESTREAM_ECM_DELAY##"><label> ms (delay for PowerVU processing)</label></TD></TR>
+Index: webif/pages_index.txt
+===================================================================
+--- webif/pages_index.txt	(revision 11742)
++++ webif/pages_index.txt	(working copy)
+@@ -91,6 +91,7 @@
+ CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
+ CONFIGMENUSTREAMRELAY         config/menu_streamrelay.html                                MODULE_STREAMRELAY
+ STREAMCLIENTSOURCEHOST        config/streamrelay_streamclientsourcehost.html              MODULE_RADEGAST
++STREAMEMUSETTINGS             config/streamrelay_emusettings.html                         WITH_EMU
+ CONFIGMENUSERIAL              config/menu_serial.html                                     MODULE_SERIAL
+ CONFIGMONITOR                 config/monitor.html                                         MODULE_MONITOR
+ CONFIGNEWCAMD                 config/newcamd.html                                         MODULE_NEWCAMD
