@@ -9681,7 +9681,7 @@ Index: module-streamrelay.c
 +
  static void write_cw(ECM_REQUEST *er, int32_t connid)
  {
- 	const uint8_t ecm = (caid_is_videoguard(er->caid) && (er->ecm[4] != 0 && (er->ecm[2] - er->ecm[4]) == 4)) ? er->ecm[21] : 0;
+ 	const uint8_t ecm = (caid_is_videoguard(er->caid) && (er->ecm[4] != 0 && (er->ecm[2] - er->ecm[4]) == 4)) ? 4 : 0;
  	if (memcmp(er->cw, "\x00\x00\x00\x00\x00\x00\x00\x00", 8) != 0)
  	{
 -		dvbcsa_bs_key_set(er->cw, key_data[connid].key[EVEN]);
@@ -10819,16 +10819,16 @@ Index: oscam.c
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -446,6 +454,8 @@
- #else
- 	fprintf(fp, "%-40s %s\n", "ARM NEON (SIMD/MPE) support:", "not supported!");
+@@ -444,6 +452,8 @@
+ #if defined(__arm__) || defined(__aarch64__)
+ 	write_conf(WITH_ARM_NEON, "ARM NEON (SIMD/MPE) support");
  #endif
 +	write_conf(WITH_EMU, "Emulator support");
 +	write_conf(WITH_SOFTCAM, "Built-in SoftCam.Key");
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1847,6 +1857,9 @@
+@@ -1845,6 +1855,9 @@
  #ifdef MODULE_STREAMRELAY
  	init_stream_server();
  #endif
