@@ -66,15 +66,6 @@ Index: Makefile
 ===================================================================
 --- Makefile	(revision 11742)
 +++ Makefile	(working copy)
-@@ -71,7 +71,7 @@ CC_OPTS = -O2 -ggdb -pipe -ffunction-sections -fdata-sections
- CC = $(CROSS_DIR)$(CROSS)gcc
- STRIP = $(CROSS_DIR)$(CROSS)strip
-
--LDFLAGS = -Wl,--gc-sections
-+LDFLAGS = -Wl,--gc-sections,-z noexecstack
-
- #enable sse2 on x86, neon on arm
- TARGETHELP := $(shell $(CC) --target-help 2>&1)
 @@ -294,6 +294,28 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
@@ -95,7 +86,7 @@ Index: Makefile
 +ifndef ANDROID_NDK
 +ifndef ANDROID_STANDALONE_TOOLCHAIN
 +TOUCH_SK := $(shell touch SoftCam.Key)
-+override LDFLAGS += -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default
++override LDFLAGS += -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default -Wl,-z,noexecstack
 +endif
 +endif
 +endif
@@ -10873,3 +10864,33 @@ Index: webif/pages_index.txt
  CONFIGMENUSERIAL              config/menu_serial.html                                     MODULE_SERIAL
  CONFIGMONITOR                 config/monitor.html                                         MODULE_MONITOR
  CONFIGNEWCAMD                 config/newcamd.html                                         MODULE_NEWCAMD
+Index: cscrypt/mdc2.c
+===================================================================
+--- cscrypt/mdc2.c	(revision 11747)
++++ cscrypt/mdc2.c	(working copy)
+@@ -24,7 +24,7 @@
+ 		PERM_OP(l,r,tt, 4,0x0f0f0f0fL); \
+ 		}
+ 
+-#if !defined(WITH_SSL) || !defined(WITH_LIBCRYPTO)
++#if (OPENSSL_VERSION_NUMBER < 0x10101000L) //|| ((OPENSSL_VERSION_NUMBER > 0x10101000L) && !defined(WITH_SSL))
+ const DES_LONG DES_SPtrans[8][64] =
+ {
+ 	{
+@@ -218,7 +218,7 @@
+ #define ROTATE(a,n)     (((a)>>(n))+((a)<<(32-(n))))
+ 
+ 
+-
++#if (OPENSSL_VERSION_NUMBER < 0x10101000L) //|| ((OPENSSL_VERSION_NUMBER > 0x10101000L) && !defined(WITH_SSL))
+ static const unsigned char odd_parity[256] =
+ {
+ 	1, 1, 2, 2, 4, 4, 7, 7, 8, 8, 11, 11, 13, 13, 14, 14,
+@@ -490,7 +490,6 @@
+ }
+ 
+ 
+-#if !defined(WITH_SSL) || !defined(WITH_LIBCRYPTO)
+ void DES_encrypt1(DES_LONG *data, DES_key_schedule *ks, int enc)
+ {
+ 	register DES_LONG l=0, r=0, t=0, u=0;
