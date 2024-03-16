@@ -10671,7 +10671,7 @@ Index: module-streamrelay.h
  typedef struct
  {
 +#ifdef WITH_EMU
-+	struct dvbcsa_bs_key_s *key[EMU_STREAM_MAX_AUDIO_SUB_TRACKS + 2];
++	struct dvbcsa_bs_key_s *key[EMU_STREAM_MAX_AUDIO_SUB_TRACKS + 2][2];
 +#else
  	struct dvbcsa_bs_key_s *key[2];
 +#endif
