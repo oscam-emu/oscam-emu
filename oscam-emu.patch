@@ -212,6 +212,17 @@ Index: globals.h
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
+@@ -2470,6 +2471,10 @@
+ #define DEFAULT_STREAM_SOURCE_PORT 8001 //Enigma2
+ #endif
+ #endif
++#ifdef WITH_EMU
++	uint32_t		emu_stream_ecm_delay;
++	int8_t			emu_stream_emm_enabled;
++#endif
+ 
+ 	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
+ 	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
 Index: module-dvbapi.c
 ===================================================================
 --- module-dvbapi.c	(revision 11748)
@@ -9539,6 +9550,21 @@ Index: module-emulator.c
 +}
 +
 +#endif // WITH_EMU
+Index: oscam-config-global.c
+===================================================================
+--- oscam-config-global.c	(revision 11748)
++++ oscam-config-global.c	(working copy)
+@@ -928,6 +928,10 @@
+ 	DEF_OPT_INT32("stream_relay_port"         , OFS(stream_relay_port),           17999),
+ 	DEF_OPT_INT8("stream_relay_enabled"       , OFS(stream_relay_enabled),        0),
+ 	DEF_OPT_UINT32("stream_relay_buffer_time" , OFS(stream_relay_buffer_time),    0),
++#ifdef WITH_EMU
++	DEF_OPT_INT8("stream_emm_enabled"         , OFS(emu_stream_emm_enabled),      0),
++	DEF_OPT_UINT32("stream_ecm_delay"         , OFS(emu_stream_ecm_delay),        600),
++#endif
+ 	DEF_OPT_FUNC("stream_relay_ctab"          , OFS(stream_relay_ctab),           check_caidtab_fn),
+ 	DEF_LAST_OPT
+ };
 Index: oscam.c
 ===================================================================
 --- oscam.c	(revision 11748)
@@ -9573,3 +9599,29 @@ Index: oscam.c
  	cfg.account = init_userdb();
  	init_signal();
  	init_provid();
+Index: webif/config/streamrelay_emusettings.html
+===================================================================
+--- webif/config/streamrelay_emusettings.html	(nonexistent)
++++ webif/config/streamrelay_emusettings.html	(working copy)
+@@ -0,0 +1,9 @@
++<TR><TD><A>Process EMM from stream (emu):</A></TD>
++    <TD>
++        <select name="stream_emm_enabled">
++            <option value="0" ##STREAMEMMENABLEDSELECTED0##>0 - disabled</option>
++            <option value="1" ##STREAMEMMENABLEDSELECTED1##>1 - enabled</option>
++        </select>
++    </TD>
++</TR>
++<TR><TD><A>ECM fix delay (emu):</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"><label> ms (delay for PowerVU processing)</label></TD></TR>
+Index: webif/pages_index.txt
+===================================================================
+--- webif/pages_index.txt	(revision 11748)
++++ webif/pages_index.txt	(working copy)
+@@ -91,6 +91,7 @@
+ CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
+ CONFIGMENUSTREAMRELAY         config/menu_streamrelay.html                                MODULE_STREAMRELAY
+ STREAMCLIENTSOURCEHOST        config/streamrelay_streamclientsourcehost.html              MODULE_RADEGAST
++STREAMEMUSETTINGS             config/streamrelay_emusettings.html                         WITH_EMU
+ CONFIGMENUSERIAL              config/menu_serial.html                                     MODULE_SERIAL
+ CONFIGMONITOR                 config/monitor.html                                         MODULE_MONITOR
+ CONFIGNEWCAMD                 config/newcamd.html                                         MODULE_NEWCAMD
