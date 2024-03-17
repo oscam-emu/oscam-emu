@@ -5326,7 +5326,7 @@ Index: module-emulator-powervu.c
 +		case 35:
 +			hash_modes_19_to_27_tables_3(dataPadded, hash, table23);
 +			break;
-+		
++
 +		case 36:
 +			hash_modes_19_to_27_tables_3(dataPadded, hash, table24);
 +			break;
@@ -9674,16 +9674,16 @@ Index: module-streamrelay.c
  	if (memcmp(er->cw, "\x00\x00\x00\x00\x00\x00\x00\x00", 8) != 0)
  	{
 +#ifdef WITH_EMU
-+		dvbcsa_bs_key_set(er->cw, key_data[connid].key[0]);
++		dvbcsa_bs_key_set(er->cw, key_data[connid].key[0][EVEN]);
 +#else
  		dvbcsa_bs_key_set(er->cw, key_data[connid].key[EVEN]);
-+#endif			
++#endif	
  	}
  
  	if (memcmp(er->cw + 8, "\x00\x00\x00\x00\x00\x00\x00\x00", 8) != 0)
  	{
 +#ifdef WITH_EMU
-+		dvbcsa_bs_key_set(er->cw + 8, key_data[connid].key[0]);
++		dvbcsa_bs_key_set(er->cw + 8, key_data[connid].key[0][ODD]);
 +#else
  		dvbcsa_bs_key_set(er->cw + 8, key_data[connid].key[ODD]);
 +#endif
