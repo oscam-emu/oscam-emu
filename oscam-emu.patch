@@ -1,8 +1,8 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11750)
+--- CMakeLists.txt	(revision 11752)
 +++ CMakeLists.txt	(working copy)
-@@ -457,6 +457,22 @@
+@@ -454,6 +454,22 @@
  # Manage config.h based on command line parameters
  # Manipulate config file based on given parameters and read unset parameters
  
@@ -25,7 +25,7 @@ Index: CMakeLists.txt
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
  string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
  
-@@ -793,7 +809,25 @@
+@@ -790,7 +806,25 @@
  	endif (HAVE_LIBUSB)
  endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
  
@@ -52,7 +52,7 @@ Index: CMakeLists.txt
  
  #----------------------- installation -----------------------------
  
-@@ -901,4 +935,11 @@
+@@ -898,4 +932,11 @@
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
  
@@ -66,9 +66,9 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11750)
+--- Makefile	(revision 11752)
 +++ Makefile	(working copy)
-@@ -296,6 +296,31 @@
+@@ -301,6 +301,31 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -102,7 +102,7 @@ Index: Makefile
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 Index: config.h
 ===================================================================
---- config.h	(revision 11750)
+--- config.h	(revision 11752)
 +++ config.h	(working copy)
 @@ -1,11 +1,13 @@
  #ifndef CONFIG_H_
@@ -121,7 +121,7 @@ Index: config.h
  //#define WITH_EXTENDED_CW 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11750)
+--- config.sh	(revision 11752)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -205,7 +205,7 @@ Index: config.sh
  	'-O'|'--detect-osx-sdk-version')
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11750)
+--- globals.h	(revision 11752)
 +++ globals.h	(working copy)
 @@ -63,6 +63,10 @@
  # define WITH_LIBCRYPTO 1
@@ -248,7 +248,7 @@ Index: globals.h
  	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11750)
+--- module-dvbapi.c	(revision 11752)
 +++ module-dvbapi.c	(working copy)
 @@ -2657,6 +2657,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
@@ -9593,9 +9593,9 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: module-streamrelay.c
 ===================================================================
---- module-streamrelay.c	(revision 11750)
+--- module-streamrelay.c	(revision 11752)
 +++ module-streamrelay.c	(working copy)
-@@ -12,6 +12,12 @@
+@@ -14,6 +14,12 @@
  #include "oscam-time.h"
  #include "oscam-chk.h"
  
@@ -9608,7 +9608,7 @@ Index: module-streamrelay.c
  #define STREAM_UNDEFINED 0x00
  #define STREAM_VIDEO     0x01
  #define STREAM_AUDIO     0x02
-@@ -26,18 +32,32 @@
+@@ -28,18 +34,32 @@
  	int32_t connid;
  } stream_client_conn_data;
  
@@ -9618,7 +9618,7 @@ Index: module-streamrelay.c
 +static char stream_source_host[256];
 +static char *stream_source_auth = NULL;
 +static uint32_t cluster_size = 50;
- bool has_dvbcsa_ecm = 0, is_dvbcsa_static = 0;
+ bool has_dvbcsa_ecm = 0, is_dvbcsa_static = 1;
  
  static uint8_t stream_server_mutex_init = 0;
  static pthread_mutex_t stream_server_mutex;
@@ -9648,7 +9648,7 @@ Index: module-streamrelay.c
  
  #ifdef MODULE_RADEGAST
  static int32_t gRadegastFd = 0;
-@@ -129,10 +149,13 @@
+@@ -131,10 +151,13 @@
  		}
  	}
  }
@@ -9662,7 +9662,7 @@ Index: module-streamrelay.c
  	uint16_t section_length = SCT_LEN(data);
  
  	if (section_length < 11)
-@@ -140,9 +163,36 @@
+@@ -142,9 +165,35 @@
  		return;
  	}
  
@@ -9688,20 +9688,19 @@ Index: module-streamrelay.c
 +#define ParseEcmData radegast_client_ecm
 +#endif
 +
-+#if DVBCSA_KEY_ECM > 0
++#if DVBCSA_KEY_ECM
++#define DVBCSA_HEADER_ECM 1
 +#define dvbcsa_bs_key_set(a,b) dvbcsa_bs_key_set_ecm(ecm,a,b)
-+#define DVBCSA_ECM_HEADER 1
++#else
++#define DVBCSA_HEADER_ECM 0
 +#endif
-+#ifndef DVBCSA_ECM_HEADER
-+#define DVBCSA_ECM_HEADER 0
-+#endif
-+#ifndef LIBDVBCSA_LIB
-+#define LIBDVBCSA_LIB ""
++#ifndef STATIC_LIBDVBCSA
++#define STATIC_LIBDVBCSA 0
 +#endif
  
  static void write_cw(ECM_REQUEST *er, int32_t connid)
  {
-@@ -151,7 +201,11 @@
+@@ -155,7 +204,11 @@
  	{
  		if (has_dvbcsa_ecm)
  		{
@@ -9713,7 +9712,7 @@ Index: module-streamrelay.c
  		}
  	}
  
-@@ -159,31 +213,36 @@
+@@ -163,31 +216,36 @@
  	{
  		if (has_dvbcsa_ecm)
  		{
@@ -9763,7 +9762,7 @@ Index: module-streamrelay.c
  }
  
  static void SearchTsPackets(const uint8_t *buf, const uint32_t bufLength, uint16_t *packetSize, uint16_t *startOffset)
-@@ -352,6 +411,21 @@
+@@ -356,6 +414,21 @@
  	}
  }
  
@@ -9785,7 +9784,7 @@ Index: module-streamrelay.c
  static void ParseDescriptors(const uint8_t *buffer, const uint16_t info_length, uint8_t *type)
  {
  	uint32_t i;
-@@ -527,6 +601,9 @@
+@@ -531,6 +604,9 @@
  			case 0xD1:
  			case 0xEA:
  			{
@@ -9795,7 +9794,7 @@ Index: module-streamrelay.c
  				cs_log_dbg(D_READER, "Stream client %i found video pid: 0x%04X (%i)",
  							cdata->connid, elementary_pid, elementary_pid);
  				stream_parse_pmt_ca_descriptor(cdata->pmt_data, i, 5, es_info_length, cdata);
-@@ -541,6 +618,15 @@
+@@ -545,6 +621,15 @@
  			case 0x2E:
  			case 0x81:
  			{
@@ -9811,7 +9810,7 @@ Index: module-streamrelay.c
  				cs_log_dbg(D_READER, "Stream client %i found audio pid: 0x%04X (%i)",
  							cdata->connid, elementary_pid, elementary_pid);
  				break;
-@@ -553,11 +639,23 @@
+@@ -557,11 +642,23 @@
  				ParseDescriptors(cdata->pmt_data + i + 5, es_info_length, &type);
  				if (type == STREAM_AUDIO)
  				{
@@ -9835,7 +9834,7 @@ Index: module-streamrelay.c
  					cs_log_dbg(D_READER, "Stream client %i found teletext pid: 0x%04X (%i)",
  								cdata->connid, elementary_pid, elementary_pid);
  				}
-@@ -569,8 +667,60 @@
+@@ -573,8 +670,60 @@
  		cdata->STREAMpidcount++;
  #endif
  	}
@@ -9896,7 +9895,7 @@ Index: module-streamrelay.c
  static void ParseTsPackets(stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
  {
  	uint8_t payloadStart;
-@@ -619,7 +769,11 @@
+@@ -623,7 +772,11 @@
  	}
  }
  
@@ -9909,7 +9908,7 @@ Index: module-streamrelay.c
  {
  	if (fill[oddeven] > 0)
  	{
-@@ -637,10 +791,531 @@
+@@ -641,10 +794,531 @@
  
  		fill[oddeven] = 0;
  
@@ -10061,9 +10060,10 @@ Index: module-streamrelay.c
 +
 +			stream_buf[i + 3] &= 0x3F;
 +		}
-+	}
+ 	}
 +	if (data->key.csa_used) { decrypt_pvu(oddeven, cw_type); }
-+}
+ }
+-#define decrypt(a) decrypt(tsbbatch, fill, a, data->connid)
 +static void DescrambleTsPacketsRosscrypt1(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
 +{
 +	int8_t is_av_pid;
@@ -10154,9 +10154,8 @@ Index: module-streamrelay.c
 +
 +			stream_buf[i + 3] &= 0x3F;
 +		}
- 	}
- }
--#define decrypt(a) decrypt(tsbbatch, fill, a, data->connid)
++	}
++}
 +
 +static void DescrambleTsPacketsCompel(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
 +{
@@ -10442,7 +10441,7 @@ Index: module-streamrelay.c
  
  static void DescrambleTsPackets(stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize, struct dvbcsa_bs_batch_s *tsbbatch)
  {
-@@ -778,6 +1453,9 @@
+@@ -782,6 +1456,9 @@
  
  	SAFE_MUTEX_LOCK(&fixed_key_srvid_mutex);
  	stream_cur_srvid[conndata->connid] = NO_SRVID_VALUE;
@@ -10452,7 +10451,7 @@ Index: module-streamrelay.c
  	SAFE_MUTEX_UNLOCK(&fixed_key_srvid_mutex);
  
  	SAFE_MUTEX_LOCK(&stream_server_mutex);
-@@ -815,10 +1493,12 @@
+@@ -819,10 +1496,12 @@
  	uint16_t packetCount = 0, packetSize = 0, startOffset = 0;
  	uint32_t remainingDataPos, remainingDataLength, tmp_pids[4];
  	uint8_t descrambling = 0;
@@ -10467,7 +10466,7 @@ Index: module-streamrelay.c
  	struct dvbcsa_bs_batch_s *tsbbatch;
  
  	cs_log("Stream client %i connected", conndata->connid);
-@@ -897,9 +1577,16 @@
+@@ -901,9 +1580,16 @@
  		stream_client_disconnect(conndata);
  		return NULL;
  	}
@@ -10485,7 +10484,7 @@ Index: module-streamrelay.c
  
  	if (!cs_malloc(&tsbbatch, (cluster_size + 1) * sizeof(struct dvbcsa_bs_batch_s)))
  	{
-@@ -912,6 +1599,9 @@
+@@ -916,6 +1602,9 @@
  
  	SAFE_MUTEX_LOCK(&fixed_key_srvid_mutex);
  	stream_cur_srvid[conndata->connid] = data->srvid;
@@ -10495,7 +10494,7 @@ Index: module-streamrelay.c
  	SAFE_MUTEX_UNLOCK(&fixed_key_srvid_mutex);
  
  	cs_log("Stream client %i request %s", conndata->connid, stream_path);
-@@ -929,6 +1619,9 @@
+@@ -933,6 +1622,9 @@
  	data->have_cat_data = 0;
  	data->have_ecm_data = 0;
  	data->have_emm_data = 0;
@@ -10505,7 +10504,7 @@ Index: module-streamrelay.c
  
  	while (!exit_oscam && clientStatus != -1 && streamConnectErrorCount < 3
  			&& streamDataErrorCount < 15)
-@@ -950,6 +1643,18 @@
+@@ -954,6 +1646,18 @@
  				&& (streamConnectErrorCount < 3 || streamDataErrorCount < 15))
  #endif
  		{
@@ -10524,7 +10523,7 @@ Index: module-streamrelay.c
  			streamStatus = recv(streamfd, stream_buf + bytesRead, cur_dvb_buffer_size - bytesRead, MSG_WAITALL);
  			if (streamStatus == 0) // socket closed
  			{
-@@ -1019,13 +1724,30 @@
+@@ -1023,13 +1727,30 @@
  					// We have both PAT and PMT data - We can start descrambling
  					if (data->have_pat_data == 1 && data->have_pmt_data == 1)
  					{
@@ -10556,7 +10555,7 @@ Index: module-streamrelay.c
  						}
  						else
  						{
-@@ -1062,9 +1784,16 @@
+@@ -1066,9 +1787,16 @@
  
  	NULLFREE(http_buf);
  	NULLFREE(stream_buf);
@@ -10574,7 +10573,7 @@ Index: module-streamrelay.c
  	NULLFREE(tsbbatch);
  
  	NULLFREE(data);
-@@ -1109,6 +1838,9 @@
+@@ -1119,6 +1847,9 @@
  	for (i = 0; i < STREAM_SERVER_MAX_CONNECTIONS; i++)
  	{
  		stream_cur_srvid[i] = NO_SRVID_VALUE;
@@ -10584,7 +10583,7 @@ Index: module-streamrelay.c
  	}
  	SAFE_MUTEX_UNLOCK(&fixed_key_srvid_mutex);
  
-@@ -1254,11 +1986,85 @@
+@@ -1264,11 +1995,85 @@
  			b64encode(authtmp, cs_strlen(authtmp), &stream_source_auth);
  		}
  
@@ -10672,7 +10671,7 @@ Index: module-streamrelay.c
  	int32_t i;
 Index: module-streamrelay.h
 ===================================================================
---- module-streamrelay.h	(revision 11750)
+--- module-streamrelay.h	(revision 11752)
 +++ module-streamrelay.h	(working copy)
 @@ -10,6 +10,18 @@
  #define DVB_BUFFER_WAIT_CSA 188*(DVB_MAX_TS_PACKETS-128)
@@ -10693,19 +10692,18 @@ Index: module-streamrelay.h
  //#define __BISS__
  #ifdef __BISS__
  #define MAX_STREAM_PIDS 32 
-@@ -17,25 +29,28 @@
+@@ -17,24 +29,28 @@
  
  #include "cscrypt/md5.h"
  #include <dvbcsa/dvbcsa.h>
--#if DVBCSA_KEY_ECM > 0
+-#if DVBCSA_KEY_ECM
+-#define DVBCSA_HEADER_ECM 1
 -#define dvbcsa_bs_key_set(a,b) dvbcsa_bs_key_set_ecm(ecm,a,b)
--#define DVBCSA_ECM_HEADER 1
+-#else
+-#define DVBCSA_HEADER_ECM 0
 -#endif
--#ifndef DVBCSA_ECM_HEADER
--#define DVBCSA_ECM_HEADER 0
--#endif
--#ifndef LIBDVBCSA_LIB
--#define LIBDVBCSA_LIB ""
+-#ifndef STATIC_LIBDVBCSA
+-#define STATIC_LIBDVBCSA 0
 -#endif
  
  #define EVEN 0
@@ -10732,7 +10730,7 @@ Index: module-streamrelay.h
  typedef struct
  {
  	int32_t connid;
-@@ -68,6 +83,15 @@
+@@ -67,6 +83,15 @@
  	uint16_t STREAMpids[MAX_STREAM_PIDS];
  #endif
  	uint8_t ecm_md5[MD5_DIGEST_LENGTH];
@@ -10748,7 +10746,7 @@ Index: module-streamrelay.h
  } stream_client_data;
  
  void *stream_server(void *a);
-@@ -76,6 +100,30 @@
+@@ -75,6 +100,30 @@
  
  bool stream_write_cw(ECM_REQUEST *er);
  
@@ -10781,7 +10779,7 @@ Index: module-streamrelay.h
  #endif // MODULE_STREAMRELAY_H_
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 11750)
+--- module-webif.c	(revision 11752)
 +++ module-webif.c	(working copy)
 @@ -1319,6 +1319,12 @@
  	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.stream_relay_port);
@@ -10798,7 +10796,7 @@ Index: module-webif.c
  
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 11750)
+--- oscam-config-global.c	(revision 11752)
 +++ oscam-config-global.c	(working copy)
 @@ -928,6 +928,10 @@
  	DEF_OPT_INT32("stream_relay_port"         , OFS(stream_relay_port),           17999),
@@ -10813,7 +10811,7 @@ Index: oscam-config-global.c
  };
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11750)
+--- oscam.c	(revision 11752)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,10 @@
  #include "reader-common.h"
@@ -10847,7 +10845,7 @@ Index: oscam.c
  	init_provid();
 Index: webif/config/streamrelay.html
 ===================================================================
---- webif/config/streamrelay.html	(revision 11750)
+--- webif/config/streamrelay.html	(revision 11752)
 +++ webif/config/streamrelay.html	(working copy)
 @@ -17,3 +17,4 @@
  ##TPLSTREAMCLIENTSOURCEHOST##
@@ -10870,7 +10868,7 @@ Index: webif/config/streamrelay_emusettings.html
 +			<TR><TD><A>ECM fix delay (emu):</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"><label> ms (delay for PowerVU processing)</label></TD></TR>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 11750)
+--- webif/pages_index.txt	(revision 11752)
 +++ webif/pages_index.txt	(working copy)
 @@ -91,6 +91,7 @@
  CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
