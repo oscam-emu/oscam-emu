@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11753)
+--- CMakeLists.txt	(revision 11754)
 +++ CMakeLists.txt	(working copy)
 @@ -454,6 +454,22 @@
  # Manage config.h based on command line parameters
@@ -66,7 +66,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11753)
+--- Makefile	(revision 11754)
 +++ Makefile	(working copy)
 @@ -31,6 +31,9 @@
  	override USE_SSL=1
@@ -78,7 +78,7 @@ Index: Makefile
  ifdef USE_SSL
  	override USE_LIBCRYPTO=1
  endif
-@@ -301,6 +304,31 @@
+@@ -298,6 +301,31 @@
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -112,7 +112,7 @@ Index: Makefile
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 Index: config.h
 ===================================================================
---- config.h	(revision 11753)
+--- config.h	(revision 11754)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -124,18 +124,20 @@ Index: config.h
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
 Index: config.sh
+old mode 100755
+new mode 100644
 ===================================================================
---- config.sh	(revision 11753)
+--- config.sh	(revision 11754)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON"
-+addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON WITH_EMU WITH_SOFTCAM"
+-addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON WITH_EMU WITH_SOFTCAM"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP MODULE_STREAMRELAY"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -27,6 +27,8 @@
+@@ -26,6 +26,8 @@
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
  # CONFIG_WITH_ARM_NEON=n
@@ -144,7 +146,7 @@ Index: config.sh
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -295,13 +297,16 @@
+@@ -294,13 +296,16 @@
  
  update_deps() {
  	# Calculate dependencies
@@ -163,7 +165,7 @@ Index: config.sh
  }
  
  list_config() {
-@@ -351,9 +356,9 @@
+@@ -350,9 +355,9 @@
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -176,7 +178,7 @@ Index: config.sh
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -471,6 +476,8 @@
+@@ -469,6 +474,8 @@
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
  		WITH_ARM_NEON		"ARM NEON (SIMD/MPE) support"			$(check_test "WITH_ARM_NEON") \
@@ -185,7 +187,7 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
-@@ -708,9 +715,19 @@
+@@ -706,9 +713,19 @@
  		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
  		if [ "$revision" = "0" ]
  		then
@@ -209,7 +211,7 @@ Index: config.sh
  	'-O'|'--detect-osx-sdk-version')
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11753)
+--- globals.h	(revision 11754)
 +++ globals.h	(working copy)
 @@ -401,7 +401,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -241,7 +243,7 @@ Index: globals.h
  	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11753)
+--- module-dvbapi.c	(revision 11754)
 +++ module-dvbapi.c	(working copy)
 @@ -2657,6 +2657,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
@@ -9586,7 +9588,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: module-streamrelay.c
 ===================================================================
---- module-streamrelay.c	(revision 11753)
+--- module-streamrelay.c	(revision 11754)
 +++ module-streamrelay.c	(working copy)
 @@ -14,6 +14,12 @@
  #include "oscam-time.h"
@@ -10664,7 +10666,7 @@ Index: module-streamrelay.c
  	int32_t i;
 Index: module-streamrelay.h
 ===================================================================
---- module-streamrelay.h	(revision 11753)
+--- module-streamrelay.h	(revision 11754)
 +++ module-streamrelay.h	(working copy)
 @@ -10,6 +10,18 @@
  #define DVB_BUFFER_WAIT_CSA 188*(DVB_MAX_TS_PACKETS-128)
@@ -10772,9 +10774,9 @@ Index: module-streamrelay.h
  #endif // MODULE_STREAMRELAY_H_
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 11753)
+--- module-webif.c	(revision 11754)
 +++ module-webif.c	(working copy)
-@@ -1319,6 +1319,12 @@
+@@ -1318,6 +1318,12 @@
  	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.stream_relay_port);
  	tpl_printf(vars, TPLADD, "STREAM_RELAY_BUFFER_TIME", "%d", cfg.stream_relay_buffer_time);
  
@@ -10789,7 +10791,7 @@ Index: module-webif.c
  
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 11753)
+--- oscam-config-global.c	(revision 11754)
 +++ oscam-config-global.c	(working copy)
 @@ -928,6 +928,10 @@
  	DEF_OPT_INT32("stream_relay_port"         , OFS(stream_relay_port),           17999),
@@ -10804,7 +10806,7 @@ Index: oscam-config-global.c
  };
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11753)
+--- oscam.c	(revision 11754)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,10 @@
  #include "reader-common.h"
@@ -10817,7 +10819,7 @@ Index: oscam.c
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -444,6 +448,8 @@
+@@ -427,6 +431,8 @@
  #if defined(__arm__) || defined(__aarch64__)
  	write_conf(WITH_ARM_NEON, "ARM NEON (SIMD/MPE) support");
  #endif
@@ -10826,7 +10828,7 @@ Index: oscam.c
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1845,6 +1851,9 @@
+@@ -1828,6 +1834,9 @@
  #ifdef MODULE_STREAMRELAY
  	init_stream_server();
  #endif
@@ -10838,7 +10840,7 @@ Index: oscam.c
  	init_provid();
 Index: webif/config/streamrelay.html
 ===================================================================
---- webif/config/streamrelay.html	(revision 11753)
+--- webif/config/streamrelay.html	(revision 11754)
 +++ webif/config/streamrelay.html	(working copy)
 @@ -17,3 +17,4 @@
  ##TPLSTREAMCLIENTSOURCEHOST##
@@ -10861,7 +10863,7 @@ Index: webif/config/streamrelay_emusettings.html
 +			<TR><TD><A>ECM fix delay (emu):</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"><label> ms (delay for PowerVU processing)</label></TD></TR>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 11753)
+--- webif/pages_index.txt	(revision 11754)
 +++ webif/pages_index.txt	(working copy)
 @@ -91,6 +91,7 @@
  CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
