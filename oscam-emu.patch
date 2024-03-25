@@ -207,18 +207,7 @@ Index: globals.h
 ===================================================================
 --- globals.h	(revision 11752)
 +++ globals.h	(working copy)
-@@ -63,6 +63,10 @@
- # define WITH_LIBCRYPTO 1
- #endif
- 
-+#if defined(WITH_EMU) && !defined(WITH_LIBCRYPTO)
-+# define WITH_LIBCRYPTO 1
-+#endif
-+
- /* For deprecated but still needed cryptography functions:
-  * 10002 corresponds to OpenSSL version 1.0.2*/
- 
-@@ -401,7 +405,7 @@
+@@ -401,7 +401,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
  
  // Support for multiple CWs per channel and other encryption algos
@@ -227,7 +216,7 @@ Index: globals.h
  
  #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1945,6 +1949,7 @@
+@@ -1945,6 +1945,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -235,7 +224,7 @@ Index: globals.h
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2470,6 +2475,10 @@
+@@ -2470,6 +2471,10 @@
  #define DEFAULT_STREAM_SOURCE_PORT 8001 //Enigma2
  #endif
  #endif
