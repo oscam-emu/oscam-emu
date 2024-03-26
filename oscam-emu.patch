@@ -124,8 +124,6 @@ Index: config.h
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
 Index: config.sh
-old mode 100755
-new mode 100644
 ===================================================================
 --- config.sh	(revision 11755)
 +++ config.sh	(working copy)
