@@ -1,6 +1,6 @@
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 11757)
+--- CMakeLists.txt	(revision 11758)
 +++ CMakeLists.txt	(working copy)
 @@ -454,6 +454,22 @@
  # Manage config.h based on command line parameters
@@ -66,7 +66,7 @@ Index: CMakeLists.txt
  message (STATUS "")
 Index: Makefile
 ===================================================================
---- Makefile	(revision 11757)
+--- Makefile	(revision 11758)
 +++ Makefile	(working copy)
 @@ -31,6 +31,9 @@
  	override USE_SSL=1
@@ -112,7 +112,7 @@ Index: Makefile
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
 Index: config.h
 ===================================================================
---- config.h	(revision 11757)
+--- config.h	(revision 11758)
 +++ config.h	(working copy)
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
@@ -125,7 +125,7 @@ Index: config.h
  #define WEBIF_JQUERY 1
 Index: config.sh
 ===================================================================
---- config.sh	(revision 11757)
+--- config.sh	(revision 11758)
 +++ config.sh	(working copy)
 @@ -1,6 +1,6 @@
  #!/bin/sh
@@ -209,7 +209,7 @@ Index: config.sh
  	'-O'|'--detect-osx-sdk-version')
 Index: globals.h
 ===================================================================
---- globals.h	(revision 11757)
+--- globals.h	(revision 11758)
 +++ globals.h	(working copy)
 @@ -401,7 +401,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
@@ -218,9 +218,9 @@ Index: globals.h
 -//#define WITH_EXTENDED_CW		1
 +#define WITH_EXTENDED_CW		1
  
- #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
  #define MAX_ECM_SIZE			1024
-@@ -1945,6 +1945,7 @@
+ #define MAX_EMM_SIZE			1024
+@@ -1926,6 +1926,7 @@
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -228,7 +228,7 @@ Index: globals.h
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2470,6 +2471,10 @@
+@@ -2451,6 +2452,10 @@
  #define DEFAULT_STREAM_SOURCE_PORT 8001 //Enigma2
  #endif
  #endif
@@ -241,7 +241,7 @@ Index: globals.h
  	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
 Index: module-dvbapi.c
 ===================================================================
---- module-dvbapi.c	(revision 11757)
+--- module-dvbapi.c	(revision 11758)
 +++ module-dvbapi.c	(working copy)
 @@ -2657,6 +2657,8 @@
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
@@ -9648,7 +9648,7 @@ Index: module-emulator.c
 +#endif // WITH_EMU
 Index: module-streamrelay.c
 ===================================================================
---- module-streamrelay.c	(revision 11757)
+--- module-streamrelay.c	(revision 11758)
 +++ module-streamrelay.c	(working copy)
 @@ -14,6 +14,12 @@
  #include "oscam-time.h"
@@ -10726,7 +10726,7 @@ Index: module-streamrelay.c
  	int32_t i;
 Index: module-streamrelay.h
 ===================================================================
---- module-streamrelay.h	(revision 11757)
+--- module-streamrelay.h	(revision 11758)
 +++ module-streamrelay.h	(working copy)
 @@ -10,6 +10,18 @@
  #define DVB_BUFFER_WAIT_CSA 188*(DVB_MAX_TS_PACKETS-128)
@@ -10834,7 +10834,7 @@ Index: module-streamrelay.h
  #endif // MODULE_STREAMRELAY_H_
 Index: module-webif.c
 ===================================================================
---- module-webif.c	(revision 11757)
+--- module-webif.c	(revision 11758)
 +++ module-webif.c	(working copy)
 @@ -1318,6 +1318,12 @@
  	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.stream_relay_port);
@@ -10851,7 +10851,7 @@ Index: module-webif.c
  
 Index: oscam-config-global.c
 ===================================================================
---- oscam-config-global.c	(revision 11757)
+--- oscam-config-global.c	(revision 11758)
 +++ oscam-config-global.c	(working copy)
 @@ -928,6 +928,10 @@
  	DEF_OPT_INT32("stream_relay_port"         , OFS(stream_relay_port),           17999),
@@ -10866,7 +10866,7 @@ Index: oscam-config-global.c
  };
 Index: oscam.c
 ===================================================================
---- oscam.c	(revision 11757)
+--- oscam.c	(revision 11758)
 +++ oscam.c	(working copy)
 @@ -41,6 +41,10 @@
  #include "reader-common.h"
@@ -10900,7 +10900,7 @@ Index: oscam.c
  	init_provid();
 Index: webif/config/streamrelay.html
 ===================================================================
---- webif/config/streamrelay.html	(revision 11757)
+--- webif/config/streamrelay.html	(revision 11758)
 +++ webif/config/streamrelay.html	(working copy)
 @@ -17,3 +17,4 @@
  ##TPLSTREAMCLIENTSOURCEHOST##
@@ -10923,7 +10923,7 @@ Index: webif/config/streamrelay_emusettings.html
 +			<TR><TD><A>ECM fix delay (emu):</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"><label> ms (delay for PowerVU processing)</label></TD></TR>
 Index: webif/pages_index.txt
 ===================================================================
---- webif/pages_index.txt	(revision 11757)
+--- webif/pages_index.txt	(revision 11758)
 +++ webif/pages_index.txt	(working copy)
 @@ -91,6 +91,7 @@
  CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
