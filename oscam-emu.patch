@@ -1,8 +1,8 @@
-Index: CMakeLists.txt
-===================================================================
---- CMakeLists.txt	(revision 11760)
-+++ CMakeLists.txt	(working copy)
-@@ -454,6 +454,22 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 63c7592c..251b44c6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -454,6 +454,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
  # Manage config.h based on command line parameters
  # Manipulate config file based on given parameters and read unset parameters
  
@@ -25,13 +25,10 @@ Index: CMakeLists.txt
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
  string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
  
-@@ -790,7 +806,25 @@
- 	endif (HAVE_LIBUSB)
- endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
+@@ -794,6 +810,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
  
--#--------------------------------------------------------------------------------
-+#-------------------------------------------------------------------------------
-+
+ #--------------------------------------------------------------------------------
+ 
 +if (NOT OSCamOperatingSystem MATCHES "Mac OS X")
 +if (NOT DEFINED ENV{ANDROID_NDK})
 +if (NOT DEFINED ENV{ANDROID_STANDALONE_TOOLCHAIN})
@@ -49,10 +46,11 @@ Index: CMakeLists.txt
 +endif (NOT DEFINED ENV{ANDROID_STANDALONE_TOOLCHAIN})
 +endif (NOT DEFINED ENV{ANDROID_NDK})
 +endif (NOT OSCamOperatingSystem MATCHES "Mac OS X")
- 
++
  #----------------------- installation -----------------------------
  
-@@ -898,4 +932,11 @@
+ file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
+@@ -901,4 +935,11 @@ if (HAVE_LIBDVBCSA)
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
  
@@ -64,11 +62,11 @@ Index: CMakeLists.txt
 +endif (WITH_EMU)
 +
  message (STATUS "")
-Index: Makefile
-===================================================================
---- Makefile	(revision 11760)
-+++ Makefile	(working copy)
-@@ -31,6 +31,9 @@
+diff --git a/Makefile b/Makefile
+index de0270e7..60d81255 100644
+--- a/Makefile
++++ b/Makefile
+@@ -32,6 +32,9 @@ ifeq "$(shell ./config.sh --enabled WITH_SSL)" "Y"
  	override USE_SSL=1
  	override USE_LIBCRYPTO=1
  endif
@@ -78,7 +76,7 @@ Index: Makefile
  ifdef USE_SSL
  	override USE_LIBCRYPTO=1
  endif
-@@ -298,6 +301,32 @@
+@@ -300,6 +303,32 @@ SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -111,10 +109,10 @@ Index: Makefile
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
-Index: config.h
-===================================================================
---- config.h	(revision 11760)
-+++ config.h	(working copy)
+diff --git a/config.h b/config.h
+index 005a3cc1..13b7ab50 100644
+--- a/config.h
++++ b/config.h
 @@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
  #define CONFIG_H_
@@ -124,10 +122,10 @@ Index: config.h
  #define WEBIF 1
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
-Index: config.sh
-===================================================================
---- config.sh	(revision 11760)
-+++ config.sh	(working copy)
+diff --git a/config.sh b/config.sh
+index 28a7f4b5..b2b5021a 100755
+--- a/config.sh
++++ b/config.sh
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
@@ -136,7 +134,7 @@ Index: config.sh
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP MODULE_STREAMRELAY"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -26,6 +26,8 @@
+@@ -26,6 +26,8 @@ CONFIG_WITH_LB=y
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
  # CONFIG_WITH_ARM_NEON=n
@@ -145,7 +143,7 @@ Index: config.sh
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -294,13 +296,16 @@
+@@ -295,13 +297,16 @@ get_opts() {
  
  update_deps() {
  	# Calculate dependencies
@@ -164,7 +162,7 @@ Index: config.sh
  }
  
  list_config() {
-@@ -350,9 +355,9 @@
+@@ -351,9 +356,9 @@ list_config() {
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -177,7 +175,7 @@ Index: config.sh
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -469,6 +474,8 @@
+@@ -470,6 +475,8 @@ menu_addons() {
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
  		WITH_ARM_NEON		"ARM NEON (SIMD/MPE) support"			$(check_test "WITH_ARM_NEON") \
@@ -186,33 +184,21 @@ Index: config.sh
  		2> ${tempfile}
  
  	opt=${?}
-@@ -706,9 +713,19 @@
- 		revision=`(svnversion -n . 2>/dev/null || printf 0) | sed 's/.*://; s/[^0-9]*$//; s/^$/0/'`
- 		if [ "$revision" = "0" ]
- 		then
--			which git > /dev/null 2>&1 && revision=`git log -10 --pretty=%B | grep git-svn-id | head -n 1 | sed -n -e 's/^.*trunk@\([0-9]*\) .*$/\1/p'`
-+			which git > /dev/null 2>&1 && revision=`git log -25 --pretty=%B | grep git-svn-id | head -n 1 | sed -n -e 's/^.*trunk@\([0-9]*\) .*$/\1/p'`
- 		fi
--		echo $revision
+@@ -706,7 +713,8 @@ do
+ 	'-r'|'--oscam-revision')
+ 		offset=1103 #difference between last svn revision number and git commit count (without merge commits) + 1
+ 		revision=`git rev-list --no-merges --count HEAD`
+-		echo $(($offset + $revision))
 +		emuversion=`grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'`
-+		if [ -z "$emuversion" ]
-+		then
-+			echo "$revision"
-+		else
-+			echo "$revision-$emuversion"
-+		fi
-+		break
-+	;;
-+	'--emu-version')
-+		grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'
++		echo $(($offset + $revision))-$emuversion
  		break
  	;;
- 	'-O'|'--detect-osx-sdk-version')
-Index: globals.h
-===================================================================
---- globals.h	(revision 11760)
-+++ globals.h	(working copy)
-@@ -401,7 +401,7 @@
+ 	'-c'|'--oscam-commit')
+diff --git a/globals.h b/globals.h
+index 51dd6408..ee0ac062 100644
+--- a/globals.h
++++ b/globals.h
+@@ -404,7 +404,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
  
  // Support for multiple CWs per channel and other encryption algos
@@ -221,7 +207,7 @@ Index: globals.h
  
  #define MAX_ECM_SIZE			1024
  #define MAX_EMM_SIZE			1024
-@@ -1926,6 +1926,7 @@
+@@ -1929,6 +1929,7 @@ struct s_reader										// contains device info, reader info and card info
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -229,22 +215,22 @@ Index: globals.h
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2451,6 +2452,10 @@
+@@ -2453,6 +2454,10 @@ struct s_config
+ #else
  #define DEFAULT_STREAM_SOURCE_PORT 8001 //Enigma2
  #endif
- #endif
++#endif
 +#ifdef WITH_EMU
 +	uint32_t		emu_stream_ecm_delay;
 +	int8_t			emu_stream_emm_enabled;
-+#endif
+ #endif
  
  	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
- 	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
-Index: module-dvbapi.c
-===================================================================
---- module-dvbapi.c	(revision 11760)
-+++ module-dvbapi.c	(working copy)
-@@ -2657,6 +2657,8 @@
+diff --git a/module-dvbapi.c b/module-dvbapi.c
+index acb4077c..a5063747 100644
+--- a/module-dvbapi.c
++++ b/module-dvbapi.c
+@@ -2657,6 +2657,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
  	er->pmtpid = demux[demux_id].pmtpid;
  	er->onid   = demux[demux_id].onid;
@@ -253,7 +239,7 @@ Index: module-dvbapi.c
  	er->msgid  = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2704,19 +2706,30 @@
+@@ -2704,19 +2706,30 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
  		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_fixed(demux[demux_id].ECMpids[pid].CAID))
  		{
  			int32_t j, n;
@@ -287,10 +273,11 @@ Index: module-dvbapi.c
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-Index: module-emulator-biss.c
-===================================================================
---- module-emulator-biss.c	(nonexistent)
-+++ module-emulator-biss.c	(working copy)
+diff --git a/module-emulator-biss.c b/module-emulator-biss.c
+new file mode 100644
+index 00000000..a6b0c9e6
+--- /dev/null
++++ b/module-emulator-biss.c
 @@ -0,0 +1,883 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -1175,10 +1162,11 @@ Index: module-emulator-biss.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-biss.h
-===================================================================
---- module-emulator-biss.h	(nonexistent)
-+++ module-emulator-biss.h	(working copy)
+diff --git a/module-emulator-biss.h b/module-emulator-biss.h
+new file mode 100644
+index 00000000..0f5900cc
+--- /dev/null
++++ b/module-emulator-biss.h
 @@ -0,0 +1,22 @@
 +#ifndef MODULE_EMULATOR_BISS_H
 +#define MODULE_EMULATOR_BISS_H
@@ -1202,10 +1190,11 @@ Index: module-emulator-biss.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_BISS_H
-Index: module-emulator-cryptoworks.c
-===================================================================
---- module-emulator-cryptoworks.c	(nonexistent)
-+++ module-emulator-cryptoworks.c	(working copy)
+diff --git a/module-emulator-cryptoworks.c b/module-emulator-cryptoworks.c
+new file mode 100644
+index 00000000..df6509ac
+--- /dev/null
++++ b/module-emulator-cryptoworks.c
 @@ -0,0 +1,688 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -1895,10 +1884,11 @@ Index: module-emulator-cryptoworks.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-cryptoworks.h
-===================================================================
---- module-emulator-cryptoworks.h	(nonexistent)
-+++ module-emulator-cryptoworks.h	(working copy)
+diff --git a/module-emulator-cryptoworks.h b/module-emulator-cryptoworks.h
+new file mode 100644
+index 00000000..c2424e24
+--- /dev/null
++++ b/module-emulator-cryptoworks.h
 @@ -0,0 +1,10 @@
 +#ifndef MODULE_EMULATOR_CRYPTOWORKS_H
 +#define MODULE_EMULATOR_CRYPTOWORKS_H
@@ -1910,10 +1900,11 @@ Index: module-emulator-cryptoworks.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_CRYPTOWORKS_H
-Index: module-emulator-director.c
-===================================================================
---- module-emulator-director.c	(nonexistent)
-+++ module-emulator-director.c	(working copy)
+diff --git a/module-emulator-director.c b/module-emulator-director.c
+new file mode 100644
+index 00000000..c8c28b9c
+--- /dev/null
++++ b/module-emulator-director.c
 @@ -0,0 +1,644 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -2559,10 +2550,11 @@ Index: module-emulator-director.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-director.h
-===================================================================
---- module-emulator-director.h	(nonexistent)
-+++ module-emulator-director.h	(working copy)
+diff --git a/module-emulator-director.h b/module-emulator-director.h
+new file mode 100644
+index 00000000..de430cf2
+--- /dev/null
++++ b/module-emulator-director.h
 @@ -0,0 +1,11 @@
 +#ifndef MODULE_EMULATOR_DIRECTOR_H
 +#define MODULE_EMULATOR_DIRECTOR_H
@@ -2575,10 +2567,11 @@ Index: module-emulator-director.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_DIRECTOR_H
-Index: module-emulator-irdeto.c
-===================================================================
---- module-emulator-irdeto.c	(nonexistent)
-+++ module-emulator-irdeto.c	(working copy)
+diff --git a/module-emulator-irdeto.c b/module-emulator-irdeto.c
+new file mode 100644
+index 00000000..c9df9708
+--- /dev/null
++++ b/module-emulator-irdeto.c
 @@ -0,0 +1,602 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -3182,10 +3175,11 @@ Index: module-emulator-irdeto.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-irdeto.h
-===================================================================
---- module-emulator-irdeto.h	(nonexistent)
-+++ module-emulator-irdeto.h	(working copy)
+diff --git a/module-emulator-irdeto.h b/module-emulator-irdeto.h
+new file mode 100644
+index 00000000..e13af0a0
+--- /dev/null
++++ b/module-emulator-irdeto.h
 @@ -0,0 +1,15 @@
 +#ifndef MODULE_EMULATOR_IRDETO_H
 +#define MODULE_EMULATOR_IRDETO_H
@@ -3202,10 +3196,11 @@ Index: module-emulator-irdeto.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_IRDETO_H
-Index: module-emulator-nagravision.c
-===================================================================
---- module-emulator-nagravision.c	(nonexistent)
-+++ module-emulator-nagravision.c	(working copy)
+diff --git a/module-emulator-nagravision.c b/module-emulator-nagravision.c
+new file mode 100644
+index 00000000..a0978713
+--- /dev/null
++++ b/module-emulator-nagravision.c
 @@ -0,0 +1,376 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -3583,10 +3578,11 @@ Index: module-emulator-nagravision.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-nagravision.h
-===================================================================
---- module-emulator-nagravision.h	(nonexistent)
-+++ module-emulator-nagravision.h	(working copy)
+diff --git a/module-emulator-nagravision.h b/module-emulator-nagravision.h
+new file mode 100644
+index 00000000..31810eb0
+--- /dev/null
++++ b/module-emulator-nagravision.h
 @@ -0,0 +1,10 @@
 +#ifndef MODULE_EMULATOR_NAGRAVISION_H
 +#define MODULE_EMULATOR_NAGRAVISION_H
@@ -3598,10 +3594,11 @@ Index: module-emulator-nagravision.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_NAGRAVISION_H
-Index: module-emulator-omnicrypt.c
-===================================================================
---- module-emulator-omnicrypt.c	(nonexistent)
-+++ module-emulator-omnicrypt.c	(working copy)
+diff --git a/module-emulator-omnicrypt.c b/module-emulator-omnicrypt.c
+new file mode 100644
+index 00000000..805926db
+--- /dev/null
++++ b/module-emulator-omnicrypt.c
 @@ -0,0 +1,72 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -3675,10 +3672,11 @@ Index: module-emulator-omnicrypt.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-omnicrypt.h
-===================================================================
---- module-emulator-omnicrypt.h	(nonexistent)
-+++ module-emulator-omnicrypt.h	(working copy)
+diff --git a/module-emulator-omnicrypt.h b/module-emulator-omnicrypt.h
+new file mode 100644
+index 00000000..3af8915c
+--- /dev/null
++++ b/module-emulator-omnicrypt.h
 @@ -0,0 +1,10 @@
 +#ifndef MODULE_EMULATOR_OMNICRYPT_H
 +#define MODULE_EMULATOR_OMNICRYPT_H
@@ -3690,10 +3688,11 @@ Index: module-emulator-omnicrypt.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_OMNICRYPT_H
-Index: module-emulator-osemu.c
-===================================================================
---- module-emulator-osemu.c	(nonexistent)
-+++ module-emulator-osemu.c	(working copy)
+diff --git a/module-emulator-osemu.c b/module-emulator-osemu.c
+new file mode 100644
+index 00000000..a3f8db3f
+--- /dev/null
++++ b/module-emulator-osemu.c
 @@ -0,0 +1,986 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -4681,10 +4680,11 @@ Index: module-emulator-osemu.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-osemu.h
-===================================================================
---- module-emulator-osemu.h	(nonexistent)
-+++ module-emulator-osemu.h	(working copy)
+diff --git a/module-emulator-osemu.h b/module-emulator-osemu.h
+new file mode 100644
+index 00000000..0fe2b1d5
+--- /dev/null
++++ b/module-emulator-osemu.h
 @@ -0,0 +1,96 @@
 +#ifndef MODULE_EMULATOR_OSEMU_H_
 +#define MODULE_EMULATOR_OSEMU_H_
@@ -4782,10 +4782,11 @@ Index: module-emulator-osemu.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_H_
-Index: module-emulator-powervu.c
-===================================================================
---- module-emulator-powervu.c	(nonexistent)
-+++ module-emulator-powervu.c	(working copy)
+diff --git a/module-emulator-powervu.c b/module-emulator-powervu.c
+new file mode 100644
+index 00000000..810fcecf
+--- /dev/null
++++ b/module-emulator-powervu.c
 @@ -0,0 +1,2795 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -7582,10 +7583,11 @@ Index: module-emulator-powervu.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-powervu.h
-===================================================================
---- module-emulator-powervu.h	(nonexistent)
-+++ module-emulator-powervu.h	(working copy)
+diff --git a/module-emulator-powervu.h b/module-emulator-powervu.h
+new file mode 100644
+index 00000000..b50d2088
+--- /dev/null
++++ b/module-emulator-powervu.h
 @@ -0,0 +1,63 @@
 +#ifndef MODULE_EMULATOR_POWERVU_H
 +#define MODULE_EMULATOR_POWERVU_H
@@ -7650,10 +7652,11 @@ Index: module-emulator-powervu.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_POWERVU_H
-Index: module-emulator-viaccess.c
-===================================================================
---- module-emulator-viaccess.c	(nonexistent)
-+++ module-emulator-viaccess.c	(working copy)
+diff --git a/module-emulator-viaccess.c b/module-emulator-viaccess.c
+new file mode 100644
+index 00000000..b5fea651
+--- /dev/null
++++ b/module-emulator-viaccess.c
 @@ -0,0 +1,1183 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -8838,10 +8841,11 @@ Index: module-emulator-viaccess.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-emulator-viaccess.h
-===================================================================
---- module-emulator-viaccess.h	(nonexistent)
-+++ module-emulator-viaccess.h	(working copy)
+diff --git a/module-emulator-viaccess.h b/module-emulator-viaccess.h
+new file mode 100644
+index 00000000..6f4afcab
+--- /dev/null
++++ b/module-emulator-viaccess.h
 @@ -0,0 +1,11 @@
 +#ifndef MODULE_EMULATOR_VIACCESS_H
 +#define MODULE_EMULATOR_VIACCESS_H
@@ -8854,10 +8858,11 @@ Index: module-emulator-viaccess.h
 +#endif // WITH_EMU
 +
 +#endif // MODULE_EMULATOR_VIACCESS_H
-Index: module-emulator.c
-===================================================================
---- module-emulator.c	(nonexistent)
-+++ module-emulator.c	(working copy)
+diff --git a/module-emulator.c b/module-emulator.c
+new file mode 100644
+index 00000000..865e6687
+--- /dev/null
++++ b/module-emulator.c
 @@ -0,0 +1,894 @@
 +#define MODULE_LOG_PREFIX "emu"
 +
@@ -9753,10 +9758,10 @@ Index: module-emulator.c
 +}
 +
 +#endif // WITH_EMU
-Index: module-streamrelay.c
-===================================================================
---- module-streamrelay.c	(revision 11760)
-+++ module-streamrelay.c	(working copy)
+diff --git a/module-streamrelay.c b/module-streamrelay.c
+index cbea39c3..1c9b7b5a 100644
+--- a/module-streamrelay.c
++++ b/module-streamrelay.c
 @@ -14,6 +14,12 @@
  #include "oscam-time.h"
  #include "oscam-chk.h"
@@ -9770,7 +9775,7 @@ Index: module-streamrelay.c
  #define STREAM_UNDEFINED 0x00
  #define STREAM_VIDEO     0x01
  #define STREAM_AUDIO     0x02
-@@ -28,18 +34,32 @@
+@@ -28,18 +34,32 @@ typedef struct
  	int32_t connid;
  } stream_client_conn_data;
  
@@ -9810,7 +9815,7 @@ Index: module-streamrelay.c
  
  #ifdef MODULE_RADEGAST
  static int32_t gRadegastFd = 0;
-@@ -131,10 +151,13 @@
+@@ -131,10 +151,13 @@ static void radegast_client_ecm(stream_client_data *cdata)
  		}
  	}
  }
@@ -9824,7 +9829,7 @@ Index: module-streamrelay.c
  	uint16_t section_length = SCT_LEN(data);
  
  	if (section_length < 11)
-@@ -142,9 +165,35 @@
+@@ -142,9 +165,35 @@ void ParseEcmData(stream_client_data *cdata)
  		return;
  	}
  
@@ -9862,7 +9867,7 @@ Index: module-streamrelay.c
  
  static void write_cw(ECM_REQUEST *er, int32_t connid)
  {
-@@ -155,7 +204,11 @@
+@@ -155,7 +204,11 @@ static void write_cw(ECM_REQUEST *er, int32_t connid)
  	{
  		if (has_dvbcsa_ecm)
  		{
@@ -9874,7 +9879,7 @@ Index: module-streamrelay.c
  		}
  	}
  
-@@ -163,31 +216,36 @@
+@@ -163,31 +216,36 @@ static void write_cw(ECM_REQUEST *er, int32_t connid)
  	{
  		if (has_dvbcsa_ecm)
  		{
@@ -9924,7 +9929,7 @@ Index: module-streamrelay.c
  }
  
  static void SearchTsPackets(const uint8_t *buf, const uint32_t bufLength, uint16_t *packetSize, uint16_t *startOffset)
-@@ -356,6 +414,21 @@
+@@ -356,6 +414,21 @@ static void ParsePatData(stream_client_data *cdata)
  	}
  }
  
@@ -9946,7 +9951,7 @@ Index: module-streamrelay.c
  static void ParseDescriptors(const uint8_t *buffer, const uint16_t info_length, uint8_t *type)
  {
  	uint32_t i;
-@@ -531,6 +604,9 @@
+@@ -531,6 +604,9 @@ static void ParsePmtData(stream_client_data *cdata)
  			case 0xD1:
  			case 0xEA:
  			{
@@ -9956,7 +9961,7 @@ Index: module-streamrelay.c
  				cs_log_dbg(D_READER, "Stream client %i found video pid: 0x%04X (%i)",
  							cdata->connid, elementary_pid, elementary_pid);
  				stream_parse_pmt_ca_descriptor(cdata->pmt_data, i, 5, es_info_length, cdata);
-@@ -545,6 +621,15 @@
+@@ -545,6 +621,15 @@ static void ParsePmtData(stream_client_data *cdata)
  			case 0x2E:
  			case 0x81:
  			{
@@ -9972,7 +9977,7 @@ Index: module-streamrelay.c
  				cs_log_dbg(D_READER, "Stream client %i found audio pid: 0x%04X (%i)",
  							cdata->connid, elementary_pid, elementary_pid);
  				break;
-@@ -557,11 +642,23 @@
+@@ -557,11 +642,23 @@ static void ParsePmtData(stream_client_data *cdata)
  				ParseDescriptors(cdata->pmt_data + i + 5, es_info_length, &type);
  				if (type == STREAM_AUDIO)
  				{
@@ -9996,7 +10001,7 @@ Index: module-streamrelay.c
  					cs_log_dbg(D_READER, "Stream client %i found teletext pid: 0x%04X (%i)",
  								cdata->connid, elementary_pid, elementary_pid);
  				}
-@@ -573,8 +670,60 @@
+@@ -573,8 +670,60 @@ static void ParsePmtData(stream_client_data *cdata)
  		cdata->STREAMpidcount++;
  #endif
  	}
@@ -10057,7 +10062,7 @@ Index: module-streamrelay.c
  static void ParseTsPackets(stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
  {
  	uint8_t payloadStart;
-@@ -623,7 +772,11 @@
+@@ -623,7 +772,11 @@ static void ParseTsPackets(stream_client_data *data, uint8_t *stream_buf, uint32
  	}
  }
  
@@ -10070,7 +10075,7 @@ Index: module-streamrelay.c
  {
  	if (fill[oddeven] > 0)
  	{
-@@ -641,10 +794,531 @@
+@@ -641,10 +794,531 @@ static void decrypt(struct dvbcsa_bs_batch_s *tsbbatch, uint16_t fill[2], const
  
  		fill[oddeven] = 0;
  
@@ -10222,10 +10227,9 @@ Index: module-streamrelay.c
 +
 +			stream_buf[i + 3] &= 0x3F;
 +		}
- 	}
++	}
 +	if (data->key.csa_used) { decrypt_pvu(oddeven, cw_type); }
- }
--#define decrypt(a) decrypt(tsbbatch, fill, a, data->connid)
++}
 +static void DescrambleTsPacketsRosscrypt1(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
 +{
 +	int8_t is_av_pid;
@@ -10316,8 +10320,9 @@ Index: module-streamrelay.c
 +
 +			stream_buf[i + 3] &= 0x3F;
 +		}
-+	}
-+}
+ 	}
+ }
+-#define decrypt(a) decrypt(tsbbatch, fill, a, data->connid)
 +
 +static void DescrambleTsPacketsCompel(emu_stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize)
 +{
@@ -10603,7 +10608,7 @@ Index: module-streamrelay.c
  
  static void DescrambleTsPackets(stream_client_data *data, uint8_t *stream_buf, uint32_t bufLength, uint16_t packetSize, struct dvbcsa_bs_batch_s *tsbbatch)
  {
-@@ -782,6 +1456,9 @@
+@@ -782,6 +1456,9 @@ static void stream_client_disconnect(stream_client_conn_data *conndata)
  
  	SAFE_MUTEX_LOCK(&fixed_key_srvid_mutex);
  	stream_cur_srvid[conndata->connid] = NO_SRVID_VALUE;
@@ -10613,7 +10618,7 @@ Index: module-streamrelay.c
  	SAFE_MUTEX_UNLOCK(&fixed_key_srvid_mutex);
  
  	SAFE_MUTEX_LOCK(&stream_server_mutex);
-@@ -819,10 +1496,12 @@
+@@ -819,10 +1496,12 @@ static void *stream_client_handler(void *arg)
  	uint16_t packetCount = 0, packetSize = 0, startOffset = 0;
  	uint32_t remainingDataPos, remainingDataLength, tmp_pids[4];
  	uint8_t descrambling = 0;
@@ -10628,11 +10633,10 @@ Index: module-streamrelay.c
  	struct dvbcsa_bs_batch_s *tsbbatch;
  
  	cs_log("Stream client %i connected", conndata->connid);
-@@ -901,9 +1580,16 @@
- 		stream_client_disconnect(conndata);
+@@ -902,8 +1581,16 @@ static void *stream_client_handler(void *arg)
  		return NULL;
  	}
--
+ 
 +#ifndef WITH_EMU
  	key_data[conndata->connid].key[ODD]  = dvbcsa_bs_key_alloc();
  	key_data[conndata->connid].key[EVEN] = dvbcsa_bs_key_alloc();
@@ -10646,7 +10650,7 @@ Index: module-streamrelay.c
  
  	if (!cs_malloc(&tsbbatch, (cluster_size + 1) * sizeof(struct dvbcsa_bs_batch_s)))
  	{
-@@ -916,6 +1602,9 @@
+@@ -916,6 +1603,9 @@ static void *stream_client_handler(void *arg)
  
  	SAFE_MUTEX_LOCK(&fixed_key_srvid_mutex);
  	stream_cur_srvid[conndata->connid] = data->srvid;
@@ -10656,7 +10660,7 @@ Index: module-streamrelay.c
  	SAFE_MUTEX_UNLOCK(&fixed_key_srvid_mutex);
  
  	cs_log("Stream client %i request %s", conndata->connid, stream_path);
-@@ -933,6 +1622,9 @@
+@@ -933,6 +1623,9 @@ static void *stream_client_handler(void *arg)
  	data->have_cat_data = 0;
  	data->have_ecm_data = 0;
  	data->have_emm_data = 0;
@@ -10666,7 +10670,7 @@ Index: module-streamrelay.c
  
  	while (!exit_oscam && clientStatus != -1 && streamConnectErrorCount < 3
  			&& streamDataErrorCount < 15)
-@@ -954,6 +1646,18 @@
+@@ -954,6 +1647,18 @@ static void *stream_client_handler(void *arg)
  				&& (streamConnectErrorCount < 3 || streamDataErrorCount < 15))
  #endif
  		{
@@ -10685,7 +10689,7 @@ Index: module-streamrelay.c
  			streamStatus = recv(streamfd, stream_buf + bytesRead, cur_dvb_buffer_size - bytesRead, MSG_WAITALL);
  			if (streamStatus == 0) // socket closed
  			{
-@@ -1023,13 +1727,30 @@
+@@ -1023,13 +1728,30 @@ static void *stream_client_handler(void *arg)
  					// We have both PAT and PMT data - We can start descrambling
  					if (data->have_pat_data == 1 && data->have_pmt_data == 1)
  					{
@@ -10717,7 +10721,7 @@ Index: module-streamrelay.c
  						}
  						else
  						{
-@@ -1066,9 +1787,16 @@
+@@ -1066,9 +1788,16 @@ static void *stream_client_handler(void *arg)
  
  	NULLFREE(http_buf);
  	NULLFREE(stream_buf);
@@ -10735,7 +10739,7 @@ Index: module-streamrelay.c
  	NULLFREE(tsbbatch);
  
  	NULLFREE(data);
-@@ -1119,6 +1847,9 @@
+@@ -1119,6 +1848,9 @@ void *stream_server(void *UNUSED(a))
  	for (i = 0; i < STREAM_SERVER_MAX_CONNECTIONS; i++)
  	{
  		stream_cur_srvid[i] = NO_SRVID_VALUE;
@@ -10745,7 +10749,7 @@ Index: module-streamrelay.c
  	}
  	SAFE_MUTEX_UNLOCK(&fixed_key_srvid_mutex);
  
-@@ -1264,11 +1995,85 @@
+@@ -1264,11 +1996,85 @@ void init_stream_server(void)
  			b64encode(authtmp, cs_strlen(authtmp), &stream_source_auth);
  		}
  
@@ -10831,10 +10835,10 @@ Index: module-streamrelay.c
  void stop_stream_server(void)
  {
  	int32_t i;
-Index: module-streamrelay.h
-===================================================================
---- module-streamrelay.h	(revision 11760)
-+++ module-streamrelay.h	(working copy)
+diff --git a/module-streamrelay.h b/module-streamrelay.h
+index e0b2ba5f..befb1bc9 100644
+--- a/module-streamrelay.h
++++ b/module-streamrelay.h
 @@ -10,6 +10,18 @@
  #define DVB_BUFFER_WAIT_CSA 188*(DVB_MAX_TS_PACKETS-128)
  #define DVB_BUFFER_SIZE DVB_BUFFER_SIZE_CSA
@@ -10892,7 +10896,7 @@ Index: module-streamrelay.h
  typedef struct
  {
  	int32_t connid;
-@@ -67,6 +83,15 @@
+@@ -67,6 +83,15 @@ typedef struct
  	uint16_t STREAMpids[MAX_STREAM_PIDS];
  #endif
  	uint8_t ecm_md5[MD5_DIGEST_LENGTH];
@@ -10908,7 +10912,7 @@ Index: module-streamrelay.h
  } stream_client_data;
  
  void *stream_server(void *a);
-@@ -75,6 +100,30 @@
+@@ -75,6 +100,30 @@ void stop_stream_server(void);
  
  bool stream_write_cw(ECM_REQUEST *er);
  
@@ -10939,11 +10943,11 @@ Index: module-streamrelay.h
  #endif // MODULE_STREAMRELAY
  
  #endif // MODULE_STREAMRELAY_H_
-Index: module-webif.c
-===================================================================
---- module-webif.c	(revision 11760)
-+++ module-webif.c	(working copy)
-@@ -1318,6 +1318,12 @@
+diff --git a/module-webif.c b/module-webif.c
+index 1e9b5659..c26daf13 100644
+--- a/module-webif.c
++++ b/module-webif.c
+@@ -1318,6 +1318,12 @@ static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uri
  	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.stream_relay_port);
  	tpl_printf(vars, TPLADD, "STREAM_RELAY_BUFFER_TIME", "%d", cfg.stream_relay_buffer_time);
  
@@ -10956,11 +10960,11 @@ Index: module-webif.c
  	tpl_printf(vars, TPLADD, "TMP", "STREAMRELAYENABLEDSELECTED%d", cfg.stream_relay_enabled);
  	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
  
-Index: oscam-config-global.c
-===================================================================
---- oscam-config-global.c	(revision 11760)
-+++ oscam-config-global.c	(working copy)
-@@ -928,6 +928,10 @@
+diff --git a/oscam-config-global.c b/oscam-config-global.c
+index 2721602f..47cf2cd9 100644
+--- a/oscam-config-global.c
++++ b/oscam-config-global.c
+@@ -928,6 +928,10 @@ static const struct config_list streamrelay_opts[] =
  	DEF_OPT_INT32("stream_relay_port"         , OFS(stream_relay_port),           17999),
  	DEF_OPT_INT8("stream_relay_enabled"       , OFS(stream_relay_enabled),        0),
  	DEF_OPT_UINT32("stream_relay_buffer_time" , OFS(stream_relay_buffer_time),    0),
@@ -10971,10 +10975,10 @@ Index: oscam-config-global.c
  	DEF_OPT_FUNC("stream_relay_ctab"          , OFS(stream_relay_ctab),           check_caidtab_fn),
  	DEF_LAST_OPT
  };
-Index: oscam.c
-===================================================================
---- oscam.c	(revision 11760)
-+++ oscam.c	(working copy)
+diff --git a/oscam.c b/oscam.c
+index 6997bc2d..dae5fe4b 100644
+--- a/oscam.c
++++ b/oscam.c
 @@ -41,6 +41,10 @@
  #include "reader-common.h"
  #include "module-gbox.h"
@@ -10986,7 +10990,7 @@ Index: oscam.c
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -426,6 +430,8 @@
+@@ -426,6 +430,8 @@ static void write_versionfile(bool use_stdout)
  #if defined(__arm__) || defined(__aarch64__)
  	write_conf(WITH_ARM_NEON, "ARM NEON (SIMD/MPE) support");
  #endif
@@ -10995,29 +10999,30 @@ Index: oscam.c
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1827,6 +1833,9 @@
+@@ -1826,6 +1832,9 @@ int32_t main(int32_t argc, char *argv[])
+ 	init_readerdb();
  #ifdef MODULE_STREAMRELAY
  	init_stream_server();
- #endif
++#endif
 +#ifdef WITH_EMU
 +	add_emu_reader();
-+#endif
+ #endif
  	cfg.account = init_userdb();
  	init_signal();
- 	init_provid();
-Index: webif/config/streamrelay.html
-===================================================================
---- webif/config/streamrelay.html	(revision 11760)
-+++ webif/config/streamrelay.html	(working copy)
+diff --git a/webif/config/streamrelay.html b/webif/config/streamrelay.html
+index af860a9b..6e55efd0 100644
+--- a/webif/config/streamrelay.html
++++ b/webif/config/streamrelay.html
 @@ -17,3 +17,4 @@
  ##TPLSTREAMCLIENTSOURCEHOST##
  			<TR><TD><A>Relay Port:</A></TD><TD><input name="stream_relay_port" class="short" type="text" maxlength="5" value="##STREAM_RELAY_PORT##"></TD></TR>
  			<TR><TD><A>Relay Buffer Time:</A></TD><TD><input name="stream_relay_buffer_time" class="short" type="text" maxlength="5" value="##STREAM_RELAY_BUFFER_TIME##"><label> ms (delay for stream processing)</label></TD></TR>
 +##TPLSTREAMEMUSETTINGS##
-Index: webif/config/streamrelay_emusettings.html
-===================================================================
---- webif/config/streamrelay_emusettings.html	(nonexistent)
-+++ webif/config/streamrelay_emusettings.html	(working copy)
+diff --git a/webif/config/streamrelay_emusettings.html b/webif/config/streamrelay_emusettings.html
+new file mode 100644
+index 00000000..08b4647b
+--- /dev/null
++++ b/webif/config/streamrelay_emusettings.html
 @@ -0,0 +1,9 @@
 +			<TR><TD><A>Process EMM from stream (emu):</A></TD>
 +				<TD>
@@ -11028,11 +11033,11 @@ Index: webif/config/streamrelay_emusettings.html
 +				</TD>
 +			</TR>
 +			<TR><TD><A>ECM fix delay (emu):</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"><label> ms (delay for PowerVU processing)</label></TD></TR>
-Index: webif/pages_index.txt
-===================================================================
---- webif/pages_index.txt	(revision 11760)
-+++ webif/pages_index.txt	(working copy)
-@@ -91,6 +91,7 @@
+diff --git a/webif/pages_index.txt b/webif/pages_index.txt
+index e0dabd5a..3588e2b2 100644
+--- a/webif/pages_index.txt
++++ b/webif/pages_index.txt
+@@ -91,6 +91,7 @@ CONFIGMENURADEGAST            config/menu_radegast.html
  CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
  CONFIGMENUSTREAMRELAY         config/menu_streamrelay.html                                MODULE_STREAMRELAY
  STREAMCLIENTSOURCEHOST        config/streamrelay_streamclientsourcehost.html              MODULE_RADEGAST
