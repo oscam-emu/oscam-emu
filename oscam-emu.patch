@@ -123,7 +123,7 @@ index 005a3cc1..13b7ab50 100644
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
 diff --git a/config.sh b/config.sh
-index 28a7f4b5..b2b5021a 100755
+index d320a5b4..624a4529 100755
 --- a/config.sh
 +++ b/config.sh
 @@ -1,6 +1,6 @@
@@ -184,18 +184,18 @@ index 28a7f4b5..b2b5021a 100755
  		2> ${tempfile}
  
  	opt=${?}
-@@ -706,7 +713,8 @@ do
- 	'-r'|'--oscam-revision')
- 		offset=1103 #difference between last svn revision number and git commit count (without merge commits) + 1
- 		revision=`git rev-list --no-merges --count HEAD`
--		echo $(($offset + $revision))
+@@ -710,7 +717,8 @@ do
+ 			#get revision based on git-svn-id in commit message
+ 			revision=`git log -10 --pretty=%B | grep git-svn-id | head -n 1 | sed -n -e 's/^.*trunk@\([0-9]*\) .*$/\1/p'`
+ 		fi
+-		echo $revision
 +		emuversion=`grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'`
 +		echo $(($offset + $revision))-$emuversion
  		break
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index 51dd6408..ee0ac062 100644
+index ca1be812..bf6575eb 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -404,7 +404,7 @@
