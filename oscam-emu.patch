@@ -11045,3 +11045,18 @@ index e0dabd5a..3588e2b2 100644
  CONFIGMENUSERIAL              config/menu_serial.html                                     MODULE_SERIAL
  CONFIGMONITOR                 config/monitor.html                                         MODULE_MONITOR
  CONFIGNEWCAMD                 config/newcamd.html                                         MODULE_NEWCAMD
+diff --git a/webif/status/status.html b/webif/status/status.html
+index d5f3846a..80034318 100644
+--- a/webif/status/status.html
++++ b/webif/status/status.html
+@@ -20,8 +20,8 @@
+ <DIV ID="subnav">
+ 	<UL ID="nav">
+ 		<LI><B>##HTTPOSCAMLABEL## r##CS_SVN_VERSION##@##CS_GIT_COMMIT##</B></LI>
+-		<LI CLASS="configmenu"><A HREF="https://git.streamboard.tv/common/oscam/-/commit/##CS_GIT_COMMIT##" TARGET="_blank">Commit</A></LI>
+-		<LI CLASS="configmenu"><A HREF="https://git.streamboard.tv/common/oscam/-/commits/master" TARGET="_blank">Timeline</A></LI>
++		<LI CLASS="configmenu"><A HREF="https://github.com/oscam-emu/oscam-patched/commit/##CS_GIT_COMMIT##" TARGET="_blank">Commit</A></LI>
++		<LI CLASS="configmenu"><A HREF="https://github.com/oscam-emu/oscam-patched/commits/master" TARGET="_blank">Timeline</A></LI>
+ 		<LI CLASS="configmenu"><A HREF="#statusfooter">Status</A></LI>
+ ##TPLPOLLINGSET##
+ 	</UL>
