@@ -123,7 +123,7 @@ index 005a3cc1..13b7ab50 100644
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
 diff --git a/config.sh b/config.sh
-index d320a5b4..624a4529 100755
+index d320a5b4..18db604d 100755
 --- a/config.sh
 +++ b/config.sh
 @@ -1,6 +1,6 @@
@@ -190,7 +190,7 @@ index d320a5b4..624a4529 100755
  		fi
 -		echo $revision
 +		emuversion=`grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'`
-+		echo $(($offset + $revision))-$emuversion
++		echo $revision-$emuversion
  		break
  	;;
  	'-c'|'--oscam-commit')
