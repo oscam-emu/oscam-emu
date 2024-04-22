@@ -195,7 +195,7 @@ index d0f5add2..27630aa4 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index c5d47401..48411d94 100644
+index 9b199a55..edc32f96 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -404,7 +404,7 @@
@@ -9759,7 +9759,7 @@ index 00000000..865e6687
 +
 +#endif // WITH_EMU
 diff --git a/module-streamrelay.c b/module-streamrelay.c
-index cbea39c3..1c9b7b5a 100644
+index 771e4c4a..e388446a 100644
 --- a/module-streamrelay.c
 +++ b/module-streamrelay.c
 @@ -14,6 +14,12 @@
@@ -10836,7 +10836,7 @@ index cbea39c3..1c9b7b5a 100644
  {
  	int32_t i;
 diff --git a/module-streamrelay.h b/module-streamrelay.h
-index e0b2ba5f..befb1bc9 100644
+index 27d4e0c3..6e839660 100644
 --- a/module-streamrelay.h
 +++ b/module-streamrelay.h
 @@ -10,6 +10,18 @@
@@ -10857,7 +10857,7 @@ index e0b2ba5f..befb1bc9 100644
 +
  //#define __BISS__
  #ifdef __BISS__
- #define MAX_STREAM_PIDS 32 
+ #define MAX_STREAM_PIDS 32
 @@ -17,24 +29,28 @@
  
  #include "cscrypt/md5.h"
