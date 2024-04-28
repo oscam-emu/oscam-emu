@@ -242,6 +242,32 @@ index 37b5d3dd..c75ede07 100644
  #endif
  
  	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
+diff --git a/module-camd35-cacheex.c b/module-camd35-cacheex.c
+index 68c24d75..f7258a02 100644
+--- a/module-camd35-cacheex.c
++++ b/module-camd35-cacheex.c
+@@ -670,7 +670,7 @@ void camd35_cacheex_feature_trigger(struct s_client *cl, int32_t feature, uint8_
+ 			if(size < 32)
+ 				size = 32;
+ 
+-			uint8_t token[14];
++			uint8_t token[18];
+ 
+ 			// bitfield
+ 			i2b_buf(2, feature, payload + i);
+diff --git a/module-cccam-cacheex.c b/module-cccam-cacheex.c
+index 6878d327..5acc7b9a 100644
+--- a/module-cccam-cacheex.c
++++ b/module-cccam-cacheex.c
+@@ -660,7 +660,7 @@ void cc_cacheex_feature_trigger(struct s_client *cl, int32_t feature, uint8_t mo
+ 			break;
+ 		// aio-version
+ 		case 32: ;
+-			uint8_t token[14];
++			uint8_t token[18];
+ 
+ 			// bitfield
+ 			i2b_buf(2, feature, payload + i);
 diff --git a/module-dvbapi.c b/module-dvbapi.c
 index 2b863d82..212c4742 100644
 --- a/module-dvbapi.c
