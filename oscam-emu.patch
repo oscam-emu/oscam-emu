@@ -195,7 +195,7 @@ index d0f5add2..27630aa4 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index af9ae48f..3491ab0e 100644
+index cf77645e..d492a078 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -404,7 +404,7 @@
@@ -227,7 +227,7 @@ index af9ae48f..3491ab0e 100644
  
  	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index e963ccd3..eda344fc 100644
+index e5594add..ebe85b6d 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -2657,6 +2657,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
