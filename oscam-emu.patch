@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 63c7592c..251b44c6 100644
+index a749eff4..83b62296 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -454,6 +454,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
@@ -25,7 +25,7 @@ index 63c7592c..251b44c6 100644
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
  string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
  
-@@ -794,6 +810,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
+@@ -792,6 +808,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
  
  #--------------------------------------------------------------------------------
  
@@ -50,7 +50,7 @@ index 63c7592c..251b44c6 100644
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
-@@ -901,4 +935,11 @@ if (HAVE_LIBDVBCSA)
+@@ -899,4 +933,11 @@ if (HAVE_LIBDVBCSA)
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
  
@@ -63,10 +63,10 @@ index 63c7592c..251b44c6 100644
 +
  message (STATUS "")
 diff --git a/Makefile b/Makefile
-index de0270e7..60d81255 100644
+index 4292b41b..2e0fae2c 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -32,6 +32,9 @@ ifeq "$(shell ./config.sh --enabled WITH_SSL)" "Y"
+@@ -31,6 +31,9 @@ ifeq "$(shell ./config.sh --enabled WITH_SSL)" "Y"
  	override USE_SSL=1
  	override USE_LIBCRYPTO=1
  endif
@@ -76,7 +76,7 @@ index de0270e7..60d81255 100644
  ifdef USE_SSL
  	override USE_LIBCRYPTO=1
  endif
-@@ -300,6 +303,32 @@ SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
+@@ -298,6 +301,32 @@ SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -123,7 +123,7 @@ index 005a3cc1..13b7ab50 100644
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
 diff --git a/config.sh b/config.sh
-index d0f5add2..27630aa4 100755
+index 73c1163d..0305acdd 100755
 --- a/config.sh
 +++ b/config.sh
 @@ -1,6 +1,6 @@
@@ -184,10 +184,17 @@ index d0f5add2..27630aa4 100755
  		2> ${tempfile}
  
  	opt=${?}
-@@ -714,7 +721,8 @@ do
- 			#get revision based on globals.h (not a git repository)
- 			revision=`grep '# define CS_SVN_VERSION' globals.h | cut -d\" -f2`
- 		fi
+@@ -701,12 +708,14 @@ do
+ 	;;
+ 	'-v'|'--oscam-version')
+ 		version=`grep '^#define CS_VERSION' globals.h | cut -d\" -f2`
+-		echo $version
++		emuversion=`grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'`
++		echo $version-$emuversion
+ 		break
+ 	;;
+ 	'-r'|'--oscam-revision') #//DEPRECATED, will be removed in later versions
+ 		revision=`grep '^#define CS_VERSION' globals.h | awk -F'-|"' '{print $3}'`
 -		echo $revision
 +		emuversion=`grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }'`
 +		echo $revision-$emuversion
@@ -195,9 +202,18 @@ index d0f5add2..27630aa4 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index cf77645e..d492a078 100644
+index 35bfa72b..cd5cb7b4 100644
 --- a/globals.h
 +++ b/globals.h
+@@ -368,7 +368,7 @@
+ /* ===========================
+  *			constants
+  * =========================== */
+-#define SCM_URL					"https://git.streamboard.tv/common/oscam"
++#define SCM_URL					"https://github.com/oscam-emu/oscam-patched"
+ #define WIKI_URL				"https://wiki.streamboard.tv/wiki"
+ #define BOARD_URL				"https://board.streamboard.tv"
+ #define CS_VERSION				"2.24.04-11773"
 @@ -404,7 +404,7 @@
  #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
  
@@ -227,7 +243,7 @@ index cf77645e..d492a078 100644
  
  	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index e5594add..ebe85b6d 100644
+index 2b863d82..f7b0424f 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -2657,6 +2657,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
@@ -10944,7 +10960,7 @@ index 27d4e0c3..6e839660 100644
  
  #endif // MODULE_STREAMRELAY_H_
 diff --git a/module-webif.c b/module-webif.c
-index 1e9b5659..c26daf13 100644
+index e596a617..43c0f15f 100644
 --- a/module-webif.c
 +++ b/module-webif.c
 @@ -1318,6 +1318,12 @@ static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uri
@@ -10976,7 +10992,7 @@ index 2721602f..47cf2cd9 100644
  	DEF_LAST_OPT
  };
 diff --git a/oscam.c b/oscam.c
-index 6997bc2d..dae5fe4b 100644
+index 181ca6b2..1419ef70 100644
 --- a/oscam.c
 +++ b/oscam.c
 @@ -41,6 +41,10 @@
@@ -11045,18 +11061,3 @@ index e0dabd5a..3588e2b2 100644
  CONFIGMENUSERIAL              config/menu_serial.html                                     MODULE_SERIAL
  CONFIGMONITOR                 config/monitor.html                                         MODULE_MONITOR
  CONFIGNEWCAMD                 config/newcamd.html                                         MODULE_NEWCAMD
-diff --git a/webif/status/status.html b/webif/status/status.html
-index d5f3846a..80034318 100644
---- a/webif/status/status.html
-+++ b/webif/status/status.html
-@@ -20,8 +20,8 @@
- <DIV ID="subnav">
- 	<UL ID="nav">
- 		<LI><B>##HTTPOSCAMLABEL## r##CS_SVN_VERSION##@##CS_GIT_COMMIT##</B></LI>
--		<LI CLASS="configmenu"><A HREF="https://git.streamboard.tv/common/oscam/-/commit/##CS_GIT_COMMIT##" TARGET="_blank">Commit</A></LI>
--		<LI CLASS="configmenu"><A HREF="https://git.streamboard.tv/common/oscam/-/commits/master" TARGET="_blank">Timeline</A></LI>
-+		<LI CLASS="configmenu"><A HREF="https://github.com/oscam-emu/oscam-patched/commit/##CS_GIT_COMMIT##" TARGET="_blank">Commit</A></LI>
-+		<LI CLASS="configmenu"><A HREF="https://github.com/oscam-emu/oscam-patched/commits/master" TARGET="_blank">Timeline</A></LI>
- 		<LI CLASS="configmenu"><A HREF="#statusfooter">Status</A></LI>
- ##TPLPOLLINGSET##
- 	</UL>
