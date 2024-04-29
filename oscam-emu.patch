@@ -269,7 +269,7 @@ index 6878d327..5acc7b9a 100644
  			// bitfield
  			i2b_buf(2, feature, payload + i);
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index 2b863d82..212c4742 100644
+index 2b863d82..f7b0424f 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -2657,6 +2657,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
@@ -315,24 +315,6 @@ index 2b863d82..212c4742 100644
  			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
  				demux_id,
  				pid,
-@@ -8211,7 +8224,7 @@ void dvbapi_write_ecminfo_file(struct s_client *client, ECM_REQUEST *er, uint8_t
- 
- 		if(cfg.dvbapi_ecminfo_type == ECMINFO_TYPE_CAMD3)
- 		{
--			if(caid_is_videoguard(er->caid))
-+			if((caid_is_videoguard(er->caid)) || (caid_is_powervu(er->caid)))
- 			{
- 				if(memcmp(er->cw, null_cw8, 8) != 0)
- 				{
-@@ -8231,7 +8244,7 @@ void dvbapi_write_ecminfo_file(struct s_client *client, ECM_REQUEST *er, uint8_t
- 				fprintf(ecmtxt, "CW1: %s\n", cs_hexdump(1, er->cw + 8, cw_length, tmp, sizeof(tmp)));
- 			}
- 		}
--		else if(caid_is_videoguard(er->caid))
-+		else if((caid_is_videoguard(er->caid)) || (caid_is_powervu(er->caid)))
- 		{
- 			if(memcmp(er->cw, null_cw8, 8) != 0)
- 			{
 diff --git a/module-emulator-biss.c b/module-emulator-biss.c
 new file mode 100644
 index 00000000..a6b0c9e6
