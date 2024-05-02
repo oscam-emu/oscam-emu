@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index f86ce5a8..85d55f4d 100644
+index 679c50ea..b91fb9e9 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -454,6 +454,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
@@ -25,7 +25,7 @@ index f86ce5a8..85d55f4d 100644
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
  string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
  
-@@ -794,6 +810,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
+@@ -775,6 +791,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
  
  #--------------------------------------------------------------------------------
  
@@ -50,7 +50,7 @@ index f86ce5a8..85d55f4d 100644
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
-@@ -899,4 +933,11 @@ if (HAVE_LIBDVBCSA)
+@@ -880,4 +914,11 @@ if (HAVE_LIBDVBCSA)
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
  
@@ -202,7 +202,7 @@ index 73c1163d..0305acdd 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index aff5083c..344b7f4c 100644
+index 64b32a1d..ab562621 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -269,7 +269,7 @@ index 6878d327..5acc7b9a 100644
  			// bitfield
  			i2b_buf(2, feature, payload + i);
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index 8f81e631..11d06162 100644
+index 7e1fa769..d9f49aa6 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -2657,6 +2657,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
