@@ -63,7 +63,7 @@ index 679c50ea..b91fb9e9 100644
 +
  message (STATUS "")
 diff --git a/Makefile b/Makefile
-index fd295209..59c35db1 100644
+index 54258b65..05790b04 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -31,6 +31,9 @@ ifeq "$(shell ./config.sh --enabled WITH_SSL)" "Y"
@@ -202,7 +202,7 @@ index 73c1163d..0305acdd 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index 64b32a1d..ab562621 100644
+index c4ce84fe..c32e41b6 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
