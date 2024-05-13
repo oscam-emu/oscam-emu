@@ -202,7 +202,7 @@ index 73c1163d..0305acdd 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index 93e8a820..f8d90624 100644
+index ded1c446..9de9c0a4 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -11018,7 +11018,7 @@ index 2721602f..47cf2cd9 100644
  	DEF_LAST_OPT
  };
 diff --git a/oscam.c b/oscam.c
-index 181ca6b2..1419ef70 100644
+index be9967dc..4522ece2 100644
 --- a/oscam.c
 +++ b/oscam.c
 @@ -41,6 +41,10 @@
@@ -11032,7 +11032,7 @@ index 181ca6b2..1419ef70 100644
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -426,6 +430,8 @@ static void write_versionfile(bool use_stdout)
+@@ -427,6 +431,8 @@ static void write_versionfile(bool use_stdout)
  #if defined(__arm__) || defined(__aarch64__)
  	write_conf(WITH_ARM_NEON, "ARM NEON (SIMD/MPE) support");
  #endif
@@ -11041,7 +11041,7 @@ index 181ca6b2..1419ef70 100644
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1826,6 +1832,9 @@ int32_t main(int32_t argc, char *argv[])
+@@ -1827,6 +1833,9 @@ int32_t main(int32_t argc, char *argv[])
  	init_readerdb();
  #ifdef MODULE_STREAMRELAY
  	init_stream_server();
