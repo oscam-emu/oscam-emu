@@ -202,7 +202,7 @@ index 73c1163d..0305acdd 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index ded1c446..9de9c0a4 100644
+index 58fd928e..7b3cba17 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -269,7 +269,7 @@ index 6878d327..5acc7b9a 100644
  			// bitfield
  			i2b_buf(2, feature, payload + i);
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index 7e1fa769..d9f49aa6 100644
+index 0a439f95..358e17ad 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -2657,6 +2657,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
@@ -10986,7 +10986,7 @@ index 27d4e0c3..6e839660 100644
  
  #endif // MODULE_STREAMRELAY_H_
 diff --git a/module-webif.c b/module-webif.c
-index e596a617..43c0f15f 100644
+index 9a8c9df4..e2f391c3 100644
 --- a/module-webif.c
 +++ b/module-webif.c
 @@ -1318,6 +1318,12 @@ static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uri
@@ -11003,7 +11003,7 @@ index e596a617..43c0f15f 100644
  	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
  
 diff --git a/oscam-config-global.c b/oscam-config-global.c
-index 2721602f..47cf2cd9 100644
+index edb5d9c4..0f22fcb4 100644
 --- a/oscam-config-global.c
 +++ b/oscam-config-global.c
 @@ -928,6 +928,10 @@ static const struct config_list streamrelay_opts[] =
@@ -11076,10 +11076,10 @@ index 00000000..08b4647b
 +			</TR>
 +			<TR><TD><A>ECM fix delay (emu):</A></TD><TD><input name="stream_ecm_delay" class="short" type="text" maxlength="5" value="##STREAM_ECM_DELAY##"><label> ms (delay for PowerVU processing)</label></TD></TR>
 diff --git a/webif/pages_index.txt b/webif/pages_index.txt
-index e0dabd5a..3588e2b2 100644
+index 5a3643b7..e089217c 100644
 --- a/webif/pages_index.txt
 +++ b/webif/pages_index.txt
-@@ -91,6 +91,7 @@ CONFIGMENURADEGAST            config/menu_radegast.html
+@@ -92,6 +92,7 @@ CONFIGMENURADEGAST            config/menu_radegast.html
  CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
  CONFIGMENUSTREAMRELAY         config/menu_streamrelay.html                                MODULE_STREAMRELAY
  STREAMCLIENTSOURCEHOST        config/streamrelay_streamclientsourcehost.html              MODULE_RADEGAST
