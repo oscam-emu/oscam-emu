@@ -202,7 +202,7 @@ index 73c1163d..0305acdd 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index 58fd928e..7b3cba17 100644
+index 48eb6d44..c9ee681f 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -223,7 +223,7 @@ index 58fd928e..7b3cba17 100644
  
  #define MAX_ECM_SIZE			1024
  #define MAX_EMM_SIZE			1024
-@@ -1931,6 +1931,7 @@ struct s_reader										// contains device info, reader info and card info
+@@ -1932,6 +1932,7 @@ struct s_reader										// contains device info, reader info and card info
  #ifdef WITH_EMU
  	FTAB			emu_auproviders;				// AU providers for Emu reader
  	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
@@ -231,7 +231,7 @@ index 58fd928e..7b3cba17 100644
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2455,6 +2456,10 @@ struct s_config
+@@ -2456,6 +2457,10 @@ struct s_config
  #else
  #define DEFAULT_STREAM_SOURCE_PORT 8001 //Enigma2
  #endif
@@ -10986,7 +10986,7 @@ index 27d4e0c3..6e839660 100644
  
  #endif // MODULE_STREAMRELAY_H_
 diff --git a/module-webif.c b/module-webif.c
-index 9a8c9df4..e2f391c3 100644
+index 0eefb257..44f1dff1 100644
 --- a/module-webif.c
 +++ b/module-webif.c
 @@ -1318,6 +1318,12 @@ static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uri
