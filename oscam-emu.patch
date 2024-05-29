@@ -202,7 +202,7 @@ index 73c1163d..0305acdd 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index 45ad1414..fb750725 100644
+index 1f8562ba..47c68575 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -269,10 +269,10 @@ index 6878d327..5acc7b9a 100644
  			// bitfield
  			i2b_buf(2, feature, payload + i);
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index 0a439f95..358e17ad 100644
+index 5364dac3..8541a9ca 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
-@@ -2657,6 +2657,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
+@@ -2686,6 +2686,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
  	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
  	er->pmtpid = demux[demux_id].pmtpid;
  	er->onid   = demux[demux_id].onid;
@@ -281,7 +281,7 @@ index 0a439f95..358e17ad 100644
  	er->msgid  = msgid;
  
  #ifdef WITH_STAPI5
-@@ -2704,19 +2706,30 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
+@@ -2733,19 +2735,30 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
  		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_fixed(demux[demux_id].ECMpids[pid].CAID))
  		{
  			int32_t j, n;
