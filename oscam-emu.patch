@@ -109,6 +109,122 @@ index 54258b65..05790b04 100644
  SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
  SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
  SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
+diff --git a/README.md b/README.md
+index 8d1c6e93..c3cacec5 100644
+--- a/README.md
++++ b/README.md
+@@ -1,14 +1,18 @@
+-OSCam: Open Source Conditional Access Module
+-============================================
++OSCam-Emu: Open Source CAM with Emulator
++========================================
++[![build](https://github.com/oscam-emu/oscam-patched/actions/workflows/build.yml/badge.svg)](https://github.com/oscam-emu/oscam-patched/actions/workflows/build.yml)
+ 
++Wiki
++====
++https://github.com/oscam-emu/oscam-patched/wiki
+ 
+ License
+ =======
+ 
+-OSCam: Open Source CAM
+-Copyright (C) 2009-2024 OSCam developers
++OSCam-Emu: Open Source CAM with Emulator
++Copyright (C) 2009-2024 OSCam-Emu developers
+ 
+-OSCam is based on the Streamboard mp-cardserver 0.9d by dukat and
++OSCam-Emu is based on the Streamboard mp-cardserver 0.9d by dukat and
+ has been extended and worked on by many more since then.
+ 
+ This program is free software: you can redistribute it and/or modify
+@@ -24,41 +28,34 @@ GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+-For the full text of the licese, please read COPYING file in OSCam
++For the full text of the licese, please read COPYING file in OSCam-Emu
+ top directory or visit http://www.gnu.org/licenses/gpl-3.0.html
+ 
+ 
+ Version history
+ ===============
+ 
+-OSCam history is accessible through Trac timeline at:
+-   https://git.streamboard.tv/common/oscam/-/commits/master
++OSCam-Emu history is accessible through GitHub history at:
++   https://github.com/oscam-emu/oscam-patched/commits/master/
+ 
+ 
+ Repositories
+ ============
+ 
+ GIT repository:
+-   git clone https://git.streamboard.tv/common/oscam.git oscam
++   git clone https://github.com/oscam-emu/oscam-patched.git
+ 
+ 
+-Building OSCam from source
++Building OSCam-Emu from source
+ ==========================
+ 
+- - Get the lastest sources from SVN
+-    git clone https://git.streamboard.tv/common/oscam.git oscam
+-
+- - Go to oscam-trunk directory.
+-
+- - Run `make config` to choose the features you want.
+-
+- - Run `make` to compile OSCam.
++https://github.com/oscam-emu/oscam-patched/wiki/Building-OSCam-Emu
+ 
+ For more information and examples on using the build system, please
+ see README.build and README.config files.
+ 
+ 
+-Building OScam for different CPUs (cross-compilation)
++Building OSCam-Emu for different CPUs (cross-compilation)
+ =====================================================
+ 
+ First you need to install the target CPU toolchain. Already built toolchains
+@@ -66,7 +63,7 @@ for various architectures can be downloaded from:
+ 
+     https://git.streamboard.tv/common/oscam/-/wikis/CrossCompiling
+ 
+-In order to cross compile OSCam you need to set CROSS variable when
++In order to cross compile OSCam-Emu you need to set CROSS variable when
+ running make. For example to compile for SH4 architecture you need
+ to run: `make CROSS=sh4-linux-` or if your cross compilers are not
+ in your PATH - `make CROSS=/opt/STM/STLinux-2.3/devkit/sh4/bin/sh4-linux-`.
+@@ -75,11 +72,11 @@ in your PATH - `make CROSS=/opt/STM/STLinux-2.3/devkit/sh4/bin/sh4-linux-`.
+ Dependencies
+ ============
+ 
+-OSCam by default do not depend on external libraries except when compilation
++OSCam-Emu by default do not depend on external libraries except when compilation
+ with SSL is requested. In that case openssl (libcrypto) library must be
+ installed.
+ 
+-OSCam supports building with the following external dependencies:
++OSCam-Emu supports building with the following external dependencies:
+   - libcrypto (libssl) - 'make USE_LIBCRYPTO=1'
+   - libusb             - 'make USE_LIBUSB=1'
+   - PCSC               - 'make USE_PCSC=1'
+@@ -104,12 +101,12 @@ Help and Support
+ 
+ man pages and configuration examples are in Distribution/doc directory.
+ 
+-You may visit our Trac system for tracking and filling bug reports.
+-   https://git.streamboard.tv/common/oscam/-/issues/new
++You may visit our GitHub system for tracking and filling bug reports.
++   https://github.com/oscam-emu/oscam-patched/issues/new
+ 
+ If you experience any problems with OSCam, feel free to post in our support
+ forum under (mainly German and English language) at:
+    https://board.streamboard.tv/forum/
+ 
+ Configuration wiki:
+-   https://wiki.streamboard.tv/wiki/OSCam
++   https://github.com/oscam-emu/oscam-patched/wiki/OSCam-Emu-configuration
 diff --git a/config.h b/config.h
 index 005a3cc1..13b7ab50 100644
 --- a/config.h
