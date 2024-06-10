@@ -318,7 +318,7 @@ index 73c1163d..0305acdd 100755
  	;;
  	'-c'|'--oscam-commit')
 diff --git a/globals.h b/globals.h
-index 0f529e73..07e9b8a7 100644
+index 7908f535..3a40a08c 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
