@@ -274,10 +274,10 @@ index 8d1c6e93..c3cacec5 100644
 -   https://wiki.streamboard.tv/wiki/OSCam
 +   https://github.com/oscam-emu/oscam-patched/wiki/OSCam-Emu-configuration
 diff --git a/config.h b/config.h
-index 005a3cc1..13b7ab50 100644
+index 005a3cc1..ec86a365 100644
 --- a/config.h
 +++ b/config.h
-@@ -1,6 +1,8 @@
+@@ -1,13 +1,15 @@
  #ifndef CONFIG_H_
  #define CONFIG_H_
  
@@ -286,8 +286,16 @@ index 005a3cc1..13b7ab50 100644
  #define WEBIF 1
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
+ //#define WITH_SSL 1
+ #if defined(__linux__) || defined(__CYGWIN__)
+ #define HAVE_DVBAPI 1
+-//#define WITH_EXTENDED_CW 1
++#define WITH_EXTENDED_CW 1
+ #endif
+ //#define WITH_NEUTRINO 1
+ #define READ_SDT_CHARSETS 1
 diff --git a/config.sh b/config.sh
-index 73c1163d..0305acdd 100755
+index 73c1163d..fb9497d4 100755
 --- a/config.sh
 +++ b/config.sh
 @@ -1,6 +1,6 @@
@@ -298,6 +306,15 @@ index 73c1163d..0305acdd 100755
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP MODULE_STREAMRELAY"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
+@@ -11,7 +11,7 @@ CONFIG_WEBIF_LIVELOG=y
+ CONFIG_WEBIF_JQUERY=y
+ # CONFIG_WITH_SSL=n
+ CONFIG_HAVE_DVBAPI=y
+-# CONFIG_WITH_EXTENDED_CW=n
++CONFIG_WITH_EXTENDED_CW=y
+ # CONFIG_WITH_NEUTRINO=n
+ CONFIG_READ_SDT_CHARSETS=y
+ # CONFIG_CS_ANTICASC=n
 @@ -26,6 +26,8 @@ CONFIG_WITH_LB=y
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
@@ -12207,7 +12224,7 @@ index 00000000..cf718779
 @@ -0,0 +1 @@
 +			<LI CLASS="##CMENUACTIVE30##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
 diff --git a/webif/pages_index.txt b/webif/pages_index.txt
-index da09dfba..e089217c 100644
+index da09dfba..ae33f205 100644
 --- a/webif/pages_index.txt
 +++ b/webif/pages_index.txt
 @@ -1,10 +1,10 @@
@@ -12223,6 +12240,15 @@ index da09dfba..e089217c 100644
  
  JSONCACHEEX                   api.json/cacheex.json                                       CS_CACHEEX
  JSONCACHEEXBIT                api.json/cacheexbit.json                                    CS_CACHEEX
+@@ -62,7 +62,7 @@ CONFIGCCCAM                   config/cccam.html
+ CONFIGCCCAMCTRL               config/cccam_control.html                                   MODULE_CCCSHARE
+ CONFIGCONTENT                 config/config.html
+ CONFIGDVBAPI                  config/dvbapi.html                                          HAVE_DVBAPI
+-EXTENDEDCWAPI                 config/dvbapi_extended_cw_api.html                          WITH_EXTENDED_CW
++EXTENDEDCWAPI                 config/dvbapi_extended_cw_api.html                          WITH_EXTENDED_CW,WITH_EMU
+ DEMUXERFIX                    config/dvbapi_demuxerfix.html                               MODULE_STREAMRELAY
+ CCCAMRESHAREBIT               config/cccreshare.html                                      MODULE_GBOX
+ CONFIGGBOX                    config/gbox.html                                            MODULE_GBOX
 @@ -92,6 +92,7 @@ CONFIGMENURADEGAST            config/menu_radegast.html
  CONFIGMENUSCAM                config/menu_scam.html                                       MODULE_SCAM
  CONFIGMENUSTREAMRELAY         config/menu_streamrelay.html                                MODULE_STREAMRELAY
