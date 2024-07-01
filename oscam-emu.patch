@@ -394,7 +394,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 913c8972..73962f2f 100644
+index 2e488ed5..0e465806 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -12138,7 +12138,7 @@ index f659d05d..4522ece2 100644
  	cfg.account = init_userdb();
  	init_signal();
 diff --git a/reader-common.c b/reader-common.c
-index e4f94b80..cb6753f7 100644
+index 5a1067fa..992e3497 100644
 --- a/reader-common.c
 +++ b/reader-common.c
 @@ -149,6 +149,18 @@ static int32_t reader_get_cardsystem(struct s_reader *reader, ATR *atr)
