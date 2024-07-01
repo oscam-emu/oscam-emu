@@ -394,7 +394,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 198e7bcb..7cda3123 100644
+index de069521..6e7bef4f 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -448,7 +448,7 @@ index 198e7bcb..7cda3123 100644
  } S_ENTITLEMENT;
  
  struct s_client;
-@@ -1740,6 +1752,7 @@ struct s_reader										// contains device info, reader info and card info
+@@ -1741,6 +1753,7 @@ struct s_reader										// contains device info, reader info and card info
  	char			cc_build[7];					// cccam build number
  	int8_t			cc_maxhops;						// cccam max distance
  	int8_t			cc_mindown;						// cccam min downhops
@@ -456,7 +456,7 @@ index 198e7bcb..7cda3123 100644
  	uint32_t		cc_id;
  	int8_t			cc_keepalive;
  	int8_t			cc_hop;							// For non-cccam reader: hop for virtual cards
-@@ -1915,6 +1928,11 @@ struct s_reader										// contains device info, reader info and card info
+@@ -1916,6 +1929,11 @@ struct s_reader										// contains device info, reader info and card info
  #endif
  #ifdef MODULE_GHTTP
  	uint8_t			ghttp_use_ssl;
@@ -468,7 +468,7 @@ index 198e7bcb..7cda3123 100644
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2439,6 +2457,10 @@ struct s_config
+@@ -2440,6 +2458,10 @@ struct s_config
  #else
  #define DEFAULT_STREAM_SOURCE_PORT 8001 //Enigma2
  #endif
@@ -479,7 +479,7 @@ index 198e7bcb..7cda3123 100644
  #endif
  
  	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
-@@ -2624,16 +2646,26 @@ bool boxtype_is(const char *boxtype);
+@@ -2625,16 +2647,26 @@ bool boxtype_is(const char *boxtype);
  bool boxname_is(const char *boxname);
  const char *boxtype_get(void);
  const char *boxname_get(void);
@@ -11928,7 +11928,7 @@ index edb5d9c4..0f22fcb4 100644
  	DEF_LAST_OPT
  };
 diff --git a/oscam-config-reader.c b/oscam-config-reader.c
-index 5c0431e1..15343079 100644
+index 5304ec1d..a6432fca 100644
 --- a/oscam-config-reader.c
 +++ b/oscam-config-reader.c
 @@ -114,6 +114,7 @@ static void protocol_fn(const char *token, char *value, void *setting, FILE *f)
@@ -11966,9 +11966,9 @@ index 5c0431e1..15343079 100644
 +	DEF_OPT_FUNC_X("emu_auproviders"              , OFS(emu_auproviders),                ftab_fn, FTAB_READER | FTAB_EMUAU),
 +	DEF_OPT_INT8("emu_datecodedenabled"           , OFS(emu_datecodedenabled),           0),
  #endif
+ 	DEF_OPT_INT8("resetalways"                    , OFS(resetalways),                     0),
  	DEF_OPT_INT8("deprecated"                     , OFS(deprecated),                      0),
- 	DEF_OPT_INT8("audisabled"                     , OFS(audisabled),                      0),
-@@ -1222,7 +1231,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
+@@ -1223,7 +1232,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
  	// These are written only when the reader is CCCAM
  	static const char *cccam_settings[] =
  	{
@@ -12036,7 +12036,7 @@ index c20a2fdd..7dcd00d2 100644
  		cs_log_dbg(D_TRACE, "warning: ecm with null odd/even byte from %s", (check_client(er->client) ? er->client->account->usr : "-"));
  		er->rc = E_INVALID;
 diff --git a/oscam-emm.c b/oscam-emm.c
-index 0ba0bc06..d0df4bab 100644
+index 7508a0ff..dc85a35c 100644
 --- a/oscam-emm.c
 +++ b/oscam-emm.c
 @@ -40,6 +40,7 @@ static int8_t cs_emmlen_is_blocked(struct s_reader *rdr, int16_t len)
@@ -12047,7 +12047,7 @@ index 0ba0bc06..d0df4bab 100644
  
  	//copied and enhanced from module-dvbapi.c
  	//dvbapi_start_emm_filter()
-@@ -236,6 +237,24 @@ int32_t emm_reader_match(struct s_reader *reader, uint16_t caid, uint32_t provid
+@@ -237,6 +238,24 @@ int32_t emm_reader_match(struct s_reader *reader, uint16_t caid, uint32_t provid
  		rdr_log_dbg(reader, D_EMM, "reader auprovid = %06X fixup to %06X (ignoring last digit)", reader->auprovid, prid);
  	}
  
@@ -12138,7 +12138,7 @@ index f659d05d..4522ece2 100644
  	cfg.account = init_userdb();
  	init_signal();
 diff --git a/reader-common.c b/reader-common.c
-index 5a1067fa..992e3497 100644
+index 5c9e6e49..86503bf4 100644
 --- a/reader-common.c
 +++ b/reader-common.c
 @@ -149,6 +149,18 @@ static int32_t reader_get_cardsystem(struct s_reader *reader, ATR *atr)
