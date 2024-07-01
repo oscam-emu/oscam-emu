@@ -394,7 +394,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 2e488ed5..0e465806 100644
+index 198e7bcb..7cda3123 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -11712,10 +11712,10 @@ index 71e97b53..6e839660 100644
  
  #endif // MODULE_STREAMRELAY_H_
 diff --git a/module-webif-tpl.c b/module-webif-tpl.c
-index f465aaee..4067b07e 100644
+index b73d9125..0fedc5ef 100644
 --- a/module-webif-tpl.c
 +++ b/module-webif-tpl.c
-@@ -453,6 +453,7 @@ char *tpl_getUnparsedTpl(const char *name, int8_t removeHeader, const char *subd
+@@ -454,6 +454,7 @@ char *tpl_getUnparsedTpl(const char *name, int8_t removeHeader, const char *subd
  											check_conf(WITH_SSL, ptr2);
  											check_conf(WITH_STAPI, ptr2);
  											check_conf(WITH_STAPI5, ptr2);
@@ -11724,7 +11724,7 @@ index f465aaee..4067b07e 100644
  										if(ok == 0)
  										{
 diff --git a/module-webif.c b/module-webif.c
-index 71dd755e..44f1dff1 100644
+index 091626ec..6e3e0118 100644
 --- a/module-webif.c
 +++ b/module-webif.c
 @@ -1318,6 +1318,12 @@ static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uri
@@ -11749,7 +11749,7 @@ index 71dd755e..44f1dff1 100644
  		{
  			if(rdr)
  				{
-@@ -3164,6 +3170,8 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
+@@ -3172,6 +3178,8 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
  	tpl_printf(vars, TPLADD, "RESHARE",      "%d", cfg.cc_reshare);
  	tpl_printf(vars, TPLADD, "CCCRECONNECT", "%d", rdr->cc_reconnect);
  
@@ -11758,7 +11758,7 @@ index 71dd755e..44f1dff1 100644
  	if(rdr->cc_keepalive)
  		{ tpl_addVar(vars, TPLADD, "KEEPALIVECHECKED", "checked"); }
  #endif
-@@ -3201,6 +3209,23 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
+@@ -3209,6 +3217,23 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
  	tpl_addVar(vars, TPLADD, "USERSCRIPT", rdr->userscript);
  #endif
  
@@ -11782,7 +11782,7 @@ index 71dd755e..44f1dff1 100644
  	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
  
  	// Show only parameters which needed for the reader
-@@ -3222,6 +3247,9 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
+@@ -3230,6 +3255,9 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
@@ -11792,7 +11792,7 @@ index 71dd755e..44f1dff1 100644
  	case R_CS378X :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
  		break;
-@@ -5250,9 +5278,34 @@ static char *send_oscam_entitlement(struct templatevars *vars, struct uriparams
+@@ -5258,9 +5286,34 @@ static char *send_oscam_entitlement(struct templatevars *vars, struct uriparams
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -11827,7 +11827,7 @@ index 71dd755e..44f1dff1 100644
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -5746,6 +5799,9 @@ static char *send_oscam_status(struct templatevars * vars, struct uriparams * pa
+@@ -5754,6 +5807,9 @@ static char *send_oscam_status(struct templatevars * vars, struct uriparams * pa
  						filtered = (type == cl->typ) || (type == 'x' && (cl->typ == 'p' || cl->typ == 'r') && (cl->reader && cl->reader->cacheex.mode));
  #else
  						filtered = (type == cl->typ);
@@ -11837,7 +11837,7 @@ index 71dd755e..44f1dff1 100644
  #endif
  					}
  				}
-@@ -7298,6 +7354,9 @@ static char *send_oscam_files(struct templatevars * vars, struct uriparams * par
+@@ -7306,6 +7362,9 @@ static char *send_oscam_files(struct templatevars * vars, struct uriparams * par
  		{ "stats.info",      MNU_GBX_FSTAINF,   FTYPE_GBOX },     // id 27
  		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
  		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
@@ -11847,7 +11847,7 @@ index 71dd755e..44f1dff1 100644
  #endif
  		{ NULL, 0, 0 },
  	};
-@@ -7770,7 +7829,11 @@ static char *send_oscam_EMM_running(struct templatevars * vars, struct uriparams
+@@ -7778,7 +7837,11 @@ static char *send_oscam_EMM_running(struct templatevars * vars, struct uriparams
  		else if(!proxy && rdr->csystem_active)     // local active reader
  		{
  			csystem = rdr->csystem;
@@ -11860,7 +11860,7 @@ index 71dd755e..44f1dff1 100644
  		}
  
  		if(csystem)
-@@ -8939,7 +9002,11 @@ static int32_t readRequest(FILE * f, IN_ADDR_T in, char **result, int8_t forcePl
+@@ -8947,7 +9010,11 @@ static int32_t readRequest(FILE * f, IN_ADDR_T in, char **result, int8_t forcePl
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -11928,7 +11928,7 @@ index edb5d9c4..0f22fcb4 100644
  	DEF_LAST_OPT
  };
 diff --git a/oscam-config-reader.c b/oscam-config-reader.c
-index 5af3ad90..6d82f60b 100644
+index 5c0431e1..15343079 100644
 --- a/oscam-config-reader.c
 +++ b/oscam-config-reader.c
 @@ -114,6 +114,7 @@ static void protocol_fn(const char *token, char *value, void *setting, FILE *f)
@@ -11949,7 +11949,7 @@ index 5af3ad90..6d82f60b 100644
  #ifdef MODULE_GBOX
  		if(ftab_type & FTAB_CCCGBXRESHARE){ rdr = container_of(setting, struct s_reader, ccc_gbx_reshare_ident); }
  #endif
-@@ -1106,6 +1110,7 @@ static const struct config_list reader_opts[] =
+@@ -1115,6 +1119,7 @@ static const struct config_list reader_opts[] =
  	DEF_OPT_SSTR("cccversion"                     , OFS(cc_version),                      "", SIZEOF(cc_version)),
  	DEF_OPT_INT8("cccmaxhops"                     , OFS(cc_maxhops),                      DEFAULT_CC_MAXHOPS),
  	DEF_OPT_INT8("cccmindown"                     , OFS(cc_mindown),                      0),
@@ -11957,7 +11957,7 @@ index 5af3ad90..6d82f60b 100644
  	DEF_OPT_INT8("ccckeepalive"                   , OFS(cc_keepalive),                    DEFAULT_CC_KEEPALIVE),
  	DEF_OPT_INT8("cccreshare"                     , OFS(cc_reshare),                      DEFAULT_CC_RESHARE),
  	DEF_OPT_INT32("cccreconnect"                  , OFS(cc_reconnect),                    DEFAULT_CC_RECONNECT),
-@@ -1120,6 +1125,10 @@ static const struct config_list reader_opts[] =
+@@ -1129,6 +1134,10 @@ static const struct config_list reader_opts[] =
  #endif
  #ifdef READER_DRECAS
  	DEF_OPT_STR("stmkeys"                         , OFS(stmkeys),                         NULL),
@@ -11968,7 +11968,7 @@ index 5af3ad90..6d82f60b 100644
  #endif
  	DEF_OPT_INT8("deprecated"                     , OFS(deprecated),                      0),
  	DEF_OPT_INT8("audisabled"                     , OFS(audisabled),                      0),
-@@ -1213,7 +1222,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
+@@ -1222,7 +1231,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
  	// These are written only when the reader is CCCAM
  	static const char *cccam_settings[] =
  	{
