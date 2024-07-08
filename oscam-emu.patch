@@ -12183,7 +12183,7 @@ index af860a9b..6e55efd0 100644
 +##TPLSTREAMEMUSETTINGS##
 diff --git a/webif/config/streamrelay_emusettings.html b/webif/config/streamrelay_emusettings.html
 new file mode 100644
-index 00000000..08b4647b
+index 00000000..dcb0618b
 --- /dev/null
 +++ b/webif/config/streamrelay_emusettings.html
 @@ -0,0 +1,9 @@
