@@ -274,10 +274,10 @@ index 8d1c6e93..c3cacec5 100644
 -   https://wiki.streamboard.tv/wiki/OSCam
 +   https://github.com/oscam-emu/oscam-patched/wiki/OSCam-Emu-configuration
 diff --git a/config.h b/config.h
-index 005a3cc1..ec86a365 100644
+index 2484f3fc..9ae2f7c0 100644
 --- a/config.h
 +++ b/config.h
-@@ -1,13 +1,15 @@
+@@ -1,6 +1,8 @@
  #ifndef CONFIG_H_
  #define CONFIG_H_
  
@@ -286,6 +286,7 @@ index 005a3cc1..ec86a365 100644
  #define WEBIF 1
  #define WEBIF_LIVELOG 1
  #define WEBIF_JQUERY 1
+@@ -8,7 +10,7 @@
  //#define WITH_SSL 1
  #if defined(__linux__) || defined(__CYGWIN__)
  #define HAVE_DVBAPI 1
@@ -295,19 +296,21 @@ index 005a3cc1..ec86a365 100644
  //#define WITH_NEUTRINO 1
  #define READ_SDT_CHARSETS 1
 diff --git a/config.sh b/config.sh
-index 73c1163d..fb9497d4 100755
+old mode 100755
+new mode 100644
+index e7a98d47..b085fb24
 --- a/config.sh
 +++ b/config.sh
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
--addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON"
-+addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON WITH_EMU WITH_SOFTCAM"
+-addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY WEBIF_COMPRESS WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON"
++addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY WEBIF_COMPRESS WITH_SSL HAVE_DVBAPI WITH_EXTENDED_CW WITH_NEUTRINO READ_SDT_CHARSETS CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT CLOCKFIX IPV6SUPPORT WITH_ARM_NEON WITH_EMU WITH_SOFTCAM"
  protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP MODULE_STREAMRELAY"
  readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
  card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
-@@ -11,7 +11,7 @@ CONFIG_WEBIF_LIVELOG=y
- CONFIG_WEBIF_JQUERY=y
+@@ -12,7 +12,7 @@ CONFIG_WEBIF_JQUERY=y
+ CONFIG_WEBIF_COMPRESS=y
  # CONFIG_WITH_SSL=n
  CONFIG_HAVE_DVBAPI=y
 -# CONFIG_WITH_EXTENDED_CW=n
@@ -315,7 +318,7 @@ index 73c1163d..fb9497d4 100755
  # CONFIG_WITH_NEUTRINO=n
  CONFIG_READ_SDT_CHARSETS=y
  # CONFIG_CS_ANTICASC=n
-@@ -26,6 +26,8 @@ CONFIG_WITH_LB=y
+@@ -27,6 +27,8 @@ CONFIG_WITH_LB=y
  # CONFIG_CLOCKFIX=n
  # CONFIG_IPV6SUPPORT=n
  # CONFIG_WITH_ARM_NEON=n
@@ -324,7 +327,7 @@ index 73c1163d..fb9497d4 100755
  # CONFIG_MODULE_CAMD33=n
  CONFIG_MODULE_CAMD35=y
  CONFIG_MODULE_CAMD35_TCP=y
-@@ -295,13 +297,16 @@ get_opts() {
+@@ -296,13 +298,16 @@ get_opts() {
  
  update_deps() {
  	# Calculate dependencies
@@ -343,7 +346,7 @@ index 73c1163d..fb9497d4 100755
  }
  
  list_config() {
-@@ -351,9 +356,9 @@ list_config() {
+@@ -352,9 +357,9 @@ list_config() {
  	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
  	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
  	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
@@ -356,7 +359,7 @@ index 73c1163d..fb9497d4 100755
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -470,6 +475,8 @@ menu_addons() {
+@@ -472,6 +477,8 @@ menu_addons() {
  		CLOCKFIX			"Clockfix (disable on old systems!)"	$(check_test "CLOCKFIX") \
  		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
  		WITH_ARM_NEON		"ARM NEON (SIMD/MPE) support"			$(check_test "WITH_ARM_NEON") \
@@ -365,7 +368,7 @@ index 73c1163d..fb9497d4 100755
  		2> ${tempfile}
  
  	opt=${?}
-@@ -701,12 +708,14 @@ do
+@@ -703,12 +710,14 @@ do
  	;;
  	'-v'|'--oscam-version')
  		version=`grep '^#define CS_VERSION' globals.h | cut -d\" -f2`
@@ -394,7 +397,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 329020a7..6bbd1ac7 100644
+index 323a3619..8cab17a5 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -11712,10 +11715,10 @@ index 71e97b53..6e839660 100644
  
  #endif // MODULE_STREAMRELAY_H_
 diff --git a/module-webif-tpl.c b/module-webif-tpl.c
-index b73d9125..0fedc5ef 100644
+index 14b16c03..c8a7e40c 100644
 --- a/module-webif-tpl.c
 +++ b/module-webif-tpl.c
-@@ -454,6 +454,7 @@ char *tpl_getUnparsedTpl(const char *name, int8_t removeHeader, const char *subd
+@@ -455,6 +455,7 @@ char *tpl_getUnparsedTpl(const char *name, int8_t removeHeader, const char *subd
  											check_conf(WITH_SSL, ptr2);
  											check_conf(WITH_STAPI, ptr2);
  											check_conf(WITH_STAPI5, ptr2);
@@ -12094,7 +12097,7 @@ index 0d6c5308..69dfcb30 100644
  	return "unknown";
  }
 diff --git a/oscam.c b/oscam.c
-index f659d05d..4522ece2 100644
+index a1922799..803bd5fb 100644
 --- a/oscam.c
 +++ b/oscam.c
 @@ -41,6 +41,10 @@
@@ -12108,7 +12111,7 @@ index f659d05d..4522ece2 100644
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -427,6 +431,8 @@ static void write_versionfile(bool use_stdout)
+@@ -428,6 +432,8 @@ static void write_versionfile(bool use_stdout)
  #if defined(__arm__) || defined(__aarch64__)
  	write_conf(WITH_ARM_NEON, "ARM NEON (SIMD/MPE) support");
  #endif
@@ -12117,7 +12120,7 @@ index f659d05d..4522ece2 100644
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1643,6 +1649,9 @@ const struct s_cardreader *cardreaders[] =
+@@ -1644,6 +1650,9 @@ const struct s_cardreader *cardreaders[] =
  #ifdef CARDREADER_STINGER
  	&cardreader_stinger,
  #endif
@@ -12127,7 +12130,7 @@ index f659d05d..4522ece2 100644
  
  	NULL
  };
-@@ -1824,6 +1833,9 @@ int32_t main(int32_t argc, char *argv[])
+@@ -1825,6 +1834,9 @@ int32_t main(int32_t argc, char *argv[])
  	init_readerdb();
  #ifdef MODULE_STREAMRELAY
  	init_stream_server();
