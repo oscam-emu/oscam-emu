@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 8ce664a1..b11179ab 100644
+index 1ff15eba..2f1908d2 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -454,6 +454,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
@@ -50,18 +50,17 @@ index 8ce664a1..b11179ab 100644
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
-@@ -880,4 +914,11 @@ if (HAVE_LIBDVBCSA)
+@@ -879,3 +913,10 @@ if (HAVE_LIBDVBCSA)
+ 		endif(LIBDVBCSADIR AND STATIC_LIBDVBCSA EQUAL 0)
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
- 
++
 +if (WITH_EMU)
 +	message (STATUS "  Compile with EMU support")
 +	if (WITH_SOFTCAM)
 +		message (STATUS "  SoftCam.Key will be linked as well")
 +	endif (WITH_SOFTCAM)
 +endif (WITH_EMU)
-+
- message (STATUS "")
 diff --git a/Distribution/doc/html/oscam.server.5.html b/Distribution/doc/html/oscam.server.5.html
 index 3fb60c56..48fc01d2 100644
 --- a/Distribution/doc/html/oscam.server.5.html
@@ -111,7 +110,7 @@ index 3d333a93..08b173ed 100644
  	  1 = send keepalive messages to keep connection to remote CCCam server up, default:0
  
 diff --git a/Makefile b/Makefile
-index be18ceff..8673eeaf 100644
+index ad771b6a..9704ab32 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -31,6 +31,9 @@ ifeq "$(shell ./config.sh --enabled WITH_SSL)" "Y"
@@ -395,7 +394,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 3df94f76..44dcef0e 100644
+index 1baafc03..22ac3a3e 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
