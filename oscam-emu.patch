@@ -394,7 +394,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index f44291c7..0e8a23f9 100644
+index a466a459..1c8dbfb9 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -559,7 +559,7 @@ index 6878d327..5acc7b9a 100644
  			// bitfield
  			i2b_buf(2, feature, payload + i);
 diff --git a/module-cccam.c b/module-cccam.c
-index b301339c..c7c04fb6 100644
+index 4ed99e4d..288d0a71 100644
 --- a/module-cccam.c
 +++ b/module-cccam.c
 @@ -1009,7 +1009,7 @@ int32_t cc_send_cli_data(struct s_client *cl)
@@ -12036,7 +12036,7 @@ index c20a2fdd..7dcd00d2 100644
  		cs_log_dbg(D_TRACE, "warning: ecm with null odd/even byte from %s", (check_client(er->client) ? er->client->account->usr : "-"));
  		er->rc = E_INVALID;
 diff --git a/oscam-emm.c b/oscam-emm.c
-index ec97898d..1ed79813 100644
+index 7508a0ff..dc85a35c 100644
 --- a/oscam-emm.c
 +++ b/oscam-emm.c
 @@ -40,6 +40,7 @@ static int8_t cs_emmlen_is_blocked(struct s_reader *rdr, int16_t len)
@@ -12047,7 +12047,7 @@ index ec97898d..1ed79813 100644
  
  	//copied and enhanced from module-dvbapi.c
  	//dvbapi_start_emm_filter()
-@@ -241,6 +242,24 @@ int32_t emm_reader_match(struct s_reader *reader, uint16_t caid, uint32_t provid
+@@ -237,6 +238,24 @@ int32_t emm_reader_match(struct s_reader *reader, uint16_t caid, uint32_t provid
  		rdr_log_dbg(reader, D_EMM, "reader auprovid = %06X fixup to %06X (ignoring last digit)", reader->auprovid, prid);
  	}
  
