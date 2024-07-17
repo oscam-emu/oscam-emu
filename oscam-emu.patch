@@ -394,7 +394,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index a466a459..1c8dbfb9 100644
+index 5263cf66..9c59815c 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -448,7 +448,7 @@ index a466a459..1c8dbfb9 100644
  } S_ENTITLEMENT;
  
  struct s_client;
-@@ -1741,6 +1753,7 @@ struct s_reader										// contains device info, reader info and card info
+@@ -1742,6 +1754,7 @@ struct s_reader										// contains device info, reader info and card info
  	char			cc_build[7];					// cccam build number
  	int8_t			cc_maxhops;						// cccam max distance
  	int8_t			cc_mindown;						// cccam min downhops
@@ -456,7 +456,7 @@ index a466a459..1c8dbfb9 100644
  	uint32_t		cc_id;
  	int8_t			cc_keepalive;
  	int8_t			cc_hop;							// For non-cccam reader: hop for virtual cards
-@@ -1916,6 +1929,11 @@ struct s_reader										// contains device info, reader info and card info
+@@ -1917,6 +1930,11 @@ struct s_reader										// contains device info, reader info and card info
  #endif
  #ifdef MODULE_GHTTP
  	uint8_t			ghttp_use_ssl;
@@ -468,7 +468,7 @@ index a466a459..1c8dbfb9 100644
  #endif
  	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
  	LLIST			*emmstat;						// emm stats
-@@ -2440,6 +2458,10 @@ struct s_config
+@@ -2441,6 +2459,10 @@ struct s_config
  #else
  #define DEFAULT_STREAM_SOURCE_PORT 8001 //Enigma2
  #endif
@@ -479,7 +479,7 @@ index a466a459..1c8dbfb9 100644
  #endif
  
  	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
-@@ -2625,16 +2647,26 @@ bool boxtype_is(const char *boxtype);
+@@ -2626,16 +2648,26 @@ bool boxtype_is(const char *boxtype);
  bool boxname_is(const char *boxname);
  const char *boxtype_get(void);
  const char *boxname_get(void);
@@ -12036,7 +12036,7 @@ index c20a2fdd..7dcd00d2 100644
  		cs_log_dbg(D_TRACE, "warning: ecm with null odd/even byte from %s", (check_client(er->client) ? er->client->account->usr : "-"));
  		er->rc = E_INVALID;
 diff --git a/oscam-emm.c b/oscam-emm.c
-index 7508a0ff..dc85a35c 100644
+index 848fa341..65ba29cc 100644
 --- a/oscam-emm.c
 +++ b/oscam-emm.c
 @@ -40,6 +40,7 @@ static int8_t cs_emmlen_is_blocked(struct s_reader *rdr, int16_t len)
@@ -12047,7 +12047,7 @@ index 7508a0ff..dc85a35c 100644
  
  	//copied and enhanced from module-dvbapi.c
  	//dvbapi_start_emm_filter()
-@@ -237,6 +238,24 @@ int32_t emm_reader_match(struct s_reader *reader, uint16_t caid, uint32_t provid
+@@ -233,6 +234,24 @@ int32_t emm_reader_match(struct s_reader *reader, uint16_t caid, uint32_t provid
  		rdr_log_dbg(reader, D_EMM, "reader auprovid = %06X fixup to %06X (ignoring last digit)", reader->auprovid, prid);
  	}
  
