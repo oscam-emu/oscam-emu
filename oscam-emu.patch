@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 1ff15eba..2f1908d2 100644
+index 679c50ea..2f875683 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -454,6 +454,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
@@ -50,17 +50,20 @@ index 1ff15eba..2f1908d2 100644
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
-@@ -879,3 +913,10 @@ if (HAVE_LIBDVBCSA)
- 		endif(LIBDVBCSADIR AND STATIC_LIBDVBCSA EQUAL 0)
+@@ -880,4 +914,11 @@ if (HAVE_LIBDVBCSA)
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
-+
+ 
+-message (STATUS "")
 +if (WITH_EMU)
 +	message (STATUS "  Compile with EMU support")
 +	if (WITH_SOFTCAM)
 +		message (STATUS "  SoftCam.Key will be linked as well")
 +	endif (WITH_SOFTCAM)
 +endif (WITH_EMU)
++
++message (STATUS "")
+\ No newline at end of file
 diff --git a/Distribution/doc/html/oscam.server.5.html b/Distribution/doc/html/oscam.server.5.html
 index 3fb60c56..48fc01d2 100644
 --- a/Distribution/doc/html/oscam.server.5.html
@@ -394,7 +397,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 7458bf19..e52857b2 100644
+index ab9f49d4..66b383d9 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
