@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 679c50ea..2f875683 100644
+index 679c50ea..b91fb9e9 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -454,6 +454,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
@@ -54,7 +54,6 @@ index 679c50ea..2f875683 100644
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
  
--message (STATUS "")
 +if (WITH_EMU)
 +	message (STATUS "  Compile with EMU support")
 +	if (WITH_SOFTCAM)
@@ -62,8 +61,7 @@ index 679c50ea..2f875683 100644
 +	endif (WITH_SOFTCAM)
 +endif (WITH_EMU)
 +
-+message (STATUS "")
-\ No newline at end of file
+ message (STATUS "")
 diff --git a/Distribution/doc/html/oscam.server.5.html b/Distribution/doc/html/oscam.server.5.html
 index 3fb60c56..48fc01d2 100644
 --- a/Distribution/doc/html/oscam.server.5.html
