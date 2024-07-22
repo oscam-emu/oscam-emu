@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 9cd49b5e..e10d5335 100644
+index 00727f83..af7b0cf4 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -471,6 +471,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
+@@ -472,6 +472,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
  # Manage config.h based on command line parameters
  # Manipulate config file based on given parameters and read unset parameters
  
@@ -25,7 +25,7 @@ index 9cd49b5e..e10d5335 100644
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
  string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
  
-@@ -801,6 +817,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
+@@ -802,6 +818,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
  
  #--------------------------------------------------------------------------------
  
@@ -50,7 +50,7 @@ index 9cd49b5e..e10d5335 100644
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
-@@ -910,4 +944,11 @@ if (HAVE_LIBDVBCSA)
+@@ -911,4 +945,11 @@ if (HAVE_LIBDVBCSA)
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
  
@@ -111,7 +111,7 @@ index 3d333a93..08b173ed 100644
  	  1 = send keepalive messages to keep connection to remote CCCam server up, default:0
  
 diff --git a/Makefile b/Makefile
-index 8c8663ba..d8fdb573 100644
+index d8c33b83..0f4f3912 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -32,6 +32,9 @@ ifeq "$(shell ./config.sh --enabled WITH_SSL)" "Y"
@@ -124,7 +124,7 @@ index 8c8663ba..d8fdb573 100644
  ifdef USE_SSL
  	override USE_LIBCRYPTO=1
  endif
-@@ -314,6 +317,32 @@ SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
+@@ -315,6 +318,32 @@ SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -408,7 +408,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index efe4a83d..f0061a4b 100644
+index f75e00ea..11660af9 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -12108,7 +12108,7 @@ index 0d6c5308..69dfcb30 100644
  	return "unknown";
  }
 diff --git a/oscam.c b/oscam.c
-index bd326360..f7d83e82 100644
+index a639364f..83904f60 100644
 --- a/oscam.c
 +++ b/oscam.c
 @@ -41,6 +41,10 @@
@@ -12122,7 +12122,7 @@ index bd326360..f7d83e82 100644
  #ifdef WITH_SSL
  #include <openssl/crypto.h>
  #include <openssl/ssl.h>
-@@ -429,6 +433,8 @@ static void write_versionfile(bool use_stdout)
+@@ -432,6 +436,8 @@ static void write_versionfile(bool use_stdout)
  #if defined(__arm__) || defined(__aarch64__)
  	write_conf(WITH_ARM_NEON, "ARM NEON (SIMD/MPE) support");
  #endif
@@ -12131,7 +12131,7 @@ index bd326360..f7d83e82 100644
  
  	fprintf(fp, "\n");
  	write_conf(MODULE_CAMD33, "camd 3.3x");
-@@ -1645,6 +1651,9 @@ const struct s_cardreader *cardreaders[] =
+@@ -1648,6 +1654,9 @@ const struct s_cardreader *cardreaders[] =
  #ifdef CARDREADER_STINGER
  	&cardreader_stinger,
  #endif
@@ -12141,7 +12141,7 @@ index bd326360..f7d83e82 100644
  
  	NULL
  };
-@@ -1826,6 +1835,9 @@ int32_t main(int32_t argc, char *argv[])
+@@ -1829,6 +1838,9 @@ int32_t main(int32_t argc, char *argv[])
  	init_readerdb();
  #ifdef MODULE_STREAMRELAY
  	init_stream_server();
