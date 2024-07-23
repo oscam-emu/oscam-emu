@@ -408,7 +408,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index f75e00ea..11660af9 100644
+index 831bf2f8..0fdddfcb 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -683,7 +683,7 @@ index ed0f3d87..2bd07a4e 100644
  			ErrorCode = oscam_sttkd_KeyWrite(tkd_desc_info[demux[demux_id].dev_index].key_hndl, l, cw + (l * 8));
  
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index 9fac2f5c..358e17ad 100644
+index 5fcb6e1e..358e17ad 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -1883,7 +1883,14 @@ void dvbapi_start_emm_filter(int32_t demux_id)
@@ -837,7 +837,15 @@ index 9fac2f5c..358e17ad 100644
  	{
  		dvbapi_start_pmt_filter(demux_id);
  	}
-@@ -5609,6 +5702,23 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
+@@ -5579,6 +5672,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
+ 	if(filtertype == TYPE_ECM)
+ 	{
+ 		uint32_t chid = 0x10000;
++		int8_t pvu_skip = 0;
+ 		ECM_REQUEST *er;
+ 
+ 		if(len != 0) // len = 0 receiver encountered an internal bufferoverflow!
+@@ -5608,8 +5702,25 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
  				return;
  			}
  
@@ -859,9 +867,12 @@ index 9fac2f5c..358e17ad 100644
 +			}
 +#endif
  			// wait for odd / even ecm change (only not for irdeto!)
- 			if((curpid->table == buffer[0] && !caid_is_irdeto(curpid->CAID)) || pvu_skip)
+-			if(curpid->table == buffer[0] && !caid_is_irdeto(curpid->CAID))
++			if((curpid->table == buffer[0] && !caid_is_irdeto(curpid->CAID)) || pvu_skip)
  			{
-@@ -5954,6 +6064,35 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
+ 				if(!(er = get_ecmtask()))
+ 				{
+@@ -5953,6 +6064,35 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
  			return; // just skip on internal buffer overflow
  		}
  
@@ -897,7 +908,7 @@ index 9fac2f5c..358e17ad 100644
  		// fix to handle more than one irdeto emm packet
  		uint8_t *pbuf = buffer;
  		int32_t done = 0;
-@@ -7172,8 +7311,10 @@ void dvbapi_write_cw(int32_t demux_id, int32_t pid, int32_t stream_id, uint8_t *
+@@ -7171,8 +7311,10 @@ void dvbapi_write_cw(int32_t demux_id, int32_t pid, int32_t stream_id, uint8_t *
  	for(n = 0; n < 2; n++)
  	{
  		// Check if cw has changed and if new cw is empty (all zeros)
@@ -909,7 +920,7 @@ index 9fac2f5c..358e17ad 100644
  		{
  			// prepare ca device
  			uint32_t idx = dvbapi_ca_set_pid(demux_id, pid, stream_id, (algo == CA_ALGO_DES), msgid);
-@@ -7481,7 +7622,9 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
+@@ -7480,7 +7622,9 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
  
  		// 0=matching ecm hash, 2=no filter, 3=table reset, 4=cache-ex response
  		// Check only against last_cw[0] (index 0) - No need to check the rest
@@ -920,7 +931,7 @@ index 9fac2f5c..358e17ad 100644
  		{
  			// check for matching control word
  			if(memcmp(er->cw, demux[i].last_cw[0][0], 8) == 0 &&
-@@ -8468,7 +8611,9 @@ int32_t dvbapi_check_ecm_delayed_delivery(int32_t demux_id, ECM_REQUEST *er)
+@@ -8467,7 +8611,9 @@ int32_t dvbapi_check_ecm_delayed_delivery(int32_t demux_id, ECM_REQUEST *er)
  	}
  
  	// Check for null cw
@@ -11738,10 +11749,21 @@ index 7a451eba..f71e5d2d 100644
  										if(ok == 0)
  										{
 diff --git a/module-webif.c b/module-webif.c
-index 5967ae44..e318151c 100644
+index 97593b17..e318151c 100644
 --- a/module-webif.c
 +++ b/module-webif.c
-@@ -1318,6 +1318,12 @@ static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uri
+@@ -137,8 +137,9 @@ static bool use_srvid2 = false;
+ #define MNU_GBX_FSTAINF     27
+ #define MNU_GBX_FEXPINF     28
+ #define MNU_GBX_INFOLOG     29
++#define MNU_CFG_FSOFTCAMKEY 30
+ 
+-#define MNU_CFG_TOTAL_ITEMS 30 // sum of items above. Use it for "All inactive" in function calls too.
++#define MNU_CFG_TOTAL_ITEMS 31 // sum of items above. Use it for "All inactive" in function calls too.
+ 
+ static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value)
+ {
+@@ -1317,6 +1318,12 @@ static char *send_oscam_config_streamrelay(struct templatevars *vars, struct uri
  	tpl_printf(vars, TPLADD, "STREAM_RELAY_PORT", "%d", cfg.stream_relay_port);
  	tpl_printf(vars, TPLADD, "STREAM_RELAY_BUFFER_TIME", "%d", cfg.stream_relay_buffer_time);
  
@@ -11754,7 +11776,7 @@ index 5967ae44..e318151c 100644
  	tpl_printf(vars, TPLADD, "TMP", "STREAMRELAYENABLEDSELECTED%d", cfg.stream_relay_enabled);
  	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
  
-@@ -2430,7 +2436,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
+@@ -2429,7 +2436,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
  		chk_reader("services", servicelabels, rdr);
  		chk_reader("lb_whitelist_services", servicelabelslb, rdr);
  
@@ -11763,7 +11785,7 @@ index 5967ae44..e318151c 100644
  		{
  			if(rdr)
  				{
-@@ -3182,6 +3188,8 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
+@@ -3181,6 +3188,8 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
  	tpl_printf(vars, TPLADD, "RESHARE",      "%d", cfg.cc_reshare);
  	tpl_printf(vars, TPLADD, "CCCRECONNECT", "%d", rdr->cc_reconnect);
  
@@ -11772,7 +11794,7 @@ index 5967ae44..e318151c 100644
  	if(rdr->cc_keepalive)
  		{ tpl_addVar(vars, TPLADD, "KEEPALIVECHECKED", "checked"); }
  #endif
-@@ -3219,6 +3227,23 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
+@@ -3218,6 +3227,23 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
  	tpl_addVar(vars, TPLADD, "USERSCRIPT", rdr->userscript);
  #endif
  
@@ -11796,7 +11818,7 @@ index 5967ae44..e318151c 100644
  	tpl_addVar(vars, TPLADD, "PROTOCOL", reader_get_type_desc(rdr, 0));
  
  	// Show only parameters which needed for the reader
-@@ -3240,6 +3265,9 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
+@@ -3239,6 +3265,9 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
  	case R_CAMD35 :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCAMD35BIT"));
  		break;
@@ -11806,7 +11828,7 @@ index 5967ae44..e318151c 100644
  	case R_CS378X :
  		tpl_addVar(vars, TPLAPPEND, "READERDEPENDINGCONFIG", tpl_getTpl(vars, "READERCONFIGCS378XBIT"));
  		break;
-@@ -5268,9 +5296,34 @@ static char *send_oscam_entitlement(struct templatevars *vars, struct uriparams
+@@ -5267,9 +5296,34 @@ static char *send_oscam_entitlement(struct templatevars *vars, struct uriparams
  
  					tpl_addVar(vars, TPLAPPEND, "LOGHISTORY", "<BR><BR>New Structure:<BR>");
  					char tbuffer[83];
@@ -11841,7 +11863,7 @@ index 5967ae44..e318151c 100644
  						localtime_r(&item->start, &start_t);
  						localtime_r(&item->end, &end_t);
  
-@@ -5764,6 +5817,9 @@ static char *send_oscam_status(struct templatevars * vars, struct uriparams * pa
+@@ -5763,6 +5817,9 @@ static char *send_oscam_status(struct templatevars * vars, struct uriparams * pa
  						filtered = (type == cl->typ) || (type == 'x' && (cl->typ == 'p' || cl->typ == 'r') && (cl->reader && cl->reader->cacheex.mode));
  #else
  						filtered = (type == cl->typ);
@@ -11851,7 +11873,7 @@ index 5967ae44..e318151c 100644
  #endif
  					}
  				}
-@@ -7316,6 +7372,9 @@ static char *send_oscam_files(struct templatevars * vars, struct uriparams * par
+@@ -7315,6 +7372,9 @@ static char *send_oscam_files(struct templatevars * vars, struct uriparams * par
  		{ "stats.info",      MNU_GBX_FSTAINF,   FTYPE_GBOX },     // id 27
  		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
  		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
@@ -11861,7 +11883,7 @@ index 5967ae44..e318151c 100644
  #endif
  		{ NULL, 0, 0 },
  	};
-@@ -7788,7 +7847,11 @@ static char *send_oscam_EMM_running(struct templatevars * vars, struct uriparams
+@@ -7787,7 +7847,11 @@ static char *send_oscam_EMM_running(struct templatevars * vars, struct uriparams
  		else if(!proxy && rdr->csystem_active)     // local active reader
  		{
  			csystem = rdr->csystem;
@@ -11874,7 +11896,7 @@ index 5967ae44..e318151c 100644
  		}
  
  		if(csystem)
-@@ -8957,7 +9020,11 @@ static int32_t readRequest(FILE * f, IN_ADDR_T in, char **result, int8_t forcePl
+@@ -8956,7 +9020,11 @@ static int32_t readRequest(FILE * f, IN_ADDR_T in, char **result, int8_t forcePl
  		memcpy(*result + bufsize, buf2, n);
  		bufsize += n;
  
@@ -12152,10 +12174,18 @@ index a639364f..83904f60 100644
  	cfg.account = init_userdb();
  	init_signal();
 diff --git a/reader-common.c b/reader-common.c
-index 5c9e6e49..86503bf4 100644
+index 64aed4b1..86503bf4 100644
 --- a/reader-common.c
 +++ b/reader-common.c
-@@ -149,6 +149,18 @@ static int32_t reader_get_cardsystem(struct s_reader *reader, ATR *atr)
+@@ -15,6 +15,7 @@
+ #include "reader-common.h"
+ //#include "csctapi/atr.h"
+ #include "csctapi/icc_async.h"
++#include "readers.h" // required by the EMU reader
+ 
+ extern const struct s_cardsystem *cardsystems[];
+ extern char *RDR_CD_TXT[];
+@@ -148,6 +149,18 @@ static int32_t reader_get_cardsystem(struct s_reader *reader, ATR *atr)
  {
  	int32_t i;
  
