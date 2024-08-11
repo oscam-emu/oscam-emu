@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 00727f83..af7b0cf4 100644
+index 0958470d..4c635f19 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -472,6 +472,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
@@ -111,7 +111,7 @@ index 3d333a93..08b173ed 100644
  	  1 = send keepalive messages to keep connection to remote CCCam server up, default:0
  
 diff --git a/Makefile b/Makefile
-index d8c33b83..0f4f3912 100644
+index a4cc72f7..fd205b06 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -32,6 +32,9 @@ ifeq "$(shell ./config.sh --enabled WITH_SSL)" "Y"
@@ -124,7 +124,7 @@ index d8c33b83..0f4f3912 100644
  ifdef USE_SSL
  	override USE_LIBCRYPTO=1
  endif
-@@ -315,6 +318,32 @@ SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
+@@ -318,6 +321,32 @@ SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
  SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
  SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
  SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
@@ -408,7 +408,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 831bf2f8..0fdddfcb 100644
+index 75bf76d9..d0b7157c 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
