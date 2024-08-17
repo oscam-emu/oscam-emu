@@ -309,9 +309,7 @@ index f48ca1da..1139180d 100644
  //#define WITH_NEUTRINO 1
  #define READ_SDT_CHARSETS 1
 diff --git a/config.sh b/config.sh
-old mode 100755
-new mode 100644
-index 3cbd32a9..15c48cae
+index 3cbd32a9..15c48cae 100755
 --- a/config.sh
 +++ b/config.sh
 @@ -1,6 +1,6 @@
