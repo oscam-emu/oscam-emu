@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index c6f2d3d0..bdfde2b3 100644
+index 72cde174..7e527d10 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -508,6 +508,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
@@ -25,7 +25,7 @@ index c6f2d3d0..bdfde2b3 100644
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
  string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
  
-@@ -849,6 +865,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
+@@ -852,6 +868,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
  
  #--------------------------------------------------------------------------------
  
@@ -50,7 +50,7 @@ index c6f2d3d0..bdfde2b3 100644
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
-@@ -961,4 +995,11 @@ if (HAVE_LIBDVBCSA)
+@@ -964,4 +998,11 @@ if (HAVE_LIBDVBCSA)
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
  
@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 62588d06..84c4d6a0 100644
+index 89e1cd90..26599a97 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
