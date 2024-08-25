@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 72cde174..7e527d10 100644
+index 61b190dc..97e12926 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -508,6 +508,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
+@@ -510,6 +510,22 @@ endif (CONFIG_STREAMRELAY MATCHES "Y" AND NOT MODULE_STREAMRELAY EQUAL 1)
  # Manage config.h based on command line parameters
  # Manipulate config file based on given parameters and read unset parameters
  
@@ -25,7 +25,7 @@ index 72cde174..7e527d10 100644
  execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --show-valid OUTPUT_VARIABLE config_vars_string OUTPUT_STRIP_TRAILING_WHITESPACE)
  string(REGEX MATCHALL "[A-Z0-9_]+" config_vars ${config_vars_string})
  
-@@ -852,6 +868,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
+@@ -856,6 +872,24 @@ endif( HAVE_LIBRT OR HAVE_LIBRT_STATIC)
  
  #--------------------------------------------------------------------------------
  
@@ -50,7 +50,7 @@ index 72cde174..7e527d10 100644
  #----------------------- installation -----------------------------
  
  file (GLOB config_files "${CMAKE_CURRENT_SOURCE_DIR}/Distribution/oscam.*")
-@@ -964,4 +998,11 @@ if (HAVE_LIBDVBCSA)
+@@ -968,4 +1002,11 @@ if (HAVE_LIBDVBCSA)
  	endif(STATICLIBDVBCSA AND NOT LIBDVBCSADIR)
  endif (HAVE_LIBDVBCSA)
  
@@ -309,7 +309,9 @@ index f48ca1da..1139180d 100644
  //#define WITH_NEUTRINO 1
  #define READ_SDT_CHARSETS 1
 diff --git a/config.sh b/config.sh
-index 3cbd32a9..15c48cae 100755
+old mode 100755
+new mode 100644
+index bcc35607..4a0f8305
 --- a/config.sh
 +++ b/config.sh
 @@ -1,6 +1,6 @@
@@ -371,16 +373,16 @@ index 3cbd32a9..15c48cae 100755
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
  	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_SHA256=y" || echo "# CONFIG_LIB_SHA256=n"
-@@ -516,6 +521,8 @@ menu_addons() {
- 		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
- 		WITH_ARM_NEON		"ARM NEON (SIMD/MPE) support"			$(check_test "WITH_ARM_NEON") \
- 		WITH_SIGNING		"Binary signing with X.509 certificate"	$(check_test "WITH_SIGNING") \
-+		WITH_EMU			"Emulator support"						$(check_test "WITH_EMU") \
-+		WITH_SOFTCAM		"Built-in SoftCam.Key"					$(check_test "WITH_SOFTCAM") \
+@@ -514,6 +519,8 @@ menu_addons() {
+ 		IPV6SUPPORT			"IPv6 support (experimental)"					$(check_test "IPV6SUPPORT") \
+ 		WITH_ARM_NEON		"ARM NEON (SIMD/MPE) support"					$(check_test "WITH_ARM_NEON") \
+ 		WITH_SIGNING		"Binary signing with X.509 certificate"			$(check_test "WITH_SIGNING") \
++		WITH_EMU			"Emulator support"								$(check_test "WITH_EMU") \
++		WITH_SOFTCAM		"Built-in SoftCam.Key"							$(check_test "WITH_SOFTCAM") \
  		2> ${tempfile}
  
  	opt=${?}
-@@ -887,12 +894,14 @@ do
+@@ -886,12 +893,14 @@ do
  	;;
  	'-v'|'--oscam-version')
  		version=`grep '^#define CS_VERSION' globals.h | cut -d\" -f2`
@@ -409,7 +411,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 8e5aed89..0f2183d1 100644
+index 4c12229b..e8e1cead 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
