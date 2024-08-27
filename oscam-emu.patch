@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 4c12229b..e8e1cead 100644
+index 96f25d9d..098dd2ec 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -10502,7 +10502,7 @@ index ed0e85e4..ee179b79 100644
  				prv = ea;
  				continue; // proxy can convert or reject
 diff --git a/module-streamrelay.c b/module-streamrelay.c
-index aff214eb..e388446a 100644
+index f03db2a1..842637ec 100644
 --- a/module-streamrelay.c
 +++ b/module-streamrelay.c
 @@ -14,6 +14,12 @@
