@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index ee8c8bfa..1e93de2b 100644
+index 7d78730f..6ee5a005 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
