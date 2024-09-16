@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 81140c41..fa060f6a 100644
+index 93409f2e..dcb1e57f 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -684,7 +684,7 @@ index 1c4e2f2a..9d5af224 100644
  			ErrorCode = oscam_sttkd_KeyWrite(tkd_desc_info[demux[demux_id].dev_index].key_hndl, l, cw + (l * 8));
  
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index 80c4ebf3..09eb2347 100644
+index 1fc6640e..b79b211f 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -1883,7 +1883,14 @@ void dvbapi_start_emm_filter(int32_t demux_id)
