@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index c78617d7..c626c2ad 100644
+index 81140c41..fa060f6a 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -684,7 +684,7 @@ index 1c4e2f2a..9d5af224 100644
  			ErrorCode = oscam_sttkd_KeyWrite(tkd_desc_info[demux[demux_id].dev_index].key_hndl, l, cw + (l * 8));
  
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index 81ab8deb..086f4354 100644
+index 80c4ebf3..09eb2347 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -1883,7 +1883,14 @@ void dvbapi_start_emm_filter(int32_t demux_id)
@@ -921,7 +921,7 @@ index 81ab8deb..086f4354 100644
  		{
  			// prepare ca device
  			uint32_t idx = dvbapi_ca_set_pid(demux_id, pid, stream_id, (algo == CA_ALGO_DES), msgid);
-@@ -7473,7 +7615,9 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
+@@ -7474,7 +7616,9 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
  
  		// 0=matching ecm hash, 2=no filter, 3=table reset, 4=cache-ex response
  		// Check only against last_cw[0] (index 0) - No need to check the rest
@@ -932,7 +932,7 @@ index 81ab8deb..086f4354 100644
  		{
  			// check for matching control word
  			if(memcmp(er->cw, demux[i].last_cw[0][0], 8) == 0 &&
-@@ -8460,7 +8604,9 @@ int32_t dvbapi_check_ecm_delayed_delivery(int32_t demux_id, ECM_REQUEST *er)
+@@ -8477,7 +8621,9 @@ int32_t dvbapi_check_ecm_delayed_delivery(int32_t demux_id, ECM_REQUEST *er)
  	}
  
  	// Check for null cw
