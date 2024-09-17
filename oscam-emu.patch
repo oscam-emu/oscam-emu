@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 81140c41..fa060f6a 100644
+index 93409f2e..dcb1e57f 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -652,10 +652,10 @@ index 8b4d44d5..cc399e40 100644
  			memcpy(demux[0].last_cw[0][n], er->cw + (n * 8), 8);
  			memcpy(openxcas_cw + (n * 8), er->cw + (n * 8), 8);
 diff --git a/module-dvbapi-stapi.c b/module-dvbapi-stapi.c
-index 9faf6dcd..866b531e 100644
+index e136091d..2264bfc2 100644
 --- a/module-dvbapi-stapi.c
 +++ b/module-dvbapi-stapi.c
-@@ -721,8 +721,10 @@ int32_t stapi_write_cw(int32_t demux_id, uint8_t *cw, uint16_t *STREAMpids, int3
+@@ -730,8 +730,10 @@ int32_t stapi_write_cw(int32_t demux_id, uint8_t *cw, uint16_t *STREAMpids, int3
  
  	for(l = 0; l < 2; l++)
  	{
@@ -668,10 +668,10 @@ index 9faf6dcd..866b531e 100644
  			for(n = 0; n < PTINUM; n++)
  			{
 diff --git a/module-dvbapi-stapi5.c b/module-dvbapi-stapi5.c
-index 1c4e2f2a..9d5af224 100644
+index 6d7bdc32..06e839db 100644
 --- a/module-dvbapi-stapi5.c
 +++ b/module-dvbapi-stapi5.c
-@@ -722,8 +722,10 @@ int32_t stapi_write_cw(int32_t demux_id, uint8_t *cw, uint16_t *STREAMpids, int3
+@@ -731,8 +731,10 @@ int32_t stapi_write_cw(int32_t demux_id, uint8_t *cw, uint16_t *STREAMpids, int3
  
  	for(l = 0; l < 2; l++)
  	{
@@ -684,7 +684,7 @@ index 1c4e2f2a..9d5af224 100644
  			ErrorCode = oscam_sttkd_KeyWrite(tkd_desc_info[demux[demux_id].dev_index].key_hndl, l, cw + (l * 8));
  
 diff --git a/module-dvbapi.c b/module-dvbapi.c
-index 1fc6640e..b79b211f 100644
+index 1ccdb46e..2f0fcea7 100644
 --- a/module-dvbapi.c
 +++ b/module-dvbapi.c
 @@ -1883,7 +1883,14 @@ void dvbapi_start_emm_filter(int32_t demux_id)
@@ -838,7 +838,7 @@ index 1fc6640e..b79b211f 100644
  	{
  		dvbapi_start_pmt_filter(demux_id);
  	}
-@@ -5572,6 +5665,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
+@@ -5586,6 +5679,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
  	if(filtertype == TYPE_ECM)
  	{
  		uint32_t chid = 0x10000;
@@ -846,7 +846,7 @@ index 1fc6640e..b79b211f 100644
  		ECM_REQUEST *er;
  
  		if(len != 0) // len = 0 receiver encountered an internal bufferoverflow!
-@@ -5601,8 +5695,25 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
+@@ -5615,8 +5709,25 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
  				return;
  			}
  
@@ -873,7 +873,7 @@ index 1fc6640e..b79b211f 100644
  			{
  				if(!(er = get_ecmtask()))
  				{
-@@ -5946,6 +6057,35 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
+@@ -5960,6 +6071,35 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
  			return; // just skip on internal buffer overflow
  		}
  
@@ -909,7 +909,7 @@ index 1fc6640e..b79b211f 100644
  		// fix to handle more than one irdeto emm packet
  		uint8_t *pbuf = buffer;
  		int32_t done = 0;
-@@ -7164,8 +7304,10 @@ void dvbapi_write_cw(int32_t demux_id, int32_t pid, int32_t stream_id, uint8_t *
+@@ -7178,8 +7318,10 @@ void dvbapi_write_cw(int32_t demux_id, int32_t pid, int32_t stream_id, uint8_t *
  	for(n = 0; n < 2; n++)
  	{
  		// Check if cw has changed and if new cw is empty (all zeros)
@@ -921,7 +921,7 @@ index 1fc6640e..b79b211f 100644
  		{
  			// prepare ca device
  			uint32_t idx = dvbapi_ca_set_pid(demux_id, pid, stream_id, (algo == CA_ALGO_DES), msgid);
-@@ -7474,7 +7616,9 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
+@@ -7490,7 +7632,9 @@ void dvbapi_send_dcw(struct s_client *client, ECM_REQUEST *er)
  
  		// 0=matching ecm hash, 2=no filter, 3=table reset, 4=cache-ex response
  		// Check only against last_cw[0] (index 0) - No need to check the rest
@@ -932,7 +932,7 @@ index 1fc6640e..b79b211f 100644
  		{
  			// check for matching control word
  			if(memcmp(er->cw, demux[i].last_cw[0][0], 8) == 0 &&
-@@ -8477,7 +8621,9 @@ int32_t dvbapi_check_ecm_delayed_delivery(int32_t demux_id, ECM_REQUEST *er)
+@@ -8495,7 +8639,9 @@ int32_t dvbapi_check_ecm_delayed_delivery(int32_t demux_id, ECM_REQUEST *er)
  	}
  
  	// Check for null cw
@@ -11738,7 +11738,7 @@ index 71e97b53..6e839660 100644
  
  #endif // MODULE_STREAMRELAY_H_
 diff --git a/module-webif-tpl.c b/module-webif-tpl.c
-index 5792e83f..14ae466a 100644
+index 29b93646..66ce02a9 100644
 --- a/module-webif-tpl.c
 +++ b/module-webif-tpl.c
 @@ -455,6 +455,7 @@ char *tpl_getUnparsedTpl(const char *name, int8_t removeHeader, const char *subd
