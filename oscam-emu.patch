@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 5bafc7c2..77cf8dcf 100644
+index 1274e6eb..32f9309c 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -668,7 +668,7 @@ index e136091d..2264bfc2 100644
  			for(n = 0; n < PTINUM; n++)
  			{
 diff --git a/module-dvbapi-stapi5.c b/module-dvbapi-stapi5.c
-index 6d7bdc32..06e839db 100644
+index 2adf4518..76f0a6ff 100644
 --- a/module-dvbapi-stapi5.c
 +++ b/module-dvbapi-stapi5.c
 @@ -731,8 +731,10 @@ int32_t stapi_write_cw(int32_t demux_id, uint8_t *cw, uint16_t *STREAMpids, int3
