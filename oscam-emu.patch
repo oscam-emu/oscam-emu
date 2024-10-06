@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index bf1c3703..186799fe 100644
+index e047c3c7..8ee0ad12 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -11966,7 +11966,7 @@ index 22255e9d..74e4e974 100644
  	DEF_LAST_OPT
  };
 diff --git a/oscam-config-reader.c b/oscam-config-reader.c
-index a813e98c..8f438772 100644
+index ca581c53..dcf76018 100644
 --- a/oscam-config-reader.c
 +++ b/oscam-config-reader.c
 @@ -114,6 +114,7 @@ static void protocol_fn(const char *token, char *value, void *setting, FILE *f)
