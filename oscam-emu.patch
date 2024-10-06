@@ -409,7 +409,7 @@ index 8b6c309a..35f38c6c 100644
  
  #endif
 diff --git a/globals.h b/globals.h
-index 9a50a972..1d23c4ff 100644
+index b81f6ac7..5a8f19c2 100644
 --- a/globals.h
 +++ b/globals.h
 @@ -368,7 +368,7 @@
@@ -11751,7 +11751,7 @@ index 29b93646..66ce02a9 100644
  										if(ok == 0)
  										{
 diff --git a/module-webif.c b/module-webif.c
-index 1c1dc568..3ccce709 100644
+index 9a8e65b1..97b43249 100644
 --- a/module-webif.c
 +++ b/module-webif.c
 @@ -137,8 +137,9 @@ static bool use_srvid2 = false;
@@ -11966,7 +11966,7 @@ index 22255e9d..74e4e974 100644
  	DEF_LAST_OPT
  };
 diff --git a/oscam-config-reader.c b/oscam-config-reader.c
-index a813e98c..8f438772 100644
+index 2a00058f..f309b43e 100644
 --- a/oscam-config-reader.c
 +++ b/oscam-config-reader.c
 @@ -114,6 +114,7 @@ static void protocol_fn(const char *token, char *value, void *setting, FILE *f)
@@ -11987,7 +11987,7 @@ index a813e98c..8f438772 100644
  #ifdef MODULE_GBOX
  		if(ftab_type & FTAB_CCCGBXRESHARE){ rdr = container_of(setting, struct s_reader, ccc_gbx_reshare_ident); }
  #endif
-@@ -1228,6 +1232,7 @@ static const struct config_list reader_opts[] =
+@@ -1227,6 +1231,7 @@ static const struct config_list reader_opts[] =
  	DEF_OPT_SSTR("cccversion"                     , OFS(cc_version),                      "", SIZEOF(cc_version)),
  	DEF_OPT_INT8("cccmaxhops"                     , OFS(cc_maxhops),                      DEFAULT_CC_MAXHOPS),
  	DEF_OPT_INT8("cccmindown"                     , OFS(cc_mindown),                      0),
@@ -11995,7 +11995,7 @@ index a813e98c..8f438772 100644
  	DEF_OPT_INT8("ccckeepalive"                   , OFS(cc_keepalive),                    DEFAULT_CC_KEEPALIVE),
  	DEF_OPT_INT8("cccreshare"                     , OFS(cc_reshare),                      DEFAULT_CC_RESHARE),
  	DEF_OPT_INT32("cccreconnect"                  , OFS(cc_reconnect),                    DEFAULT_CC_RECONNECT),
-@@ -1242,6 +1247,10 @@ static const struct config_list reader_opts[] =
+@@ -1241,6 +1246,10 @@ static const struct config_list reader_opts[] =
  #endif
  #ifdef READER_DRECAS
  	DEF_OPT_STR("stmkeys"                         , OFS(stmkeys),                         NULL),
@@ -12006,7 +12006,7 @@ index a813e98c..8f438772 100644
  #endif
  	DEF_OPT_INT8("resetalways"                    , OFS(resetalways),                     0),
  	DEF_OPT_INT8("deprecated"                     , OFS(deprecated),                      0),
-@@ -1339,7 +1348,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
+@@ -1338,7 +1347,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
  	// These are written only when the reader is CCCAM
  	static const char *cccam_settings[] =
  	{
